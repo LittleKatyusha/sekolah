@@ -60,7 +60,20 @@ export const kelasService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   update: async (id, data) => {
-    return await apiService.put(`${BASE_URL}/${id}`, data)
+    const formData = new FormData()
+    formData.append('_method', 'PUT')
+    
+    Object.keys(data).forEach(key => {
+      if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
+        formData.append(key, data[key])
+      }
+    })
+    
+    return await apiService.post(`${BASE_URL}/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
   },
 
   /**

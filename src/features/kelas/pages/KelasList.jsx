@@ -15,6 +15,7 @@ const ActionsMenu = ({ data, onViewSiswa, onDetail, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
+  const menuRef = useRef(null)
 
   const handleAction = (action) => {
     setIsOpen(false)
@@ -37,7 +38,10 @@ const ActionsMenu = ({ data, onViewSiswa, onDetail, onEdit, onDelete }) => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
+      const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
+      
+      if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
     }
@@ -61,6 +65,7 @@ const ActionsMenu = ({ data, onViewSiswa, onDetail, onEdit, onDelete }) => {
       
       {isOpen && createPortal(
         <div
+          ref={menuRef}
           className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]"
           style={{
             top: `${position.top}px`,

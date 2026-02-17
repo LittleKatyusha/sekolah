@@ -14,6 +14,7 @@ const KelasForm = () => {
   const isEditMode = !!id
 
   const [loading, setLoading] = useState(false)
+  const [fetchingData, setFetchingData] = useState(false)
   
   const [formData, setFormData] = useState({
     nama_kelas: '',
@@ -118,22 +119,27 @@ const KelasForm = () => {
   }
 
   const fetchKelas = async () => {
-    setLoading(true)
+    setFetchingData(true)
     const { data, error } = await kelasService.getById(id)
     if (data) {
       const kelas = data.data
+      const waliGuruId = kelas.wali_guru?.id || ''
       setFormData({
         nama_kelas: kelas.nama_kelas || '',
         tingkat: kelas.tingkat || '',
         tahun_ajaran: kelas.tahun_ajaran || '',
         kapasitas: kelas.kapasitas || '',
-        wali_guru_id: kelas.wali_guru_id || ''
+        wali_guru_id: waliGuruId
       })
+      // Set selectedGuru for the searchable dropdown display
+      if (kelas.wali_guru) {
+        setSelectedGuru(kelas.wali_guru)
+      }
     } else {
       showError('Gagal mengambil data kelas')
       navigate('/kelas')
     }
-    setLoading(false)
+    setFetchingData(false)
   }
 
   const handleChange = (e) => {
@@ -228,6 +234,11 @@ const KelasForm = () => {
       </div>
 
       <Card>
+        {fetchingData ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nama Kelas */}
@@ -317,7 +328,7 @@ const KelasForm = () => {
                   } bg-white px-3 py-2 text-sm text-left focus:outline-none focus:ring-1 dark:border-gray-600 dark:bg-gray-800 dark:text-white flex items-center justify-between`}
                 >
                   <span className={selectedGuru ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}>
-                    {selectedGuru ? `${selectedGuru.nama} (${selectedGuru.nip})` : 'Pilih Wali Kelas'}
+                    {selectedGuru ? `${selectedGuru.nama}${selectedGuru.nip ? ` (${selectedGuru.nip})` : ''}` : 'Pilih Wali Kelas'}
                   </span>
                   <div className="flex items-center gap-1">
                     {selectedGuru && (
@@ -399,6 +410,7 @@ const KelasForm = () => {
             </Button>
           </div>
         </form>
+        )}
       </Card>
     </div>
   )
