@@ -8,6 +8,20 @@ import Button from '../components/ui/Button'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
 
+const REMEMBER_ME_KEY = 'login_remember_me'
+
+const getSavedCredentials = () => {
+  try {
+    const saved = localStorage.getItem(REMEMBER_ME_KEY)
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return null
+}
+
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -19,8 +33,15 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
+  const savedCredentials = getSavedCredentials()
+  const [rememberMe, setRememberMe] = useState(!!savedCredentials)
+
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: savedCredentials?.email || '',
+      password: savedCredentials?.password || '',
+    },
   })
 
   const [error, setError] = useState('')
@@ -28,6 +49,16 @@ const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     setError('')
+
+    // Save or clear remembered credentials
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({
+        email: data.email,
+        password: data.password,
+      }))
+    } else {
+      localStorage.removeItem(REMEMBER_ME_KEY)
+    }
 
     try {
       const { data: response, error: apiError } = await apiService.post('/auth/login', {
@@ -149,6 +180,8 @@ const Login = () => {
               <label className="flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
