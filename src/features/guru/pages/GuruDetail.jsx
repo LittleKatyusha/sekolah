@@ -42,6 +42,14 @@ const GuruDetail = () => {
     }
   }
 
+  const getJenisKelaminLabel = (value) => {
+    const jkMap = {
+      1: 'Laki-Laki',
+      2: 'Perempuan',
+    }
+    return jkMap[value] || value || '-'
+  }
+
   const getPendidikanLabel = (value) => {
     const pendidikanMap = {
       1: 'S1',
@@ -107,8 +115,12 @@ const GuruDetail = () => {
                 <p className="text-gray-500 dark:text-gray-400 mb-4">NUPTK: {guru.nuptk}</p>
               )}
 
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {guru.jenis_kelamin}
+              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                (guru.jenis_kelamin === 'Laki-Laki' || guru.jenis_kelamin === 1)
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-pink-100 text-pink-800'
+              }`}>
+                {getJenisKelaminLabel(guru.jenis_kelamin)}
               </div>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">

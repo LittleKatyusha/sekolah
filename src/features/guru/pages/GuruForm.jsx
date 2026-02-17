@@ -7,6 +7,26 @@ import Input from '../../../components/ui/Input'
 import { guruService } from '../services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
+const JENIS_KELAMIN_OPTIONS = [
+  { value: 1, label: 'Laki-Laki' },
+  { value: 2, label: 'Perempuan' }
+]
+
+const PENDIDIKAN_OPTIONS = [
+  { value: 1, label: 'S1' },
+  { value: 2, label: 'S2' },
+  { value: 3, label: 'S3' },
+  { value: 4, label: 'D3' },
+  { value: 5, label: 'D4' }
+]
+
+// Helper to convert string jenis_kelamin from API to numeric value
+const getJenisKelaminNumeric = (jk) => {
+  if (jk === 'Laki-Laki' || jk === 1) return 1
+  if (jk === 'Perempuan' || jk === 2) return 2
+  return 1
+}
+
 const GuruForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -19,7 +39,7 @@ const GuruForm = () => {
     nip: '',
     nuptk: '',
     nama: '',
-    jenis_kelamin: 'Laki-Laki',
+    jenis_kelamin: '1',
     tanggal_lahir: '',
     alamat: '',
     no_hp: '',
@@ -28,14 +48,6 @@ const GuruForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-
-  const pendidikanOptions = [
-    { value: 1, label: 'S1' },
-    { value: 2, label: 'S2' },
-    { value: 3, label: 'S3' },
-    { value: 4, label: 'D3' },
-    { value: 5, label: 'D4' }
-  ]
 
   useEffect(() => {
     if (isEditMode) {
@@ -52,12 +64,12 @@ const GuruForm = () => {
         nip: guru.nip || '',
         nuptk: guru.nuptk || '',
         nama: guru.nama || '',
-        jenis_kelamin: guru.jenis_kelamin || 'Laki-Laki',
+        jenis_kelamin: String(getJenisKelaminNumeric(guru.jenis_kelamin)),
         tanggal_lahir: guru.tanggal_lahir || '',
         alamat: guru.alamat || '',
         no_hp: guru.no_hp || '',
         email: guru.email || '',
-        pendidikan_terakhir: guru.pendidikan_terakhir || ''
+        pendidikan_terakhir: guru.pendidikan_terakhir ? String(guru.pendidikan_terakhir) : ''
       })
     } else {
       showError('Gagal mengambil data guru')
@@ -98,6 +110,7 @@ const GuruForm = () => {
     
     const submitData = {
       ...formData,
+      jenis_kelamin: parseInt(formData.jenis_kelamin),
       pendidikan_terakhir: formData.pendidikan_terakhir ? parseInt(formData.pendidikan_terakhir) : null
     }
 
@@ -198,10 +211,17 @@ const GuruForm = () => {
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
-                  <option value="Laki-Laki">Laki-Laki</option>
-                  <option value="Perempuan">Perempuan</option>
+                  {JENIS_KELAMIN_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
-                {errors.jenis_kelamin && <p className="mt-1 text-sm text-red-500">{errors.jenis_kelamin}</p>}
+                {errors.jenis_kelamin && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {Array.isArray(errors.jenis_kelamin) ? errors.jenis_kelamin[0] : errors.jenis_kelamin}
+                  </p>
+                )}
               </div>
 
               {/* Tanggal Lahir */}
@@ -259,7 +279,7 @@ const GuruForm = () => {
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Pilih Pendidikan</option>
-                  {pendidikanOptions.map(option => (
+                  {PENDIDIKAN_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>

@@ -146,6 +146,14 @@ const GuruList = () => {
     }
   }
 
+  const getJenisKelaminLabel = (value) => {
+    const jkMap = {
+      1: 'Laki-Laki',
+      2: 'Perempuan',
+    }
+    return jkMap[value] || value || '-'
+  }
+
   const getPendidikanLabel = (value) => {
     const pendidikanMap = {
       1: 'S1',
@@ -191,13 +199,14 @@ const GuruList = () => {
       minWidth: 120,
       cellRenderer: (params) => {
         const jk = params.value
-        const colorClass = jk === 'Laki-Laki'
+        const label = getJenisKelaminLabel(jk)
+        const colorClass = (jk === 'Laki-Laki' || jk === 1)
           ? 'bg-blue-100 text-blue-800'
           : 'bg-pink-100 text-pink-800'
 
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-            {jk}
+            {label}
           </span>
         )
       }
