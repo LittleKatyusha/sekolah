@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # React App Development Server
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: adminfe-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=https://jsonplaceholder.typicode.com
+    command: npm run dev -- --host
+    networks:
+      - admin-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: adminfe-nginx
+    ports:
+      - "8002:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - admin-network
+    restart: unless-stopped
+
+networks:
+  admin-network:
+    driver: bridge
