@@ -17,6 +17,7 @@ const DataGrid = lazy(() => import('./pages/DataGrid'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Siswa = lazy(() => import('./pages/Siswa'))
 const Kelas = lazy(() => import('./pages/Kelas'))
+const Guru = lazy(() => import('./pages/Guru'))
 const Absensi = lazy(() => import('./pages/Absensi'))
 const Nilai = lazy(() => import('./pages/Nilai'))
 const BK = lazy(() => import('./pages/BK'))
@@ -43,6 +44,7 @@ const TitleUpdater = () => {
       '/register': 'Register',
       '/siswa': 'Data Siswa',
       '/kelas': 'Data Kelas',
+      '/guru': 'Data Guru',
       '/absensi': 'Absensi',
       '/nilai': 'Nilai',
       '/bk': 'Bimbingan Konseling',
@@ -106,6 +108,16 @@ function App() {
                 element={
                   <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
                     <Kelas />
+                  </RoleGuard>
+                }
+              />
+              
+              {/* Guru: Admin (1) */}
+              <Route
+                path="/guru/*"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <Guru />
                   </RoleGuard>
                 }
               />
