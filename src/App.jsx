@@ -11,7 +11,9 @@ import useAuthStore from './store/useAuthStore'
 
 // Lazy load pages for code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Users = lazy(() => import('./pages/Users'))
+const UsersList = lazy(() => import('./features/users/pages/UsersList'))
+const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
+const UsersDetail = lazy(() => import('./features/users/pages/UsersDetail'))
 const Analytics = lazy(() => import('./pages/Analytics'))
 const DataGrid = lazy(() => import('./pages/DataGrid'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -157,7 +159,40 @@ function App() {
                 path="/users"
                 element={
                   <RoleGuard allowedRoles={[1, 'admin']}>
-                    <Users />
+                    <UsersList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/users/create"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <UsersForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/users/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <UsersDetail />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/users/:id/edit"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <UsersForm />
+                  </RoleGuard>
+                }
+              />
+              {/* Also handle /admin/users from API menu */}
+              <Route
+                path="/admin/users/*"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <UsersList />
                   </RoleGuard>
                 }
               />
