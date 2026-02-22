@@ -40,3 +40,4 @@ docker-compose.prod.yaml
 erd_system.png
 package-lock.json
 nginx/
+compose.yaml
