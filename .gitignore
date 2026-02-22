@@ -28,3 +28,14 @@ dist-ssr
 .env.local
 .env.production
 .env.development
+.env.example
+API_DOCUMENTATION.md
+DEVELOPMENT.md
+Dockerfile
+Dockerfile.dev
+QUICKSTART.md
+README.md
+docker-compose.dev.yaml
+docker-compose.prod.yaml
+erd_system.png
+package-lock.json
