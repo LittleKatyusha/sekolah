@@ -1,6 +1,7 @@
 import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/guru'
+const LIST_URL = '/guru/'
 
 export const guruService = {
   /**
@@ -13,7 +14,7 @@ export const guruService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getAll: async (params = {}) => {
-    return await apiService.get(BASE_URL, { params })
+    return await apiService.get(LIST_URL, { params })
   },
 
   /**

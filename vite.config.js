@@ -16,7 +16,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8002',
+        target: 'https://api.akademihub.id',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,

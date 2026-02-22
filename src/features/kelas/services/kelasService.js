@@ -1,6 +1,7 @@
 import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/kelas'
+const LIST_URL = '/kelas/'
 
 export const kelasService = {
   /**
@@ -14,7 +15,7 @@ export const kelasService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getAll: async (params = {}) => {
-    return await apiService.get(BASE_URL, { params })
+    return await apiService.get(LIST_URL, { params })
   },
 
   /**

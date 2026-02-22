@@ -8,24 +8,21 @@ import { guruService } from '../services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const JENIS_KELAMIN_OPTIONS = [
-  { value: 1, label: 'Laki-Laki' },
-  { value: 2, label: 'Perempuan' }
+  { value: 'Laki-Laki', label: 'Laki-Laki' },
+  { value: 'Perempuan', label: 'Perempuan' }
 ]
 
 const PENDIDIKAN_OPTIONS = [
-  { value: 1, label: 'S1' },
-  { value: 2, label: 'S2' },
-  { value: 3, label: 'S3' },
-  { value: 4, label: 'D3' },
-  { value: 5, label: 'D4' }
+  { value: 'SD / Sederajat', label: 'SD / Sederajat' },
+  { value: 'SMP / Sederajat', label: 'SMP / Sederajat' },
+  { value: 'SMA / Sederajat', label: 'SMA / Sederajat' },
+  { value: 'Diploma 1 (D1)', label: 'Diploma 1 (D1)' },
+  { value: 'Diploma 2 (D2)', label: 'Diploma 2 (D2)' },
+  { value: 'Diploma 3 (D3)', label: 'Diploma 3 (D3)' },
+  { value: 'Sarjana (S1) / Diploma 4 (D4)', label: 'Sarjana (S1) / Diploma 4 (D4)' },
+  { value: 'Magister (S2)', label: 'Magister (S2)' },
+  { value: 'Doktor (S3)', label: 'Doktor (S3)' }
 ]
-
-// Helper to convert string jenis_kelamin from API to numeric value
-const getJenisKelaminNumeric = (jk) => {
-  if (jk === 'Laki-Laki' || jk === 1) return 1
-  if (jk === 'Perempuan' || jk === 2) return 2
-  return 1
-}
 
 const GuruForm = () => {
   const { id } = useParams()
@@ -39,7 +36,7 @@ const GuruForm = () => {
     nip: '',
     nuptk: '',
     nama: '',
-    jenis_kelamin: '1',
+    jenis_kelamin: 'Laki-Laki',
     tanggal_lahir: '',
     alamat: '',
     no_hp: '',
@@ -64,12 +61,12 @@ const GuruForm = () => {
         nip: guru.nip || '',
         nuptk: guru.nuptk || '',
         nama: guru.nama || '',
-        jenis_kelamin: String(getJenisKelaminNumeric(guru.jenis_kelamin)),
+        jenis_kelamin: guru.jenis_kelamin || 'Laki-Laki',
         tanggal_lahir: guru.tanggal_lahir || '',
         alamat: guru.alamat || '',
         no_hp: guru.no_hp || '',
         email: guru.email || '',
-        pendidikan_terakhir: guru.pendidikan_terakhir ? String(guru.pendidikan_terakhir) : ''
+        pendidikan_terakhir: guru.pendidikan_terakhir || ''
       })
     } else {
       showError('Gagal mengambil data guru')
@@ -110,8 +107,7 @@ const GuruForm = () => {
     
     const submitData = {
       ...formData,
-      jenis_kelamin: parseInt(formData.jenis_kelamin),
-      pendidikan_terakhir: formData.pendidikan_terakhir ? parseInt(formData.pendidikan_terakhir) : null
+      pendidikan_terakhir: formData.pendidikan_terakhir || null
     }
 
     let result

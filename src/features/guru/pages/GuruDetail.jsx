@@ -43,14 +43,16 @@ const GuruDetail = () => {
   }
 
   const getJenisKelaminLabel = (value) => {
+    if (!value) return '-'
     const jkMap = {
       1: 'Laki-Laki',
       2: 'Perempuan',
     }
-    return jkMap[value] || value || '-'
+    return jkMap[value] || value
   }
 
   const getPendidikanLabel = (value) => {
+    if (!value) return '-'
     const pendidikanMap = {
       1: 'S1',
       2: 'S2',
@@ -58,7 +60,7 @@ const GuruDetail = () => {
       4: 'D3',
       5: 'D4',
     }
-    return pendidikanMap[value] || value || '-'
+    return pendidikanMap[value] || value
   }
 
   const formatDate = (dateString) => {
@@ -116,9 +118,9 @@ const GuruDetail = () => {
               )}
 
               <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                (guru.jenis_kelamin === 'Laki-Laki' || guru.jenis_kelamin === 1)
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'bg-pink-100 text-pink-800'
+                (guru.jenis_kelamin === 'Laki-Laki' || guru.jenis_kelamin === 'Laki-laki' || guru.jenis_kelamin === 1)
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                  : 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400'
               }`}>
                 {getJenisKelaminLabel(guru.jenis_kelamin)}
               </div>
