@@ -1,26 +1,50 @@
+
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { AgGridReact } from 'ag-grid-react'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, ToggleRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
-import { guruService } from '../services/guruService'
+import { usersService } from '../services/usersService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
+// Role options based on API response
+const ROLE_OPTIONS = [
+  { value: 1, label: 'Administrator', code: 'admin' },
+  { value: 2, label: 'Guru', code: 'guru' },
+  { value: 3, label: 'Staff', code: 'staff' },
+]
+
+// Get role label from role ID or role object
+const getRoleLabel = (roleValue, roles = []) => {
+  if (roles && roles.length > 0) {
+    return roles[0].name || 'Unknown'
+  }
+  const role = ROLE_OPTIONS.find(r => r.value === roleValue)
+  return role ? role.label : 'Unknown'
+}
+
+// Get role badge color
+const getRoleBadgeColor = (roleValue, roles = []) => {
+  const roleCode = roles && roles.length > 0 ? roles[0].code : null
+  if (roleCode === 'admin' || roleValue === 1) {
+    return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+  }
+  if (roleCode === 'guru' || roleValue === 2) {
+    return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+  }
+  return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+}
+
 // Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
   const menuRef = useRef(null)
-
-  const handleAction = (action) => {
-    setIsOpen(false)
-    action()
-  }
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
@@ -74,22 +98,38 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         >
           <div className="py-1">
             <button
-              onClick={() => handleAction(onDetail)}
+              onClick={() => { setIsOpen(false); onDetail(); }}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Eye size={16} className="text-blue-600" />
               Detail
             </button>
             <button
-              onClick={() => handleAction(onEdit)}
+              onClick={() => { setIsOpen(false); onEdit(); }}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Edit size={16} className="text-yellow-600" />
               Edit
             </button>
+            <button
+              onClick={() => { setIsOpen(false); onToggleStatus(); }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            >
+              {data.is_active ? (
+                <>
+                  <ToggleRight size={16} className="text-orange-600" />
+                  Nonaktifkan
+                </>
+              ) : (
+                <>
+                  <ToggleRight size={16} className="text-green-600" />
+                  Aktifkan
+                </>
+              )}
+            </button>
             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
             <button
-              onClick={() => handleAction(onDelete)}
+              onClick={() => { setIsOpen(false); onDelete(); }}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
               <Trash2 size={16} />
@@ -103,145 +143,131 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
   )
 }
 
-const GuruList = () => {
+const UsersList = () => {
   const navigate = useNavigate()
   const [rowData, setRowData] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
 
-  const fetchGuru = async () => {
+  const fetchUsers = async () => {
     setLoading(true)
-    const { data, error } = await guruService.getAll()
+    const { data, error } = await usersService.getAll()
     if (data) {
       setRowData(data.data || [])
     } else {
-      console.error('Error fetching guru:', error)
-      showError('Gagal mengambil data guru')
+      console.error('Error fetching users:', error)
+      showError('Gagal mengambil data users')
     }
     setLoading(false)
   }
 
   useEffect(() => {
-    fetchGuru()
+    fetchUsers()
   }, [])
 
   const handleEdit = (data) => {
-    navigate(`/guru/${data.id}/edit`)
+    navigate(`/users/${data.id}/edit`)
   }
 
   const handleDetail = (data) => {
-    navigate(`/guru/${data.id}`)
+    navigate(`/users/${data.id}`)
   }
 
   const handleDelete = async (data) => {
-    const result = await showDeleteConfirm(data.nama)
+    const result = await showDeleteConfirm(data.name)
     if (result.isConfirmed) {
-      const { error } = await guruService.delete(data.id)
+      const { error } = await usersService.delete(data.id)
       if (!error) {
-        showSuccess(`${data.nama} berhasil dihapus!`)
-        fetchGuru()
+        showSuccess(`${data.name} berhasil dihapus!`)
+        fetchUsers()
       } else {
-        showError('Gagal menghapus guru')
+        showError('Gagal menghapus user')
       }
     }
   }
 
-  const getJenisKelaminLabel = (value) => {
-    if (!value) return '-'
-    // Handle both numeric and string values from API
-    const jkMap = {
-      1: 'Laki-Laki',
-      2: 'Perempuan',
+  const handleToggleStatus = async (data) => {
+    const newStatus = !data.is_active
+    const { error } = await usersService.toggleStatus(data.id, newStatus)
+    if (!error) {
+      showSuccess(`User ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}!`)
+      fetchUsers()
+    } else {
+      showError('Gagal mengubah status user')
     }
-    return jkMap[value] || value
-  }
-
-  const getPendidikanLabel = (value) => {
-    if (!value) return '-'
-    // Handle both numeric and string values from API
-    const pendidikanMap = {
-      1: 'S1',
-      2: 'S2',
-      3: 'S3',
-      4: 'D3',
-      5: 'D4',
-    }
-    return pendidikanMap[value] || value
   }
 
   const columnDefs = useMemo(() => [
     {
-      field: 'nip',
-      headerName: 'NIP',
-      sortable: true,
-      filter: true,
-      width: 160,
-      minWidth: 130
-    },
-    {
-      field: 'nuptk',
-      headerName: 'NUPTK',
-      sortable: true,
-      filter: true,
-      width: 130,
-      minWidth: 100
-    },
-    {
-      field: 'nama',
-      headerName: 'Nama Lengkap',
+      field: 'name',
+      headerName: 'Nama',
       sortable: true,
       filter: true,
       flex: 1,
       minWidth: 180
     },
     {
-      field: 'jenis_kelamin',
-      headerName: 'Jenis Kelamin',
+      field: 'email',
+      headerName: 'Email',
       sortable: true,
       filter: true,
-      width: 140,
+      flex: 1,
+      minWidth: 200
+    },
+    {
+      field: 'role',
+      headerName: 'Role',
+      sortable: true,
+      filter: true,
+      width: 150,
       minWidth: 120,
       cellRenderer: (params) => {
-        const jk = params.value
-        const label = getJenisKelaminLabel(jk)
-        const isLaki = (jk === 'Laki-Laki' || jk === 'Laki-laki' || jk === 1)
-        const colorClass = isLaki
-          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-          : 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400'
-
+        const roleLabel = getRoleLabel(params.value, params.data.roles)
+        const badgeColor = getRoleBadgeColor(params.value, params.data.roles)
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-            {label}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeColor}`}>
+            {roleLabel}
           </span>
         )
       }
     },
     {
-      field: 'no_hp',
-      headerName: 'No. HP',
-      sortable: true,
-      filter: true,
-      width: 140,
-      minWidth: 120,
-      cellRenderer: (params) => params.value || '-'
-    },
-    {
-      field: 'email',
-      headerName: 'Email',
-      sortable: true,
-      filter: true,
-      width: 200,
-      minWidth: 160,
-      cellRenderer: (params) => params.value || '-'
-    },
-    {
-      field: 'pendidikan_terakhir',
-      headerName: 'Pendidikan',
+      field: 'is_active',
+      headerName: 'Status',
       sortable: true,
       filter: true,
       width: 120,
       minWidth: 100,
-      cellRenderer: (params) => getPendidikanLabel(params.value)
+      cellRenderer: (params) => {
+        return params.value ? (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+            Aktif
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+            Nonaktif
+          </span>
+        )
+      }
+    },
+    {
+      field: 'created_at',
+      headerName: 'Dibuat',
+      sortable: true,
+      filter: true,
+      width: 180,
+      minWidth: 150,
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        const date = new Date(params.value)
+        return date.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }
     },
     {
       headerName: 'Aksi',
@@ -259,6 +285,7 @@ const GuruList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
+              onToggleStatus={() => handleToggleStatus(params.data)}
             />
           </div>
         )
@@ -279,24 +306,24 @@ const GuruList = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Data Guru</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manajemen Users</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Cari guru..."
+              placeholder="Cari users..."
               value={searchText}
               onChange={onFilterTextBoxChanged}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={fetchGuru} variant="secondary" title="Refresh Data">
+          <Button onClick={fetchUsers} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/guru/create')}>
+          <Button onClick={() => navigate('/users/create')}>
             <Plus size={18} className="mr-2" />
-            Tambah Guru
+            Tambah User
           </Button>
         </div>
       </div>
@@ -325,4 +352,4 @@ const GuruList = () => {
   )
 }
 
-export default GuruList
+export default UsersList

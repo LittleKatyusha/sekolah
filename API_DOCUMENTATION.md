@@ -87,8 +87,8 @@ Authorization: Bearer {access_token}
 
 **Query Parameters:**
 - `kelas_id` - Filter by kelas
-- `status` - Filter by status (aktif, lulus, pindah)
-- `jenis_kelamin` - Filter by gender (L, P)
+- `status` - Filter by status (Aktif, Lulus, Pindah, Keluar)
+- `jenis_kelamin` - Filter by gender (Laki-Laki, Perempuan)
 - `search` - Search by nama or nis
 - `per_page` - Items per page (default: 15)
 - `cursor` - Cursor for pagination
@@ -101,18 +101,37 @@ Authorization: Bearer {access_token}
     "data": [
         {
             "id": 1,
-            "nis": "12345",
-            "nama": "Budi Santoso",
-            "jenis_kelamin": "L",
-            "tanggal_lahir": "2005-01-15",
+            "nis": "10001",
+            "nisn": "0012345678",
+            "nik": "3201234567890001",
+            "nama": "Aditya Pratama",
+            "jenis_kelamin": "Laki-Laki",
+            "tempat_lahir": "Jakarta",
+            "tanggal_lahir": "2008-03-15",
+            "agama": "Islam",
             "alamat": "Jl. Merdeka No. 1",
-            "status": "aktif",
+            "email": "aditya@example.com",
+            "no_hp": "081234567890",
+            "golongan_darah": "A",
+            "tinggi_badan": 165,
+            "berat_badan": 55,
+            "tanggal_masuk": "2023-07-10",
+            "asal_sekolah": "SMP Negeri 1",
+            "anak_ke": 2,
+            "status": "Aktif",
+            "user": {
+                "id": 20,
+                "email": "aditya@example.com",
+                "is_active": true
+            },
             "kelas": {
                 "id": 1,
-                "nama_kelas": "X-A",
+                "nama_kelas": "X IPA 1",
                 "tingkat": 10,
-                "tahun_ajaran": "2023/2024"
-            }
+                "tahun_ajaran": "2024/2025"
+            },
+            "created_at": "2024-01-01T00:00:00.000000Z",
+            "updated_at": "2024-01-01T00:00:00.000000Z"
         }
     ],
     "meta": {
@@ -137,16 +156,31 @@ Authorization: Bearer {access_token}
 Content-Type: application/json
 
 {
-    "sys_user_id": 1,
-    "nis": "12345",
-    "nama": "Budi Santoso",
-    "jenis_kelamin": "L",
-    "tanggal_lahir": "2005-01-15",
-    "alamat": "Jl. Merdeka No. 1",
+    "nis": "10001",
+    "nama": "Aditya Pratama",
+    "jenis_kelamin": "Laki-Laki",
     "mst_kelas_id": 1,
-    "status": "aktif"
+    "nisn": "0012345678",
+    "nik": "3201234567890001",
+    "tempat_lahir": "Jakarta",
+    "tanggal_lahir": "2008-03-15",
+    "agama": "Islam",
+    "alamat": "Jl. Merdeka No. 1",
+    "email": "aditya@example.com",
+    "no_hp": "081234567890",
+    "golongan_darah": "A",
+    "tinggi_badan": 165,
+    "berat_badan": 55,
+    "tanggal_masuk": "2023-07-10",
+    "asal_sekolah": "SMP Negeri 1",
+    "anak_ke": 2,
+    "status": "Aktif",
+    "sys_user_id": 1
 }
 ```
+
+**Required fields:** `nis`, `nama`, `jenis_kelamin`, `mst_kelas_id`
+**Optional fields:** `nisn`, `nik`, `tempat_lahir`, `tanggal_lahir`, `agama`, `alamat`, `email`, `no_hp`, `golongan_darah`, `tinggi_badan`, `berat_badan`, `tanggal_masuk`, `asal_sekolah`, `anak_ke`, `status`, `sys_user_id`
 
 ### Update Siswa
 ```http
@@ -155,7 +189,7 @@ Authorization: Bearer {access_token}
 Content-Type: application/json
 
 {
-    "nama": "Budi Santoso Updated",
+    "nama": "Aditya Pratama Updated",
     "alamat": "Jl. Sudirman No. 2"
 }
 ```

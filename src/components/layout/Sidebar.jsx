@@ -152,11 +152,19 @@ const Sidebar = ({ isOpen, onClose }) => {
           return
         }
 
+        // Convert backend API URL to frontend route path
+        // e.g. "/api/v1/guru" -> "/guru", "/api/v1/admin/users" -> "/admin/users"
+        const toFrontendRoute = (url) => {
+          if (!url || url === '#') return null
+          // Strip the API base prefix (e.g. /api/v1) to get the frontend route
+          return url.replace(/^\/api\/v[0-9]+/, '') || '/'
+        }
+
         // Helper function to map menu items recursively
         const mapMenuItem = (item) => {
           const menuItem = {
             name: item.nama_menu,
-            to: item.url === '#' ? null : item.url,
+            to: toFrontendRoute(item.url),
             icon: ICON_MAP[item.icon] || HelpCircle,
             id: item.id,
             children: []
