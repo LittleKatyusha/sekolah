@@ -87,7 +87,17 @@ export const kelasService = {
   },
 
   /**
-   * Get siswa in a kelas
+   * Get siswa by kelas ID
+   * Endpoint: /kelas/{id}/siswa
+   * @param {number|string} id - Kelas ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getSiswaByKelasId: async (id) => {
+    return await apiService.get(`${BASE_URL}/${id}/siswa`)
+  },
+
+  /**
+   * Backward-compatible alias for get siswa by kelas
    * @param {number|string} id - Kelas ID
    * @returns {Promise<{data: any, error: any}>}
    */

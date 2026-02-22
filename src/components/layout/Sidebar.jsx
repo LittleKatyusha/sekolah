@@ -12,7 +12,8 @@ import {
   MessageSquare,
   HelpCircle,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
@@ -62,7 +63,7 @@ const ICON_MAP = {
   'bi-shield': Settings,
   'bi-key': Settings,
   'bi-list': Table2,
-  'bi-clock-history': BarChart3,
+  'bi-clock-history': Clock,
   // Fallback for direct Lucide names
   LayoutDashboard,
   Users,
@@ -73,7 +74,8 @@ const ICON_MAP = {
   ClipboardCheck,
   Award,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Clock
 }
 
 const MenuItem = ({ item, onClose }) => {

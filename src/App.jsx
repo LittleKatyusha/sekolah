@@ -14,6 +14,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const UsersList = lazy(() => import('./features/users/pages/UsersList'))
 const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
 const UsersDetail = lazy(() => import('./features/users/pages/UsersDetail'))
+const ActivityLogsList = lazy(() => import('./features/activity-logs/pages/ActivityLogsList'))
 const Analytics = lazy(() => import('./pages/Analytics'))
 const DataGrid = lazy(() => import('./pages/DataGrid'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -51,6 +52,7 @@ const TitleUpdater = () => {
       '/nilai': 'Nilai',
       '/bk': 'Bimbingan Konseling',
       '/unauthorized': 'Unauthorized',
+      '/admin/activity-logs': 'Activity Logs',
     }
     
     const title = titles[location.pathname] || 'Admin Dashboard'
@@ -217,6 +219,14 @@ function App() {
                 element={
                   <RoleGuard allowedRoles={[1, 'admin']}>
                     <Settings />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/activity-logs"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <ActivityLogsList />
                   </RoleGuard>
                 }
               />
