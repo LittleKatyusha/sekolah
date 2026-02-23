@@ -102,11 +102,9 @@ const MenuForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   const [parentMenus, setParentMenus] = useState([])
-  const [permissions, setPermissions] = useState([])
   
   const [formData, setFormData] = useState({
     parent_id: '',
-    sys_permission_id: '',
     nama_menu: '',
     url: '',
     icon: '',
@@ -127,9 +125,8 @@ const MenuForm = () => {
     try {
       // Assuming you have endpoints for parent menus and permissions
       // If not, you might need to adjust these or mock them
-      const [menusRes, permissionsRes] = await Promise.all([
+      const [menusRes] = await Promise.all([
         menuService.getAll({ per_page: 100 }), // Get all for dropdown
-        apiService.get('/admin/permissions', { params: { per_page: 100 } }).catch(() => ({ data: { data: [] } }))
       ])
 
       if (menusRes.data) {
@@ -141,9 +138,6 @@ const MenuForm = () => {
         setParentMenus(availableParents)
       }
       
-      if (permissionsRes.data) {
-        setPermissions(permissionsRes.data.data || [])
-      }
     } catch (error) {
       console.error("Error fetching options", error)
     }
@@ -156,7 +150,6 @@ const MenuForm = () => {
       const menu = data.data
       setFormData({
         parent_id: menu.parent_id || '',
-        sys_permission_id: menu.sys_permission_id || '',
         nama_menu: menu.nama_menu || '',
         url: menu.url || '',
         icon: menu.icon || '',
@@ -200,7 +193,6 @@ const MenuForm = () => {
     
     const submitData = {
       parent_id: formData.parent_id ? parseInt(formData.parent_id) : null,
-      sys_permission_id: formData.sys_permission_id ? parseInt(formData.sys_permission_id) : null,
       nama_menu: formData.nama_menu,
       url: formData.url,
       icon: formData.icon || null,
@@ -335,20 +327,6 @@ const MenuForm = () => {
                 />
               </div>
 
-              {/* Permission ID */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Permission (Opsional)
-                </label>
-                <SearchableSelect
-                  name="sys_permission_id"
-                  value={formData.sys_permission_id}
-                  onChange={handleChange}
-                  placeholder="-- Pilih Permission --"
-                  options={permissions.map(p => ({ value: p.id, label: `${p.name} (${p.code})` }))}
-                  error={errors.sys_permission_id}
-                />
-              </div>
 
               {/* Status */}
               <div className="flex items-center h-full pt-6">
