@@ -15,6 +15,8 @@ const UsersList = lazy(() => import('./features/users/pages/UsersList'))
 const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
 const UsersDetail = lazy(() => import('./features/users/pages/UsersDetail'))
 const ActivityLogsList = lazy(() => import('./features/activity-logs/pages/ActivityLogsList'))
+const MenuList = lazy(() => import('./features/menus/pages/MenuList'))
+const MenuForm = lazy(() => import('./features/menus/pages/MenuForm'))
 const Analytics = lazy(() => import('./pages/Analytics'))
 const DataGrid = lazy(() => import('./pages/DataGrid'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -24,6 +26,11 @@ const Guru = lazy(() => import('./pages/Guru'))
 const Absensi = lazy(() => import('./pages/Absensi'))
 const Nilai = lazy(() => import('./pages/Nilai'))
 const BK = lazy(() => import('./pages/BK'))
+
+// Mapel routes
+const MapelList = lazy(() => import('./features/mapel/pages/MapelList'))
+const MapelForm = lazy(() => import('./features/mapel/pages/MapelForm'))
+const MapelDetail = lazy(() => import('./features/mapel/pages/MapelDetail'))
 
 // Loading component
 const LoadingFallback = () => (
@@ -48,11 +55,13 @@ const TitleUpdater = () => {
       '/siswa': 'Data Siswa',
       '/kelas': 'Data Kelas',
       '/guru': 'Data Guru',
+      '/mapel': 'Mata Pelajaran',
       '/absensi': 'Absensi',
       '/nilai': 'Nilai',
       '/bk': 'Bimbingan Konseling',
       '/unauthorized': 'Unauthorized',
       '/admin/activity-logs': 'Activity Logs',
+      '/admin/menus': 'Manajemen Menu',
     }
     
     const title = titles[location.pathname] || 'Admin Dashboard'
@@ -122,6 +131,40 @@ function App() {
                 element={
                   <RoleGuard allowedRoles={[1, 'admin']}>
                     <Guru />
+                  </RoleGuard>
+                }
+              />
+              
+              {/* Mapel: Admin (1) */}
+              <Route
+                path="/mapel"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MapelList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/mapel/create"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MapelForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/mapel/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MapelDetail />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/mapel/:id/edit"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MapelForm />
                   </RoleGuard>
                 }
               />
@@ -227,6 +270,30 @@ function App() {
                 element={
                   <RoleGuard allowedRoles={[1, 'admin']}>
                     <ActivityLogsList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/menus"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MenuList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/menus/create"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MenuForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/menus/:id/edit"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <MenuForm />
                   </RoleGuard>
                 }
               />

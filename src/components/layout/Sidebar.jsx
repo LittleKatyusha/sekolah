@@ -13,7 +13,8 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronRight,
-  Clock
+  Clock,
+  BookOpen
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
@@ -186,6 +187,26 @@ const Sidebar = ({ isOpen, onClose }) => {
         const mappedMenus = menuData
           .filter(item => item.is_active)
           .map(mapMenuItem)
+
+        // Statically inject Mata Pelajaran menu
+        const mapelMenu = {
+          name: 'Mata Pelajaran',
+          to: '/mapel',
+          icon: BookOpen,
+          id: 'static-mapel',
+          children: []
+        }
+
+        // Find logical position (near Guru or Kelas)
+        const targetIndex = mappedMenus.findIndex(
+          (m) => m.name.toLowerCase().includes('guru') || m.name.toLowerCase().includes('kelas')
+        )
+
+        if (targetIndex !== -1) {
+          mappedMenus.splice(targetIndex + 1, 0, mapelMenu)
+        } else {
+          mappedMenus.push(mapelMenu)
+        }
         
         setNavigation(mappedMenus)
       } catch (err) {
