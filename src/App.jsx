@@ -24,6 +24,9 @@ const Siswa = lazy(() => import('./pages/Siswa'))
 const Kelas = lazy(() => import('./pages/Kelas'))
 const Guru = lazy(() => import('./pages/Guru'))
 const Absensi = lazy(() => import('./pages/Absensi'))
+const AbsensiGuruList = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruList'))
+const AbsensiGuruForm = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruForm'))
+const AbsensiGuruDetail = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruDetail'))
 const Nilai = lazy(() => import('./pages/Nilai'))
 const BK = lazy(() => import('./pages/BK'))
 
@@ -31,6 +34,11 @@ const BK = lazy(() => import('./pages/BK'))
 const MapelList = lazy(() => import('./features/mapel/pages/MapelList'))
 const MapelForm = lazy(() => import('./features/mapel/pages/MapelForm'))
 const MapelDetail = lazy(() => import('./features/mapel/pages/MapelDetail'))
+
+// Wali routes
+const WaliList = lazy(() => import('./features/wali/pages/WaliList'))
+const WaliDetail = lazy(() => import('./features/wali/pages/WaliDetail'))
+const WaliForm = lazy(() => import('./features/wali/pages/WaliForm'))
 
 // Loading component
 const LoadingFallback = () => (
@@ -56,7 +64,9 @@ const TitleUpdater = () => {
       '/kelas': 'Data Kelas',
       '/guru': 'Data Guru',
       '/mapel': 'Mata Pelajaran',
+      '/wali': 'Wali Murid',
       '/absensi': 'Absensi',
+      '/absensi-guru': 'Absensi Guru',
       '/nilai': 'Nilai',
       '/bk': 'Bimbingan Konseling',
       '/unauthorized': 'Unauthorized',
@@ -169,12 +179,80 @@ function App() {
                 }
               />
               
+              {/* Wali Routes: Admin (1) */}
+              <Route
+                path="/wali"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <WaliList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/wali/create"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <WaliForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/wali/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <WaliDetail />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/wali/:id/edit"
+                element={
+                  <RoleGuard allowedRoles={[1, 'admin']}>
+                    <WaliForm />
+                  </RoleGuard>
+                }
+              />
+
               {/* Absensi: Admin (1), Guru (2) */}
               <Route
                 path="/absensi"
                 element={
                   <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
                     <Absensi />
+                  </RoleGuard>
+                }
+              />
+              
+              {/* Absensi Guru: Admin (1), Guru (2) */}
+              <Route
+                path="/absensi-guru"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiGuruList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/absensi-guru/tambah"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiGuruForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/absensi-guru/edit/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiGuruForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/absensi-guru/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiGuruDetail />
                   </RoleGuard>
                 }
               />

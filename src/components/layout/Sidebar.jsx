@@ -14,7 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
-  BookOpen
+  BookOpen,
+  ClipboardList
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
@@ -206,6 +207,52 @@ const Sidebar = ({ isOpen, onClose }) => {
           mappedMenus.splice(targetIndex + 1, 0, mapelMenu)
         } else {
           mappedMenus.push(mapelMenu)
+        }
+
+        // Statically inject Wali menu
+        const waliMenu = {
+          name: 'Wali',
+          to: '/wali',
+          icon: Users,
+          id: 'static-wali',
+          children: []
+        }
+
+        // Find logical position (after Siswa)
+        const siswaIndex = mappedMenus.findIndex(
+          (m) => m.name.toLowerCase().includes('siswa')
+        )
+
+        if (siswaIndex !== -1) {
+          mappedMenus.splice(siswaIndex + 1, 0, waliMenu)
+        } else {
+          // Fallback: If Siswa not found, add it after Mata Pelajaran
+          const mapelIndex = mappedMenus.findIndex((m) => m.id === 'static-mapel');
+          if (mapelIndex !== -1) {
+            mappedMenus.splice(mapelIndex + 1, 0, waliMenu);
+          } else {
+            mappedMenus.push(waliMenu);
+          }
+        }
+
+        // Statically inject Absensi Guru menu
+        const absensiGuruMenu = {
+          name: 'Absensi Guru',
+          to: '/absensi-guru',
+          icon: ClipboardList,
+          id: 'static-absensi-guru',
+          children: []
+        }
+
+        // Find logical position (after Wali)
+        const waliIndex = mappedMenus.findIndex(
+          (m) => m.name.toLowerCase() === 'wali'
+        )
+
+        if (waliIndex !== -1) {
+          mappedMenus.splice(waliIndex + 1, 0, absensiGuruMenu)
+        } else {
+          mappedMenus.push(absensiGuruMenu)
         }
         
         setNavigation(mappedMenus)
