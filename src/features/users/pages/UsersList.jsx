@@ -149,21 +149,36 @@ const UsersList = () => {
   const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
 
-  const fetchUsers = async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalRows, setTotalRows] = useState(0)
+
+  const fetchUsers = useCallback(async (page = currentPage, size = pageSize) => {
     setLoading(true)
-    const { data, error } = await usersService.getAll()
+    const params = {
+      page: page,
+      per_page: size
+    }
+    
+    if (searchText) {
+      params.search = searchText
+    }
+
+    const { data, error } = await usersService.getAll(params)
     if (data) {
       setRowData(data.data || [])
+      setTotalRows(data.meta?.total || data.data?.length || 0)
     } else {
       console.error('Error fetching users:', error)
       showError('Gagal mengambil data users')
     }
     setLoading(false)
-  }
+  }, [currentPage, pageSize, searchText])
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
   const handleEdit = (data) => {
     navigate(`/users/${data.id}/edit`)
@@ -196,6 +211,32 @@ const UsersList = () => {
       showError('Gagal mengubah status user')
     }
   }
+
+  const handleRefresh = () => {
+    fetchUsers(currentPage, pageSize)
+  }
+
+  const onPaginationChanged = useCallback((params) => {
+    const newPage = params.api.paginationGetCurrentPage() + 1
+    const newPageSize = params.api.paginationGetPageSize()
+    
+    if (newPage !== currentPage || newPageSize !== pageSize) {
+      setCurrentPage(newPage)
+      setPageSize(newPageSize)
+      fetchUsers(newPage, newPageSize)
+    }
+  }, [currentPage, pageSize, fetchUsers])
+
+  const onFilterTextBoxChanged = useCallback((e) => {
+    const value = e.target.value
+    setSearchText(value)
+    setCurrentPage(1) // Reset to first page when searching
+    // Debounce the search by using a timeout
+    const timeoutId = setTimeout(() => {
+      fetchUsers(1, pageSize)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [pageSize, fetchUsers])
 
   const columnDefs = useMemo(() => [
     {
@@ -299,10 +340,6 @@ const UsersList = () => {
     filter: true,
   }), [])
 
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -318,7 +355,7 @@ const UsersList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={fetchUsers} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/users/create')}>
@@ -340,9 +377,11 @@ const UsersList = () => {
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination={true}
-              paginationPageSize={10}
+              paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
-              quickFilterText={searchText}
+              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
+              onPaginationChanged={onPaginationChanged}
+              rowCount={totalRows}
               animateRows={true}
             />
           </div>

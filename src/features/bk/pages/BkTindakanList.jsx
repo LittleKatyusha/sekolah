@@ -105,24 +105,45 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const BkTindakanList = () => {
   const navigate = useNavigate()
+  const gridRef = useRef(null)
   const [rowData, setRowData] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalRows, setTotalRows] = useState(0)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (page = 1, perPage = 10, search = '') => {
     setLoading(true)
-    const { data, error } = await bkTindakanService.getAll()
+    const params = {
+      per_page: perPage,
+      cursor: page,
+    }
+    
+    if (search && search.trim() !== '') {
+      params.search = search.trim()
+    }
+    
+    const { data, error } = await bkTindakanService.getAll(params)
     if (data) {
       setRowData(data.data || [])
+      // Extract pagination info from meta
+      if (data.meta) {
+        setTotalRows(data.meta.total || 0)
+        setCurrentPage(data.meta.current_page || page)
+      }
     } else {
       console.error('Error fetching tindakan:', error)
       showError('Gagal mengambil data tindakan')
     }
     setLoading(false)
-  }
+  }, [])
 
+  // Initial load
   useEffect(() => {
-    fetchData()
+    fetchData(currentPage, pageSize, searchText)
   }, [])
 
   const handleEdit = (data) => {
@@ -139,7 +160,7 @@ const BkTindakanList = () => {
       const { error } = await bkTindakanService.delete(data.id)
       if (!error) {
         showSuccess('Tindakan berhasil dihapus!')
-        fetchData()
+        fetchData(currentPage, pageSize, searchText)
       } else {
         showError('Gagal menghapus tindakan')
       }
@@ -151,7 +172,11 @@ const BkTindakanList = () => {
       field: 'id',
       headerName: 'No',
       width: 70,
-      valueGetter: (params) => params.node.rowIndex + 1,
+      valueGetter: (params) => {
+        // Calculate row number based on current page and index
+        const startIndex = (currentPage - 1) * pageSize
+        return startIndex + params.node.rowIndex + 1
+      },
       sortable: false,
       filter: false
     },
@@ -199,7 +224,7 @@ const BkTindakanList = () => {
         )
       }
     }
-  ], [])
+  ], [currentPage, pageSize])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -208,8 +233,32 @@ const BkTindakanList = () => {
   }), [])
 
   const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
+    const value = e.target.value
+    setSearchText(value)
+    // Debounce search to avoid too many API calls
+    setTimeout(() => {
+      setCurrentPage(1) // Reset to first page on search
+      fetchData(1, pageSize, value)
+    }, 300)
+  }, [pageSize, fetchData])
+
+  const onPaginationChanged = useCallback((params) => {
+    if (params.api) {
+      const newPage = params.api.paginationGetCurrentPage() + 1 // AG Grid uses 0-based index
+      const newPageSize = params.api.paginationGetPageSize()
+      
+      // Only fetch if page or page size actually changed
+      if (newPage !== currentPage || newPageSize !== pageSize) {
+        setPageSize(newPageSize)
+        setCurrentPage(newPage)
+        fetchData(newPage, newPageSize, searchText)
+      }
+    }
+  }, [currentPage, pageSize, searchText, fetchData])
+
+  const handleRefresh = useCallback(() => {
+    fetchData(currentPage, pageSize, searchText)
+  }, [currentPage, pageSize, searchText, fetchData])
 
   return (
     <div className="space-y-6">
@@ -226,7 +275,7 @@ const BkTindakanList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={fetchData} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/bk/tindakan/create')}>
@@ -244,14 +293,19 @@ const BkTindakanList = () => {
         ) : (
           <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
             <AgGridReact
+              ref={gridRef}
               rowData={rowData}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination={true}
-              paginationPageSize={10}
+              paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
-              quickFilterText={searchText}
+              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
+              onPaginationChanged={onPaginationChanged}
               animateRows={true}
+              suppressPaginationPanel={false}
+              cacheBlockSize={pageSize}
+              rowModelType="clientSide"
             />
           </div>
         )}

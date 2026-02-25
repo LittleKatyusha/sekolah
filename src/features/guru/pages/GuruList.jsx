@@ -108,22 +108,62 @@ const GuruList = () => {
   const [rowData, setRowData] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalRows, setTotalRows] = useState(0)
+  const [cursor, setCursor] = useState(null)
 
-  const fetchGuru = async () => {
+  const fetchGuru = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText, cursorValue = null) => {
     setLoading(true)
-    const { data, error } = await guruService.getAll()
+    
+    const params = {
+      per_page: perPage,
+      page: page
+    }
+    
+    // Add search parameter if provided
+    if (searchQuery && searchQuery.trim()) {
+      params.search = searchQuery.trim()
+    }
+    
+    // Add cursor for pagination if provided
+    if (cursorValue) {
+      params.cursor = cursorValue
+    }
+    
+    const { data, error } = await guruService.getAll(params)
+    
     if (data) {
       setRowData(data.data || [])
+      // Update pagination info from meta
+      if (data.meta) {
+        setTotalRows(data.meta.total || 0)
+        setCurrentPage(data.meta.current_page || page)
+        setCursor(data.meta.next_cursor || null)
+      }
     } else {
       console.error('Error fetching guru:', error)
       showError('Gagal mengambil data guru')
     }
+    
     setLoading(false)
-  }
+  }, [pageSize, searchText])
 
+  // Initial fetch
   useEffect(() => {
-    fetchGuru()
+    fetchGuru(1, pageSize)
   }, [])
+
+  // Handle search with debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchGuru(1, pageSize, searchText, null)
+    }, 300)
+    
+    return () => clearTimeout(timeoutId)
+  }, [searchText, pageSize, fetchGuru])
 
   const handleEdit = (data) => {
     navigate(`/guru/${data.id}/edit`)
@@ -139,7 +179,8 @@ const GuruList = () => {
       const { error } = await guruService.delete(data.id)
       if (!error) {
         showSuccess(`${data.nama} berhasil dihapus!`)
-        fetchGuru()
+        // Refresh current page after delete
+        fetchGuru(currentPage, pageSize)
       } else {
         showError('Gagal menghapus guru')
       }
@@ -168,6 +209,21 @@ const GuruList = () => {
     }
     return pendidikanMap[value] || value
   }
+
+  // Handle pagination changes from AgGrid
+  const onPaginationChanged = useCallback((params) => {
+    if (params.api) {
+      const newPage = params.api.paginationGetCurrentPage() + 1 // AgGrid uses 0-based index
+      const newPageSize = params.api.paginationGetPageSize()
+      
+      // Only fetch if page or page size actually changed
+      if (newPage !== currentPage || newPageSize !== pageSize) {
+        setPageSize(newPageSize)
+        setCurrentPage(newPage)
+        fetchGuru(newPage, newPageSize, searchText)
+      }
+    }
+  }, [currentPage, pageSize, searchText, fetchGuru])
 
   const columnDefs = useMemo(() => [
     {
@@ -276,6 +332,10 @@ const GuruList = () => {
     setSearchText(e.target.value)
   }, [])
 
+  const handleRefresh = useCallback(() => {
+    fetchGuru(currentPage, pageSize, searchText)
+  }, [currentPage, pageSize, searchText, fetchGuru])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -291,7 +351,7 @@ const GuruList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={fetchGuru} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/guru/create')}>
@@ -313,10 +373,13 @@ const GuruList = () => {
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination={true}
-              paginationPageSize={10}
+              paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
-              quickFilterText={searchText}
+              onPaginationChanged={onPaginationChanged}
+              rowCount={totalRows}
               animateRows={true}
+              suppressPaginationPanel={false}
+              cacheBlockSize={pageSize}
             />
           </div>
         )}

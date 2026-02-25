@@ -15,6 +15,11 @@ const ActivityLogsList = () => {
   const [searchText, setSearchText] = useState('')
   const gridRef = useRef()
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(15)
+  const [totalRows, setTotalRows] = useState(0)
+
   // Detail modal state
   const [selectedLog, setSelectedLog] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -28,48 +33,65 @@ const ActivityLogsList = () => {
   const [activeFilters, setActiveFilters] = useState([])
 
   // Fetch with filters
-  const fetchActivityLogs = async (filters = {}) => {
+  const fetchActivityLogs = useCallback(async (filters = {}, page = currentPage, size = pageSize) => {
     setLoading(true)
-    const { data, error } = await activityLogsService.getAll(filters)
+    const params = {
+      page: page,
+      per_page: size,
+      ...filters
+    }
+    
+    const { data, error } = await activityLogsService.getAll(params)
     if (data) {
       const logs = Array.isArray(data) ? data : (data.data || [])
       setRowData(logs)
+      setTotalRows(data.meta?.total || logs.length || 0)
     } else {
       console.error('Error fetching activity logs:', error)
       showError('Gagal mengambil data activity logs')
     }
     setLoading(false)
-  }
+  }, [currentPage, pageSize])
 
-  const fetchByUser = async (userId) => {
+  const fetchByUser = useCallback(async (userId, page = currentPage, size = pageSize) => {
     if (!userId) return
     setLoading(true)
-    const { data, error } = await activityLogsService.getByUser(userId)
+    const params = {
+      page: page,
+      per_page: size
+    }
+    const { data, error } = await activityLogsService.getByUser(userId, params)
     if (data) {
       const logs = Array.isArray(data) ? data : (data.data || [])
       setRowData(logs)
+      setTotalRows(data.meta?.total || logs.length || 0)
       showSuccess(`Data filtered by user ID: ${userId}`)
     } else {
       console.error('Error fetching activity logs by user:', error)
       showError('Gagal mengambil data activity logs by user')
     }
     setLoading(false)
-  }
+  }, [currentPage, pageSize])
 
-  const fetchByModule = async (module) => {
+  const fetchByModule = useCallback(async (module, page = currentPage, size = pageSize) => {
     if (!module) return
     setLoading(true)
-    const { data, error } = await activityLogsService.getByModule(module)
+    const params = {
+      page: page,
+      per_page: size
+    }
+    const { data, error } = await activityLogsService.getByModule(module, params)
     if (data) {
       const logs = Array.isArray(data) ? data : (data.data || [])
       setRowData(logs)
+      setTotalRows(data.meta?.total || logs.length || 0)
       showSuccess(`Data filtered by module: ${module}`)
     } else {
       console.error('Error fetching activity logs by module:', error)
       showError('Gagal mengambil data activity logs by module')
     }
     setLoading(false)
-  }
+  }, [currentPage, pageSize])
 
   useEffect(() => {
     fetchActivityLogs()
@@ -148,11 +170,13 @@ const ActivityLogsList = () => {
     if (dateRangeFilter) active.push({ type: 'date_range', value: dateRangeFilter, label: `Range: ${dateRangeFilter}` })
     setActiveFilters(active)
 
+    setCurrentPage(1) // Reset to first page when applying filters
+
     // Use specific endpoints for user/module filters
     if (userIdFilter && !moduleFilter) {
-      await fetchByUser(userIdFilter)
+      await fetchByUser(userIdFilter, 1, pageSize)
     } else if (moduleFilter && !userIdFilter) {
-      await fetchByModule(moduleFilter)
+      await fetchByModule(moduleFilter, 1, pageSize)
     } else {
       const filters = {}
       if (fromDateFilter) filters.from_date = fromDateFilter
@@ -161,9 +185,9 @@ const ActivityLogsList = () => {
       if (searchText) filters.search = searchText
       
       if (userIdFilter) {
-        await fetchByUser(userIdFilter)
+        await fetchByUser(userIdFilter, 1, pageSize)
       } else {
-        await fetchActivityLogs(filters)
+        await fetchActivityLogs(filters, 1, pageSize)
       }
     }
   }
@@ -176,7 +200,8 @@ const ActivityLogsList = () => {
     setDateRangeFilter('')
     setSearchText('')
     setActiveFilters([])
-    fetchActivityLogs()
+    setCurrentPage(1) // Reset to first page when clearing filters
+    fetchActivityLogs({}, 1, pageSize)
   }
 
   const removeFilter = (filterType) => {
@@ -203,6 +228,61 @@ const ActivityLogsList = () => {
       handleApplyFilters()
     }, 0)
   }
+
+  const handleRefresh = () => {
+    if (userIdFilter) {
+      fetchByUser(userIdFilter, currentPage, pageSize)
+    } else if (moduleFilter) {
+      fetchByModule(moduleFilter, currentPage, pageSize)
+    } else {
+      const filters = {}
+      if (fromDateFilter) filters.from_date = fromDateFilter
+      if (toDateFilter) filters.to_date = toDateFilter
+      if (dateRangeFilter) filters.date_range = dateRangeFilter
+      if (searchText) filters.search = searchText
+      fetchActivityLogs(filters, currentPage, pageSize)
+    }
+  }
+
+  const onPaginationChanged = useCallback((params) => {
+    const newPage = params.api.paginationGetCurrentPage() + 1
+    const newPageSize = params.api.paginationGetPageSize()
+    
+    if (newPage !== currentPage || newPageSize !== pageSize) {
+      setCurrentPage(newPage)
+      setPageSize(newPageSize)
+      
+      // Fetch data with new pagination
+      if (userIdFilter) {
+        fetchByUser(userIdFilter, newPage, newPageSize)
+      } else if (moduleFilter) {
+        fetchByModule(moduleFilter, newPage, newPageSize)
+      } else {
+        const filters = {}
+        if (fromDateFilter) filters.from_date = fromDateFilter
+        if (toDateFilter) filters.to_date = toDateFilter
+        if (dateRangeFilter) filters.date_range = dateRangeFilter
+        if (searchText) filters.search = searchText
+        fetchActivityLogs(filters, newPage, newPageSize)
+      }
+    }
+  }, [currentPage, pageSize, userIdFilter, moduleFilter, fromDateFilter, toDateFilter, dateRangeFilter, searchText, fetchByUser, fetchByModule, fetchActivityLogs])
+
+  const onFilterTextBoxChanged = useCallback((e) => {
+    const value = e.target.value
+    setSearchText(value)
+    setCurrentPage(1) // Reset to first page when searching
+    // Debounce the search by using a timeout
+    const timeoutId = setTimeout(() => {
+      const filters = {}
+      if (fromDateFilter) filters.from_date = fromDateFilter
+      if (toDateFilter) filters.to_date = toDateFilter
+      if (dateRangeFilter) filters.date_range = dateRangeFilter
+      if (value) filters.search = value
+      fetchActivityLogs(filters, 1, pageSize)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [pageSize, fromDateFilter, toDateFilter, dateRangeFilter, fetchActivityLogs])
 
   const columnDefs = useMemo(() => [
     {
@@ -328,10 +408,6 @@ const ActivityLogsList = () => {
     filter: true,
   }), [])
 
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -347,7 +423,7 @@ const ActivityLogsList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={() => fetchActivityLogs()} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
         </div>
@@ -458,9 +534,11 @@ const ActivityLogsList = () => {
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination={true}
-              paginationPageSize={15}
+              paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 15, 25, 50, 100]}
-              quickFilterText={searchText}
+              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
+              onPaginationChanged={onPaginationChanged}
+              rowCount={totalRows}
               animateRows={true}
             />
           </div>
