@@ -59,6 +59,15 @@ const BkWaliList = lazy(() => import('./features/bk/pages/BkWaliList'))
 const BkWaliForm = lazy(() => import('./features/bk/pages/BkWaliForm'))
 const BkWaliDetail = lazy(() => import('./features/bk/pages/BkWaliDetail'))
 
+// Perpustakaan
+const Perpustakaan = lazy(() => import('./pages/Perpustakaan'))
+const BukuList = lazy(() => import('./features/perpustakaan/pages/BukuList'))
+const BukuForm = lazy(() => import('./features/perpustakaan/pages/BukuForm'))
+const BukuDetail = lazy(() => import('./features/perpustakaan/pages/BukuDetail'))
+const PeminjamanList = lazy(() => import('./features/perpustakaan/pages/PeminjamanList'))
+const PeminjamanForm = lazy(() => import('./features/perpustakaan/pages/PeminjamanForm'))
+const PeminjamanDetail = lazy(() => import('./features/perpustakaan/pages/PeminjamanDetail'))
+
 // Mapel routes
 const MapelList = lazy(() => import('./features/mapel/pages/MapelList'))
 const MapelForm = lazy(() => import('./features/mapel/pages/MapelForm'))
@@ -111,8 +120,24 @@ const TitleUpdater = () => {
       '/admin/activity-logs': 'Activity Logs',
       '/admin/menus': 'Manajemen Menu',
     }
+
+    const path = location.pathname
+    let title = titles[path]
     
-    const title = titles[location.pathname] || 'Admin Dashboard'
+    // Handle perpustakaan routes
+    if (!title) {
+      if (path === '/perpustakaan') title = 'Perpustakaan'
+      else if (path === '/perpustakaan/buku') title = 'Daftar Buku'
+      else if (path === '/perpustakaan/buku/create') title = 'Tambah Buku'
+      else if (path.startsWith('/perpustakaan/buku/') && path.endsWith('/edit')) title = 'Edit Buku'
+      else if (path.startsWith('/perpustakaan/buku/')) title = 'Detail Buku'
+      else if (path === '/perpustakaan/peminjaman') title = 'Daftar Peminjaman'
+      else if (path === '/perpustakaan/peminjaman/create') title = 'Tambah Peminjaman'
+      else if (path.startsWith('/perpustakaan/peminjaman/') && path.endsWith('/edit')) title = 'Edit Peminjaman'
+      else if (path.startsWith('/perpustakaan/peminjaman/')) title = 'Detail Peminjaman'
+      else title = 'Admin Dashboard'
+    }
+    
     document.title = `${title} | Admin Dashboard`
   }, [location.pathname])
   
@@ -388,7 +413,18 @@ function App() {
               <Route path="/bk/wali/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliForm /></RoleGuard>} />
               <Route path="/bk/wali/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliDetail /></RoleGuard>} />
               <Route path="/bk/wali/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliForm /></RoleGuard>} />
-              
+
+              {/* Perpustakaan Routes */}
+              <Route path="/perpustakaan" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><Perpustakaan /></RoleGuard>} />
+              <Route path="/perpustakaan/buku" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuList /></RoleGuard>} />
+              <Route path="/perpustakaan/buku/create" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuForm /></RoleGuard>} />
+              <Route path="/perpustakaan/buku/:id" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuDetail /></RoleGuard>} />
+              <Route path="/perpustakaan/buku/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuForm /></RoleGuard>} />
+              <Route path="/perpustakaan/peminjaman" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanList /></RoleGuard>} />
+              <Route path="/perpustakaan/peminjaman/create" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanForm /></RoleGuard>} />
+              <Route path="/perpustakaan/peminjaman/:id" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanDetail /></RoleGuard>} />
+              <Route path="/perpustakaan/peminjaman/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanForm /></RoleGuard>} />
+
               {/* Admin only routes - Role 1 */}
               <Route
                 path="/users"
