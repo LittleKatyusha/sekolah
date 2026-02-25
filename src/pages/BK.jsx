@@ -1,15 +1,78 @@
-import React from 'react'
-import Card from '../components/ui/Card'
+import { useState, useEffect } from 'react'
+import {
+  Tag, FolderOpen, Calendar, CheckCircle,
+  ClipboardList, Paperclip, Users,
+  BarChart3
+} from 'lucide-react'
+import { bkKasusService, bkJenisService, bkKategoriService, bkSesiService } from '../features/bk/services/bkService'
+import StatCard from '../components/bk/StatCard'
+import NavigationCard from '../components/bk/NavigationCard'
 
 const BK = () => {
+  const [stats, setStats] = useState({ kasus: '-', sesi: '-', jenis: '-', kategori: '-' })
+  const [loadingStats, setLoadingStats] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoadingStats(true)
+      try {
+        const [kasusRes, sesiRes, jenisRes, kategoriRes] = await Promise.all([
+          bkKasusService.getAll(),
+          bkSesiService.getAll(),
+          bkJenisService.getAll(),
+          bkKategoriService.getAll(),
+        ])
+        setStats({
+          kasus: kasusRes.data?.data?.length ?? '-',
+          sesi: sesiRes.data?.data?.length ?? '-',
+          jenis: jenisRes.data?.data?.length ?? '-',
+          kategori: kategoriRes.data?.data?.length ?? '-',
+        })
+      } catch (error) {
+        console.error('Failed to fetch BK stats:', error)
+        setStats({ kasus: '-', sesi: '-', jenis: '-', kategori: '-' })
+      }
+      setLoadingStats(false)
+    }
+    fetchStats()
+  }, [])
+
+  const navigationItems = [
+    { icon: FolderOpen, title: 'Kasus BK', description: 'Kelola data kasus bimbingan konseling', path: '/bk/kasus', color: 'indigo' },
+    { icon: Calendar, title: 'Sesi Konseling', description: 'Kelola sesi konseling dengan siswa', path: '/bk/sesi', color: 'blue' },
+    { icon: CheckCircle, title: 'Hasil Konseling', description: 'Catat hasil dari proses konseling', path: '/bk/hasil', color: 'green' },
+    { icon: ClipboardList, title: 'Tindakan', description: 'Tindak lanjut dari kasus BK', path: '/bk/tindakan', color: 'orange' },
+    { icon: Tag, title: 'Jenis BK', description: 'Kelola jenis bimbingan konseling', path: '/bk/jenis', color: 'purple' },
+    { icon: BarChart3, title: 'Kategori BK', description: 'Kelola kategori bimbingan konseling', path: '/bk/kategori', color: 'teal' },
+    { icon: Paperclip, title: 'Lampiran', description: 'Kelola file lampiran kasus BK', path: '/bk/lampiran', color: 'pink' },
+    { icon: Users, title: 'Wali BK', description: 'Kelola keterlibatan wali murid', path: '/bk/wali', color: 'amber' },
+  ]
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bimbingan Konseling</h1>
-      <Card>
-        <div className="p-4">
-          <p>Bimbingan Konseling Module - Coming Soon</p>
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bimbingan Konseling</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">Kelola seluruh data bimbingan dan konseling siswa</p>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={FolderOpen} label="Total Kasus" value={stats.kasus} color="indigo" loadingStats={loadingStats} />
+        <StatCard icon={Calendar} label="Total Sesi" value={stats.sesi} color="blue" loadingStats={loadingStats} />
+        <StatCard icon={Tag} label="Total Jenis" value={stats.jenis} color="purple" loadingStats={loadingStats} />
+        <StatCard icon={BarChart3} label="Total Kategori" value={stats.kategori} color="teal" loadingStats={loadingStats} />
+      </div>
+
+      {/* Navigation Cards */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modul BK</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {navigationItems.map((item) => (
+            <NavigationCard key={item.path} {...item} />
+          ))}
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

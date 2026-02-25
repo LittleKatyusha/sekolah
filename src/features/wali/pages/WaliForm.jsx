@@ -1,0 +1,352 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Save } from 'lucide-react';
+import Card from '../../../components/ui/Card';
+import Button from '../../../components/ui/Button';
+import Input from '../../../components/ui/Input';
+import { waliService } from '../services/waliService';
+import referenceService from '../../../services/referenceService';
+import { showSuccess, showError } from '../../../utils/sweetalert';
+import { usePageTitle } from '../../../hooks/usePageTitle';
+
+const WaliForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditMode = !!id;
+  const pageTitle = isEditMode ? 'Edit Wali' : 'Tambah Wali';
+  usePageTitle(pageTitle);
+
+  const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
+
+  // Dropdown options state
+  const [jenisKelaminOptions, setJenisKelaminOptions] = useState([]);
+  const [pendidikanOptions, setPendidikanOptions] = useState([]);
+  const [pekerjaanOptions, setPekerjaanOptions] = useState([]);
+  const [fetchingOptions, setFetchingOptions] = useState(true);
+
+  const [formData, setFormData] = useState({
+    nama: '',
+    nik: '',
+    jenis_kelamin: '',
+    no_hp: '',
+    alamat: '',
+    pendidikan_terakhir: '',
+    pekerjaan: '',
+    penghasilan: '',
+  });
+
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    fetchDropdownOptions();
+    if (isEditMode) {
+      fetchWali();
+    }
+  }, [id]);
+
+  const fetchDropdownOptions = async () => {
+    setFetchingOptions(true);
+    
+    // Fetch all dropdown options in parallel
+    const [jenisKelaminRes, pendidikanRes, pekerjaanRes] = await Promise.all([
+      referenceService.getReferencesByCategory('jenis_kelamin'),
+      referenceService.getReferencesByCategory('pendidikan_terakhir'),
+      referenceService.getReferencesByCategory('pekerjaan'),
+    ]);
+
+    // Transform API response to options format (kode as value, nama as label)
+    if (jenisKelaminRes.data?.success) {
+      setJenisKelaminOptions(
+        jenisKelaminRes.data.data.map((item) => ({
+          value: item.kode,
+          label: item.nama,
+        }))
+      );
+      // Set default value if options exist and formData is empty
+      if (jenisKelaminRes.data.data.length > 0 && !formData.jenis_kelamin) {
+        setFormData((prev) => ({
+          ...prev,
+          jenis_kelamin: Number(jenisKelaminRes.data.data[0].kode),
+        }));
+      }
+    }
+
+    if (pendidikanRes.data?.success) {
+      setPendidikanOptions(
+        pendidikanRes.data.data.map((item) => ({
+          value: item.kode,
+          label: item.nama,
+        }))
+      );
+    }
+
+    if (pekerjaanRes.data?.success) {
+      setPekerjaanOptions(
+        pekerjaanRes.data.data.map((item) => ({
+          value: item.kode,
+          label: item.nama,
+        }))
+      );
+    }
+
+    setFetchingOptions(false);
+  };
+
+  const fetchWali = async () => {
+    setFetchingData(true);
+    const { data, error } = await waliService.getWaliById(id);
+    if (data) {
+      const wali = data.data;
+      setFormData({
+        nama: wali.nama || '',
+        nik: wali.nik || '',
+        // API returns integer IDs for these fields
+        jenis_kelamin: wali.jenis_kelamin || '',
+        no_hp: wali.no_hp || '',
+        alamat: wali.alamat || '',
+        pendidikan_terakhir: wali.pendidikan_terakhir || '',
+        pekerjaan: wali.pekerjaan || '',
+        penghasilan: wali.penghasilan || '',
+      });
+    } else {
+      showError('Gagal mengambil data wali');
+      navigate('/wali');
+    }
+    setFetchingData(false);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    // Convert select values to integers for reference fields
+    const fieldsToConvert = ['jenis_kelamin', 'pendidikan_terakhir', 'pekerjaan'];
+    const newValue = fieldsToConvert.includes(name) ? (value ? Number(value) : '') : value;
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.nama) newErrors.nama = 'Nama wajib diisi';
+    if (!formData.nik) newErrors.nik = 'NIK wajib diisi';
+    if (!formData.jenis_kelamin) newErrors.jenis_kelamin = 'Jenis kelamin wajib dipilih';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    setLoading(true);
+
+    let result;
+    if (isEditMode) {
+      result = await waliService.updateWali(id, formData);
+    } else {
+      result = await waliService.createWali(formData);
+    }
+
+    const { error } = result;
+
+    if (!error) {
+      showSuccess(`Wali berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`);
+      navigate('/wali');
+    } else {
+      console.error(error);
+      if (error.errors) {
+        setErrors(error.errors);
+      } else {
+        showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} wali`);
+      }
+    }
+    setLoading(false);
+  };
+
+  // Show loading when either dropdown options or data is being fetched
+  const isLoading = fetchingOptions || fetchingData;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="secondary" onClick={() => navigate('/wali')}>
+          <ArrowLeft size={18} className="mr-2" />
+          Kembali
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {pageTitle}
+        </h1>
+      </div>
+
+      <Card>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Nama */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nama Lengkap <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  name="nama"
+                  value={formData.nama}
+                  onChange={handleChange}
+                  placeholder="Nama Lengkap Wali"
+                  error={errors.nama}
+                />
+              </div>
+
+              {/* NIK */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  NIK <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  name="nik"
+                  value={formData.nik}
+                  onChange={handleChange}
+                  placeholder="Nomor Induk Kependudukan"
+                  error={errors.nik}
+                />
+              </div>
+
+              {/* Jenis Kelamin */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Jenis Kelamin <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="jenis_kelamin"
+                  value={formData.jenis_kelamin}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  {jenisKelaminOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.jenis_kelamin && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {Array.isArray(errors.jenis_kelamin) ? errors.jenis_kelamin[0] : errors.jenis_kelamin}
+                  </p>
+                )}
+              </div>
+
+              {/* No HP */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  No. HP
+                </label>
+                <Input
+                  name="no_hp"
+                  value={formData.no_hp}
+                  onChange={handleChange}
+                  placeholder="08xxxxxxxxxx"
+                  error={errors.no_hp}
+                />
+              </div>
+              
+              {/* Pendidikan Terakhir */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Pendidikan Terakhir
+                </label>
+                <select
+                  name="pendidikan_terakhir"
+                  value={formData.pendidikan_terakhir}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Pilih Pendidikan</option>
+                    {pendidikanOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                {errors.pendidikan_terakhir && <p className="mt-1 text-sm text-red-500">{errors.pendidikan_terakhir}</p>}
+              </div>
+
+              {/* Pekerjaan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Pekerjaan
+                </label>
+                <select
+                  name="pekerjaan"
+                  value={formData.pekerjaan}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Pilih Pekerjaan</option>
+                  {pekerjaanOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.pekerjaan && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {Array.isArray(errors.pekerjaan) ? errors.pekerjaan[0] : errors.pekerjaan}
+                  </p>
+                )}
+              </div>
+
+              {/* Penghasilan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Penghasilan
+                </label>
+                <Input
+                  name="penghasilan"
+                  value={formData.penghasilan}
+                  onChange={handleChange}
+                  placeholder="Contoh: 3000000"
+                  error={errors.penghasilan}
+                />
+              </div>
+
+              {/* Alamat */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Alamat
+                </label>
+                <textarea
+                  name="alamat"
+                  value={formData.alamat}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  placeholder="Alamat Lengkap"
+                />
+                {errors.alamat && <p className="mt-1 text-sm text-red-500">{errors.alamat}</p>}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button type="button" variant="secondary" onClick={() => navigate('/wali')}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={loading}>
+                <Save size={18} className="mr-2" />
+                {loading ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+export default WaliForm;
