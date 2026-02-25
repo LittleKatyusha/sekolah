@@ -264,6 +264,34 @@ const Sidebar = ({ isOpen, onClose }) => {
         } else {
           mappedMenus.push(absensiSiswaMenu, absensiGuruMenu)
         }
+
+        // Statically inject Ujian menu
+        const ujianMenu = {
+          name: 'Data Ujian',
+          to: '/akademik/ujian',
+          icon: ClipboardList,
+          id: 'static-ujian',
+          children: []
+        }
+
+        // Find logical position (after Nilai menu or near akademik features)
+        const nilaiIndex = mappedMenus.findIndex(
+          (m) => m.name.toLowerCase().includes('nilai')
+        )
+
+        if (nilaiIndex !== -1) {
+          mappedMenus.splice(nilaiIndex + 1, 0, ujianMenu)
+        } else {
+          // Fallback: add after Absensi Guru or at the end
+          const absensiGuruIndex = mappedMenus.findIndex(
+            (m) => m.id === 'static-absensi-guru'
+          )
+          if (absensiGuruIndex !== -1) {
+            mappedMenus.splice(absensiGuruIndex + 1, 0, ujianMenu)
+          } else {
+            mappedMenus.push(ujianMenu)
+          }
+        }
         
         setNavigation(mappedMenus)
       } catch (err) {

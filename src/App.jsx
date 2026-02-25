@@ -78,6 +78,12 @@ const WaliList = lazy(() => import('./features/wali/pages/WaliList'))
 const WaliDetail = lazy(() => import('./features/wali/pages/WaliDetail'))
 const WaliForm = lazy(() => import('./features/wali/pages/WaliForm'))
 
+// Ujian routes
+const UjianList = lazy(() => import('./features/ujian/pages/UjianList'))
+const UjianForm = lazy(() => import('./features/ujian/pages/UjianForm'))
+const UjianDetail = lazy(() => import('./features/ujian/pages/UjianDetail'))
+const UjianNilai = lazy(() => import('./features/ujian/pages/UjianNilai'))
+
 // Loading component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
@@ -136,6 +142,15 @@ const TitleUpdater = () => {
       else if (path.startsWith('/perpustakaan/peminjaman/') && path.endsWith('/edit')) title = 'Edit Peminjaman'
       else if (path.startsWith('/perpustakaan/peminjaman/')) title = 'Detail Peminjaman'
       else title = 'Admin Dashboard'
+    }
+
+    // Handle ujian routes
+    if (!title) {
+      if (path === '/akademik/ujian') title = 'Data Ujian'
+      else if (path === '/akademik/ujian/create') title = 'Tambah Ujian'
+      else if (path.startsWith('/akademik/ujian/') && path.endsWith('/nilai')) title = 'Nilai Ujian'
+      else if (path.startsWith('/akademik/ujian/') && path.endsWith('/edit')) title = 'Edit Ujian'
+      else if (path.startsWith('/akademik/ujian/')) title = 'Detail Ujian'
     }
     
     document.title = `${title} | Admin Dashboard`
@@ -360,6 +375,48 @@ function App() {
                 element={
                   <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
                     <Nilai />
+                  </RoleGuard>
+                }
+              />
+
+              {/* Ujian: Admin (1), Guru (2) */}
+              <Route
+                path="/akademik/ujian"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <UjianList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/akademik/ujian/create"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <UjianForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/akademik/ujian/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <UjianDetail />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/akademik/ujian/:id/edit"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <UjianForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/akademik/ujian/:id/nilai"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <UjianNilai />
                   </RoleGuard>
                 }
               />
