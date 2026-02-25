@@ -24,11 +24,40 @@ const Siswa = lazy(() => import('./pages/Siswa'))
 const Kelas = lazy(() => import('./pages/Kelas'))
 const Guru = lazy(() => import('./pages/Guru'))
 const Absensi = lazy(() => import('./pages/Absensi'))
+const AbsensiSiswaList = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaList'))
+const AbsensiSiswaForm = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaForm'))
+const AbsensiSiswaDetail = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaDetail'))
 const AbsensiGuruList = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruList'))
 const AbsensiGuruForm = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruForm'))
 const AbsensiGuruDetail = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruDetail'))
 const Nilai = lazy(() => import('./pages/Nilai'))
 const BK = lazy(() => import('./pages/BK'))
+
+// BK Module
+const BkJenisList = lazy(() => import('./features/bk/pages/BkJenisList'))
+const BkJenisForm = lazy(() => import('./features/bk/pages/BkJenisForm'))
+const BkJenisDetail = lazy(() => import('./features/bk/pages/BkJenisDetail'))
+const BkKategoriList = lazy(() => import('./features/bk/pages/BkKategoriList'))
+const BkKategoriForm = lazy(() => import('./features/bk/pages/BkKategoriForm'))
+const BkKategoriDetail = lazy(() => import('./features/bk/pages/BkKategoriDetail'))
+const BkKasusList = lazy(() => import('./features/bk/pages/BkKasusList'))
+const BkKasusForm = lazy(() => import('./features/bk/pages/BkKasusForm'))
+const BkKasusDetail = lazy(() => import('./features/bk/pages/BkKasusDetail'))
+const BkSesiList = lazy(() => import('./features/bk/pages/BkSesiList'))
+const BkSesiForm = lazy(() => import('./features/bk/pages/BkSesiForm'))
+const BkSesiDetail = lazy(() => import('./features/bk/pages/BkSesiDetail'))
+const BkHasilList = lazy(() => import('./features/bk/pages/BkHasilList'))
+const BkHasilForm = lazy(() => import('./features/bk/pages/BkHasilForm'))
+const BkHasilDetail = lazy(() => import('./features/bk/pages/BkHasilDetail'))
+const BkTindakanList = lazy(() => import('./features/bk/pages/BkTindakanList'))
+const BkTindakanForm = lazy(() => import('./features/bk/pages/BkTindakanForm'))
+const BkTindakanDetail = lazy(() => import('./features/bk/pages/BkTindakanDetail'))
+const BkLampiranList = lazy(() => import('./features/bk/pages/BkLampiranList'))
+const BkLampiranForm = lazy(() => import('./features/bk/pages/BkLampiranForm'))
+const BkLampiranDetail = lazy(() => import('./features/bk/pages/BkLampiranDetail'))
+const BkWaliList = lazy(() => import('./features/bk/pages/BkWaliList'))
+const BkWaliForm = lazy(() => import('./features/bk/pages/BkWaliForm'))
+const BkWaliDetail = lazy(() => import('./features/bk/pages/BkWaliDetail'))
 
 // Mapel routes
 const MapelList = lazy(() => import('./features/mapel/pages/MapelList'))
@@ -66,9 +95,18 @@ const TitleUpdater = () => {
       '/mapel': 'Mata Pelajaran',
       '/wali': 'Wali Murid',
       '/absensi': 'Absensi',
+      '/absensi-siswa': 'Absensi Siswa',
       '/absensi-guru': 'Absensi Guru',
       '/nilai': 'Nilai',
       '/bk': 'Bimbingan Konseling',
+      '/bk/jenis': 'Jenis BK',
+      '/bk/kategori': 'Kategori BK',
+      '/bk/kasus': 'Kasus BK',
+      '/bk/sesi': 'Sesi Konseling',
+      '/bk/hasil': 'Hasil Konseling',
+      '/bk/tindakan': 'Tindakan BK',
+      '/bk/lampiran': 'Lampiran BK',
+      '/bk/wali': 'Wali BK',
       '/unauthorized': 'Unauthorized',
       '/admin/activity-logs': 'Activity Logs',
       '/admin/menus': 'Manajemen Menu',
@@ -223,6 +261,40 @@ function App() {
                 }
               />
               
+              {/* Absensi Siswa: Admin (1), Guru (2) */}
+              <Route
+                path="/absensi-siswa"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiSiswaList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/absensi-siswa/tambah"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiSiswaForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/absensi-siswa/edit/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiSiswaForm />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/absensi-siswa/:id"
+                element={
+                  <RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}>
+                    <AbsensiSiswaDetail />
+                  </RoleGuard>
+                }
+              />
+
               {/* Absensi Guru: Admin (1), Guru (2) */}
               <Route
                 path="/absensi-guru"
@@ -267,15 +339,55 @@ function App() {
                 }
               />
               
-              {/* BK: Admin (1), Guru (2), Staff (3) */}
-              <Route
-                path="/bk"
-                element={
-                  <RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}>
-                    <BK />
-                  </RoleGuard>
-                }
-              />
+              {/* BK Module - Dashboard */}
+              <Route path="/bk" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BK /></RoleGuard>} />
+
+              {/* BK Jenis */}
+              <Route path="/bk/jenis" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisList /></RoleGuard>} />
+              <Route path="/bk/jenis/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisForm /></RoleGuard>} />
+              <Route path="/bk/jenis/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisDetail /></RoleGuard>} />
+              <Route path="/bk/jenis/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisForm /></RoleGuard>} />
+
+              {/* BK Kategori */}
+              <Route path="/bk/kategori" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriList /></RoleGuard>} />
+              <Route path="/bk/kategori/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriForm /></RoleGuard>} />
+              <Route path="/bk/kategori/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriDetail /></RoleGuard>} />
+              <Route path="/bk/kategori/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriForm /></RoleGuard>} />
+
+              {/* BK Kasus */}
+              <Route path="/bk/kasus" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusList /></RoleGuard>} />
+              <Route path="/bk/kasus/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusForm /></RoleGuard>} />
+              <Route path="/bk/kasus/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusDetail /></RoleGuard>} />
+              <Route path="/bk/kasus/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusForm /></RoleGuard>} />
+
+              {/* BK Sesi */}
+              <Route path="/bk/sesi" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiList /></RoleGuard>} />
+              <Route path="/bk/sesi/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiForm /></RoleGuard>} />
+              <Route path="/bk/sesi/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiDetail /></RoleGuard>} />
+              <Route path="/bk/sesi/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiForm /></RoleGuard>} />
+
+              {/* BK Hasil */}
+              <Route path="/bk/hasil" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilList /></RoleGuard>} />
+              <Route path="/bk/hasil/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilForm /></RoleGuard>} />
+              <Route path="/bk/hasil/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilDetail /></RoleGuard>} />
+              <Route path="/bk/hasil/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilForm /></RoleGuard>} />
+
+              {/* BK Tindakan */}
+              <Route path="/bk/tindakan" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanList /></RoleGuard>} />
+              <Route path="/bk/tindakan/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanForm /></RoleGuard>} />
+              <Route path="/bk/tindakan/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanDetail /></RoleGuard>} />
+              <Route path="/bk/tindakan/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanForm /></RoleGuard>} />
+
+              {/* BK Lampiran - NO edit route (no update endpoint) */}
+              <Route path="/bk/lampiran" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkLampiranList /></RoleGuard>} />
+              <Route path="/bk/lampiran/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkLampiranForm /></RoleGuard>} />
+              <Route path="/bk/lampiran/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkLampiranDetail /></RoleGuard>} />
+
+              {/* BK Wali */}
+              <Route path="/bk/wali" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliList /></RoleGuard>} />
+              <Route path="/bk/wali/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliForm /></RoleGuard>} />
+              <Route path="/bk/wali/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliDetail /></RoleGuard>} />
+              <Route path="/bk/wali/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliForm /></RoleGuard>} />
               
               {/* Admin only routes - Role 1 */}
               <Route

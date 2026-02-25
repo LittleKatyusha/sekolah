@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Clock,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  UserCheck
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
@@ -235,6 +236,15 @@ const Sidebar = ({ isOpen, onClose }) => {
           }
         }
 
+        // Statically inject Absensi Siswa menu
+        const absensiSiswaMenu = {
+          name: 'Absensi Siswa',
+          to: '/absensi-siswa',
+          icon: UserCheck,
+          id: 'static-absensi-siswa',
+          children: []
+        }
+
         // Statically inject Absensi Guru menu
         const absensiGuruMenu = {
           name: 'Absensi Guru',
@@ -250,9 +260,9 @@ const Sidebar = ({ isOpen, onClose }) => {
         )
 
         if (waliIndex !== -1) {
-          mappedMenus.splice(waliIndex + 1, 0, absensiGuruMenu)
+          mappedMenus.splice(waliIndex + 1, 0, absensiSiswaMenu, absensiGuruMenu)
         } else {
-          mappedMenus.push(absensiGuruMenu)
+          mappedMenus.push(absensiSiswaMenu, absensiGuruMenu)
         }
         
         setNavigation(mappedMenus)
