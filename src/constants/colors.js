@@ -1,0 +1,10 @@
+export const colorStyles = {
+  indigo: { bg: 'bg-indigo-50 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', hover: 'hover:border-indigo-300 dark:hover:border-indigo-600', groupHover: 'group-hover:text-indigo-600 dark:group-hover:text-indigo-400' },
+  blue: { bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', hover: 'hover:border-blue-300 dark:hover:border-blue-600', groupHover: 'group-hover:text-blue-600 dark:group-hover:text-blue-400' },
+  green: { bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', hover: 'hover:border-green-300 dark:hover:border-green-600', groupHover: 'group-hover:text-green-600 dark:group-hover:text-green-400' },
+  orange: { bg: 'bg-orange-50 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400', hover: 'hover:border-orange-300 dark:hover:border-orange-600', groupHover: 'group-hover:text-orange-600 dark:group-hover:text-orange-400' },
+  purple: { bg: 'bg-purple-50 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400', hover: 'hover:border-purple-300 dark:hover:border-purple-600', groupHover: 'group-hover:text-purple-600 dark:group-hover:text-purple-400' },
+  teal: { bg: 'bg-teal-50 dark:bg-teal-900/30', text: 'text-teal-600 dark:text-teal-400', hover: 'hover:border-teal-300 dark:hover:border-teal-600', groupHover: 'group-hover:text-teal-600 dark:group-hover:text-teal-400' },
+  pink: { bg: 'bg-pink-50 dark:bg-pink-900/30', text: 'text-pink-600 dark:text-pink-400', hover: 'hover:border-pink-300 dark:hover:border-pink-600', groupHover: 'group-hover:text-pink-600 dark:group-hover:text-pink-400' },
+  amber: { bg: 'bg-amber-50 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', hover: 'hover:border-amber-300 dark:hover:border-amber-600', groupHover: 'group-hover:text-amber-600 dark:group-hover:text-amber-400' },
+}
