@@ -8,19 +8,19 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { raporService } from '../services/raporService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { mapelService } from '../../mapel/services/mapelService'
-import { referenceService } from '../../../services/referenceService'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { apiService } from '../../../utils/api'
-
-const SEMESTER_OPTIONS = [
-  { value: '1', label: 'Ganjil' },
-  { value: '2', label: 'Genap' },
-]
 
 const RaporForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester', [
+    { value: '1', label: 'Ganjil' },
+    { value: '2', label: 'Genap' },
+  ])
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -244,7 +244,7 @@ const RaporForm = () => {
                   name="semester"
                   value={formData.semester}
                   onChange={handleChange}
-                  options={SEMESTER_OPTIONS}
+                  options={semesterOptions}
                   placeholder="Pilih semester"
                   error={errors.semester}
                 />

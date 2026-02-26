@@ -7,11 +7,7 @@ import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { pendaftarService, gelombangService } from '../services/ppdbService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const GENDER_OPTIONS = [
-  { value: 'L', label: 'Laki-laki' },
-  { value: 'P', label: 'Perempuan' },
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
@@ -23,6 +19,10 @@ const STATUS_OPTIONS = [
 ]
 
 const PendaftarForm = () => {
+  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin', [
+    { value: 'L', label: 'Laki-laki' },
+    { value: 'P', label: 'Perempuan' },
+  ])
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
@@ -213,7 +213,7 @@ const PendaftarForm = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Jenis Kelamin <span className="text-red-500">*</span>
                 </label>
-                <SearchableSelect name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} options={GENDER_OPTIONS} placeholder="Pilih jenis kelamin" error={errors.jenis_kelamin} />
+                <SearchableSelect name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} options={jenisKelaminOptions} placeholder="Pilih jenis kelamin" error={errors.jenis_kelamin} />
               </div>
 
               <div>

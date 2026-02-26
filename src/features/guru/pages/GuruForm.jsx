@@ -6,28 +6,29 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import { guruService } from '../services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const JENIS_KELAMIN_OPTIONS = [
-  { value: 'Laki-Laki', label: 'Laki-Laki' },
-  { value: 'Perempuan', label: 'Perempuan' }
-]
-
-const PENDIDIKAN_OPTIONS = [
-  { value: 'SD / Sederajat', label: 'SD / Sederajat' },
-  { value: 'SMP / Sederajat', label: 'SMP / Sederajat' },
-  { value: 'SMA / Sederajat', label: 'SMA / Sederajat' },
-  { value: 'Diploma 1 (D1)', label: 'Diploma 1 (D1)' },
-  { value: 'Diploma 2 (D2)', label: 'Diploma 2 (D2)' },
-  { value: 'Diploma 3 (D3)', label: 'Diploma 3 (D3)' },
-  { value: 'Sarjana (S1) / Diploma 4 (D4)', label: 'Sarjana (S1) / Diploma 4 (D4)' },
-  { value: 'Magister (S2)', label: 'Magister (S2)' },
-  { value: 'Doktor (S3)', label: 'Doktor (S3)' }
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const GuruForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: jenisKelaminOptions, loading: loadingJK } = useReferenceOptions('jenis_kelamin', [
+    { value: 'Laki-Laki', label: 'Laki-Laki' },
+    { value: 'Perempuan', label: 'Perempuan' },
+  ])
+
+  const { options: pendidikanOptions, loading: loadingPendidikan } = useReferenceOptions('pendidikan_terakhir', [
+    { value: 'SD / Sederajat', label: 'SD / Sederajat' },
+    { value: 'SMP / Sederajat', label: 'SMP / Sederajat' },
+    { value: 'SMA / Sederajat', label: 'SMA / Sederajat' },
+    { value: 'Diploma 1 (D1)', label: 'Diploma 1 (D1)' },
+    { value: 'Diploma 2 (D2)', label: 'Diploma 2 (D2)' },
+    { value: 'Diploma 3 (D3)', label: 'Diploma 3 (D3)' },
+    { value: 'Sarjana (S1) / Diploma 4 (D4)', label: 'Sarjana (S1) / Diploma 4 (D4)' },
+    { value: 'Magister (S2)', label: 'Magister (S2)' },
+    { value: 'Doktor (S3)', label: 'Doktor (S3)' },
+  ])
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -207,7 +208,7 @@ const GuruForm = () => {
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
-                  {JENIS_KELAMIN_OPTIONS.map(option => (
+                  {jenisKelaminOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -275,7 +276,7 @@ const GuruForm = () => {
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Pilih Pendidikan</option>
-                  {PENDIDIKAN_OPTIONS.map(option => (
+                  {pendidikanOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>

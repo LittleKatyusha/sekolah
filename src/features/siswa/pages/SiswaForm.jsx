@@ -8,20 +8,7 @@ import FileUpload from '../../../components/ui/FileUpload'
 import { siswaService } from '../services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const JENIS_KELAMIN_OPTIONS = [
-  { value: 'Laki-Laki', label: 'Laki-Laki' },
-  { value: 'Perempuan', label: 'Perempuan' }
-]
-
-const AGAMA_OPTIONS = [
-  { value: 'Islam', label: 'Islam' },
-  { value: 'Kristen', label: 'Kristen' },
-  { value: 'Katolik', label: 'Katolik' },
-  { value: 'Hindu', label: 'Hindu' },
-  { value: 'Buddha', label: 'Buddha' },
-  { value: 'Konghucu', label: 'Konghucu' }
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const GOLONGAN_DARAH_OPTIONS = [
   { value: 'A', label: 'A' },
@@ -41,6 +28,20 @@ const SiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin', [
+    { value: '1', label: 'Laki-Laki' },
+    { value: '2', label: 'Perempuan' },
+  ])
+  const { options: agamaOptions } = useReferenceOptions('agama', [
+    { value: '1', label: 'Islam' },
+    { value: '2', label: 'Kristen' },
+    { value: '3', label: 'Katholik' },
+    { value: '4', label: 'Hindu' },
+    { value: '5', label: 'Budha' },
+    { value: '6', label: 'Konghucu' },
+    { value: '7', label: 'Kepercayaan' },
+  ])
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -308,7 +309,7 @@ const SiswaForm = () => {
                     onChange={handleChange}
                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   >
-                    {JENIS_KELAMIN_OPTIONS.map(option => (
+                    {jenisKelaminOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -333,7 +334,7 @@ const SiswaForm = () => {
                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   >
                     <option value="">Pilih Agama</option>
-                    {AGAMA_OPTIONS.map(option => (
+                    {agamaOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>

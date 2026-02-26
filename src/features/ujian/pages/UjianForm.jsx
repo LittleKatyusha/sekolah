@@ -9,24 +9,21 @@ import { ujianService } from '../services/ujianService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const JENIS_OPTIONS = [
-  { value: '1', label: 'PTS (Penilaian Tengah Semester)' },
-  { value: '2', label: 'PAS (Penilaian Akhir Semester)' },
-  { value: '3', label: 'US (Ujian Sekolah)' },
-  { value: '4', label: 'Tryout' },
-  { value: '5', label: 'Lainnya' }
-]
-
-const SEMESTER_OPTIONS = [
-  { value: '1', label: 'Ganjil' },
-  { value: '2', label: 'Genap' }
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const UjianForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: jenisUjianOptions } = useReferenceOptions('jenis_ujian', [
+    { value: '1', label: 'Harian' },
+    { value: '2', label: 'Penilaian Tengah Semester' },
+  ])
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester', [
+    { value: '1', label: 'Ganjil' },
+    { value: '2', label: 'Genap' },
+  ])
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -226,7 +223,7 @@ const UjianForm = () => {
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Pilih jenis ujian</option>
-                  {JENIS_OPTIONS.map(option => (
+                  {jenisUjianOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -280,7 +277,7 @@ const UjianForm = () => {
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Pilih semester</option>
-                  {SEMESTER_OPTIONS.map(option => (
+                  {semesterOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
