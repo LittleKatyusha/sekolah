@@ -148,9 +148,17 @@ const AbsensiGuruList = () => {
   })
   const [showFilter, setShowFilter] = useState(false)
 
-  const fetchAbsensi = async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalRows, setTotalRows] = useState(0)
+
+  const fetchAbsensi = useCallback(async (page = currentPage, size = pageSize) => {
     setLoading(true)
-    const params = {}
+    const params = {
+      page: page,
+      per_page: size
+    }
     
     if (filters.tanggal_mulai) {
       params.tanggal_mulai = filters.tanggal_mulai
@@ -158,20 +166,24 @@ const AbsensiGuruList = () => {
     if (filters.tanggal_akhir) {
       params.tanggal_akhir = filters.tanggal_akhir
     }
+    if (searchText) {
+      params.search = searchText
+    }
 
     const { data, error } = await absensiGuruService.getAbsensiGuru(params)
     if (data) {
       setRowData(data.data || [])
+      setTotalRows(data.meta?.total || data.data?.length || 0)
     } else {
       console.error('Error fetching absensi:', error)
       showError('Gagal mengambil data absensi guru')
     }
     setLoading(false)
-  }
+  }, [filters, searchText, currentPage, pageSize])
 
   useEffect(() => {
     fetchAbsensi()
-  }, [])
+  }, [fetchAbsensi])
 
   const handleDetail = (data) => {
     navigate(`/absensi-guru/${data.id}`)
@@ -207,7 +219,8 @@ const AbsensiGuruList = () => {
   }
 
   const applyFilters = () => {
-    fetchAbsensi()
+    setCurrentPage(1) // Reset to first page when applying filters
+    fetchAbsensi(1, pageSize)
   }
 
   const clearFilters = () => {
@@ -215,8 +228,35 @@ const AbsensiGuruList = () => {
       tanggal_mulai: '',
       tanggal_akhir: ''
     })
-    fetchAbsensi()
+    setCurrentPage(1) // Reset to first page when clearing filters
+    fetchAbsensi(1, pageSize)
   }
+
+  const handleRefresh = () => {
+    fetchAbsensi(currentPage, pageSize)
+  }
+
+  const onPaginationChanged = useCallback((params) => {
+    const newPage = params.api.paginationGetCurrentPage() + 1
+    const newPageSize = params.api.paginationGetPageSize()
+    
+    if (newPage !== currentPage || newPageSize !== pageSize) {
+      setCurrentPage(newPage)
+      setPageSize(newPageSize)
+      fetchAbsensi(newPage, newPageSize)
+    }
+  }, [currentPage, pageSize, fetchAbsensi])
+
+  const onFilterTextBoxChanged = useCallback((e) => {
+    const value = e.target.value
+    setSearchText(value)
+    setCurrentPage(1) // Reset to first page when searching
+    // Debounce the search by using a timeout
+    const timeoutId = setTimeout(() => {
+      fetchAbsensi(1, pageSize)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [pageSize, fetchAbsensi])
 
   const columnDefs = useMemo(() => [
     {
@@ -319,10 +359,6 @@ const AbsensiGuruList = () => {
     filter: true,
   }), [])
 
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -345,7 +381,7 @@ const AbsensiGuruList = () => {
           >
             <Calendar size={18} />
           </Button>
-          <Button onClick={fetchAbsensi} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={handleAdd}>
@@ -403,9 +439,11 @@ const AbsensiGuruList = () => {
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination={true}
-              paginationPageSize={10}
+              paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
-              quickFilterText={searchText}
+              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
+              onPaginationChanged={onPaginationChanged}
+              rowCount={totalRows}
               animateRows={true}
             />
           </div>

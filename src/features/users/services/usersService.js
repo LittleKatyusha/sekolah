@@ -53,11 +53,10 @@ export const usersService = {
   /**
    * Toggle user active status
    * @param {number|string} id - User ID
-   * @param {boolean} is_active - Active status
    * @returns {Promise<{data: any, error: any}>}
    */
-  toggleStatus: async (id, is_active) => {
-    return await apiService.patch(`${BASE_URL}/${id}`, { is_active })
+  toggleStatus: async (id) => {
+    return await apiService.post(`${BASE_URL}/${id}/toggle-active`)
   },
 
   /**
@@ -67,6 +66,17 @@ export const usersService = {
    */
   delete: async (id) => {
     return await apiService.delete(`${BASE_URL}/${id}`)
+  },
+
+  /**
+   * Assign roles to a user
+   * Endpoint: POST /admin/users/{id}/assign-roles
+   * @param {number|string} id - User ID
+   * @param {Object} data - Role assignment data
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  assignRoles: async (id, data) => {
+    return await apiService.post(`${BASE_URL}/${id}/assign-roles`, data)
   },
 }
 

@@ -62,6 +62,25 @@ export const guruService = {
   delete: async (id) => {
     return await apiService.delete(`${BASE_URL}/${id}`)
   },
+
+  /**
+   * Get guru by mapel ID
+   * @param {number|string} mapelId - Mapel ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getByMapel: async (mapelId) => {
+    return await apiService.get(`${BASE_URL}/mapel/${mapelId}`)
+  },
+
+  /**
+   * Get absensi summary for a guru
+   * @param {number|string} id - Guru ID
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getAbsensiSummary: async (id, params = {}) => {
+    return await apiService.get(`${BASE_URL}/${id}/absensi-summary`, { params })
+  },
 }
 
 export default guruService

@@ -115,22 +115,56 @@ const KelasList = () => {
   const [rowData, setRowData] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalRows, setTotalRows] = useState(0)
+  const [cursor, setCursor] = useState(null)
 
-  const fetchKelas = async () => {
+  const fetchKelas = useCallback(async (page = 1, size = pageSize, search = searchText, cursorParam = null) => {
     setLoading(true)
-    const { data, error } = await kelasService.getAll()
+    
+    const params = {
+      per_page: size,
+      page: page
+    }
+    
+    // Add search parameter if provided
+    if (search && search.trim()) {
+      params.search = search.trim()
+    }
+    
+    // Add cursor for pagination if provided
+    if (cursorParam) {
+      params.cursor = cursorParam
+    }
+    
+    const { data, error } = await kelasService.getAll(params)
+    
     if (data) {
       setRowData(data.data || [])
+      // Update pagination info from meta
+      if (data.meta) {
+        setTotalRows(data.meta.total || 0)
+        setCurrentPage(data.meta.current_page || 1)
+        // Store next cursor if available
+        if (data.meta.next_cursor) {
+          setCursor(data.meta.next_cursor)
+        }
+      }
     } else {
       console.error('Error fetching kelas:', error)
       showError('Gagal mengambil data kelas')
     }
+    
     setLoading(false)
-  }
+  }, [pageSize, searchText])
 
+  // Initial load
   useEffect(() => {
-    fetchKelas()
-  }, [])
+    fetchKelas(1, pageSize, searchText)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEdit = (data) => {
     navigate(`/kelas/${data.id}/edit`)
@@ -146,7 +180,7 @@ const KelasList = () => {
       const { error } = await kelasService.delete(data.id)
       if (!error) {
         showSuccess(`${data.nama_kelas} berhasil dihapus!`)
-        fetchKelas()
+        fetchKelas(currentPage, pageSize, searchText)
       } else {
         showError('Gagal menghapus kelas')
       }
@@ -280,8 +314,32 @@ const KelasList = () => {
   }), [])
 
   const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
+    const value = e.target.value
+    setSearchText(value)
+    // Reset to first page when searching
+    setCurrentPage(1)
+    setCursor(null)
+    // Fetch with new search term
+    fetchKelas(1, pageSize, value)
+  }, [fetchKelas, pageSize])
+
+  const onRefresh = useCallback(() => {
+    setCurrentPage(1)
+    setCursor(null)
+    fetchKelas(1, pageSize, searchText)
+  }, [fetchKelas, pageSize, searchText])
+
+  const onPaginationChanged = useCallback((params) => {
+    const newPage = params.api.paginationGetCurrentPage() + 1 // AG Grid uses 0-based index
+    const newPageSize = params.api.paginationGetPageSize()
+    
+    // Only fetch if page or page size actually changed
+    if (newPage !== currentPage || newPageSize !== pageSize) {
+      setPageSize(newPageSize)
+      setCurrentPage(newPage)
+      fetchKelas(newPage, newPageSize, searchText)
+    }
+  }, [currentPage, pageSize, searchText, fetchKelas])
 
   return (
     <div className="space-y-6">
@@ -298,7 +356,7 @@ const KelasList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={fetchKelas} variant="secondary" title="Refresh Data">
+          <Button onClick={onRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/kelas/create')}>
@@ -309,7 +367,7 @@ const KelasList = () => {
       </div>
 
       <Card>
-        {loading ? (
+        {loading && rowData.length === 0 ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
@@ -320,10 +378,13 @@ const KelasList = () => {
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
               pagination={true}
-              paginationPageSize={10}
+              paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
-              quickFilterText={searchText}
+              paginationGetRowCount={totalRows}
+              onPaginationChanged={onPaginationChanged}
               animateRows={true}
+              overlayLoadingTemplate={'<span class="ag-overlay-loading-center">Loading...</span>'}
+              overlayNoRowsTemplate={'<span class="ag-overlay-no-rows-center">Tidak ada data</span>'}
             />
           </div>
         )}

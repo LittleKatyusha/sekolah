@@ -57,6 +57,25 @@ export const absensiGuruService = {
   deleteAbsensiGuru: async (id) => {
     return await apiService.delete(`${BASE_URL}/${id}`)
   },
+
+  /**
+   * Get absensi by guru ID
+   * @param {number|string} guruId - Guru ID
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getByGuru: async (guruId, params = {}) => {
+    return await apiService.get(`${BASE_URL}/guru/${guruId}`, { params })
+  },
+
+  /**
+   * Get absensi summary by guru ID
+   * @param {number|string} guruId - Guru ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getSummaryByGuru: async (guruId) => {
+    return await apiService.get(`${BASE_URL}/guru/${guruId}/summary`)
+  },
 }
 
 export default absensiGuruService

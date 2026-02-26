@@ -32,7 +32,7 @@ const Users = () => {
 
   const fetchUsers = async () => {
     setLoading(true)
-    const { data, error } = await apiService.get('/users')
+    const { data, error } = await apiService.get('/admin/users/')
     if (data) {
       setUsers(data)
     } else {
@@ -62,7 +62,7 @@ const Users = () => {
     const result = await showDeleteConfirm(user.name)
     if (!result.isConfirmed) return
 
-    const { error } = await apiService.delete(`/users/${user.id}`)
+    const { error } = await apiService.delete(`/admin/users/${user.id}`)
     if (!error) {
       setUsers(users.filter(u => u.id !== user.id))
       showSuccess(`${user.name} has been deleted successfully!`, 'Deleted!')
@@ -81,7 +81,7 @@ const Users = () => {
 
     if (editingUser) {
       // Update user
-      const { data: updatedUser, error } = await apiService.put(`/users/${editingUser.id}`, sanitizedData)
+      const { data: updatedUser, error } = await apiService.put(`/admin/users/${editingUser.id}`, sanitizedData)
       if (!error) {
         setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...sanitizedData } : u))
         showSuccess('User updated successfully!', 'Updated!')
@@ -91,7 +91,7 @@ const Users = () => {
       }
     } else {
       // Create user
-      const { data: newUser, error } = await apiService.post('/users', sanitizedData)
+      const { data: newUser, error } = await apiService.post('/admin/users', sanitizedData)
       if (!error) {
         setUsers([...users, { ...sanitizedData, id: users.length + 1 }])
         showSuccess('User created successfully!', 'Created!')

@@ -13,10 +13,7 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronRight,
-  Clock,
-  BookOpen,
-  ClipboardList,
-  UserCheck
+  Clock
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
@@ -190,81 +187,6 @@ const Sidebar = ({ isOpen, onClose }) => {
           .filter(item => item.is_active)
           .map(mapMenuItem)
 
-        // Statically inject Mata Pelajaran menu
-        const mapelMenu = {
-          name: 'Mata Pelajaran',
-          to: '/mapel',
-          icon: BookOpen,
-          id: 'static-mapel',
-          children: []
-        }
-
-        // Find logical position (near Guru or Kelas)
-        const targetIndex = mappedMenus.findIndex(
-          (m) => m.name.toLowerCase().includes('guru') || m.name.toLowerCase().includes('kelas')
-        )
-
-        if (targetIndex !== -1) {
-          mappedMenus.splice(targetIndex + 1, 0, mapelMenu)
-        } else {
-          mappedMenus.push(mapelMenu)
-        }
-
-        // Statically inject Wali menu
-        const waliMenu = {
-          name: 'Wali',
-          to: '/wali',
-          icon: Users,
-          id: 'static-wali',
-          children: []
-        }
-
-        // Find logical position (after Siswa)
-        const siswaIndex = mappedMenus.findIndex(
-          (m) => m.name.toLowerCase().includes('siswa')
-        )
-
-        if (siswaIndex !== -1) {
-          mappedMenus.splice(siswaIndex + 1, 0, waliMenu)
-        } else {
-          // Fallback: If Siswa not found, add it after Mata Pelajaran
-          const mapelIndex = mappedMenus.findIndex((m) => m.id === 'static-mapel');
-          if (mapelIndex !== -1) {
-            mappedMenus.splice(mapelIndex + 1, 0, waliMenu);
-          } else {
-            mappedMenus.push(waliMenu);
-          }
-        }
-
-        // Statically inject Absensi Siswa menu
-        const absensiSiswaMenu = {
-          name: 'Absensi Siswa',
-          to: '/absensi-siswa',
-          icon: UserCheck,
-          id: 'static-absensi-siswa',
-          children: []
-        }
-
-        // Statically inject Absensi Guru menu
-        const absensiGuruMenu = {
-          name: 'Absensi Guru',
-          to: '/absensi-guru',
-          icon: ClipboardList,
-          id: 'static-absensi-guru',
-          children: []
-        }
-
-        // Find logical position (after Wali)
-        const waliIndex = mappedMenus.findIndex(
-          (m) => m.name.toLowerCase() === 'wali'
-        )
-
-        if (waliIndex !== -1) {
-          mappedMenus.splice(waliIndex + 1, 0, absensiSiswaMenu, absensiGuruMenu)
-        } else {
-          mappedMenus.push(absensiSiswaMenu, absensiGuruMenu)
-        }
-        
         setNavigation(mappedMenus)
       } catch (err) {
         console.error('Error fetching menus:', err)

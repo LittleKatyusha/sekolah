@@ -54,6 +54,16 @@ export const mapelService = {
   deleteMapel: async (id) => {
     return await apiService.delete(`${BASE_URL}/${id}`)
   },
+
+  /**
+   * Get gurus assigned to a mapel
+   * Endpoint: GET /mapel/{id}/gurus
+   * @param {number|string} id - Mapel ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getGurusByMapel: async (id) => {
+    return await apiService.get(`${BASE_URL}/${id}/gurus`)
+  },
 }
 
 export default mapelService

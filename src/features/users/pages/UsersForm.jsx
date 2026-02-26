@@ -51,7 +51,7 @@ const UsersForm = () => {
       })
     } else {
       showError('Gagal mengambil data user')
-      navigate('/users')
+      navigate('/admin/users')
     }
     setLoading(false)
   }
@@ -110,7 +110,7 @@ const UsersForm = () => {
 
     if (!error) {
       showSuccess(`User berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
-      navigate('/users')
+      navigate('/admin/users')
     } else {
       console.error(error)
       // Handle server-side validation errors
@@ -126,7 +126,7 @@ const UsersForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="secondary" onClick={() => navigate('/users')}>
+        <Button variant="secondary" onClick={() => navigate('/admin/users')}>
           <ArrowLeft size={18} className="mr-2" />
           Kembali
         </Button>
@@ -224,7 +224,7 @@ const UsersForm = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <Button type="button" variant="secondary" onClick={() => navigate('/users')}>
+            <Button type="button" variant="secondary" onClick={() => navigate('/admin/users')}>
               Batal
             </Button>
             <Button type="submit" disabled={loading}>

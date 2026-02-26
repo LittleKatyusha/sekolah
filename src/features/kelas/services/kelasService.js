@@ -104,6 +104,16 @@ export const kelasService = {
   getSiswa: async (id) => {
     return await apiService.get(`${BASE_URL}/${id}/siswa`)
   },
+
+  /**
+   * Get kelas by tingkat
+   * Endpoint: GET /kelas/tingkat/{tingkat}
+   * @param {number|string} tingkat - Tingkat (e.g., 10, 11, 12)
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getByTingkat: async (tingkat) => {
+    return await apiService.get(`${BASE_URL}/tingkat/${tingkat}`)
+  },
 }
 
 export default kelasService

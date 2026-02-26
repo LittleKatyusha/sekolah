@@ -101,7 +101,7 @@ const DataGrid = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const { data, error } = await apiService.get('/users')
+      const { data, error } = await apiService.get('/admin/users/')
       if (data) {
         setRowData(data)
       } else {

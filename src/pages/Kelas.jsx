@@ -7,9 +7,9 @@ const Kelas = () => {
   return (
     <Routes>
       <Route path="/" element={<KelasList />} />
-      <Route path="/create" element={<KelasForm />} />
-      <Route path="/:id" element={<KelasDetail />} />
-      <Route path="/:id/edit" element={<KelasForm />} />
+      <Route path="create" element={<KelasForm />} />
+      <Route path=":id" element={<KelasDetail />} />
+      <Route path=":id/edit" element={<KelasForm />} />
     </Routes>
   )
 }

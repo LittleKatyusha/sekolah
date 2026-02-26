@@ -22,21 +22,47 @@ export const activityLogsService = {
   },
 
   /**
-   * Filter activity logs by user id
-   * @param {number|string} userId
+   * Delete activity log by ID
+   * @param {number|string} id
    * @returns {Promise<{data: any, error: any}>}
    */
-  getByUser: async (userId) => {
-    return await apiService.get(`${BASE_URL}/user/${userId}`)
+  deleteById: async (id) => {
+    return await apiService.delete(`${BASE_URL}/${id}`)
   },
 
   /**
-   * Filter activity logs by module name
-   * @param {string} module
+   * Filter activity logs by user id
+   * @param {number|string} userId
+   * @param {Object} params - Query parameters for pagination
    * @returns {Promise<{data: any, error: any}>}
    */
-  getByModule: async (module) => {
-    return await apiService.get(`${BASE_URL}/module/${encodeURIComponent(module)}`)
+  getByUser: async (userId, params = {}) => {
+    return await apiService.get(`${BASE_URL}/user/${userId}`, { params })
+  },
+
+  /**
+   * Get list of modules
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getModuleList: async (params = {}) => {
+    return await apiService.get(`${BASE_URL}/module/list`, { params })
+  },
+
+  /**
+   * Clear old activity logs
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  clearOld: async () => {
+    return await apiService.delete(`${BASE_URL}/clear-old`)
+  },
+
+  /**
+   * Get activity logs statistics
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getStatistics: async () => {
+    return await apiService.get(`${BASE_URL}/statistics`)
   },
 }
 
