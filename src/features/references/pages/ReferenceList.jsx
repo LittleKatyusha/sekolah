@@ -7,7 +7,7 @@ import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide
 import { useNavigate } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
-import { menuService } from '../services/menuService'
+import { referenceAdminService } from '../services/referenceAdminService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
@@ -25,10 +25,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
     e.stopPropagation()
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 192
-      })
+      setPosition({ top: rect.bottom + window.scrollY, left: rect.right + window.scrollX - 192 })
     }
     setIsOpen(!isOpen)
   }
@@ -71,7 +68,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
   )
 }
 
-const MenuList = () => {
+const ReferenceList = () => {
   const navigate = useNavigate()
   const [rowData, setRowData] = useState([])
   const [loading, setLoading] = useState(false)
@@ -80,12 +77,12 @@ const MenuList = () => {
   const [pageSize, setPageSize] = useState(10)
   const [totalRows, setTotalRows] = useState(0)
 
-  const fetchMenus = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
+  const fetchData = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
     setLoading(true)
     const params = { per_page: perPage, page }
     if (searchQuery && searchQuery.trim()) params.search = searchQuery.trim()
 
-    const { data, error } = await menuService.getAll(params)
+    const { data, error } = await referenceAdminService.getAll(params)
     if (data) {
       setRowData(data.data || [])
       if (data.meta) {
@@ -93,31 +90,28 @@ const MenuList = () => {
         setCurrentPage(data.meta.current_page || page)
       }
     } else {
-      console.error('Error fetching menus:', error)
-      showError('Gagal mengambil data menu')
+      console.error('Error fetching references:', error)
+      showError('Gagal mengambil data referensi')
     }
     setLoading(false)
   }, [pageSize, searchText])
 
-  useEffect(() => { fetchMenus(1, pageSize) }, [])
+  useEffect(() => { fetchData(1, pageSize) }, [])
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => { fetchMenus(1, pageSize, searchText) }, 300)
+    const timeoutId = setTimeout(() => { fetchData(1, pageSize, searchText) }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, fetchMenus])
-
-  const handleDetail = (data) => navigate(`/admin/menus/${data.id}`)
-  const handleEdit = (data) => navigate(`/admin/menus/${data.id}/edit`)
+  }, [searchText, pageSize, fetchData])
 
   const handleDelete = async (data) => {
-    const result = await showDeleteConfirm(data.nama_menu)
+    const result = await showDeleteConfirm(data.nama)
     if (result.isConfirmed) {
-      const { error } = await menuService.deleteById(data.id)
+      const { error } = await referenceAdminService.delete(data.id)
       if (!error) {
-        showSuccess(`Menu "${data.nama_menu}" berhasil dihapus!`)
-        fetchMenus(currentPage, pageSize)
+        showSuccess(`${data.nama} berhasil dihapus!`)
+        fetchData(currentPage, pageSize)
       } else {
-        showError('Gagal menghapus menu')
+        showError('Gagal menghapus referensi')
       }
     }
   }
@@ -129,97 +123,24 @@ const MenuList = () => {
       if (newPage !== currentPage || newPageSize !== pageSize) {
         setPageSize(newPageSize)
         setCurrentPage(newPage)
-        fetchMenus(newPage, newPageSize, searchText)
+        fetchData(newPage, newPageSize, searchText)
       }
     }
-  }, [currentPage, pageSize, searchText, fetchMenus])
+  }, [currentPage, pageSize, searchText, fetchData])
 
   const columnDefs = useMemo(() => [
+    { field: 'kategori', headerName: 'Kategori', sortable: true, filter: true, width: 180, minWidth: 140 },
+    { field: 'kode', headerName: 'Kode', sortable: true, filter: true, width: 150, minWidth: 120 },
+    { field: 'nama', headerName: 'Nama', sortable: true, filter: true, flex: 1, minWidth: 200 },
+    { field: 'urutan', headerName: 'Urutan', sortable: true, filter: true, width: 100, minWidth: 80 },
     {
-      field: 'nama_menu',
-      headerName: 'Nama Menu',
-      sortable: true,
-      filter: true,
-      flex: 1,
-      minWidth: 200,
-      cellRenderer: (params) => {
-        const depth = params.data?.parent_id ? 1 : 0
-        const prefix = depth > 0 ? '└─ ' : ''
-        return (
-          <span className={depth > 0 ? 'text-gray-600 dark:text-gray-400' : 'font-medium text-gray-900 dark:text-white'}>
-            {prefix}{params.value}
-          </span>
-        )
-      }
-    },
-    {
-      field: 'url',
-      headerName: 'URL',
-      sortable: true,
-      filter: true,
-      width: 200,
-      minWidth: 150,
-      cellRenderer: (params) => params.value ? (
-        <span className="text-blue-600 dark:text-blue-400 font-mono text-sm">{params.value}</span>
-      ) : '-'
-    },
-    {
-      field: 'icon',
-      headerName: 'Icon',
-      sortable: true,
-      filter: true,
-      width: 120,
-      minWidth: 100,
-      cellRenderer: (params) => params.value || '-'
-    },
-    {
-      field: 'urutan',
-      headerName: 'Urutan',
-      sortable: true,
-      filter: true,
-      width: 100,
-      minWidth: 80,
-      cellRenderer: (params) => params.value ?? '-'
-    },
-    {
-      field: 'parent',
-      headerName: 'Parent',
-      sortable: false,
-      filter: false,
-      width: 160,
-      minWidth: 130,
-      cellRenderer: (params) => params.data?.parent?.nama_menu || '-'
-    },
-    {
-      field: 'is_active',
-      headerName: 'Status',
-      sortable: true,
-      filter: true,
-      width: 110,
-      minWidth: 100,
-      cellRenderer: (params) => {
-        const active = params.value === 1 || params.value === true
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
-            {active ? 'Aktif' : 'Nonaktif'}
-          </span>
-        )
-      }
-    },
-    {
-      headerName: 'Aksi',
-      width: 80,
-      minWidth: 80,
-      maxWidth: 80,
-      suppressSizeToFit: true,
-      sortable: false,
-      filter: false,
+      headerName: 'Aksi', width: 80, minWidth: 80, maxWidth: 80, sortable: false, filter: false,
       cellRenderer: (params) => (
         <div className="h-full flex items-center justify-center">
           <ActionsMenu
             data={params.data}
-            onDetail={() => handleDetail(params.data)}
-            onEdit={() => handleEdit(params.data)}
+            onDetail={() => navigate(`/admin/references/${params.data.id}`)}
+            onEdit={() => navigate(`/admin/references/${params.data.id}/edit`)}
             onDelete={() => handleDelete(params.data)}
           />
         </div>
@@ -232,24 +153,21 @@ const MenuList = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manajemen Menu</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">System References</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
-              type="text"
-              placeholder="Cari menu..."
-              value={searchText}
+              type="text" placeholder="Cari referensi..." value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={() => fetchMenus(currentPage, pageSize, searchText)} variant="secondary" title="Refresh Data">
+          <Button onClick={() => fetchData(currentPage, pageSize, searchText)} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/menus/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Menu
+          <Button onClick={() => navigate('/admin/references/create')}>
+            <Plus size={18} className="mr-2" /> Tambah Referensi
           </Button>
         </div>
       </div>
@@ -262,17 +180,11 @@ const MenuList = () => {
         ) : (
           <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
             <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
+              rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef}
+              pagination={true} paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
               onPaginationChanged={onPaginationChanged}
-              rowCount={totalRows}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
+              rowCount={totalRows} animateRows={true}
             />
           </div>
         )}
@@ -281,4 +193,4 @@ const MenuList = () => {
   )
 }
 
-export default MenuList
+export default ReferenceList
