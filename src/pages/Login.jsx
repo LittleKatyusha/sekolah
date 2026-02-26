@@ -81,7 +81,7 @@ const Login = () => {
 
       login(response.data)
       setLoading(false)
-      navigate('/')
+      navigate('/dashboard')
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)

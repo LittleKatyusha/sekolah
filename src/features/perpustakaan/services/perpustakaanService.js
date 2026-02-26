@@ -127,6 +127,24 @@ export const peminjamanService = {
   pengembalian: async (id) => {
     return await apiService.post(`/perpustakaan/peminjaman/${id}/pengembalian`)
   },
+
+  /**
+   * Get overdue peminjaman
+   * @param {Object} params - Query parameters
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getOverdue: async (params = {}) => {
+    return await apiService.get('/perpustakaan/peminjaman/overdue', { params })
+  },
+
+  /**
+   * Get peminjaman by siswa ID
+   * @param {number|string} siswaId - Siswa ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getBySiswa: async (siswaId) => {
+    return await apiService.get(`/perpustakaan/peminjaman/siswa/${siswaId}`)
+  },
 }
 
 export default {

@@ -22,6 +22,14 @@ export const menuService = {
   },
 
   /**
+   * Get menu tree structure
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getTree: async () => {
+    return await apiService.get(`${BASE_URL}/tree`)
+  },
+
+  /**
    * Create new menu
    * @param {Object} data - Menu data
    * @returns {Promise<{data: any, error: any}>}

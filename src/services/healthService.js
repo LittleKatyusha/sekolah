@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { apiService } from '../utils/api'
 
 /**
  * Health check service for API monitoring
@@ -9,20 +9,7 @@ export const healthService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   check: async () => {
-    try {
-      const response = await axios.get('/api/health', {
-        timeout: 5000,
-      })
-      return { data: response.data, error: null }
-    } catch (error) {
-      return {
-        data: null,
-        error: error.response?.data || {
-          success: false,
-          message: 'Health check failed',
-        },
-      }
-    }
+    return await apiService.get('/health')
   },
 }
 

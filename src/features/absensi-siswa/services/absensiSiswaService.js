@@ -73,7 +73,18 @@ export const absensiSiswaService = {
    */
   deleteAbsensiSiswa: async (id) => {
     return await apiService.delete(`${BASE_URL}/${id}`)
-  }
+  },
+
+  /**
+   * Get absensi siswa by date range
+   * @param {Object} data - Date range data
+   * @param {string} data.tanggal_mulai - Start date (YYYY-MM-DD)
+   * @param {string} data.tanggal_akhir - End date (YYYY-MM-DD)
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getByDateRange: async (data) => {
+    return await apiService.post(`${BASE_URL}/date-range`, data)
+  },
 }
 
 export default absensiSiswaService

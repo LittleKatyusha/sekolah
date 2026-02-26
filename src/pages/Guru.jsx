@@ -7,9 +7,9 @@ const Guru = () => {
   return (
     <Routes>
       <Route path="/" element={<GuruList />} />
-      <Route path="/create" element={<GuruForm />} />
-      <Route path="/:id" element={<GuruDetail />} />
-      <Route path="/:id/edit" element={<GuruForm />} />
+      <Route path="create" element={<GuruForm />} />
+      <Route path=":id" element={<GuruDetail />} />
+      <Route path=":id/edit" element={<GuruForm />} />
     </Routes>
   )
 }

@@ -48,6 +48,15 @@ export const waliService = {
   deleteWali: async (id) => {
     return await apiService.delete(`${BASE_URL}/${id}`)
   },
+
+  /**
+   * Get siswa linked to a wali
+   * @param {number|string} id - Wali ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getSiswaByWali: async (id) => {
+    return await apiService.get(`${BASE_URL}/${id}/siswa`)
+  },
 }
 
 export default waliService

@@ -7,9 +7,9 @@ const Siswa = () => {
   return (
     <Routes>
       <Route path="/" element={<SiswaList />} />
-      <Route path="/create" element={<SiswaForm />} />
-      <Route path="/:id" element={<SiswaDetail />} />
-      <Route path="/:id/edit" element={<SiswaForm />} />
+      <Route path="create" element={<SiswaForm />} />
+      <Route path=":id" element={<SiswaDetail />} />
+      <Route path=":id/edit" element={<SiswaForm />} />
     </Routes>
   )
 }

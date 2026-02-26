@@ -1,16 +1,16 @@
-import React from 'react'
-import Card from '../components/ui/Card'
+import { Routes, Route } from 'react-router-dom'
+import NilaiList from '../features/nilai/pages/NilaiList'
+import NilaiForm from '../features/nilai/pages/NilaiForm'
+import NilaiDetail from '../features/nilai/pages/NilaiDetail'
 
 const Nilai = () => {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nilai</h1>
-      <Card>
-        <div className="p-4">
-          <p>Nilai Management Module - Coming Soon</p>
-        </div>
-      </Card>
-    </div>
+    <Routes>
+      <Route path="/" element={<NilaiList />} />
+      <Route path="create" element={<NilaiForm />} />
+      <Route path=":id" element={<NilaiDetail />} />
+      <Route path=":id/edit" element={<NilaiForm />} />
+    </Routes>
   )
 }
 

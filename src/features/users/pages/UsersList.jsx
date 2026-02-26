@@ -181,11 +181,11 @@ const UsersList = () => {
   }, [fetchUsers])
 
   const handleEdit = (data) => {
-    navigate(`/users/${data.id}/edit`)
+    navigate(`/admin/users/${data.id}/edit`)
   }
 
   const handleDetail = (data) => {
-    navigate(`/users/${data.id}`)
+    navigate(`/admin/users/${data.id}`)
   }
 
   const handleDelete = async (data) => {
@@ -358,7 +358,7 @@ const UsersList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/users/create')}>
+          <Button onClick={() => navigate('/admin/users/create')}>
             <Plus size={18} className="mr-2" />
             Tambah User
           </Button>

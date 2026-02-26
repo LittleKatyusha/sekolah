@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { BookOpen, BookCopy, Book, RotateCcw, CheckCircle } from 'lucide-react'
 import { bukuService, peminjamanService } from '../features/perpustakaan/services/perpustakaanService'
-import { NavigationCard } from '../components/bk/NavigationCard'
-import { StatCard } from '../components/bk/StatCard'
+import NavigationCard from '../components/bk/NavigationCard'
+import StatCard from '../components/bk/StatCard'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { showError } from '../utils/sweetalert'
 

@@ -52,7 +52,7 @@ const UsersDetail = () => {
       setUser(data.data)
     } else {
       showError('Gagal mengambil data user')
-      navigate('/users')
+      navigate('/admin/users')
     }
     setLoading(false)
   }
@@ -63,7 +63,7 @@ const UsersDetail = () => {
       const { error } = await usersService.delete(user.id)
       if (!error) {
         showSuccess(`${user.name} berhasil dihapus!`)
-        navigate('/users')
+        navigate('/admin/users')
       } else {
         showError('Gagal menghapus user')
       }
@@ -96,14 +96,14 @@ const UsersDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="secondary" onClick={() => navigate('/users')}>
+          <Button variant="secondary" onClick={() => navigate('/admin/users')}>
             <ArrowLeft size={18} className="mr-2" />
             Kembali
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail User</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/users/${id}/edit`)}>
+          <Button variant="warning" onClick={() => navigate(`/admin/users/${id}/edit`)}>
             <Edit size={18} className="mr-2" />
             Edit
           </Button>
