@@ -8,18 +8,19 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { guruService } from '../../guru/services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const STATUS_OPTIONS = [
-  { value: 1, label: 'Hadir' },
-  { value: 2, label: 'Sakit' },
-  { value: 3, label: 'Izin' },
-  { value: 4, label: 'Alpha' },
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const AbsensiGuruForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: statusOptions } = useReferenceOptions('status_presensi', [
+    { value: '1', label: 'Hadir' },
+    { value: '2', label: 'Sakit' },
+    { value: '3', label: 'Izin' },
+    { value: '4', label: 'Alpha' },
+  ])
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -176,7 +177,7 @@ const AbsensiGuruForm = () => {
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
-                  {STATUS_OPTIONS.map(opt => (
+                  {statusOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>

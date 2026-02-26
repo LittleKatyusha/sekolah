@@ -6,7 +6,7 @@ import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { absensiSiswaService } from '../services/absensiSiswaService'
 import { siswaService } from '../../siswa/services/siswaService'
-import { referenceService } from '../../../services/referenceService'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const AbsensiSiswaForm = () => {
@@ -18,9 +18,13 @@ const AbsensiSiswaForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
   const [fetchingSiswas, setFetchingSiswas] = useState(true)
   const [siswas, setSiswas] = useState([])
-  const [statusOptions, setStatusOptions] = useState([])
-  const [fetchingStatus, setFetchingStatus] = useState(true)
-  const [rawAbsensiStatus, setRawAbsensiStatus] = useState(null)
+
+  const { options: statusOptions, loading: fetchingStatus } = useReferenceOptions('status_presensi', [
+    { value: '1', label: 'Hadir' },
+    { value: '2', label: 'Sakit' },
+    { value: '3', label: 'Izin' },
+    { value: '4', label: 'Alpha' },
+  ])
   
   const [formData, setFormData] = useState({
     mst_siswa_id: '',
@@ -33,49 +37,10 @@ const AbsensiSiswaForm = () => {
 
   useEffect(() => {
     fetchSiswas()
-    fetchStatusOptions()
     if (isEditMode) {
       fetchAbsensiSiswa()
     }
   }, [id])
-
-  useEffect(() => {
-    if (rawAbsensiStatus !== null) {
-      const statusMap = {
-        'hadir': 1,
-        'sakit': 2,
-        'izin': 3,
-        'alpha': 4,
-        'alpa': 4,
-        '1': 1,
-        '2': 2,
-        '3': 3,
-        '4': 4
-      }
-      
-      const mappedValue = statusMap[String(rawAbsensiStatus).toLowerCase()]
-      if (mappedValue) {
-        setFormData(prev => ({ ...prev, status: mappedValue }))
-      } else if (!isNaN(parseInt(rawAbsensiStatus))) {
-        setFormData(prev => ({ ...prev, status: parseInt(rawAbsensiStatus) }))
-      }
-      
-      // Clear it so we don't re-run this unnecessarily
-      setRawAbsensiStatus(null)
-    }
-  }, [rawAbsensiStatus])
-
-  const fetchStatusOptions = async () => {
-    setFetchingStatus(true)
-    // Hardcode status options based on requirements (1: hadir, 2: sakit, 3: izin, 4: alpha)
-    setStatusOptions([
-      { value: 1, label: 'Hadir' },
-      { value: 2, label: 'Sakit' },
-      { value: 3, label: 'Izin' },
-      { value: 4, label: 'Alpha' }
-    ])
-    setFetchingStatus(false)
-  }
 
   const fetchSiswas = async () => {
     setFetchingSiswas(true)
@@ -89,18 +54,29 @@ const AbsensiSiswaForm = () => {
     setFetchingSiswas(false)
   }
 
+  const mapStatus = (raw) => {
+    const statusMap = {
+      'hadir': '1', 'sakit': '2', 'izin': '3', 'alpha': '4', 'alpa': '4',
+      '1': '1', '2': '2', '3': '3', '4': '4'
+    }
+    const mapped = statusMap[String(raw).toLowerCase()]
+    if (mapped) return mapped
+    if (!isNaN(parseInt(raw))) return String(parseInt(raw))
+    return ''
+  }
+
   const fetchAbsensiSiswa = async () => {
     setFetchingData(true)
     const { data, error } = await absensiSiswaService.getAbsensiSiswaById(id)
     if (data) {
       const absensi = data.data
+      const rawStatus = absensi.status_absensi || absensi.status || ''
       setFormData({
         mst_siswa_id: absensi.siswa?.id || absensi.mst_siswa_id || '',
         tanggal: absensi.tanggal || '',
-        status: '',
+        status: mapStatus(rawStatus),
         keterangan: absensi.keterangan || ''
       })
-      setRawAbsensiStatus(absensi.status_absensi || absensi.status || null)
     } else {
       showError('Gagal mengambil data absensi siswa')
       navigate('/absensi-siswa')
