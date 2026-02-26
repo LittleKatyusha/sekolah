@@ -16,8 +16,10 @@ const UsersList = lazy(() => import('./features/users/pages/UsersList'))
 const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
 const UsersDetail = lazy(() => import('./features/users/pages/UsersDetail'))
 const ActivityLogsList = lazy(() => import('./features/activity-logs/pages/ActivityLogsList'))
+const ActivityLogDetail = lazy(() => import('./features/activity-logs/pages/ActivityLogDetail'))
 const MenuList = lazy(() => import('./features/menus/pages/MenuList'))
 const MenuForm = lazy(() => import('./features/menus/pages/MenuForm'))
+const MenuDetail = lazy(() => import('./features/menus/pages/MenuDetail'))
 const Analytics = lazy(() => import('./pages/Analytics'))
 const DataGrid = lazy(() => import('./pages/DataGrid'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -97,14 +99,22 @@ const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
 const JadwalPelajaran = lazy(() => import('./pages/JadwalPelajaran'))
-const HariOperasional = lazy(() => import('./pages/placeholders/HariOperasional'))
-const KalenderHarian = lazy(() => import('./pages/placeholders/KalenderHarian'))
-const Presensi = lazy(() => import('./pages/placeholders/Presensi'))
-const UjianJawaban = lazy(() => import('./pages/placeholders/UjianJawaban'))
-const LogAksesMateri = lazy(() => import('./pages/placeholders/LogAksesMateri'))
-const References = lazy(() => import('./pages/placeholders/References'))
-const KalenderTipe = lazy(() => import('./pages/placeholders/KalenderTipe'))
-const Files = lazy(() => import('./pages/placeholders/Files'))
+const HariOperasional = lazy(() => import('./features/hari-operasional/pages/HariOperasionalList'))
+const KalenderHarian = lazy(() => import('./features/kalender-harian/pages/KalenderHarianList'))
+const PresensiList = lazy(() => import('./features/presensi/pages/PresensiList'))
+const PresensiForm = lazy(() => import('./features/presensi/pages/PresensiForm'))
+const PresensiDetail = lazy(() => import('./features/presensi/pages/PresensiDetail'))
+const UjianJawabanList = lazy(() => import('./features/ujian-jawaban/pages/UjianJawabanList'))
+const UjianJawabanForm = lazy(() => import('./features/ujian-jawaban/pages/UjianJawabanForm'))
+const UjianJawabanDetail = lazy(() => import('./features/ujian-jawaban/pages/UjianJawabanDetail'))
+const LogAksesMateriList = lazy(() => import('./features/log-akses-materi/pages/LogAksesMateriList'))
+const LogAksesMateriDetail = lazy(() => import('./features/log-akses-materi/pages/LogAksesMateriDetail'))
+const ReferenceList = lazy(() => import('./features/references/pages/ReferenceList'))
+const ReferenceForm = lazy(() => import('./features/references/pages/ReferenceForm'))
+const ReferenceDetail = lazy(() => import('./features/references/pages/ReferenceDetail'))
+const KalenderTipeList = lazy(() => import('./features/kalender-tipe/pages/KalenderTipeList'))
+const KalenderTipeForm = lazy(() => import('./features/kalender-tipe/pages/KalenderTipeForm'))
+const Files = lazy(() => import('./features/files/pages/FileUploadPage'))
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
@@ -233,9 +243,15 @@ function App() {
               <Route path="/akademik/rapor/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Rapor /></RoleGuard>} />
               <Route path="/akademik/forum/*" element={<RoleGuard allowedRoles={[1, 2, 3, 4, 'admin', 'guru', 'staff', 'siswa']}><Forum /></RoleGuard>} />
               <Route path="/akademik/materi/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Materi /></RoleGuard>} />
-              <Route path="/akademik/presensi" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Presensi /></RoleGuard>} />
-              <Route path="/akademik/ujian-jawaban" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawaban /></RoleGuard>} />
-              <Route path="/akademik/log-akses-materi" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><LogAksesMateri /></RoleGuard>} />
+              <Route path="/akademik/presensi" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiList /></RoleGuard>} />
+              <Route path="/akademik/presensi/tambah" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiForm /></RoleGuard>} />
+              <Route path="/akademik/presensi/edit/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiForm /></RoleGuard>} />
+              <Route path="/akademik/presensi/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiDetail /></RoleGuard>} />
+              <Route path="/akademik/ujian-jawaban" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawabanList /></RoleGuard>} />
+              <Route path="/akademik/ujian-jawaban/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawabanDetail /></RoleGuard>} />
+              <Route path="/akademik/ujian-jawaban/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawabanForm /></RoleGuard>} />
+              <Route path="/akademik/log-akses-materi" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><LogAksesMateriList /></RoleGuard>} />
+              <Route path="/akademik/log-akses-materi/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><LogAksesMateriDetail /></RoleGuard>} />
 
               {/* Ujian */}
               <Route path="/akademik/ujian" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianList /></RoleGuard>} />
@@ -261,8 +277,13 @@ function App() {
               <Route path="/admin/permissions/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Permissions /></RoleGuard>} />
               <Route path="/admin/hari-operasional" element={<RoleGuard allowedRoles={[1, 'admin']}><HariOperasional /></RoleGuard>} />
               <Route path="/admin/kalender-harian" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderHarian /></RoleGuard>} />
-              <Route path="/admin/references" element={<RoleGuard allowedRoles={[1, 'admin']}><References /></RoleGuard>} />
-              <Route path="/admin/kalender-tipe" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipe /></RoleGuard>} />
+              <Route path="/admin/references" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceList /></RoleGuard>} />
+              <Route path="/admin/references/create" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceForm /></RoleGuard>} />
+              <Route path="/admin/references/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceDetail /></RoleGuard>} />
+              <Route path="/admin/references/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceForm /></RoleGuard>} />
+              <Route path="/admin/kalender-tipe" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipeList /></RoleGuard>} />
+              <Route path="/admin/kalender-tipe/create" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipeForm /></RoleGuard>} />
+              <Route path="/admin/kalender-tipe/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipeForm /></RoleGuard>} />
 
               {/* ===== KEUANGAN (SPP split) ===== */}
               <Route path="/keuangan/tarif-spp/*" element={<RoleGuard allowedRoles={[1, 'admin']}><TarifSpp /></RoleGuard>} />
@@ -346,8 +367,10 @@ function App() {
               <Route path="/data-grid" element={<RoleGuard allowedRoles={[1, 'admin']}><DataGrid /></RoleGuard>} />
               <Route path="/settings" element={<RoleGuard allowedRoles={[1, 'admin']}><Settings /></RoleGuard>} />
               <Route path="/admin/activity-logs" element={<RoleGuard allowedRoles={[1, 'admin']}><ActivityLogsList /></RoleGuard>} />
+              <Route path="/admin/activity-logs/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><ActivityLogDetail /></RoleGuard>} />
               <Route path="/admin/menus" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuList /></RoleGuard>} />
               <Route path="/admin/menus/create" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuForm /></RoleGuard>} />
+              <Route path="/admin/menus/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuDetail /></RoleGuard>} />
               <Route path="/admin/menus/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuForm /></RoleGuard>} />
             </Route>
 
