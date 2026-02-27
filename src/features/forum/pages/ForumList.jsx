@@ -1,135 +1,63 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Card from '../../../components/ui/Card'
-import Button from '../../../components/ui/Button'
+import { MessageSquare, Clock, User, Search, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { forumService } from '../services/forumService'
-import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { showError } from '../../../utils/sweetalert'
 
-// Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [position, setPosition] = useState({ top: 0, left: 0 })
-  const buttonRef = useRef(null)
-  const menuRef = useRef(null)
+function timeAgo(dateString) {
+  const now = new Date()
+  const date = new Date(dateString)
+  const seconds = Math.floor((now - date) / 1000)
+  if (seconds < 60) return 'Baru saja'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} menit lalu`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} jam lalu`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days} hari lalu`
+  return date.toLocaleDateString('id-ID')
+}
 
-  const handleAction = (action) => {
-    setIsOpen(false)
-    action()
-  }
+function stripHtml(html) {
+  if (!html) return ''
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  return tmp.textContent || tmp.innerText || ''
+}
 
-  const handleButtonClick = (e) => {
-    e.stopPropagation()
+function getInitials(name) {
+  if (!name) return '?'
+  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
 
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 192
-      })
-    }
+const COLORS = [
+  'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500',
+  'bg-pink-500', 'bg-teal-500', 'bg-indigo-500', 'bg-red-500'
+]
 
-    setIsOpen(!isOpen)
-  }
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
-      const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-
-      if (isOutsideButton && isOutsideMenu) {
-        setIsOpen(false)
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
-
-  return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={handleButtonClick}
-        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-        title="Actions"
-      >
-        <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
-      </button>
-
-      {isOpen && createPortal(
-        <div
-          ref={menuRef}
-          className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]"
-          style={{
-            top: `${position.top}px`,
-            left: `${position.left}px`
-          }}
-        >
-          <div className="py-1">
-            <button
-              onClick={() => handleAction(onDetail)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
-            <button
-              onClick={() => handleAction(onEdit)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit size={16} className="text-yellow-600" />
-              Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button
-              onClick={() => handleAction(onDelete)}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-            >
-              <Trash2 size={16} />
-              Hapus
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  )
+function getAvatarColor(name) {
+  if (!name) return COLORS[0]
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return COLORS[Math.abs(hash) % COLORS.length]
 }
 
 const ForumList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
+  const [topics, setTopics] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
-
-  // Pagination state
-  const [pageSize, setPageSize] = useState(10)
   const [totalRows, setTotalRows] = useState(0)
+  const searchTimeout = useRef(null)
 
-  // Use refs to track pagination state without causing re-renders
   const currentPageRef = useRef(1)
   const pageCursorsRef = useRef({ 1: null })
-  const isFetchingRef = useRef(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const perPage = 15
 
-  const gridRef = useRef(null)
-
-  const fetchForum = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    // Prevent concurrent fetches
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-
+  const fetchTopics = useCallback(async (page = 1, searchQuery = '') => {
     setLoading(true)
-
-    // Get cursor for the requested page
     const cursorValue = pageCursorsRef.current[page]
-
     const params = {
       per_page: perPage,
       ...(searchQuery && { search: searchQuery }),
@@ -137,14 +65,12 @@ const ForumList = () => {
     }
 
     const { data, error } = await forumService.getAll(params)
-
     if (data) {
-      setRowData(data.data || [])
+      setTopics(data.data || [])
       if (data.meta) {
         setTotalRows(data.meta.total || 0)
         currentPageRef.current = data.meta.current_page || page
-
-        // Store next cursor for the next page
+        setCurrentPage(data.meta.current_page || page)
         if (data.meta.next_cursor) {
           pageCursorsRef.current[page + 1] = data.meta.next_cursor
         }
@@ -153,238 +79,163 @@ const ForumList = () => {
       console.error('Error fetching forum:', error)
       showError('Gagal mengambil data forum')
     }
-
     setLoading(false)
-    isFetchingRef.current = false
-  }, [pageSize, searchText])
-
-  // Initial load
-  useEffect(() => {
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    fetchForum(1, pageSize, searchText)
   }, [])
 
-  const handleEdit = (data) => {
-    navigate(`/akademik/forum/${data.id}/edit`)
-  }
+  useEffect(() => {
+    fetchTopics(1, '')
+  }, [fetchTopics])
 
-  const handleDetail = (data) => {
-    navigate(`/akademik/forum/${data.id}`)
-  }
-
-  const handleDelete = async (data) => {
-    const label = `Forum "${data.judul || data.pesan?.substring(0, 30) || ''}"`
-    const result = await showDeleteConfirm(label)
-    if (result.isConfirmed) {
-      const { error } = await forumService.delete(data.id)
-      if (!error) {
-        showSuccess(`${label} berhasil dihapus!`)
-        fetchForum(currentPageRef.current, pageSize, searchText)
-      } else {
-        showError('Gagal menghapus forum')
-      }
-    }
-  }
-
-  // Handle pagination change from AG Grid
-  const onPaginationChanged = useCallback((params) => {
-    if (!gridRef.current || isFetchingRef.current) return
-
-    const newPageNumber = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-
-    // Handle page size change
-    if (newPageSize !== pageSize) {
-      setPageSize(newPageSize)
-      pageCursorsRef.current = { 1: null }
-      currentPageRef.current = 1
-      fetchForum(1, newPageSize, searchText)
-      return
-    }
-
-    // Handle page number change
-    if (newPageNumber !== currentPageRef.current) {
-      fetchForum(newPageNumber, pageSize, searchText)
-    }
-  }, [pageSize, searchText, fetchForum])
-
-  // Handle search
-  const onFilterTextBoxChanged = useCallback((e) => {
+  const handleSearch = (e) => {
     const value = e.target.value
     setSearchText(value)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    searchTimeout.current = setTimeout(() => {
+      pageCursorsRef.current = { 1: null }
+      currentPageRef.current = 1
+      fetchTopics(1, value)
+    }, 400)
+  }
 
-    // Reset pagination when searching
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
+  const totalPages = Math.ceil(totalRows / perPage)
+  const hasNext = currentPage < totalPages
+  const hasPrev = currentPage > 1
 
-    // Reset grid to first page
-    if (gridRef.current) {
-      gridRef.current.api.paginationGoToPage(0)
+  const goNext = () => {
+    if (hasNext) fetchTopics(currentPage + 1, searchText)
+  }
+  const goPrev = () => {
+    if (hasPrev) {
+      pageCursorsRef.current = { 1: null }
+      fetchTopics(currentPage - 1, searchText)
     }
-
-    fetchForum(1, pageSize, value)
-  }, [fetchForum, pageSize])
-
-  // Handle refresh
-  const handleRefresh = useCallback(() => {
-    fetchForum(currentPageRef.current, pageSize, searchText)
-  }, [fetchForum, pageSize, searchText])
-
-  const columnDefs = useMemo(() => [
-    {
-      field: 'id',
-      headerName: 'ID',
-      sortable: true,
-      filter: true,
-      width: 80,
-      minWidth: 70
-    },
-    {
-      field: 'judul',
-      headerName: 'Judul',
-      sortable: true,
-      filter: true,
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params) => params.value || '-'
-    },
-    {
-      field: 'pesan',
-      headerName: 'Pesan',
-      sortable: true,
-      filter: true,
-      flex: 2,
-      minWidth: 200,
-      cellRenderer: (params) => {
-        const pesan = params.value
-        if (!pesan) return '-'
-        return pesan.length > 80 ? pesan.substring(0, 80) + '...' : pesan
-      }
-    },
-    {
-      headerName: 'Guru / Mapel',
-      sortable: true,
-      filter: true,
-      flex: 1.5,
-      minWidth: 180,
-      valueGetter: (params) => {
-        const guruMapel = params.data?.guru_mapel
-        if (!guruMapel) return '-'
-        const guruNama = guruMapel.guru?.nama || ''
-        const mapelNama = guruMapel.mapel?.nama || ''
-        return guruNama && mapelNama ? `${guruNama} - ${mapelNama}` : guruNama || mapelNama || '-'
-      }
-    },
-    {
-      headerName: 'User',
-      sortable: true,
-      filter: true,
-      flex: 1,
-      minWidth: 120,
-      valueGetter: (params) => params.data?.user?.name || '-'
-    },
-    {
-      field: 'is_topik',
-      headerName: 'Tipe',
-      sortable: true,
-      filter: true,
-      width: 120,
-      minWidth: 100,
-      cellRenderer: (params) => {
-        const isTopik = params.value
-        if (isTopik) {
-          return (
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-              Topik
-            </span>
-          )
-        }
-        return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-            Balasan
-          </span>
-        )
-      }
-    },
-    {
-      headerName: 'Aksi',
-      width: 80,
-      minWidth: 80,
-      maxWidth: 80,
-      suppressSizeToFit: true,
-      sortable: false,
-      filter: false,
-      cellRenderer: (params) => {
-        return (
-          <div className="h-full flex items-center justify-center">
-            <ActionsMenu
-              data={params.data}
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
-              onDelete={() => handleDelete(params.data)}
-            />
-          </div>
-        )
-      }
-    }
-  ], [])
-
-  const defaultColDef = useMemo(() => ({
-    resizable: true,
-    sortable: true,
-    filter: true,
-  }), [])
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Forum</h1>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari forum..."
-              value={searchText}
-              onChange={onFilterTextBoxChanged}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
-            />
-          </div>
-          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
-            <RefreshCw size={18} />
-          </Button>
-          <Button onClick={() => navigate('/akademik/forum/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Forum
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Forum Diskusi</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {totalRows} topik diskusi
+          </p>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Cari topik diskusi..."
+            value={searchText}
+            onChange={handleSearch}
+            className="pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none w-full sm:w-80 transition-colors"
+          />
         </div>
       </div>
 
-      <Card>
-        {loading && rowData.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      {/* Topic List */}
+      {loading && topics.length === 0 ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+        </div>
+      ) : topics.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+          <MessageSquare size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 text-lg">Belum ada topik diskusi</p>
+          {searchText && (
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+              Tidak ditemukan hasil untuk "{searchText}"
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {topics.map((topic) => {
+            const authorName = topic.user?.name || 'Unknown'
+            const mapelName = topic.guru_mapel?.mapel?.nama
+            const replyCount = topic.replies?.length || topic.replies_count || 0
+            const preview = stripHtml(topic.pesan)
+
+            return (
+              <div
+                key={topic.id}
+                onClick={() => navigate(`/akademik/forum/${topic.id}`)}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-5 cursor-pointer hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600 transition-all group"
+              >
+                <div className="flex gap-4">
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${getAvatarColor(authorName)} flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-white text-sm sm:text-base font-semibold">
+                      {getInitials(authorName)}
+                    </span>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+                        {topic.judul || 'Tanpa Judul'}
+                      </h3>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap flex items-center gap-1 flex-shrink-0">
+                        <Clock size={12} />
+                        {timeAgo(topic.created_at)}
+                      </span>
+                    </div>
+
+                    {preview && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        {preview.length > 150 ? preview.substring(0, 150) + '...' : preview}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <User size={13} />
+                        {authorName}
+                      </span>
+                      {mapelName && (
+                        <span className="flex items-center gap-1">
+                          <BookOpen size={13} />
+                          {mapelName}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <MessageSquare size={13} />
+                        {replyCount} balasan
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 px-4 py-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Halaman {currentPage} dari {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={goPrev}
+              disabled={!hasPrev}
+              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={goNext}
+              disabled={!hasNext}
+              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              rowCount={totalRows}
-            />
-          </div>
-        )}
-      </Card>
+        </div>
+      )}
     </div>
   )
 }

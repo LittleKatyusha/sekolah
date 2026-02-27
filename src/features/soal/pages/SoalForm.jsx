@@ -5,6 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import LexicalEditor from '../../../components/ui/LexicalEditor'
+import '../../../components/ui/LexicalEditor.css'
 import { showSoal, storeSoal, updateSoal } from '../services/soalService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { ujianService } from '../../ujian/services/ujianService'
@@ -294,16 +296,13 @@ const SoalForm = () => {
             <div className="grid grid-cols-1 gap-6">
               {/* Pertanyaan */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Pertanyaan <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="pertanyaan"
+                <LexicalEditor
+                  label="Pertanyaan"
+                  required
                   value={formData.pertanyaan}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                  placeholder="Masukkan pertanyaan"
+                  onChange={(html) => setFormData(prev => ({ ...prev, pertanyaan: html }))}
+                  placeholder="Tulis pertanyaan..."
+                  minHeight="150px"
                 />
                 {errors.pertanyaan && <p className="mt-1 text-sm text-red-500">{errors.pertanyaan}</p>}
               </div>

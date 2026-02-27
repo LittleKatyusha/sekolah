@@ -5,6 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import LexicalEditor from '../../../components/ui/LexicalEditor'
+import '../../../components/ui/LexicalEditor.css'
 import { materiService } from '../services/materiService'
 import { guruService } from '../../guru/services/guruService'
 import { mapelService } from '../../mapel/services/mapelService'
@@ -258,16 +260,13 @@ const MateriForm = () => {
 
               {/* Konten */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Konten
-                </label>
-                <textarea
-                  name="konten"
+                <LexicalEditor
+                  label="Konten"
+                  required
                   value={formData.konten}
-                  onChange={handleChange}
-                  placeholder="Masukkan konten/deskripsi materi"
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"
+                  onChange={(html) => setFormData(prev => ({ ...prev, konten: html }))}
+                  placeholder="Tulis konten materi..."
+                  minHeight="200px"
                 />
                 {errors.konten && (
                   <p className="mt-1 text-sm text-red-500">{errors.konten}</p>
