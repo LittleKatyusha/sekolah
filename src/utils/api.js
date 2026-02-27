@@ -13,7 +13,6 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Origin': window.location.origin, // Set origin header for CORS
   },
 })
 
