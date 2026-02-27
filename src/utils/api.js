@@ -8,9 +8,12 @@ const baseURL = import.meta.env.DEV
 
 const api = axios.create({
   baseURL,
-  timeout: 30000,
+  withCredentials: false, // We use token-based auth, so no cookies
+  timeout: 30000, // 30 seconds timeout for all requests
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Origin': window.location.origin, // Set origin header for CORS
   },
 })
 

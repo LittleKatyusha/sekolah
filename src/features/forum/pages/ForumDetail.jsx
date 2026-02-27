@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, Clock, Send, Edit2, Trash2, Paperclip, BookOpen, User, ArrowDown } from 'lucide-react'
+import { ArrowLeft, MessageSquare, Clock, Send, Edit2, Trash2, Paperclip, BookOpen, User, ArrowDown, Wifi, WifiOff } from 'lucide-react'
 import useAuthStore from '../../../store/useAuthStore'
 import { forumService } from '../services/forumService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
+import useWebSocket from '../../../hooks/useWebSocket'
+import useNotificationStore from '../../../store/useNotificationStore'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -81,30 +83,51 @@ const ForumDetail = () => {
     fetchReplies()
   }, [fetchTopic, fetchReplies])
 
-  // Auto-polling for new replies every 10 seconds
+  // ── WebSocket: subscribe to forum.<id> for live replies ───────────────────
+  const wsStatus = useNotificationStore(s => s.wsStatus)
+  const isLive   = wsStatus === 'connected'
+
+  const isScrolledToBottom = useCallback(() => {
+    if (!repliesContainerRef.current) return true
+    const el = repliesContainerRef.current
+    return el.getBoundingClientRect().bottom <= window.innerHeight + 100
+  }, [])
+
+  const handleNewReply = useCallback((data) => {
+    // data is the new reply object pushed by the server
+    setReplies(prev => {
+      const exists = prev.some(r => r.id === data.id)
+      if (exists) return prev
+      const next = [...prev, data]
+      if (isScrolledToBottom()) {
+        setTimeout(() => repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        setNewReplyCount(0)
+      } else {
+        setNewReplyCount(c => c + 1)
+      }
+      return next
+    })
+  }, [isScrolledToBottom])
+
+  useWebSocket(
+    topic ? `forum.${topic.id}` : null,
+    { 'new-reply': handleNewReply, 'reply-deleted': () => fetchReplies() }
+  )
+
+  // ── Fallback polling (60 s) when WebSocket is not available ───────────────
   useEffect(() => {
-    if (!topic) return
+    if (!topic || isLive) return
 
-    const isScrolledToBottom = () => {
-      if (!repliesContainerRef.current) return true
-      const el = repliesContainerRef.current
-      return el.getBoundingClientRect().bottom <= window.innerHeight + 100
-    }
-
-    const pollReplies = async () => {
-      if (isTypingRef.current) return // Skip while typing
+    const fallbackPoll = async () => {
+      if (isTypingRef.current) return
       try {
         const { data } = await forumService.getReplies(topic.id)
         const freshReplies = data?.data || data || []
-
         setReplies(prev => {
           if (freshReplies.length > prev.length) {
             const newCount = freshReplies.length - prev.length
             if (isScrolledToBottom()) {
-              // Auto-scroll if user is at bottom
-              setTimeout(() => {
-                repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-              }, 100)
+              setTimeout(() => repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
               setNewReplyCount(0)
             } else {
               setNewReplyCount(newCount)
@@ -112,14 +135,12 @@ const ForumDetail = () => {
           }
           return freshReplies
         })
-      } catch (err) {
-        // Silent fail on poll
-      }
+      } catch { /* silent */ }
     }
 
-    const interval = setInterval(pollReplies, 10000) // 10 seconds
+    const interval = setInterval(fallbackPoll, 60_000)
     return () => clearInterval(interval)
-  }, [topic])
+  }, [topic, isLive, isScrolledToBottom])
 
   // Track typing state
   const handleReplyChange = (html) => {
@@ -252,13 +273,21 @@ const ForumDetail = () => {
             <MessageSquare size={20} />
             Balasan ({replies.length})
           </h2>
-          <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          {isLive ? (
+            <span className="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <Wifi size={12} />
+              Live
             </span>
-            Auto-refresh aktif
-          </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+              <WifiOff size={12} />
+              Polling (60 s)
+            </span>
+          )}
         </div>
 
         {repliesLoading && replies.length === 0 ? (

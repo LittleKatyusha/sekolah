@@ -21,6 +21,14 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path,
       },
+      // WebSocket proxy – forwards ws://localhost:5173/ws → wss://api.akademihub.id/ws
+      '/ws': {
+        target: 'wss://api.akademihub.id',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+      },
     },
   },
   build: {

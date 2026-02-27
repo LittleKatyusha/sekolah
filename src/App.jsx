@@ -9,6 +9,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Unauthorized from './pages/Unauthorized'
 import useAuthStore from './store/useAuthStore'
+import wsService from './services/websocketService'
+import useNotificationStore from './store/useNotificationStore'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -186,12 +188,51 @@ const TitleUpdater = () => {
   return null
 }
 
+// ── WebSocket lifecycle manager ───────────────────────────────────────────────
+// Mounted once inside BrowserRouter; manages connection based on auth state.
+function WebSocketManager() {
+  const { isAuthenticated, token } = useAuthStore()
+  const { addNotification, setWsStatus } = useNotificationStore()
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      wsService.disconnect()
+      return
+    }
+
+    // Connect and wire up global listeners
+    wsService.connect(token)
+
+    const offStatus = wsService.on('status', (status) => {
+      setWsStatus(status)
+    })
+
+    const offNotif = wsService.on('notification', (data) => {
+      addNotification(data)
+    })
+
+    // Subscribe to user-level notification channel once authenticated
+    wsService.subscribe('notifications')
+
+    return () => {
+      offStatus()
+      offNotif()
+      wsService.unsubscribe('notifications')
+      wsService.disconnect()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, token])
+
+  return null
+}
+
 function App() {
   const { isAuthenticated } = useAuthStore()
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <TitleUpdater />
+        <WebSocketManager />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
