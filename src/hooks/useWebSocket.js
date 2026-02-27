@@ -1,11 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react'
-import wsService from '../services/websocketService'
+import echoService from '../services/echoService'
 import useNotificationStore from '../store/useNotificationStore'
 
 /**
- * useWebSocket
- *
- * Subscribe to a WebSocket channel and listen for specific events.
+ * Subscribe to a Laravel Echo channel and listen for specific events.
  *
  * @param {string|null} channel
  *   Backend channel name, e.g. "forum.42" or "notifications".
@@ -30,8 +28,8 @@ export function useWebSocket(channel, eventHandlers = {}) {
   useEffect(() => {
     if (!channel && Object.keys(eventHandlers).length === 0) return
 
-    // Subscribe to the backend channel
-    if (channel) wsService.subscribe(channel)
+    // Subscribe to the backend channel via Echo
+    if (channel) echoService.subscribe(channel)
 
     // Register per-channel event listeners
     const unsubs = Object.keys(handlersRef.current).map(event => {
@@ -40,21 +38,23 @@ export function useWebSocket(channel, eventHandlers = {}) {
         : channel
           ? `${channel}:${event}`
           : event
-      return wsService.on(fullEvent, (data) => {
+      return echoService.on(fullEvent, (data) => {
         handlersRef.current[event]?.(data)
       })
     })
 
     return () => {
       unsubs.forEach(fn => fn())
-      if (channel) wsService.unsubscribe(channel)
+      if (channel) echoService.unsubscribe(channel)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel])
 
-  const send = useCallback((type, payload = {}) => {
-    wsService._send({ type, channel, ...payload })
-  }, [channel])
+  // send is a no-op shim kept for API compatibility;
+  // with Echo you listen to server broadcasts rather than sending raw frames.
+  const send = useCallback((_type, _payload = {}) => {
+    console.warn('[Echo] useWebSocket.send() is not supported with Laravel Echo')
+  }, [])
 
   return { status: wsStatus, send }
 }

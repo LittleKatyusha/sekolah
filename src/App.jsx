@@ -9,7 +9,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Unauthorized from './pages/Unauthorized'
 import useAuthStore from './store/useAuthStore'
-import wsService from './services/websocketService'
+import echoService from './services/echoService'
 import useNotificationStore from './store/useNotificationStore'
 
 // Lazy load pages
@@ -196,29 +196,29 @@ function WebSocketManager() {
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
-      wsService.disconnect()
+      echoService.disconnect()
       return
     }
 
-    // Connect and wire up global listeners
-    wsService.connect(token)
+    // Connect via Laravel Echo (Reverb) and wire up global listeners
+    echoService.connect(token)
 
-    const offStatus = wsService.on('status', (status) => {
+    const offStatus = echoService.on('status', (status) => {
       setWsStatus(status)
     })
 
-    const offNotif = wsService.on('notification', (data) => {
+    const offNotif = echoService.on('notification', (data) => {
       addNotification(data)
     })
 
     // Subscribe to user-level notification channel once authenticated
-    wsService.subscribe('notifications')
+    echoService.subscribe('notifications')
 
     return () => {
       offStatus()
       offNotif()
-      wsService.unsubscribe('notifications')
-      wsService.disconnect()
+      echoService.unsubscribe('notifications')
+      echoService.disconnect()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, token])
