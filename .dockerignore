@@ -9,7 +9,7 @@ dist
 build
 
 # Environment files
-.env
+#.env
 .env.local
 .env.development
 .env.development.local

@@ -162,26 +162,42 @@ class EchoService {
   _initEcho(token) {
     this._setStatus('connecting')
 
-    const scheme = import.meta.env.VITE_REVERB_SCHEME || 'wss'
-    const port   = Number(import.meta.env.VITE_REVERB_PORT) || 443
+    const env = import.meta.env
+    const appKey = env.VITE_REVERB_APP_KEY || env.VITE_PUSHER_APP_KEY
+    const wsHost = env.VITE_REVERB_HOST || window.location.hostname
+    const rawPort = Number(env.VITE_REVERB_PORT)
+    const wsPort = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 443
+    const forceTLS = (env.VITE_REVERB_SCHEME || 'wss') === 'wss'
 
-    this._echo = new Echo({
+    if (!appKey || !wsHost) {
+      console.warn('[Echo] missing Reverb/Pusher configuration. Set VITE_REVERB_APP_KEY (or VITE_PUSHER_APP_KEY) and VITE_REVERB_HOST.')
+      this._setStatus('error')
+      return
+    }
+
+    try {
+      this._echo = new Echo({
         broadcaster: 'reverb',
-        key: import.meta.env.VITE_REVERB_APP_KEY,
-        wsHost: import.meta.env.VITE_REVERB_HOST,
-        wsPort: import.meta.env.VITE_REVERB_PORT,
-        wssPort: import.meta.env.VITE_REVERB_PORT,
-        forceTLS: true,
+        key: appKey,
+        wsHost,
+        wsPort,
+        wssPort: wsPort,
+        forceTLS,
         enabledTransports: ['ws', 'wss'],
       // Broadcasting auth endpoint (Laravel standard)
-      authEndpoint: `${import.meta.env.VITE_API_BASE_URL}/broadcasting/auth`,
-      auth: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept:        'application/json',
+        authEndpoint: `${env.VITE_API_BASE_URL}/broadcasting/auth`,
+        auth: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept:        'application/json',
+          },
         },
-      },
-    })
+      })
+    } catch (err) {
+      console.error('[Echo] failed to initialize:', err)
+      this._setStatus('error')
+      return
+    }
 
     // Bind to Pusher connection state changes
     const conn = this._echo.connector.pusher.connection
