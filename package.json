@@ -10,7 +10,7 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^5.2.2",
     "@lexical/code": "^0.41.0",
     "@lexical/html": "^0.41.0",
     "@lexical/link": "^0.41.0",
