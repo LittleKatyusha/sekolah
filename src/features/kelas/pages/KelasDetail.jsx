@@ -244,6 +244,7 @@
                      pagination={true}
                      paginationPageSize={10}
                      animateRows={true}
+              theme="legacy"
                    />
                  </div>
                ) : (

@@ -184,7 +184,7 @@ const ReferenceList = () => {
               pagination={true} paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
               onPaginationChanged={onPaginationChanged}
-              rowCount={totalRows} animateRows={true}
+              theme="legacy"
             />
           </div>
         )}

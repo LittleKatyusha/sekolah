@@ -322,6 +322,7 @@ const BkHasilList = () => {
               suppressPaginationPanel={false}
               cacheBlockSize={pageSize}
               rowModelType="clientSide"
+              theme="legacy"
             />
           </div>
         )}

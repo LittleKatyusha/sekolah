@@ -193,6 +193,8 @@ const InfiniteGrid = ({
         // Infinite row model specific
         maxBlocksInCache={10}
         blockLoadDebounceMillis={200}
+        // Use legacy theme to avoid conflict with CSS imports
+        theme="legacy"
         {...restProps}
       />
     </div>

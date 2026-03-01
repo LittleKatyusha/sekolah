@@ -247,7 +247,7 @@ const PermissionsList = () => {
               animateRows={true}
               suppressPaginationPanel={false}
               cacheBlockSize={pageSize}
-              rowCount={totalRows}
+              theme="legacy"
             />
           </div>
         )}

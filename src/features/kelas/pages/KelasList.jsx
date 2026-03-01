@@ -383,6 +383,7 @@ const KelasList = () => {
               paginationGetRowCount={totalRows}
               onPaginationChanged={onPaginationChanged}
               animateRows={true}
+              theme="legacy"
               overlayLoadingTemplate={'<span class="ag-overlay-loading-center">Loading...</span>'}
               overlayNoRowsTemplate={'<span class="ag-overlay-no-rows-center">Tidak ada data</span>'}
             />

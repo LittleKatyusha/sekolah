@@ -158,7 +158,7 @@ const KalenderTipeList = () => {
           <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
             <AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef}
               pagination={true} paginationPageSize={pageSize} paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged} rowCount={totalRows} animateRows={true} />
+              theme="legacy" />
           </div>
         )}
       </Card>

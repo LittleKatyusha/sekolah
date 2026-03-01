@@ -167,6 +167,8 @@ const ServerGrid = ({
         serverSideStoreType="partial"
         suppressRowClickSelection={true}
         rowSelection="multiple"
+        // Use legacy theme to avoid conflict with CSS imports
+        theme="legacy"
         {...restProps}
       />
     </div>

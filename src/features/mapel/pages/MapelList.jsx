@@ -237,6 +237,7 @@ const MapelList = () => {
               paginationPageSizeSelector={[10, 20, 50, 100]}
               quickFilterText={searchText}
               animateRows={true}
+              theme="legacy"
             />
           </div>
         )}

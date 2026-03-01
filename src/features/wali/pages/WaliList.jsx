@@ -286,8 +286,8 @@ const WaliList = () => {
               paginationPageSizeSelector={[10, 20, 50, 100]}
               paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
               onPaginationChanged={onPaginationChanged}
-              rowCount={totalRows}
               animateRows={true}
+              theme="legacy"
             />
           </div>
         )}

@@ -467,6 +467,7 @@ const UjianNilai = () => {
               suppressClickEdit={false}
               singleClickEdit={true}
               stopEditingWhenCellsLoseFocus={true}
+              theme="legacy"
             />
           </div>
         )}

@@ -133,6 +133,7 @@ const HariOperasionalList = () => {
               defaultColDef={defaultColDef}
               animateRows={true}
               domLayout="normal"
+              theme="legacy"
             />
           </div>
         )}

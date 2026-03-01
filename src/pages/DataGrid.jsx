@@ -211,6 +211,7 @@ const DataGrid = () => {
               suppressRowClickSelection={true}
               quickFilterText={searchText}
               animateRows={true}
+              theme="legacy"
             />
           </div>
         )}

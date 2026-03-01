@@ -374,10 +374,10 @@ const SoalList = () => {
               paginationPageSize={pageSize}
               paginationPageSizeSelector={[10, 20, 50, 100]}
               onPaginationChanged={onPaginationChanged}
-              rowCount={totalRows}
               animateRows={true}
               suppressPaginationPanel={false}
               cacheBlockSize={pageSize}
+              theme="legacy"
             />
           </div>
         )}
