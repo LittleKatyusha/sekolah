@@ -1,16 +1,12 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
-import { siswaService } from '../services/siswaService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { siswaService } from '../services/siswaService'
 
-// Actions Menu Component (portal-based dropdown like Guru)
+// Actions Menu Component
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -36,16 +32,17 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
     setIsOpen(!isOpen)
   }
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
-      const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
-      if (isOutsideButton && isOutsideMenu) {
-        setIsOpen(false)
-      }
+  const handleClickOutside = (e) => {
+    const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
+    const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
+    
+    if (isOutsideButton && isOutsideMenu) {
+      setIsOpen(false)
     }
+  }
 
+  // Handle click outside
+  useEffect(() => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -60,10 +57,12 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
         title="Actions"
       >
-        <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600 dark:text-gray-400">
+          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+        </svg>
       </button>
       
-      {isOpen && createPortal(
+      {isOpen && (
         <div
           ref={menuRef}
           className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]"
@@ -77,14 +76,18 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
               onClick={() => handleAction(onDetail)}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
-              <Eye size={16} className="text-blue-600" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
               Detail
             </button>
             <button
               onClick={() => handleAction(onEdit)}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
-              <Edit size={16} className="text-yellow-600" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-600">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
               Edit
             </button>
             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
@@ -92,12 +95,13 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
               onClick={() => handleAction(onDelete)}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
-              <Trash2 size={16} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
               Hapus
             </button>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   )
@@ -105,138 +109,15 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const SiswaList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  
-  // Pagination state
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  
-  // Use refs to track pagination state without causing re-renders
-  const currentPageRef = useRef(1)
-  const pageCursorsRef = useRef({ 1: null }) // Map page number to cursor
-  const isFetchingRef = useRef(false)
-
   const gridRef = useRef(null)
-
-  const fetchSiswa = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    // Prevent concurrent fetches
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-    
-    setLoading(true)
-    
-    // Get cursor for the requested page
-    const cursorValue = pageCursorsRef.current[page]
-    
-    const params = {
-      per_page: perPage,
-      ...(searchQuery && { search: searchQuery }),
-      ...(cursorValue && { cursor: cursorValue })
-    }
-    
-    const { data, error } = await siswaService.getAll(params)
-    
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        currentPageRef.current = data.meta.current_page || page
-        
-        // Store next cursor for the next page
-        if (data.meta.next_cursor) {
-          pageCursorsRef.current[page + 1] = data.meta.next_cursor
-        }
-      }
-    } else {
-      console.error('Error fetching siswa:', error)
-      showError('Gagal mengambil data siswa')
-    }
-    
-    setLoading(false)
-    isFetchingRef.current = false
-  }, [pageSize, searchText])
-
-  // Initial load
-  useEffect(() => {
-    // Reset cursors on initial load
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    fetchSiswa(1, pageSize, searchText)
-  }, [])
-
-  const handleEdit = (data) => {
-    navigate(`/siswa/${data.id}/edit`)
-  }
-
-  const handleDetail = (data) => {
-    navigate(`/siswa/${data.id}`)
-  }
-
-  const handleDelete = async (data) => {
-    const result = await showDeleteConfirm(data.nama)
-    if (result.isConfirmed) {
-      const { error } = await siswaService.delete(data.id)
-      if (!error) {
-        showSuccess(`${data.nama} berhasil dihapus!`)
-        fetchSiswa(currentPageRef.current, pageSize, searchText)
-      } else {
-        showError('Gagal menghapus siswa')
-      }
-    }
-  }
-
-  // Handle pagination change from AG Grid
-  const onPaginationChanged = useCallback((params) => {
-    if (!gridRef.current || isFetchingRef.current) return
-    
-    const newPageNumber = params.api.paginationGetCurrentPage() + 1 // AG Grid is 0-indexed
-    const newPageSize = params.api.paginationGetPageSize()
-    
-    // Handle page size change - reset and refetch from beginning
-    if (newPageSize !== pageSize) {
-      setPageSize(newPageSize)
-      pageCursorsRef.current = { 1: null }
-      currentPageRef.current = 1
-      fetchSiswa(1, newPageSize, searchText)
-      return
-    }
-    
-    // Handle page number change
-    if (newPageNumber !== currentPageRef.current) {
-      fetchSiswa(newPageNumber, pageSize, searchText)
-    }
-  }, [pageSize, searchText, fetchSiswa])
-
-  // Handle search with debounce
-  const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    
-    // Reset pagination when searching
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    
-    // Reset grid to first page
-    if (gridRef.current) {
-      gridRef.current.api.paginationGoToPage(0)
-    }
-    
-    fetchSiswa(1, pageSize, value)
-  }, [fetchSiswa, pageSize])
-
-  // Handle refresh
-  const handleRefresh = useCallback(() => {
-    fetchSiswa(currentPageRef.current, pageSize, searchText)
-  }, [fetchSiswa, pageSize, searchText])
-
+  
+  // Column definitions
   const columnDefs = useMemo(() => [
     { 
       field: 'nis', 
       headerName: 'NIS',
       sortable: true,
-      filter: true,
+      filter: 'agTextColumnFilter',
       width: 120,
       minWidth: 100
     },
@@ -244,16 +125,16 @@ const SiswaList = () => {
       field: 'nisn', 
       headerName: 'NISN',
       sortable: true,
-      filter: true,
+      filter: 'agTextColumnFilter',
       width: 120,
       minWidth: 100,
-      cellRenderer: (params) => params.value || '-'
+      valueFormatter: (params) => params.value || '-'
     },
     { 
       field: 'nama', 
       headerName: 'Nama Lengkap',
       sortable: true,
-      filter: true,
+      filter: 'agTextColumnFilter',
       flex: 1,
       minWidth: 180
     },
@@ -261,7 +142,7 @@ const SiswaList = () => {
       field: 'jenis_kelamin',
       headerName: 'Jenis Kelamin',
       sortable: true,
-      filter: true,
+      filter: 'agTextColumnFilter',
       width: 140,
       minWidth: 120,
       cellRenderer: (params) => {
@@ -280,19 +161,20 @@ const SiswaList = () => {
       }
     },
     { 
-      field: 'kelas.nama_kelas', 
+      field: 'kelas', 
       headerName: 'Kelas',
       sortable: true,
-      filter: true,
+      filter: 'agTextColumnFilter',
       width: 130,
       minWidth: 110,
-      cellRenderer: (params) => params.value || '-'
+      valueGetter: (params) => params.data?.kelas?.nama_kelas || '-',
+      valueFormatter: (params) => params.value || '-'
     },
     { 
       field: 'status', 
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: 'agTextColumnFilter',
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
@@ -326,70 +208,83 @@ const SiswaList = () => {
           <div className="h-full flex items-center justify-center">
             <ActionsMenu
               data={params.data}
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
+              onDetail={() => navigate(`/siswa/${params.data.id}`)}
+              onEdit={() => navigate(`/siswa/${params.data.id}/edit`)}
               onDelete={() => handleDelete(params.data)}
             />
           </div>
         )
       }
     }
-  ], [])
+  ], [navigate])
 
+  // Default column definition
   const defaultColDef = useMemo(() => ({
     resizable: true,
-    sortable: true,
-    filter: true,
   }), [])
+
+  // Handle row click for navigation
+  const handleRowClicked = useCallback((event) => {
+    // Optional: navigate to detail on row click
+    // navigate(`/siswa/${event.data.id}`)
+  }, [navigate])
+
+  // Handle delete
+  const handleDelete = async (data) => {
+    const result = await showDeleteConfirm(data.nama)
+    if (result.isConfirmed) {
+      const { error } = await siswaService.delete(data.id)
+      if (!error) {
+        showSuccess(`${data.nama} berhasil dihapus!`)
+        // Refresh the grid
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
+      } else {
+        showError('Gagal menghapus siswa')
+      }
+    }
+  }
+
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Data Siswa</h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari siswa..."
-              value={searchText}
-              onChange={onFilterTextBoxChanged}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
-            />
-          </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
-            <RefreshCw size={18} />
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh
           </Button>
           <Button onClick={() => navigate('/siswa/create')}>
-            <Plus size={18} className="mr-2" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
             Tambah Siswa
           </Button>
         </div>
       </div>
 
       <Card>
-        {loading && rowData.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              rowCount={totalRows}
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          ref={gridRef}
+          endpoint="/siswa/"
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          onRowClicked={handleRowClicked}
+          height={600}
+        />
       </Card>
     </div>
   )
