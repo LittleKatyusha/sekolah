@@ -1,45 +1,40 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
+import { useMemo, useCallback, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { hariOperasionalService } from '../services/hariOperasionalService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const HariOperasionalList = () => {
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    const { data, error } = await hariOperasionalService.getAll({ per_page: 50 })
-    if (data) {
-      setRowData(data.data || [])
-    } else {
-      console.error('Error fetching hari operasional:', error)
-      showError('Gagal mengambil data hari operasional')
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'asc',
+    search: '',
+    filter: '{}',
+  }), [])
+
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-    setLoading(false)
   }, [])
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const handleToggle = async (row) => {
+  const handleToggle = useCallback(async (row) => {
     const newValue = !row.is_active
     const { error } = await hariOperasionalService.update(row.id, { is_active: newValue })
+
     if (!error) {
       showSuccess(`${row.hari} berhasil ${newValue ? 'diaktifkan' : 'dinonaktifkan'}`)
-      setRowData(prev => prev.map(item =>
-        item.id === row.id ? { ...item, is_active: newValue } : item
-      ))
+      if (gridRef.current?.refreshGrid) {
+        gridRef.current.refreshGrid()
+      }
     } else {
       showError('Gagal mengubah status hari operasional')
     }
-  }
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -105,7 +100,7 @@ const HariOperasionalList = () => {
         )
       },
     },
-  ], [])
+  ], [handleToggle])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -115,28 +110,23 @@ const HariOperasionalList = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hari Operasional</h1>
-        <Button onClick={fetchData} variant="secondary" title="Refresh Data">
+        <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
           <RefreshCw size={18} />
         </Button>
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 450 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              animateRows={true}
-              domLayout="normal"
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          ref={gridRef}
+          endpoint="/admin/hari-operasional/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={450}
+        />
       </Card>
     </div>
   )

@@ -1,13 +1,11 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
-import { listSoals, deleteSoal } from '../services/soalService'
+import { deleteSoal } from '../services/soalService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 // Actions Menu Component
@@ -24,7 +22,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -32,7 +30,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -40,7 +38,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -62,7 +60,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -105,87 +103,38 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const SoalList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  const [cursor, setCursor] = useState(null)
 
-  const fetchSoals = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText, cursorValue = null) => {
-    setLoading(true)
-    
-    const params = {
-      per_page: perPage,
-      page: page
-    }
-    
-    // Add search parameter if provided
-    if (searchQuery && searchQuery.trim()) {
-      params.search = searchQuery.trim()
-    }
-    
-    // Add cursor for pagination if provided
-    if (cursorValue) {
-      params.cursor = cursorValue
-    }
-    
-    const { data, error } = await listSoals(params)
-    
-    if (data) {
-      setRowData(data.data || [])
-      // Update pagination info from meta
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        setCurrentPage(data.meta.current_page || page)
-        setCursor(data.meta.next_cursor || null)
-      }
-    } else {
-      console.error('Error fetching soal:', error)
-      showError('Gagal mengambil data soal')
-    }
-    
-    setLoading(false)
-  }, [pageSize, searchText])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  // Initial fetch
-  useEffect(() => {
-    fetchSoals(1, pageSize)
-  }, [])
-
-  // Handle search with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchSoals(1, pageSize, searchText, null)
-    }, 300)
-    
-    return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, fetchSoals])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/akademik/soals/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/akademik/soals/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(`Soal #${data.id}`)
     if (result.isConfirmed) {
       const { error } = await deleteSoal(data.id)
       if (!error) {
         showSuccess(`Soal #${data.id} berhasil dihapus!`)
-        // Refresh current page after delete
-        fetchSoals(currentPage, pageSize)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus soal')
       }
     }
-  }
+  }, [])
 
   const getTipeLabel = (value) => {
     if (!value) return '-'
@@ -209,21 +158,6 @@ const SoalList = () => {
     return tingkatMap[value] || value
   }
 
-  // Handle pagination changes from AgGrid
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1 // AgGrid uses 0-based index
-      const newPageSize = params.api.paginationGetPageSize()
-      
-      // Only fetch if page or page size actually changed
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchSoals(newPage, newPageSize, searchText)
-      }
-    }
-  }, [currentPage, pageSize, searchText, fetchSoals])
-
   const columnDefs = useMemo(() => [
     {
       field: 'id',
@@ -242,8 +176,8 @@ const SoalList = () => {
       minWidth: 200,
       cellRenderer: (params) => {
         const pertanyaan = params.value || ''
-        return pertanyaan.length > 100 
-          ? `${pertanyaan.substring(0, 100)}...` 
+        return pertanyaan.length > 100
+          ? `${pertanyaan.substring(0, 100)}...`
           : pertanyaan
       }
     },
@@ -275,13 +209,13 @@ const SoalList = () => {
         const tingkat = params.value
         const label = getTingkatKesulitanLabel(tingkat)
         let colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-        
+
         if (tingkat === 2) {
           colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
         } else if (tingkat === 3) {
           colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
         }
-        
+
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
             {label}
@@ -318,7 +252,7 @@ const SoalList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -326,13 +260,11 @@ const SoalList = () => {
     filter: true,
   }), [])
 
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
-
   const handleRefresh = useCallback(() => {
-    fetchSoals(currentPage, pageSize, searchText)
-  }, [currentPage, pageSize, searchText, fetchSoals])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -345,7 +277,7 @@ const SoalList = () => {
               type="text"
               placeholder="Cari soal..."
               value={searchText}
-              onChange={onFilterTextBoxChanged}
+              onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
@@ -360,27 +292,18 @@ const SoalList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`soal-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/akademik/soals"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

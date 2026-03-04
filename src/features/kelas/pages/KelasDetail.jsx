@@ -244,8 +244,7 @@
                      pagination={true}
                      paginationPageSize={10}
                      animateRows={true}
-              theme="legacy"
-                   />
+                    />
                  </div>
                ) : (
                  <div className="text-center py-12">

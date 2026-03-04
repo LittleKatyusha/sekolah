@@ -165,10 +165,7 @@ const ServerGrid = ({
         onGridReady={handleGridReady}
         // Server-side specific options
         serverSideStoreType="partial"
-        suppressRowClickSelection={true}
-        rowSelection="multiple"
-        // Use legacy theme to avoid conflict with CSS imports
-        theme="legacy"
+        rowSelection={{ mode: 'multiRow', enableClickSelection: false }}
         {...restProps}
       />
     </div>

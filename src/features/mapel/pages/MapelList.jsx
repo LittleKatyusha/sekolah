@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { mapelService } from '../services/mapelService'
@@ -24,7 +22,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -32,7 +30,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -40,7 +38,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -62,7 +60,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -105,46 +103,48 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const MapelList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
 
-  const fetchMapel = async () => {
-    setLoading(true)
-    const { data, error } = await mapelService.getMapel()
-    if (data) {
-      setRowData(data.data || [])
-    } else {
-      console.error('Error fetching mapel:', error)
-      showError('Gagal mengambil data mata pelajaran')
-    }
-    setLoading(false)
-  }
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  useEffect(() => {
-    fetchMapel()
-  }, [])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/mapel/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/mapel/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.nama)
     if (result.isConfirmed) {
       const { error } = await mapelService.deleteMapel(data.id)
       if (!error) {
         showSuccess(`${data.nama} berhasil dihapus!`)
-        fetchMapel()
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus mata pelajaran')
       }
     }
-  }
+  }, [])
+
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
+
+  const onFilterTextBoxChanged = useCallback((e) => {
+    setSearchText(e.target.value)
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -184,17 +184,13 @@ const MapelList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDetail, handleEdit, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
     sortable: true,
     filter: true,
   }), [])
-
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
 
   return (
     <div className="space-y-6">
@@ -211,7 +207,7 @@ const MapelList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={fetchMapel} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/mapel/create')}>
@@ -222,25 +218,18 @@ const MapelList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={10}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              quickFilterText={searchText}
-              animateRows={true}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`mapel-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/mapel/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

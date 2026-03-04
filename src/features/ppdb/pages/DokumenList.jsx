@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
 import { Plus, Search, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { dokumenService } from '../services/ppdbService'
@@ -55,49 +55,31 @@ const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
 const DokumenList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
-  const [totalRows, setTotalRows] = useState(0)
-  const [paginationPageSize] = useState(20)
-  const pageCursorsRef = useRef({})
-  const currentPageRef = useRef(0)
 
-  const fetchData = useCallback(async (page = 0) => {
-    setLoading(true)
-    const params = { page_size: paginationPageSize }
-    if (search) params.search = search
-    if (page > 0 && pageCursorsRef.current[page]) params.cursor = pageCursorsRef.current[page]
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: search || '',
+    filter: '{}',
+  }), [search])
 
-    const { data, error } = await dokumenService.getAll(params)
-    if (data) {
-      const items = data.data || []
-      setRowData(items)
-      setTotalRows(data.total || items.length)
-      if (data.next_cursor) pageCursorsRef.current[page + 1] = data.next_cursor
-      currentPageRef.current = page
-    } else {
-      showError('Gagal mengambil data dokumen')
-    }
-    setLoading(false)
-  }, [search, paginationPageSize])
-
-  useEffect(() => { fetchData(0) }, [fetchData])
-
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(`Dokumen "${data.jenis_dokumen || data.file_name || ''}"`)
     if (result.isConfirmed) {
       const { error } = await dokumenService.delete(data.id)
       if (!error) {
         showSuccess('Dokumen berhasil dihapus!')
-        fetchData(currentPageRef.current)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus dokumen')
       }
     }
-  }
+  }, [])
 
-  const columnDefs = [
+  const columnDefs = useMemo(() => ([
     { field: 'id', headerName: 'ID', width: 80, sortable: true },
     { field: 'ppdb_pendaftar_id', headerName: 'ID Pendaftar', width: 120, sortable: true },
     { field: 'jenis_dokumen', headerName: 'Jenis Dokumen', flex: 1, sortable: true },
@@ -131,7 +113,9 @@ const DokumenList = () => {
       sortable: false,
       filter: false,
     },
-  ]
+  ]), [navigate, handleDelete])
+
+  const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), [])
 
   return (
     <div className="space-y-6">
@@ -156,22 +140,20 @@ const DokumenList = () => {
             />
           </div>
         </div>
-        <div className="ag-theme-quartz dark:ag-theme-quartz-dark" style={{ height: 500, width: '100%' }}>
-          <AgGridReact
-            ref={gridRef}
-            rowData={rowData}
-            columnDefs={columnDefs}
-            defaultColDef={{ resizable: true }}
-            pagination={true}
-            paginationPageSize={paginationPageSize}
-            suppressPaginationPanel={false}
-            loading={loading}
-            overlayNoRowsTemplate='<span class="text-gray-500">Tidak ada data dokumen</span>'
-          />
-        </div>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500">
-          Total: {totalRows} dokumen
-        </div>
+        <InfiniteGrid
+          key={`dokumen-grid-${search}`}
+          ref={gridRef}
+          endpoint="/ppdb/dokumen/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={500}
+          overlayNoRowsTemplate={'<span class="text-gray-500">Tidak ada data dokumen</span>'}
+          themeClass="ag-theme-quartz dark:ag-theme-quartz-dark"
+        />
       </Card>
     </div>
   )

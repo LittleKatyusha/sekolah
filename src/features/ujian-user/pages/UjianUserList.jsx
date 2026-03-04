@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Play, FileText } from 'lucide-react'
+import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Play } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
@@ -27,7 +25,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -35,7 +33,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -43,7 +41,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -68,7 +66,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -121,20 +119,22 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
 const UjianUserList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
-  
+
   // Filter states
   const [selectedUjian, setSelectedUjian] = useState('')
   const [selectedSiswa, setSelectedSiswa] = useState('')
   const [ujianList, setUjianList] = useState([])
   const [siswaList, setSiswaList] = useState([])
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
+
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+    ...(selectedUjian ? { trx_ujian_id: selectedUjian } : {}),
+    ...(selectedSiswa ? { mst_siswa_id: selectedSiswa } : {}),
+  }), [searchText, selectedUjian, selectedSiswa])
 
   // Helper function to get status label
   const getStatusLabel = (value) => {
@@ -206,82 +206,32 @@ const UjianUserList = () => {
     fetchSiswaList()
   }, [])
 
-  const fetchData = useCallback(async (page = 1, perPage = 10, search = '') => {
-    setLoading(true)
-    
-    const params = {
-      per_page: perPage,
-      page: page,
-    }
-    
-    if (search && search.trim() !== '') {
-      params.search = search.trim()
-    }
-    
-    if (selectedUjian) {
-      params.trx_ujian_id = selectedUjian
-    }
-    
-    if (selectedSiswa) {
-      params.mst_siswa_id = selectedSiswa
-    }
-    
-    const { data, error } = await ujianUserService.getAll(params)
-    
-    if (data) {
-      setRowData(data.data || [])
-      // Extract pagination info from meta
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        setCurrentPage(data.meta.current_page || page)
-      }
-    } else {
-      console.error('Error fetching ujian user:', error)
-      showError('Gagal mengambil data ujian user')
-    }
-    
-    setLoading(false)
-  }, [selectedUjian, selectedSiswa])
-
-  // Initial load
-  useEffect(() => {
-    fetchData(currentPage, pageSize, searchText)
-  }, [])
-
-  // Handle search with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1)
-      fetchData(1, pageSize, searchText)
-    }, 300)
-    
-    return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, selectedUjian, selectedSiswa, fetchData])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/akademik/ujian-user/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/akademik/ujian-user/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const siswaName = data.siswa?.nama || 'Siswa'
     const ujianName = data.ujian?.nama || `Ujian #${data.trx_ujian_id}`
     const result = await showDeleteConfirm(`${siswaName} - ${ujianName}`)
     if (result.isConfirmed) {
       const { error } = await ujianUserService.delete(data.id)
       if (!error) {
-        showSuccess(`Ujian user berhasil dihapus!`)
-        fetchData(currentPage, pageSize, searchText)
+        showSuccess('Ujian user berhasil dihapus!')
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus ujian user')
       }
     }
-  }
+  }, [])
 
-  const handleMulai = async (data) => {
+  const handleMulai = useCallback(async (data) => {
     const siswaName = data.siswa?.nama || 'Siswa'
     const ujianName = data.ujian?.nama || `Ujian #${data.trx_ujian_id}`
     const result = await showConfirm(
@@ -289,7 +239,7 @@ const UjianUserList = () => {
       'Konfirmasi Mulai Ujian'
     )
     if (result.isConfirmed) {
-      const { data: responseData, error } = await ujianUserService.mulaiUjian(data.id)
+      const { error } = await ujianUserService.mulaiUjian(data.id)
       if (!error) {
         showSuccess('Ujian berhasil dimulai!')
         navigate(`/akademik/ujian-user/${data.id}/mulai`)
@@ -297,17 +247,15 @@ const UjianUserList = () => {
         showError('Gagal memulai ujian')
       }
     }
-  }
+  }, [navigate])
 
-  const handleUjianChange = (e) => {
+  const handleUjianChange = useCallback((e) => {
     setSelectedUjian(e.target.value)
-    setCurrentPage(1)
-  }
+  }, [])
 
-  const handleSiswaChange = (e) => {
+  const handleSiswaChange = useCallback((e) => {
     setSelectedSiswa(e.target.value)
-    setCurrentPage(1)
-  }
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -390,9 +338,13 @@ const UjianUserList = () => {
         if (nilai === null || nilai === undefined) return '-'
         return (
           <span className={`font-semibold ${
-            parseFloat(nilai) >= 70 ? 'text-green-600' : 
-            parseFloat(nilai) >= 60 ? 'text-yellow-600' : 'text-red-600'
-          }`}>
+            parseFloat(nilai) >= 70
+              ? 'text-green-600'
+              : parseFloat(nilai) >= 60
+                ? 'text-yellow-600'
+                : 'text-red-600'
+          }`}
+          >
             {nilai}
           </span>
         )
@@ -438,7 +390,7 @@ const UjianUserList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit, handleMulai])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -450,23 +402,11 @@ const UjianUserList = () => {
     setSearchText(e.target.value)
   }, [])
 
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1 // AG Grid uses 0-based index
-      const newPageSize = params.api.paginationGetPageSize()
-      
-      // Only fetch if page or page size actually changed
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchData(newPage, newPageSize, searchText)
-      }
-    }
-  }, [currentPage, pageSize, searchText, fetchData])
-
   const handleRefresh = useCallback(() => {
-    fetchData(currentPage, pageSize, searchText)
-  }, [currentPage, pageSize, searchText, fetchData])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   // Prepare options with "Semua" as default
   const ujianOptions = [
@@ -523,36 +463,19 @@ const UjianUserList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : rowData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-            <FileText size={48} className="mb-4 opacity-50" />
-            <p className="text-lg font-medium">Tidak ada data ujian user</p>
-            <p className="text-sm">Silakan tambah data baru atau ubah filter pencarian</p>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              rowModelType="clientSide"
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`ujian-user-grid-${searchText}-${selectedUjian}-${selectedSiswa}`}
+          ref={gridRef}
+          endpoint="/akademik/ujian-user/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+          overlayNoRowsTemplate={'<span class="text-gray-500">Tidak ada data ujian user</span>'}
+        />
       </Card>
     </div>
   )

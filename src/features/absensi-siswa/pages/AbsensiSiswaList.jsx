@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Edit, Trash2, MoreVertical, Calendar, Eye } from 'lucide-react'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
@@ -14,7 +12,7 @@ import { siswaService } from '../../siswa/services/siswaService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 // Actions Menu Component
-const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
+const ActionsMenu = ({ onEdit, onDelete, onDetail }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -27,7 +25,7 @@ const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -35,7 +33,7 @@ const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -43,7 +41,7 @@ const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -65,7 +63,7 @@ const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -141,23 +139,17 @@ const StatusBadge = ({ status }) => {
 
 const AbsensiSiswaList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
   const [filters, setFilters] = useState({
     tanggal_mulai: '',
     tanggal_akhir: ''
   })
   const [showFilter, setShowFilter] = useState(false)
-  
+
   const [siswaOptions, setSiswaOptions] = useState([])
   const [selectedSiswaId, setSelectedSiswaId] = useState('')
   const [summaryData, setSummaryData] = useState(null)
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
 
   const fetchSiswaOptions = async () => {
     const { data } = await siswaService.getAll({ per_page: 1000 })
@@ -174,86 +166,68 @@ const AbsensiSiswaList = () => {
     fetchSiswaOptions()
   }, [])
 
-  const fetchAbsensi = useCallback(async (page = currentPage, size = pageSize) => {
-    setLoading(true)
-    const params = {
-      page: page,
-      per_page: size
-    }
-    
-    if (filters.tanggal_mulai) {
-      params.tanggal_mulai = filters.tanggal_mulai
-    }
-    if (filters.tanggal_akhir) {
-      params.tanggal_akhir = filters.tanggal_akhir
-    }
-    if (searchText) {
-      params.search = searchText
-    }
+  useEffect(() => {
+    const fetchSummary = async () => {
+      if (!selectedSiswaId) {
+        setSummaryData(null)
+        return
+      }
 
-    try {
-      if (selectedSiswaId) {
-        const { data, error } = await absensiSiswaService.getAbsensiBySiswa(selectedSiswaId, params)
-        if (data) {
-          setRowData(data.data || [])
-          setTotalRows(data.meta?.total || data.data?.length || 0)
-        } else {
-          console.error('Error fetching absensi by siswa:', error)
-          showError('Gagal mengambil data absensi siswa')
-        }
-
-        const { data: summaryRes } = await absensiSiswaService.getSummaryBySiswa(selectedSiswaId)
-        if (summaryRes) {
-          setSummaryData(summaryRes.data)
-        }
+      const { data: summaryRes } = await absensiSiswaService.getSummaryBySiswa(selectedSiswaId)
+      if (summaryRes) {
+        setSummaryData(summaryRes.data)
       } else {
-        const { data, error } = await absensiSiswaService.getAbsensiSiswa(params)
-        if (data) {
-          setRowData(data.data || [])
-          setTotalRows(data.meta?.total || data.data?.length || 0)
-        } else {
-          console.error('Error fetching absensi:', error)
-          showError('Gagal mengambil data absensi siswa')
-        }
         setSummaryData(null)
       }
-    } catch (err) {
-      console.error(err)
-      showError('Terjadi kesalahan')
     }
-    
-    setLoading(false)
-  }, [filters, selectedSiswaId, searchText, currentPage, pageSize])
 
-  useEffect(() => {
-    fetchAbsensi()
-  }, [fetchAbsensi])
+    fetchSummary()
+  }, [selectedSiswaId])
+
+  const endpoint = useMemo(
+    () => (selectedSiswaId ? `/absensi-siswa/siswa/${selectedSiswaId}` : '/absensi-siswa'),
+    [selectedSiswaId]
+  )
+
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: JSON.stringify({
+      tanggal_mulai: filters.tanggal_mulai || '',
+      tanggal_akhir: filters.tanggal_akhir || '',
+      siswa_id: selectedSiswaId || ''
+    }),
+    tanggal_mulai: filters.tanggal_mulai || undefined,
+    tanggal_akhir: filters.tanggal_akhir || undefined,
+  }), [filters.tanggal_akhir, filters.tanggal_mulai, searchText, selectedSiswaId])
 
   const handleSiswaChange = (e) => {
     setSelectedSiswaId(e.target.value)
-    setCurrentPage(1) // Reset to first page when filter changes
   }
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/absensi-siswa/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/absensi-siswa/edit/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.siswa?.nama || 'absensi ini')
     if (result.isConfirmed) {
       const { error } = await absensiSiswaService.deleteAbsensiSiswa(data.id)
       if (!error) {
         showSuccess('Absensi berhasil dihapus!')
-        fetchAbsensi()
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus absensi')
       }
     }
-  }
+  }, [])
 
   const handleAdd = () => {
     navigate('/absensi-siswa/tambah')
@@ -268,8 +242,9 @@ const AbsensiSiswaList = () => {
   }
 
   const applyFilters = () => {
-    setCurrentPage(1) // Reset to first page when applying filters
-    fetchAbsensi(1, pageSize)
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
   }
 
   const clearFilters = () => {
@@ -277,35 +252,13 @@ const AbsensiSiswaList = () => {
       tanggal_mulai: '',
       tanggal_akhir: ''
     })
-    setCurrentPage(1) // Reset to first page when clearing filters
-    fetchAbsensi(1, pageSize)
   }
 
-  const handleRefresh = () => {
-    fetchAbsensi(currentPage, pageSize)
-  }
-
-  const onPaginationChanged = useCallback((params) => {
-    const newPage = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-    
-    if (newPage !== currentPage || newPageSize !== pageSize) {
-      setCurrentPage(newPage)
-      setPageSize(newPageSize)
-      fetchAbsensi(newPage, newPageSize)
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-  }, [currentPage, pageSize, fetchAbsensi])
-
-  const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    setCurrentPage(1) // Reset to first page when searching
-    // Debounce the search by using a timeout
-    const timeoutId = setTimeout(() => {
-      fetchAbsensi(1, pageSize)
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [pageSize, fetchAbsensi])
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -375,7 +328,6 @@ const AbsensiSiswaList = () => {
         return (
           <div className="h-full flex items-center justify-center">
             <ActionsMenu
-              data={params.data}
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
@@ -384,7 +336,7 @@ const AbsensiSiswaList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -412,12 +364,12 @@ const AbsensiSiswaList = () => {
               type="text"
               placeholder="Cari absensi..."
               value={searchText}
-              onChange={onFilterTextBoxChanged}
+              onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button 
-            onClick={() => setShowFilter(!showFilter)} 
+          <Button
+            onClick={() => setShowFilter(!showFilter)}
             variant={showFilter ? 'primary' : 'secondary'}
             title="Filter Tanggal"
           >
@@ -506,26 +458,18 @@ const AbsensiSiswaList = () => {
       )}
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`absensi-siswa-grid-${selectedSiswaId}-${searchText}-${filters.tanggal_mulai}-${filters.tanggal_akhir}`}
+          ref={gridRef}
+          endpoint={endpoint}
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

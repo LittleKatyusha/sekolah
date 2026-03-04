@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { guruService } from '../services/guruService'
@@ -24,7 +22,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -32,7 +30,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -40,7 +38,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -62,7 +60,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -105,101 +103,50 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const GuruList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  const [cursor, setCursor] = useState(null)
 
-  const fetchGuru = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText, cursorValue = null) => {
-    setLoading(true)
-    
-    const params = {
-      per_page: perPage,
-      page: page
-    }
-    
-    // Add search parameter if provided
-    if (searchQuery && searchQuery.trim()) {
-      params.search = searchQuery.trim()
-    }
-    
-    // Add cursor for pagination if provided
-    if (cursorValue) {
-      params.cursor = cursorValue
-    }
-    
-    const { data, error } = await guruService.getAll(params)
-    
-    if (data) {
-      setRowData(data.data || [])
-      // Update pagination info from meta
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        setCurrentPage(data.meta.current_page || page)
-        setCursor(data.meta.next_cursor || null)
-      }
-    } else {
-      console.error('Error fetching guru:', error)
-      showError('Gagal mengambil data guru')
-    }
-    
-    setLoading(false)
-  }, [pageSize, searchText])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  // Initial fetch
-  useEffect(() => {
-    fetchGuru(1, pageSize)
-  }, [])
-
-  // Handle search with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchGuru(1, pageSize, searchText, null)
-    }, 300)
-    
-    return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, fetchGuru])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/guru/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/guru/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.nama)
     if (result.isConfirmed) {
       const { error } = await guruService.delete(data.id)
       if (!error) {
         showSuccess(`${data.nama} berhasil dihapus!`)
-        // Refresh current page after delete
-        fetchGuru(currentPage, pageSize)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus guru')
       }
     }
-  }
+  }, [])
 
-  const getJenisKelaminLabel = (value) => {
+  const getJenisKelaminLabel = useCallback((value) => {
     if (!value) return '-'
-    // Handle both numeric and string values from API
     const jkMap = {
       1: 'Laki-Laki',
       2: 'Perempuan',
     }
     return jkMap[value] || value
-  }
+  }, [])
 
-  const getPendidikanLabel = (value) => {
+  const getPendidikanLabel = useCallback((value) => {
     if (!value) return '-'
-    // Handle both numeric and string values from API
     const pendidikanMap = {
       1: 'S1',
       2: 'S2',
@@ -208,22 +155,7 @@ const GuruList = () => {
       5: 'D4',
     }
     return pendidikanMap[value] || value
-  }
-
-  // Handle pagination changes from AgGrid
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1 // AgGrid uses 0-based index
-      const newPageSize = params.api.paginationGetPageSize()
-      
-      // Only fetch if page or page size actually changed
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchGuru(newPage, newPageSize, searchText)
-      }
-    }
-  }, [currentPage, pageSize, searchText, fetchGuru])
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -320,7 +252,7 @@ const GuruList = () => {
         )
       }
     }
-  ], [])
+  ], [getJenisKelaminLabel, getPendidikanLabel, handleDetail, handleEdit, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -333,8 +265,10 @@ const GuruList = () => {
   }, [])
 
   const handleRefresh = useCallback(() => {
-    fetchGuru(currentPage, pageSize, searchText)
-  }, [currentPage, pageSize, searchText, fetchGuru])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -362,27 +296,18 @@ const GuruList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`guru-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/guru/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

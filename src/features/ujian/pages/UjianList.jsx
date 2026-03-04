@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, FileText } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
@@ -26,7 +24,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -34,7 +32,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -42,7 +40,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -64,7 +62,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -115,20 +113,19 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
 const UjianList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
-  
-  // Kelas filter state
+
   const [selectedKelas, setSelectedKelas] = useState('')
   const [kelasList, setKelasList] = useState([])
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
 
-  // Helper function to map jenis values to labels
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+    ...(selectedKelas ? { mst_kelas_id: selectedKelas } : {}),
+  }), [searchText, selectedKelas])
+
   const getJenisLabel = (value) => {
     if (!value) return '-'
     const jenisMap = {
@@ -141,7 +138,6 @@ const UjianList = () => {
     return jenisMap[value] || `Jenis ${value}`
   }
 
-  // Helper function to get jenis badge color
   const getJenisColorClass = (value) => {
     const colorMap = {
       1: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
@@ -153,7 +149,6 @@ const UjianList = () => {
     return colorMap[value] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
 
-  // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
@@ -164,13 +159,11 @@ const UjianList = () => {
     })
   }
 
-  // Helper function to capitalize semester
   const formatSemester = (value) => {
     if (!value) return '-'
     return value.charAt(0).toUpperCase() + value.slice(1)
   }
 
-  // Fetch kelas list on component mount
   useEffect(() => {
     const fetchKelasList = async () => {
       const { data, error } = await kelasService.getAll({ per_page: 100 })
@@ -187,95 +180,42 @@ const UjianList = () => {
     fetchKelasList()
   }, [])
 
-  const fetchData = useCallback(async (page = 1, perPage = 10, search = '', kelasId = '') => {
-    setLoading(true)
-    
-    let result
-    if (kelasId) {
-      // Use getByKelas when kelas is selected
-      result = await ujianService.getByKelas(kelasId)
-      if (result.data) {
-        // Handle the response format from getByKelas
-        const ujianData = result.data.data || result.data || []
-        setRowData(Array.isArray(ujianData) ? ujianData : [ujianData])
-        setTotalRows(Array.isArray(ujianData) ? ujianData.length : 1)
-        setCurrentPage(1)
-      }
-    } else {
-      // Use getAll with pagination and search
-      const params = {
-        per_page: perPage,
-        page: page,
-      }
-      
-      if (search && search.trim() !== '') {
-        params.search = search.trim()
-      }
-      
-      result = await ujianService.getAll(params)
-      if (result.data) {
-        setRowData(result.data.data || [])
-        // Extract pagination info from meta
-        if (result.data.meta) {
-          setTotalRows(result.data.meta.total || 0)
-          setCurrentPage(result.data.meta.current_page || page)
-        }
-      }
-    }
-    
-    if (result.error) {
-      console.error('Error fetching ujian:', result.error)
-      showError('Gagal mengambil data ujian')
-    }
-    
-    setLoading(false)
-  }, [])
-
-  // Initial load
-  useEffect(() => {
-    fetchData(currentPage, pageSize, searchText, selectedKelas)
-  }, [])
-
-  // Handle search with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1)
-      fetchData(1, pageSize, searchText, selectedKelas)
-    }, 300)
-    
-    return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, selectedKelas, fetchData])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/akademik/ujian/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/akademik/ujian/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.nama || `Ujian #${data.id}`)
     if (result.isConfirmed) {
       const { error } = await ujianService.delete(data.id)
       if (!error) {
-        showSuccess(`Ujian berhasil dihapus!`)
-        fetchData(currentPage, pageSize, searchText, selectedKelas)
+        showSuccess('Ujian berhasil dihapus!')
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus ujian')
       }
     }
-  }
+  }, [])
 
-  const handleNilai = (data) => {
+  const handleNilai = useCallback((data) => {
     navigate(`/akademik/ujian/${data.id}/nilai`)
-  }
+  }, [navigate])
 
-  const handleKelasChange = (e) => {
-    const kelasId = e.target.value
-    setSelectedKelas(kelasId)
-    setCurrentPage(1)
-  }
+  const handleKelasChange = useCallback((e) => {
+    setSelectedKelas(e.target.value)
+  }, [])
+
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -293,7 +233,7 @@ const UjianList = () => {
       flex: 1,
       minWidth: 150,
       valueGetter: (params) => {
-        return params.data.mapel?.nama || params.data.mapel?.kode || '-'
+        return params.data?.mapel?.nama || params.data?.mapel?.kode || '-'
       }
     },
     {
@@ -304,7 +244,7 @@ const UjianList = () => {
       width: 120,
       minWidth: 100,
       valueGetter: (params) => {
-        return params.data.kelas?.nama_kelas || '-'
+        return params.data?.kelas?.nama_kelas || '-'
       }
     },
     {
@@ -382,7 +322,7 @@ const UjianList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit, handleNilai])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -390,29 +330,6 @@ const UjianList = () => {
     filter: true,
   }), [])
 
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
-  }, [])
-
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1 // AG Grid uses 0-based index
-      const newPageSize = params.api.paginationGetPageSize()
-      
-      // Only fetch if page or page size actually changed
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchData(newPage, newPageSize, searchText, selectedKelas)
-      }
-    }
-  }, [currentPage, pageSize, searchText, selectedKelas, fetchData])
-
-  const handleRefresh = useCallback(() => {
-    fetchData(currentPage, pageSize, searchText, selectedKelas)
-  }, [currentPage, pageSize, searchText, selectedKelas, fetchData])
-
-  // Prepare kelas options with "Semua Kelas" as default
   const kelasOptions = [
     { value: '', label: 'Semua Kelas' },
     ...kelasList
@@ -429,7 +346,7 @@ const UjianList = () => {
               type="text"
               placeholder="Cari ujian..."
               value={searchText}
-              onChange={onFilterTextBoxChanged}
+              onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
@@ -453,36 +370,19 @@ const UjianList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : rowData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-            <FileText size={48} className="mb-4 opacity-50" />
-            <p className="text-lg font-medium">Tidak ada data ujian</p>
-            <p className="text-sm">Silakan tambah ujian baru atau ubah filter pencarian</p>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              rowModelType="clientSide"
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`ujian-grid-${searchText}-${selectedKelas}`}
+          ref={gridRef}
+          endpoint="/akademik/ujian/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+          overlayNoRowsTemplate={'<span class="text-gray-500">Tidak ada data ujian</span>'}
+        />
       </Card>
     </div>
   )

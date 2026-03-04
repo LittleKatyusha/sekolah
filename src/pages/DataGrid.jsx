@@ -207,11 +207,10 @@ const DataGrid = () => {
                 mode: 'multiRow',
                 checkboxes: true,
                 headerCheckbox: true,
+                enableClickSelection: false,
               }}
-              suppressRowClickSelection={true}
               quickFilterText={searchText}
               animateRows={true}
-              theme="legacy"
             />
           </div>
         )}

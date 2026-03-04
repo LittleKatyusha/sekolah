@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { eksSiswaService } from '../services/ekstrakurikulerService'
@@ -101,103 +99,44 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const EksSiswaList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  const currentPageRef = useRef(1)
-  const pageCursorsRef = useRef({ 1: null })
-  const isFetchingRef = useRef(false)
   const gridRef = useRef(null)
+  const [searchText, setSearchText] = useState('')
 
-  const fetchData = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-    setLoading(true)
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-    const cursorValue = pageCursorsRef.current[page]
-    const params = {
-      per_page: perPage,
-      ...(searchQuery && { search: searchQuery }),
-      ...(cursorValue && { cursor: cursorValue })
-    }
+  const handleEdit = useCallback((data) => navigate(`/ekstrakurikuler/siswa/${data.id}/edit`), [navigate])
+  const handleDetail = useCallback((data) => navigate(`/ekstrakurikuler/siswa/${data.id}`), [navigate])
 
-    const { data, error } = await eksSiswaService.getAll(params)
-
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        currentPageRef.current = data.meta.current_page || page
-        if (data.meta.next_cursor) {
-          pageCursorsRef.current[page + 1] = data.meta.next_cursor
-        }
-      }
-    } else {
-      console.error('Error fetching ekstrakurikuler siswa:', error)
-      showError('Gagal mengambil data pendaftaran ekskul')
-    }
-
-    setLoading(false)
-    isFetchingRef.current = false
-  }, [pageSize, searchText])
-
-  useEffect(() => {
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    fetchData(1, pageSize, searchText)
-  }, [])
-
-  const handleEdit = (data) => navigate(`/ekstrakurikuler/siswa/${data.id}/edit`)
-  const handleDetail = (data) => navigate(`/ekstrakurikuler/siswa/${data.id}`)
-
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const label = `Pendaftaran #${data.id}`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await eksSiswaService.delete(data.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        fetchData(currentPageRef.current, pageSize, searchText)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus pendaftaran')
       }
     }
-  }
-
-  const onPaginationChanged = useCallback((params) => {
-    if (!gridRef.current || isFetchingRef.current) return
-    const newPageNumber = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-
-    if (newPageSize !== pageSize) {
-      setPageSize(newPageSize)
-      pageCursorsRef.current = { 1: null }
-      currentPageRef.current = 1
-      fetchData(1, newPageSize, searchText)
-      return
-    }
-
-    if (newPageNumber !== currentPageRef.current) {
-      fetchData(newPageNumber, pageSize, searchText)
-    }
-  }, [pageSize, searchText, fetchData])
+  }, [])
 
   const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    if (gridRef.current) {
-      gridRef.current.api.paginationGoToPage(0)
-    }
-    fetchData(1, pageSize, value)
-  }, [fetchData, pageSize])
+    setSearchText(e.target.value)
+  }, [])
 
   const handleRefresh = useCallback(() => {
-    fetchData(currentPageRef.current, pageSize, searchText)
-  }, [fetchData, pageSize, searchText])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
@@ -267,7 +206,7 @@ const EksSiswaList = () => {
         </div>
       )
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -301,28 +240,18 @@ const EksSiswaList = () => {
       </div>
 
       <Card>
-        {loading && rowData.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`eks-siswa-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/ekstrakurikuler/pendaftaran/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

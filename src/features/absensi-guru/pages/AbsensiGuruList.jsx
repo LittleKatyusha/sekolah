@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Edit, Trash2, MoreVertical, Eye } from 'lucide-react'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
+const ActionsMenu = ({ onEdit, onDelete, onDetail }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -39,6 +37,7 @@ const ActionsMenu = ({ data, onEdit, onDelete, onDetail }) => {
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
       if (isOutsideButton && isOutsideMenu) setIsOpen(false)
     }
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -84,66 +83,39 @@ const StatusBadge = ({ status }) => {
 
 const AbsensiGuruList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
 
-  const fetchAbsensi = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    setLoading(true)
-    const params = { page, per_page: perPage }
-    if (searchQuery && searchQuery.trim()) params.search = searchQuery.trim()
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-    const { data, error } = await absensiGuruService.getAll(params)
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        setCurrentPage(data.meta.current_page || page)
-      }
-    } else {
-      console.error('Error fetching absensi guru:', error)
-      showError('Gagal mengambil data absensi guru')
-    }
-    setLoading(false)
-  }, [pageSize, searchText])
+  const handleDetail = useCallback((data) => navigate(`/absensi-guru/${data.id}`), [navigate])
+  const handleEdit = useCallback((data) => navigate(`/absensi-guru/edit/${data.id}`), [navigate])
 
-  useEffect(() => { fetchAbsensi(1, pageSize) }, [])
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => { fetchAbsensi(1, pageSize, searchText) }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, fetchAbsensi])
-
-  const handleDetail = (data) => navigate(`/absensi-guru/${data.id}`)
-  const handleEdit = (data) => navigate(`/absensi-guru/edit/${data.id}`)
-
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.guru?.nama || 'absensi ini')
     if (result.isConfirmed) {
       const { error } = await absensiGuruService.deleteById(data.id)
       if (!error) {
         showSuccess('Absensi guru berhasil dihapus!')
-        fetchAbsensi(currentPage, pageSize)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus absensi guru')
       }
     }
-  }
+  }, [])
 
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1
-      const newPageSize = params.api.paginationGetPageSize()
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchAbsensi(newPage, newPageSize, searchText)
-      }
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-  }, [currentPage, pageSize, searchText, fetchAbsensi])
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -207,7 +179,6 @@ const AbsensiGuruList = () => {
       cellRenderer: (params) => (
         <div className="h-full flex items-center justify-center">
           <ActionsMenu
-            data={params.data}
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
@@ -215,7 +186,7 @@ const AbsensiGuruList = () => {
         </div>
       )
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit])
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), [])
 
@@ -234,7 +205,7 @@ const AbsensiGuruList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={() => fetchAbsensi(currentPage, pageSize, searchText)} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/absensi-guru/tambah')}>
@@ -245,27 +216,18 @@ const AbsensiGuruList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`absensi-guru-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/absensi-guru"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

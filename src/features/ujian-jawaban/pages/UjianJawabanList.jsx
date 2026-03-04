@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianJawabanService } from '../services/ujianJawabanService'
@@ -60,49 +58,36 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const UjianJawabanList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
 
-  const fetchData = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    setLoading(true)
-    const params = { per_page: perPage, page }
-    if (searchQuery?.trim()) params.search = searchQuery.trim()
-    const { data, error } = await ujianJawabanService.getAll(params)
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) { setTotalRows(data.meta.total || 0); setCurrentPage(data.meta.current_page || page) }
-    } else {
-      showError('Gagal mengambil data ujian jawaban')
-    }
-    setLoading(false)
-  }, [pageSize, searchText])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  useEffect(() => { fetchData(1, pageSize) }, [])
-  useEffect(() => {
-    const t = setTimeout(() => fetchData(1, pageSize, searchText), 300)
-    return () => clearTimeout(t)
-  }, [searchText, pageSize, fetchData])
-
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(`Jawaban #${data.id}`)
     if (result.isConfirmed) {
       const { error } = await ujianJawabanService.delete(data.id)
-      if (!error) { showSuccess('Jawaban berhasil dihapus!'); fetchData(currentPage, pageSize) }
-      else showError('Gagal menghapus jawaban')
+      if (!error) {
+        showSuccess('Jawaban berhasil dihapus!')
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
+      } else {
+        showError('Gagal menghapus jawaban')
+      }
     }
-  }
+  }, [])
 
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1
-      const newPageSize = params.api.paginationGetPageSize()
-      if (newPage !== currentPage || newPageSize !== pageSize) { setPageSize(newPageSize); setCurrentPage(newPage); fetchData(newPage, newPageSize, searchText) }
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-  }, [currentPage, pageSize, searchText, fetchData])
+  }, [])
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', width: 80, sortable: true },
@@ -133,7 +118,7 @@ const UjianJawabanList = () => {
         </div>
       )
     }
-  ], [])
+  ], [handleDelete, navigate])
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), [])
 
@@ -147,19 +132,22 @@ const UjianJawabanList = () => {
             <input type="text" placeholder="Cari jawaban..." value={searchText} onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64" />
           </div>
-          <Button onClick={() => fetchData(currentPage, pageSize, searchText)} variant="secondary"><RefreshCw size={18} /></Button>
+          <Button onClick={handleRefresh} variant="secondary"><RefreshCw size={18} /></Button>
         </div>
       </div>
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef}
-              pagination={true} paginationPageSize={pageSize} paginationPageSizeSelector={[10, 20, 50, 100]}
-              theme="legacy" />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`ujian-jawaban-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/akademik/ujian-jawaban"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

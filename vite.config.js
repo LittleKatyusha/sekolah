@@ -20,6 +20,19 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // Some upstream nginx/WAF setups reject browser Origin/Referer in dev proxy requests.
+            // Align forwarded request behavior closer to Postman/cURL for auth endpoints.
+            proxyReq.removeHeader('origin')
+            proxyReq.removeHeader('referer')
+
+            // Ensure upstream sees expected host/scheme headers.
+            proxyReq.setHeader('host', 'api.akademihub.id')
+            proxyReq.setHeader('x-forwarded-host', req.headers.host || 'localhost:5173')
+            proxyReq.setHeader('x-forwarded-proto', 'http')
+          })
+        },
       },
       // WebSocket proxy – forwards ws://localhost:5173/ws → wss://api.akademihub.id/ws
       '/ws': {

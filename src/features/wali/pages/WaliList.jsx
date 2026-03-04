@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { waliService } from '../services/waliService'
@@ -107,87 +105,48 @@ const ActionsMenu = ({ onDetail, onEdit, onDelete }) => {
 const WaliList = () => {
   usePageTitle('Data Wali')
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  const fetchWalis = useCallback(async (page = currentPage, size = pageSize) => {
-    setLoading(true)
-    const params = {
-      page: page,
-      per_page: size
-    }
-    
-    if (searchText) {
-      params.search = searchText
-    }
-
-    const { data, error } = await waliService.getWalis(params)
-    if (data) {
-      setRowData(data.data || [])
-      setTotalRows(data.meta?.total || data.data?.length || 0)
-    } else {
-      console.error('Error fetching wali:', error)
-      showError('Gagal mengambil data wali')
-    }
-    setLoading(false)
-  }, [currentPage, pageSize, searchText])
-
-  useEffect(() => {
-    fetchWalis()
-  }, [fetchWalis])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/wali/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/wali/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.nama)
     if (result.isConfirmed) {
       const { error } = await waliService.deleteWali(data.id)
       if (!error) {
         showSuccess(`Wali ${data.nama} berhasil dihapus!`)
-        fetchWalis()
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus wali')
       }
     }
-  }
+  }, [])
 
-  const handleRefresh = () => {
-    fetchWalis(currentPage, pageSize)
-  }
-
-  const onPaginationChanged = useCallback((params) => {
-    const newPage = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-    
-    if (newPage !== currentPage || newPageSize !== pageSize) {
-      setCurrentPage(newPage)
-      setPageSize(newPageSize)
-      fetchWalis(newPage, newPageSize)
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-  }, [currentPage, pageSize, fetchWalis])
+  }, [])
 
   const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    setCurrentPage(1) // Reset to first page when searching
-    // Debounce the search by using a timeout
-    const timeoutId = setTimeout(() => {
-      fetchWalis(1, pageSize)
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [pageSize, fetchWalis])
+    setSearchText(e.target.value)
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -237,7 +196,7 @@ const WaliList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDetail, handleEdit, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -271,26 +230,18 @@ const WaliList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`wali-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/wali/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

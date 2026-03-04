@@ -188,13 +188,10 @@ const InfiniteGrid = ({
         onGridReady={handleGridReady}
         onRowClicked={onRowClicked}
         onSelectionChanged={onSelectionChanged}
-        rowSelection={rowSelection ? 'multiple' : undefined}
-        suppressRowClickSelection={!rowSelection}
+        rowSelection={rowSelection ? { mode: 'multiRow', enableClickSelection: false } : undefined}
         // Infinite row model specific
         maxBlocksInCache={10}
         blockLoadDebounceMillis={200}
-        // Use legacy theme to avoid conflict with CSS imports
-        theme="legacy"
         {...restProps}
       />
     </div>

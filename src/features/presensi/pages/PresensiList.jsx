@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { presensiService } from '../services/presensiService'
@@ -19,7 +17,7 @@ const STATUS_MAP = {
 }
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = ({ onDetail, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -110,111 +108,45 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 const PresensiList = () => {
   usePageTitle()
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  const currentPageRef = useRef(1)
-  const isFetchingRef = useRef(false)
-  const searchTimerRef = useRef(null)
   const gridRef = useRef(null)
+  const [searchText, setSearchText] = useState('')
 
-  const fetchPresensi = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-    setLoading(true)
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-    const params = {
-      page,
-      per_page: perPage,
-      ...(searchQuery && { search: searchQuery })
-    }
-
-    const { data, error } = await presensiService.getPresensi(params)
-
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        currentPageRef.current = data.meta.current_page || page
-      } else if (data.total !== undefined) {
-        setTotalRows(data.total || 0)
-        currentPageRef.current = data.current_page || page
-      }
-    } else {
-      console.error('Error fetching presensi:', error)
-      showError('Gagal mengambil data presensi')
-    }
-
-    setLoading(false)
-    isFetchingRef.current = false
-  }, [pageSize, searchText])
-
-  useEffect(() => {
-    fetchPresensi(1, pageSize, searchText)
-  }, [])
-
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/akademik/presensi/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/akademik/presensi/edit/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const label = `Presensi ${data.siswa?.nama || ''} - ${data.tanggal || ''}`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await presensiService.deletePresensi(data.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        fetchPresensi(currentPageRef.current, pageSize, searchText)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus presensi')
       }
     }
-  }
-
-  const onPaginationChanged = useCallback((params) => {
-    if (!gridRef.current || isFetchingRef.current) return
-
-    const newPageNumber = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-
-    if (newPageSize !== pageSize) {
-      setPageSize(newPageSize)
-      currentPageRef.current = 1
-      fetchPresensi(1, newPageSize, searchText)
-      return
-    }
-
-    if (newPageNumber !== currentPageRef.current) {
-      fetchPresensi(newPageNumber, pageSize, searchText)
-    }
-  }, [pageSize, searchText, fetchPresensi])
-
-  const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current)
-    }
-
-    searchTimerRef.current = setTimeout(() => {
-      currentPageRef.current = 1
-      if (gridRef.current) {
-        gridRef.current.api.paginationGoToPage(0)
-      }
-      fetchPresensi(1, pageSize, value)
-    }, 300)
-  }, [fetchPresensi, pageSize])
+  }, [])
 
   const handleRefresh = useCallback(() => {
-    fetchPresensi(currentPageRef.current, pageSize, searchText)
-  }, [fetchPresensi, pageSize, searchText])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -325,7 +257,6 @@ const PresensiList = () => {
       cellRenderer: (params) => (
         <div className="h-full flex items-center justify-center">
           <ActionsMenu
-            data={params.data}
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
@@ -333,7 +264,7 @@ const PresensiList = () => {
         </div>
       )
     }
-  ], [])
+  ], [handleDelete, handleDetail, handleEdit])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -352,7 +283,7 @@ const PresensiList = () => {
               type="text"
               placeholder="Cari presensi..."
               value={searchText}
-              onChange={onFilterTextBoxChanged}
+              onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
@@ -367,28 +298,18 @@ const PresensiList = () => {
       </div>
 
       <Card>
-        {loading && rowData.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`presensi-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/akademik/presensi"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

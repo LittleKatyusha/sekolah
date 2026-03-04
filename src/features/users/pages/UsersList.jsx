@@ -1,11 +1,9 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, ToggleRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { usersService } from '../services/usersService'
@@ -145,98 +143,61 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus }) => {
 
 const UsersList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  const fetchUsers = useCallback(async (page = currentPage, size = pageSize) => {
-    setLoading(true)
-    const params = {
-      page: page,
-      per_page: size
-    }
-    
-    if (searchText) {
-      params.search = searchText
-    }
-
-    const { data, error } = await usersService.getAll(params)
-    if (data) {
-      setRowData(data.data || [])
-      setTotalRows(data.meta?.total || data.data?.length || 0)
-    } else {
-      console.error('Error fetching users:', error)
-      showError('Gagal mengambil data users')
-    }
-    setLoading(false)
-  }, [currentPage, pageSize, searchText])
-
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/admin/users/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/admin/users/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm(data.name)
     if (result.isConfirmed) {
       const { error } = await usersService.delete(data.id)
       if (!error) {
         showSuccess(`${data.name} berhasil dihapus!`)
-        fetchUsers()
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus user')
       }
     }
-  }
+  }, [])
 
-  const handleToggleStatus = async (data) => {
+  const handleToggleStatus = useCallback(async (data) => {
     const newStatus = !data.is_active
     const { error } = await usersService.toggleStatus(data.id, newStatus)
     if (!error) {
       showSuccess(`User ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}!`)
-      fetchUsers()
+      if (gridRef.current?.refreshGrid) {
+        gridRef.current.refreshGrid()
+      }
     } else {
       showError('Gagal mengubah status user')
     }
-  }
+  }, [])
 
-  const handleRefresh = () => {
-    fetchUsers(currentPage, pageSize)
-  }
-
-  const onPaginationChanged = useCallback((params) => {
-    const newPage = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-    
-    if (newPage !== currentPage || newPageSize !== pageSize) {
-      setCurrentPage(newPage)
-      setPageSize(newPageSize)
-      fetchUsers(newPage, newPageSize)
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-  }, [currentPage, pageSize, fetchUsers])
+  }, [])
 
   const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    setCurrentPage(1) // Reset to first page when searching
-    // Debounce the search by using a timeout
-    const timeoutId = setTimeout(() => {
-      fetchUsers(1, pageSize)
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [pageSize, fetchUsers])
+    setSearchText(e.target.value)
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
@@ -332,7 +293,7 @@ const UsersList = () => {
         )
       }
     }
-  ], [])
+  ], [handleDetail, handleEdit, handleDelete, handleToggleStatus])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -366,26 +327,18 @@ const UsersList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`users-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/admin/users/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

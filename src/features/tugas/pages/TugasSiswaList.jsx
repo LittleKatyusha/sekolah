@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Star } from 'lucide-react'
+import { Search, Plus, RefreshCw, Eye, Trash2, MoreVertical, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { tugasSiswaService } from '../services/tugasService'
@@ -33,7 +31,7 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -41,7 +39,7 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -49,7 +47,7 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -71,7 +69,7 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -114,133 +112,51 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
 
 const TugasSiswaList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  
-  // Pagination state
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  
-  // Use refs to track pagination state without causing re-renders
-  const currentPageRef = useRef(1)
-  const pageCursorsRef = useRef({ 1: null })
-  const isFetchingRef = useRef(false)
-
   const gridRef = useRef(null)
+  const [searchText, setSearchText] = useState('')
 
-  const fetchTugasSiswa = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    // Prevent concurrent fetches
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-    
-    setLoading(true)
-    
-    // Get cursor for the requested page
-    const cursorValue = pageCursorsRef.current[page]
-    
-    const params = {
-      per_page: perPage,
-      ...(searchQuery && { search: searchQuery }),
-      ...(cursorValue && { cursor: cursorValue })
-    }
-    
-    const { data, error } = await tugasSiswaService.getAll(params)
-    
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        currentPageRef.current = data.meta.current_page || page
-        
-        // Store next cursor for the next page
-        if (data.meta.next_cursor) {
-          pageCursorsRef.current[page + 1] = data.meta.next_cursor
-        }
-      }
-    } else {
-      console.error('Error fetching tugas siswa:', error)
-      showError('Gagal mengambil data tugas siswa')
-    }
-    
-    setLoading(false)
-    isFetchingRef.current = false
-  }, [pageSize, searchText])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  // Initial load
-  useEffect(() => {
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    fetchTugasSiswa(1, pageSize, searchText)
-  }, [])
-
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/akademik/tugas-siswa/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleGrade = (data) => {
+  const handleGrade = useCallback((data) => {
     navigate(`/akademik/tugas-siswa/${data.id}`, { state: { openGrade: true } })
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const label = `Pengumpulan tugas #${data.id}`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await tugasSiswaService.delete(data.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        fetchTugasSiswa(currentPageRef.current, pageSize, searchText)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus data')
       }
     }
-  }
+  }, [])
 
-  // Handle pagination change from AG Grid
-  const onPaginationChanged = useCallback((params) => {
-    if (!gridRef.current || isFetchingRef.current) return
-    
-    const newPageNumber = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-    
-    // Handle page size change
-    if (newPageSize !== pageSize) {
-      setPageSize(newPageSize)
-      pageCursorsRef.current = { 1: null }
-      currentPageRef.current = 1
-      fetchTugasSiswa(1, newPageSize, searchText)
-      return
-    }
-    
-    // Handle page number change
-    if (newPageNumber !== currentPageRef.current) {
-      fetchTugasSiswa(newPageNumber, pageSize, searchText)
-    }
-  }, [pageSize, searchText, fetchTugasSiswa])
-
-  // Handle search
   const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    
-    // Reset pagination when searching
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    
-    // Reset grid to first page
-    if (gridRef.current) {
-      gridRef.current.api.paginationGoToPage(0)
-    }
-    
-    fetchTugasSiswa(1, pageSize, value)
-  }, [fetchTugasSiswa, pageSize])
+    setSearchText(e.target.value)
+  }, [])
 
-  // Handle refresh
   const handleRefresh = useCallback(() => {
-    fetchTugasSiswa(currentPageRef.current, pageSize, searchText)
-  }, [fetchTugasSiswa, pageSize, searchText])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = useCallback((dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
     return date.toLocaleDateString('id-ID', {
@@ -250,18 +166,18 @@ const TugasSiswaList = () => {
       hour: '2-digit',
       minute: '2-digit'
     })
-  }
+  }, [])
 
   const columnDefs = useMemo(() => [
-    { 
-      field: 'id', 
+    {
+      field: 'id',
       headerName: 'ID',
       sortable: true,
       filter: true,
       width: 80,
       minWidth: 70
     },
-    { 
+    {
       headerName: 'Tugas',
       sortable: true,
       filter: true,
@@ -271,7 +187,7 @@ const TugasSiswaList = () => {
         return params.data?.tugas?.judul || '-'
       }
     },
-    { 
+    {
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -281,8 +197,8 @@ const TugasSiswaList = () => {
         return params.data?.siswa?.nama || params.data?.siswa?.name || '-'
       }
     },
-    { 
-      field: 'tanggal_kumpul', 
+    {
+      field: 'tanggal_kumpul',
       headerName: 'Tanggal Kumpul',
       sortable: true,
       filter: true,
@@ -290,8 +206,8 @@ const TugasSiswaList = () => {
       minWidth: 150,
       cellRenderer: (params) => formatDateTime(params.value)
     },
-    { 
-      field: 'status_kumpl', 
+    {
+      field: 'status_kumpl',
       headerName: 'Status',
       sortable: true,
       filter: true,
@@ -309,8 +225,8 @@ const TugasSiswaList = () => {
         )
       }
     },
-    { 
-      field: 'nilai', 
+    {
+      field: 'nilai',
       headerName: 'Nilai',
       sortable: true,
       filter: true,
@@ -345,7 +261,7 @@ const TugasSiswaList = () => {
         )
       }
     }
-  ], [])
+  ], [formatDateTime, handleDetail, handleGrade, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -379,28 +295,18 @@ const TugasSiswaList = () => {
       </div>
 
       <Card>
-        {loading && rowData.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`tugas-siswa-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/akademik/tugas-siswa/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

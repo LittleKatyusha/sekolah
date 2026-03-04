@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { tugasService } from '../services/tugasService'
@@ -32,7 +30,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -40,7 +38,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -48,7 +46,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -70,7 +68,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -113,133 +111,51 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const TugasList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  
-  // Pagination state
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
-  
-  // Use refs to track pagination state without causing re-renders
-  const currentPageRef = useRef(1)
-  const pageCursorsRef = useRef({ 1: null })
-  const isFetchingRef = useRef(false)
-
   const gridRef = useRef(null)
+  const [searchText, setSearchText] = useState('')
 
-  const fetchTugas = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    // Prevent concurrent fetches
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-    
-    setLoading(true)
-    
-    // Get cursor for the requested page
-    const cursorValue = pageCursorsRef.current[page]
-    
-    const params = {
-      per_page: perPage,
-      ...(searchQuery && { search: searchQuery }),
-      ...(cursorValue && { cursor: cursorValue })
-    }
-    
-    const { data, error } = await tugasService.getAll(params)
-    
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        currentPageRef.current = data.meta.current_page || page
-        
-        // Store next cursor for the next page
-        if (data.meta.next_cursor) {
-          pageCursorsRef.current[page + 1] = data.meta.next_cursor
-        }
-      }
-    } else {
-      console.error('Error fetching tugas:', error)
-      showError('Gagal mengambil data tugas')
-    }
-    
-    setLoading(false)
-    isFetchingRef.current = false
-  }, [pageSize, searchText])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  // Initial load
-  useEffect(() => {
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    fetchTugas(1, pageSize, searchText)
-  }, [])
-
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     navigate(`/akademik/tugas/${data.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/akademik/tugas/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const label = `Tugas "${data.judul || ''}"`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await tugasService.delete(data.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        fetchTugas(currentPageRef.current, pageSize, searchText)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus tugas')
       }
     }
-  }
+  }, [])
 
-  // Handle pagination change from AG Grid
-  const onPaginationChanged = useCallback((params) => {
-    if (!gridRef.current || isFetchingRef.current) return
-    
-    const newPageNumber = params.api.paginationGetCurrentPage() + 1
-    const newPageSize = params.api.paginationGetPageSize()
-    
-    // Handle page size change
-    if (newPageSize !== pageSize) {
-      setPageSize(newPageSize)
-      pageCursorsRef.current = { 1: null }
-      currentPageRef.current = 1
-      fetchTugas(1, newPageSize, searchText)
-      return
-    }
-    
-    // Handle page number change
-    if (newPageNumber !== currentPageRef.current) {
-      fetchTugas(newPageNumber, pageSize, searchText)
-    }
-  }, [pageSize, searchText, fetchTugas])
-
-  // Handle search
   const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    
-    // Reset pagination when searching
-    pageCursorsRef.current = { 1: null }
-    currentPageRef.current = 1
-    
-    // Reset grid to first page
-    if (gridRef.current) {
-      gridRef.current.api.paginationGoToPage(0)
-    }
-    
-    fetchTugas(1, pageSize, value)
-  }, [fetchTugas, pageSize])
+    setSearchText(e.target.value)
+  }, [])
 
-  // Handle refresh
   const handleRefresh = useCallback(() => {
-    fetchTugas(currentPageRef.current, pageSize, searchText)
-  }, [fetchTugas, pageSize, searchText])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = useCallback((dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
     return date.toLocaleDateString('id-ID', {
@@ -249,19 +165,19 @@ const TugasList = () => {
       hour: '2-digit',
       minute: '2-digit'
     })
-  }
+  }, [])
 
   const columnDefs = useMemo(() => [
-    { 
-      field: 'id', 
+    {
+      field: 'id',
       headerName: 'ID',
       sortable: true,
       filter: true,
       width: 80,
       minWidth: 70
     },
-    { 
-      field: 'judul', 
+    {
+      field: 'judul',
       headerName: 'Judul',
       sortable: true,
       filter: true,
@@ -269,7 +185,7 @@ const TugasList = () => {
       minWidth: 200,
       cellRenderer: (params) => params.value || '-'
     },
-    { 
+    {
       headerName: 'Guru / Mapel',
       sortable: true,
       filter: true,
@@ -283,7 +199,7 @@ const TugasList = () => {
         return guruNama && mapelNama ? `${guruNama} - ${mapelNama}` : guruNama || mapelNama || '-'
       }
     },
-    { 
+    {
       headerName: 'Kelas',
       sortable: true,
       filter: true,
@@ -295,8 +211,8 @@ const TugasList = () => {
         return kelas.nama_kelas || kelas.nama || '-'
       }
     },
-    { 
-      field: 'tenggat_waktu', 
+    {
+      field: 'tenggat_waktu',
       headerName: 'Tenggat Waktu',
       sortable: true,
       filter: true,
@@ -304,8 +220,8 @@ const TugasList = () => {
       minWidth: 150,
       cellRenderer: (params) => formatDateTime(params.value)
     },
-    { 
-      field: 'status', 
+    {
+      field: 'status',
       headerName: 'Status',
       sortable: true,
       filter: true,
@@ -344,7 +260,7 @@ const TugasList = () => {
         )
       }
     }
-  ], [])
+  ], [formatDateTime, handleDetail, handleEdit, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -378,28 +294,18 @@ const TugasList = () => {
       </div>
 
       <Card>
-        {loading && rowData.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`tugas-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/akademik/tugas/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

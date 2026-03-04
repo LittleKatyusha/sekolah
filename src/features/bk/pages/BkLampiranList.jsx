@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkLampiranService } from '../services/bkService'
@@ -24,7 +22,7 @@ const ActionsMenu = ({ data, onDetail, onDelete }) => {
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
-    
+
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({
@@ -32,7 +30,7 @@ const ActionsMenu = ({ data, onDetail, onDelete }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    
+
     setIsOpen(!isOpen)
   }
 
@@ -40,7 +38,7 @@ const ActionsMenu = ({ data, onDetail, onDelete }) => {
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-      
+
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false)
       }
@@ -62,7 +60,7 @@ const ActionsMenu = ({ data, onDetail, onDelete }) => {
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
       </button>
-      
+
       {isOpen && createPortal(
         <div
           ref={menuRef}
@@ -99,73 +97,40 @@ const ActionsMenu = ({ data, onDetail, onDelete }) => {
 const BkLampiranList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
   const [searchText, setSearchText] = useState('')
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
 
-  const fetchData = useCallback(async (page = 1, perPage = 10, search = '') => {
-    setLoading(true)
-    const params = {
-      per_page: perPage,
-      cursor: page,
-    }
-    
-    if (search && search.trim() !== '') {
-      params.search = search.trim()
-    }
-    
-    const { data, error } = await bkLampiranService.getAll(params)
-    if (data) {
-      setRowData(data.data || [])
-      // Extract pagination info from meta
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        setCurrentPage(data.meta.current_page || page)
-      }
-    } else {
-      console.error('Error fetching lampiran:', error)
-      showError('Gagal mengambil data lampiran')
-    }
-    setLoading(false)
-  }, [])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
-  // Initial load
-  useEffect(() => {
-    fetchData(currentPage, pageSize, searchText)
-  }, [])
-
-  const handleDetail = (data) => {
+  const handleDetail = useCallback((data) => {
     navigate(`/bk/lampiran/${data.id}`)
-  }
+  }, [navigate])
 
-  const handleDelete = async (data) => {
+  const handleDelete = useCallback(async (data) => {
     const result = await showDeleteConfirm('lampiran ini')
     if (result.isConfirmed) {
       const { error } = await bkLampiranService.delete(data.id)
       if (!error) {
         showSuccess('Lampiran berhasil dihapus!')
-        fetchData(currentPage, pageSize, searchText)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus lampiran')
       }
     }
-  }
+  }, [])
 
   const columnDefs = useMemo(() => [
     {
       field: 'id',
       headerName: 'No',
       width: 70,
-      valueGetter: (params) => {
-        // Calculate row number based on current page and index
-        const startIndex = (currentPage - 1) * pageSize
-        return startIndex + params.node.rowIndex + 1
-      },
+      valueGetter: (params) => (params.node?.rowIndex ?? 0) + 1,
       sortable: false,
       filter: false
     },
@@ -216,7 +181,7 @@ const BkLampiranList = () => {
         )
       }
     }
-  ], [currentPage, pageSize])
+  ], [handleDelete, handleDetail])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -225,32 +190,14 @@ const BkLampiranList = () => {
   }), [])
 
   const onFilterTextBoxChanged = useCallback((e) => {
-    const value = e.target.value
-    setSearchText(value)
-    // Debounce search to avoid too many API calls
-    setTimeout(() => {
-      setCurrentPage(1) // Reset to first page on search
-      fetchData(1, pageSize, value)
-    }, 300)
-  }, [pageSize, fetchData])
-
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1 // AG Grid uses 0-based index
-      const newPageSize = params.api.paginationGetPageSize()
-      
-      // Only fetch if page or page size actually changed
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchData(newPage, newPageSize, searchText)
-      }
-    }
-  }, [currentPage, pageSize, searchText, fetchData])
+    setSearchText(e.target.value)
+  }, [])
 
   const handleRefresh = useCallback(() => {
-    fetchData(currentPage, pageSize, searchText)
-  }, [currentPage, pageSize, searchText, fetchData])
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -278,30 +225,18 @@ const BkLampiranList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              ref={gridRef}
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              paginationNumberFormatter={(params) => `${params.value.toLocaleString()}`}
-              onPaginationChanged={onPaginationChanged}
-              animateRows={true}
-              suppressPaginationPanel={false}
-              cacheBlockSize={pageSize}
-              rowModelType="clientSide"
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`bk-lampiran-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/bk/lampiran/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )

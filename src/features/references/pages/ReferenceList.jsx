@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { referenceAdminService } from '../services/referenceAdminService'
@@ -70,38 +68,15 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
 const ReferenceList = () => {
   const navigate = useNavigate()
-  const [rowData, setRowData] = useState([])
-  const [loading, setLoading] = useState(false)
+  const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalRows, setTotalRows] = useState(0)
 
-  const fetchData = useCallback(async (page = 1, perPage = pageSize, searchQuery = searchText) => {
-    setLoading(true)
-    const params = { per_page: perPage, page }
-    if (searchQuery && searchQuery.trim()) params.search = searchQuery.trim()
-
-    const { data, error } = await referenceAdminService.getAll(params)
-    if (data) {
-      setRowData(data.data || [])
-      if (data.meta) {
-        setTotalRows(data.meta.total || 0)
-        setCurrentPage(data.meta.current_page || page)
-      }
-    } else {
-      console.error('Error fetching references:', error)
-      showError('Gagal mengambil data referensi')
-    }
-    setLoading(false)
-  }, [pageSize, searchText])
-
-  useEffect(() => { fetchData(1, pageSize) }, [])
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => { fetchData(1, pageSize, searchText) }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [searchText, pageSize, fetchData])
+  const staticParams = useMemo(() => ({
+    sort_by: 'id',
+    sort_dir: 'desc',
+    search: searchText || '',
+    filter: '{}',
+  }), [searchText])
 
   const handleDelete = async (data) => {
     const result = await showDeleteConfirm(data.nama)
@@ -109,24 +84,24 @@ const ReferenceList = () => {
       const { error } = await referenceAdminService.delete(data.id)
       if (!error) {
         showSuccess(`${data.nama} berhasil dihapus!`)
-        fetchData(currentPage, pageSize)
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
+        }
       } else {
         showError('Gagal menghapus referensi')
       }
     }
   }
 
-  const onPaginationChanged = useCallback((params) => {
-    if (params.api) {
-      const newPage = params.api.paginationGetCurrentPage() + 1
-      const newPageSize = params.api.paginationGetPageSize()
-      if (newPage !== currentPage || newPageSize !== pageSize) {
-        setPageSize(newPageSize)
-        setCurrentPage(newPage)
-        fetchData(newPage, newPageSize, searchText)
-      }
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
-  }, [currentPage, pageSize, searchText, fetchData])
+  }, [])
+
+  const onFilterTextBoxChanged = useCallback((e) => {
+    setSearchText(e.target.value)
+  }, [])
 
   const columnDefs = useMemo(() => [
     { field: 'kategori', headerName: 'Kategori', sortable: true, filter: true, width: 180, minWidth: 140 },
@@ -146,7 +121,7 @@ const ReferenceList = () => {
         </div>
       )
     }
-  ], [])
+  ], [navigate])
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), [])
 
@@ -159,11 +134,11 @@ const ReferenceList = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text" placeholder="Cari referensi..." value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={onFilterTextBoxChanged}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
-          <Button onClick={() => fetchData(currentPage, pageSize, searchText)} variant="secondary" title="Refresh Data">
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <Button onClick={() => navigate('/admin/references/create')}>
@@ -173,21 +148,18 @@ const ReferenceList = () => {
       </div>
 
       <Card>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : (
-          <div className="ag-theme-alpine dark:ag-theme-alpine-dark w-full" style={{ height: 600 }}>
-            <AgGridReact
-              rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef}
-              pagination={true} paginationPageSize={pageSize}
-              paginationPageSizeSelector={[10, 20, 50, 100]}
-              onPaginationChanged={onPaginationChanged}
-              theme="legacy"
-            />
-          </div>
-        )}
+        <InfiniteGrid
+          key={`reference-grid-${searchText}`}
+          ref={gridRef}
+          endpoint="/admin/references/"
+          staticParams={staticParams}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
+        />
       </Card>
     </div>
   )
