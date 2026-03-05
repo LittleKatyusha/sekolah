@@ -207,14 +207,21 @@ const AbsensiSiswaList = () => {
   }
 
   const handleDetail = useCallback((data) => {
+    if (!data?.id) return
     navigate(`/absensi-siswa/${data.id}`)
   }, [navigate])
 
   const handleEdit = useCallback((data) => {
+    if (!data?.id) return
     navigate(`/absensi-siswa/edit/${data.id}`)
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
+    if (!data?.id) {
+      showError('Data absensi siswa tidak valid')
+      return
+    }
+
     const result = await showDeleteConfirm(data.siswa?.nama || 'absensi ini')
     if (result.isConfirmed) {
       const { error } = await absensiSiswaService.deleteAbsensiSiswa(data.id)
@@ -268,7 +275,7 @@ const AbsensiSiswaList = () => {
       filter: true,
       flex: 1,
       minWidth: 180,
-      valueGetter: (params) => params.data.siswa?.nama || '-',
+      valueGetter: (params) => params.data?.siswa?.nama || '-',
       cellRenderer: (params) => params.value || '-'
     },
     {
@@ -278,7 +285,7 @@ const AbsensiSiswaList = () => {
       filter: true,
       width: 160,
       minWidth: 130,
-      valueGetter: (params) => params.data.siswa?.nis || '-',
+      valueGetter: (params) => params.data?.siswa?.nis || '-',
       cellRenderer: (params) => params.value || '-'
     },
     {
@@ -325,12 +332,15 @@ const AbsensiSiswaList = () => {
       sortable: false,
       filter: false,
       cellRenderer: (params) => {
+        const row = params.data
+        if (!row) return null
+
         return (
           <div className="h-full flex items-center justify-center">
             <ActionsMenu
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
-              onDelete={() => handleDelete(params.data)}
+              onDetail={() => handleDetail(row)}
+              onEdit={() => handleEdit(row)}
+              onDelete={() => handleDelete(row)}
             />
           </div>
         )

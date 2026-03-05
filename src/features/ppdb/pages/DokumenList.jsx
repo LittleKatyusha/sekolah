@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { Plus, Search, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, MoreVertical, Eye, Edit, Trash2, RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -65,6 +65,11 @@ const DokumenList = () => {
   }), [search])
 
   const handleDelete = useCallback(async (data) => {
+    if (!data?.id) {
+      showError('Data dokumen tidak valid')
+      return
+    }
+
     const result = await showDeleteConfirm(`Dokumen "${data.jenis_dokumen || data.file_name || ''}"`)
     if (result.isConfirmed) {
       const { error } = await dokumenService.delete(data.id)
@@ -76,6 +81,12 @@ const DokumenList = () => {
       } else {
         showError('Gagal menghapus dokumen')
       }
+    }
+  }, [])
+
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
   }, [])
 
@@ -102,14 +113,19 @@ const DokumenList = () => {
     {
       headerName: 'Aksi',
       width: 80,
-      cellRenderer: (params) => (
-        <ActionsMenu
-          data={params.data}
-          onView={(d) => navigate(`/ppdb/dokumen/${d.id}`)}
-          onEdit={(d) => navigate(`/ppdb/dokumen/${d.id}/edit`)}
-          onDelete={handleDelete}
-        />
-      ),
+      cellRenderer: (params) => {
+        const row = params.data
+        if (!row) return null
+
+        return (
+          <ActionsMenu
+            data={row}
+            onView={(d) => navigate(`/ppdb/dokumen/${d.id}`)}
+            onEdit={(d) => navigate(`/ppdb/dokumen/${d.id}/edit`)}
+            onDelete={handleDelete}
+          />
+        )
+      },
       sortable: false,
       filter: false,
     },
@@ -121,25 +137,28 @@ const DokumenList = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dokumen PPDB</h1>
-        <Button onClick={() => navigate('/ppdb/dokumen/create')}>
-          <Plus size={18} className="mr-2" />
-          Tambah Dokumen
-        </Button>
-      </div>
-
-      <Card>
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="relative max-w-md">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Cari dokumen..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
             />
           </div>
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
+            <RefreshCw size={18} />
+          </Button>
+          <Button onClick={() => navigate('/ppdb/dokumen/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah Dokumen
+          </Button>
         </div>
+      </div>
+
+      <Card>
         <InfiniteGrid
           key={`dokumen-grid-${search}`}
           ref={gridRef}
@@ -150,9 +169,7 @@ const DokumenList = () => {
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}
-          height={500}
-          overlayNoRowsTemplate={'<span class="text-gray-500">Tidak ada data dokumen</span>'}
-          themeClass="ag-theme-quartz dark:ag-theme-quartz-dark"
+          height={600}
         />
       </Card>
     </div>

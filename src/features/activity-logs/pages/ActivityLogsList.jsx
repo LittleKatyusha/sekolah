@@ -80,7 +80,10 @@ const ActivityLogsList = () => {
     filter: '{}',
   }), [searchText])
 
-  const handleDetail = useCallback((data) => navigate(`/admin/activity-logs/${data.id}`), [navigate])
+  const handleDetail = useCallback((data) => {
+    if (!data?.id) return
+    navigate(`/admin/activity-logs/${data.id}`)
+  }, [navigate])
 
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
@@ -100,8 +103,8 @@ const ActivityLogsList = () => {
       headerName: 'User',
       flex: 1,
       minWidth: 150,
-      valueGetter: (p) => p.data.user?.name || p.data.user?.email || '-',
-      cellRenderer: (p) => p.value
+      valueGetter: (p) => p.data?.user?.name || p.data?.user?.email || '-',
+      cellRenderer: (p) => p.value || '-'
     },
     { field: 'action', headerName: 'Action', width: 120, minWidth: 100, cellRenderer: (p) => <ActionBadge action={p.value} /> },
     { field: 'module', headerName: 'Module', width: 150, minWidth: 120, cellRenderer: (p) => p.value || '-' },
@@ -110,11 +113,16 @@ const ActivityLogsList = () => {
     { field: 'created_at', headerName: 'Waktu', width: 160, minWidth: 140, cellRenderer: (p) => formatDateTime(p.value) },
     {
       headerName: 'Aksi', width: 80, minWidth: 80, maxWidth: 80, suppressSizeToFit: true, sortable: false, filter: false,
-      cellRenderer: (p) => (
-        <div className="h-full flex items-center justify-center">
-          <ActionsMenu onDetail={() => handleDetail(p.data)} />
-        </div>
-      )
+      cellRenderer: (p) => {
+        const row = p.data
+        if (!row) return null
+
+        return (
+          <div className="h-full flex items-center justify-center">
+            <ActionsMenu onDetail={() => handleDetail(row)} />
+          </div>
+        )
+      }
     }
   ], [handleDetail])
 

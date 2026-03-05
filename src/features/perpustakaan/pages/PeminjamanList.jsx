@@ -51,7 +51,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onKembalikan }) => {
     }
   }, [isOpen])
 
-  const showKembalikan = data.status !== 'dikembalikan'
+  const showKembalikan = data?.status !== 'dikembalikan'
 
   return (
     <div className="relative">
@@ -127,14 +127,21 @@ const PeminjamanList = () => {
   }), [searchText])
 
   const handleEdit = useCallback((data) => {
+    if (!data?.id) return
     navigate(`/perpustakaan/peminjaman/${data.id}/edit`)
   }, [navigate])
 
   const handleDetail = useCallback((data) => {
+    if (!data?.id) return
     navigate(`/perpustakaan/peminjaman/${data.id}`)
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
+    if (!data?.id) {
+      showError('Data peminjaman tidak valid')
+      return
+    }
+
     const result = await showDeleteConfirm(`peminjaman ${data.siswa?.nama || ''}`)
     if (result.isConfirmed) {
       const { error } = await peminjamanService.delete(data.id)
@@ -150,6 +157,11 @@ const PeminjamanList = () => {
   }, [])
 
   const handleKembalikan = useCallback(async (data) => {
+    if (!data?.id) {
+      showError('Data peminjaman tidak valid')
+      return
+    }
+
     const result = await showDeleteConfirm(`mengembalikan buku "${data.buku?.judul || ''}" oleh ${data.siswa?.nama || ''}`)
     if (result.isConfirmed) {
       const { error } = await peminjamanService.pengembalian(data.id)
@@ -304,14 +316,17 @@ const PeminjamanList = () => {
       sortable: false,
       filter: false,
       cellRenderer: (params) => {
+        const row = params.data
+        if (!row) return null
+
         return (
           <div className="h-full flex items-center justify-center">
             <ActionsMenu
-              data={params.data}
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
-              onDelete={() => handleDelete(params.data)}
-              onKembalikan={() => handleKembalikan(params.data)}
+              data={row}
+              onDetail={() => handleDetail(row)}
+              onEdit={() => handleEdit(row)}
+              onDelete={() => handleDelete(row)}
+              onKembalikan={() => handleKembalikan(row)}
             />
           </div>
         )

@@ -23,11 +23,16 @@ const HariOperasionalList = () => {
   }, [])
 
   const handleToggle = useCallback(async (row) => {
+    if (!row?.id) {
+      showError('Data hari operasional tidak valid')
+      return
+    }
+
     const newValue = !row.is_active
     const { error } = await hariOperasionalService.update(row.id, { is_active: newValue })
 
     if (!error) {
-      showSuccess(`${row.hari} berhasil ${newValue ? 'diaktifkan' : 'dinonaktifkan'}`)
+      showSuccess(`${row?.hari ?? 'Hari'} berhasil ${newValue ? 'diaktifkan' : 'dinonaktifkan'}`)
       if (gridRef.current?.refreshGrid) {
         gridRef.current.refreshGrid()
       }
@@ -61,17 +66,22 @@ const HariOperasionalList = () => {
       minWidth: 120,
       sortable: true,
       cellRenderer: (params) => {
-        const isActive = params.value
+        const isActive = Boolean(params.value)
+        const row = params.data
+        const hariLabel = row?.hari ?? 'hari operasional'
+        const isDisabled = !row?.id
+
         return (
           <div className="h-full flex items-center">
             <button
-              onClick={() => handleToggle(params.data)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+              onClick={() => !isDisabled && handleToggle(row)}
+              disabled={isDisabled}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isActive ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
               }`}
               role="switch"
               aria-checked={isActive}
-              aria-label={`Toggle ${params.data.hari}`}
+              aria-label={`Toggle ${hariLabel}`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${

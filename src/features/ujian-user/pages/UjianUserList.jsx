@@ -54,7 +54,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
   }, [isOpen])
 
   // Determine if mulai button should be shown (status 0 = belum mulai)
-  const canStart = data.status === 0 || data.status === null
+  const canStart = data?.status === 0 || data?.status === null
 
   return (
     <div className="relative">
@@ -273,7 +273,9 @@ const UjianUserList = () => {
       flex: 1,
       minWidth: 150,
       valueGetter: (params) => {
-        return params.data.ujian?.nama || `Ujian #${params.data.trx_ujian_id}`
+        const row = params.data
+        if (!row) return '-'
+        return row.ujian?.nama || `Ujian #${row.trx_ujian_id ?? '-'}`
       }
     },
     {
@@ -284,11 +286,13 @@ const UjianUserList = () => {
       flex: 1,
       minWidth: 180,
       valueGetter: (params) => {
-        const siswa = params.data.siswa
+        const row = params.data
+        if (!row) return '-'
+        const siswa = row.siswa
         if (siswa) {
           return `${siswa.nama} (${siswa.nis})`
         }
-        return `Siswa #${params.data.mst_siswa_id}`
+        return `Siswa #${row.mst_siswa_id ?? '-'}`
       }
     },
     {
@@ -377,14 +381,17 @@ const UjianUserList = () => {
       sortable: false,
       filter: false,
       cellRenderer: (params) => {
+        const row = params.data
+        if (!row) return null
+
         return (
           <div className="h-full flex items-center justify-center">
             <ActionsMenu
-              data={params.data}
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
-              onDelete={() => handleDelete(params.data)}
-              onMulai={() => handleMulai(params.data)}
+              data={row}
+              onDetail={() => handleDetail(row)}
+              onEdit={() => handleEdit(row)}
+              onDelete={() => handleDelete(row)}
+              onMulai={() => handleMulai(row)}
             />
           </div>
         )

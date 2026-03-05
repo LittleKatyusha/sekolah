@@ -92,6 +92,7 @@ const Semester = lazy(() => import('./pages/Semester'))
 const KalenderAkademik = lazy(() => import('./pages/KalenderAkademik'))
 const Roles = lazy(() => import('./pages/Roles'))
 const Permissions = lazy(() => import('./pages/Permissions'))
+const RolePermissions = lazy(() => import('./pages/RolePermissions'))
 const TarifSpp = lazy(() => import('./pages/TarifSpp'))
 const PembayaranSpp = lazy(() => import('./pages/PembayaranSpp'))
 const Ekstrakurikuler = lazy(() => import('./pages/Ekstrakurikuler'))
@@ -157,7 +158,7 @@ const TitleUpdater = () => {
       '/admin/semester': 'Semester',
       '/admin/kalender-akademik': 'Kalender Akademik',
       '/admin/roles': 'Roles',
-      '/admin/permissions': 'Permissions',
+      '/admin/role-permissions': 'Role Permissions',
       '/admin/hari-operasional': 'Hari Operasional',
       '/admin/kalender-harian': 'Kalender Harian',
       '/admin/references': 'System References',
@@ -316,6 +317,7 @@ function App() {
               <Route path="/admin/kalender-akademik/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><KalenderAkademik /></RoleGuard>} />
               <Route path="/admin/roles/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Roles /></RoleGuard>} />
               <Route path="/admin/permissions/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Permissions /></RoleGuard>} />
+              <Route path="/admin/role-permissions/*" element={<RoleGuard allowedRoles={[1, 'admin']}><RolePermissions /></RoleGuard>} />
               <Route path="/admin/hari-operasional" element={<RoleGuard allowedRoles={[1, 'admin']}><HariOperasional /></RoleGuard>} />
               <Route path="/admin/kalender-harian" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderHarian /></RoleGuard>} />
               <Route path="/admin/references" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceList /></RoleGuard>} />

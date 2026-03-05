@@ -113,7 +113,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus }) => {
               onClick={() => { setIsOpen(false); onToggleStatus(); }}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
-              {data.is_active ? (
+              {data?.is_active ? (
                 <>
                   <ToggleRight size={16} className="text-orange-600" />
                   Nonaktifkan
@@ -154,19 +154,26 @@ const UsersList = () => {
   }), [searchText])
 
   const handleEdit = useCallback((data) => {
+    if (!data?.id) return
     navigate(`/admin/users/${data.id}/edit`)
   }, [navigate])
 
   const handleDetail = useCallback((data) => {
+    if (!data?.id) return
     navigate(`/admin/users/${data.id}`)
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
-    const result = await showDeleteConfirm(data.name)
+    if (!data?.id) {
+      showError('Data user tidak valid')
+      return
+    }
+
+    const result = await showDeleteConfirm(data.name || 'user ini')
     if (result.isConfirmed) {
       const { error } = await usersService.delete(data.id)
       if (!error) {
-        showSuccess(`${data.name} berhasil dihapus!`)
+        showSuccess(`${data.name || 'User'} berhasil dihapus!`)
         if (gridRef.current?.refreshGrid) {
           gridRef.current.refreshGrid()
         }
@@ -177,6 +184,11 @@ const UsersList = () => {
   }, [])
 
   const handleToggleStatus = useCallback(async (data) => {
+    if (!data?.id) {
+      showError('Data user tidak valid')
+      return
+    }
+
     const newStatus = !data.is_active
     const { error } = await usersService.toggleStatus(data.id, newStatus)
     if (!error) {
@@ -224,8 +236,9 @@ const UsersList = () => {
       width: 150,
       minWidth: 120,
       cellRenderer: (params) => {
-        const roleLabel = getRoleLabel(params.value, params.data.roles)
-        const badgeColor = getRoleBadgeColor(params.value, params.data.roles)
+        const roles = params.data?.roles || []
+        const roleLabel = getRoleLabel(params.value, roles)
+        const badgeColor = getRoleBadgeColor(params.value, roles)
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeColor}`}>
             {roleLabel}
@@ -280,14 +293,17 @@ const UsersList = () => {
       sortable: false,
       filter: false,
       cellRenderer: (params) => {
+        const row = params.data
+        if (!row) return null
+
         return (
           <div className="h-full flex items-center justify-center">
             <ActionsMenu
-              data={params.data}
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
-              onDelete={() => handleDelete(params.data)}
-              onToggleStatus={() => handleToggleStatus(params.data)}
+              data={row}
+              onDetail={() => handleDetail(row)}
+              onEdit={() => handleEdit(row)}
+              onDelete={() => handleDelete(row)}
+              onToggleStatus={() => handleToggleStatus(row)}
             />
           </div>
         )

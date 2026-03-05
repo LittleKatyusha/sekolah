@@ -93,10 +93,22 @@ const AbsensiGuruList = () => {
     filter: '{}',
   }), [searchText])
 
-  const handleDetail = useCallback((data) => navigate(`/absensi-guru/${data.id}`), [navigate])
-  const handleEdit = useCallback((data) => navigate(`/absensi-guru/edit/${data.id}`), [navigate])
+  const handleDetail = useCallback((data) => {
+    if (!data?.id) return
+    navigate(`/absensi-guru/${data.id}`)
+  }, [navigate])
+
+  const handleEdit = useCallback((data) => {
+    if (!data?.id) return
+    navigate(`/absensi-guru/edit/${data.id}`)
+  }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
+    if (!data?.id) {
+      showError('Data absensi guru tidak valid')
+      return
+    }
+
     const result = await showDeleteConfirm(data.guru?.nama || 'absensi ini')
     if (result.isConfirmed) {
       const { error } = await absensiGuruService.deleteById(data.id)
@@ -125,7 +137,7 @@ const AbsensiGuruList = () => {
       filter: true,
       flex: 1,
       minWidth: 180,
-      valueGetter: (params) => params.data.guru?.nama || '-',
+      valueGetter: (params) => params.data?.guru?.nama || '-',
       cellRenderer: (params) => params.value || '-'
     },
     {
@@ -135,7 +147,7 @@ const AbsensiGuruList = () => {
       filter: true,
       width: 160,
       minWidth: 130,
-      valueGetter: (params) => params.data.guru?.nip || '-',
+      valueGetter: (params) => params.data?.guru?.nip || '-',
       cellRenderer: (params) => params.value || '-'
     },
     {
@@ -176,15 +188,20 @@ const AbsensiGuruList = () => {
       suppressSizeToFit: true,
       sortable: false,
       filter: false,
-      cellRenderer: (params) => (
-        <div className="h-full flex items-center justify-center">
-          <ActionsMenu
-            onDetail={() => handleDetail(params.data)}
-            onEdit={() => handleEdit(params.data)}
-            onDelete={() => handleDelete(params.data)}
-          />
-        </div>
-      )
+      cellRenderer: (params) => {
+        const row = params.data
+        if (!row) return null
+
+        return (
+          <div className="h-full flex items-center justify-center">
+            <ActionsMenu
+              onDetail={() => handleDetail(row)}
+              onEdit={() => handleEdit(row)}
+              onDelete={() => handleDelete(row)}
+            />
+          </div>
+        )
+      }
     }
   ], [handleDelete, handleDetail, handleEdit])
 

@@ -267,7 +267,7 @@ const NilaiList = () => {
         <InfiniteGrid
           key={`nilai-grid-${searchText}`}
           ref={gridRef}
-          endpoint="/admin/nilai/"
+          endpoint="/akademik/nilai"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
