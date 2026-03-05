@@ -67,22 +67,28 @@ const Login = () => {
       })
 
       if (apiError) {
-        setError(apiError.message || 'Login failed. Please check your credentials.')
+        // Handle API errors - stay on page, show error
+        const errorMessage = apiError.message || apiError.error || 'Login failed. Please check your credentials.'
+        setError(errorMessage)
         setLoading(false)
         return
       }
 
       // Response format: { success, message, data: { access_token, refresh_token, token_type, expires_in, user } }
       if (!response?.success) {
-        setError(response?.message || 'Login failed. Please check your credentials.')
+        // Handle unsuccessful response - stay on page, show error
+        const errorMessage = response?.message || 'Login failed. Please check your credentials.'
+        setError(errorMessage)
         setLoading(false)
         return
       }
 
+      // Only navigate on successful login
       login(response.data)
       setLoading(false)
       navigate('/dashboard')
     } catch (err) {
+      // Handle unexpected errors - stay on page, show error
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }

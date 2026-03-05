@@ -109,7 +109,10 @@ api.interceptors.response.use(
         processQueue(refreshError, null)
         // Token refresh failed - logout user
         useAuthStore.getState().logout()
-        window.location.href = '/login'
+        // Only redirect if not already on login page to prevent refresh
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
