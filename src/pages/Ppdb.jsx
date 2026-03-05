@@ -12,11 +12,17 @@ import DokumenDetail from '../features/ppdb/pages/DokumenDetail'
 const Ppdb = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="gelombang" replace />} />
+      <Route index element={<Navigate to="/ppdb/gelombang" replace />} />
       <Route path="gelombang" element={<GelombangList />} />
       <Route path="gelombang/create" element={<GelombangForm />} />
       <Route path="gelombang/:id" element={<GelombangDetail />} />
       <Route path="gelombang/:id/edit" element={<GelombangForm />} />
+      <Route path="pendaftaran" element={<PendaftarList />} />
+      <Route path="pendaftaran/create" element={<PendaftarForm />} />
+      <Route path="pendaftaran/:id" element={<PendaftarDetail />} />
+      <Route path="pendaftaran/:id/edit" element={<PendaftarForm />} />
+
+      {/* backward compatibility */}
       <Route path="pendaftar" element={<PendaftarList />} />
       <Route path="pendaftar/create" element={<PendaftarForm />} />
       <Route path="pendaftar/:id" element={<PendaftarDetail />} />
@@ -25,6 +31,7 @@ const Ppdb = () => {
       <Route path="dokumen/create" element={<DokumenForm />} />
       <Route path="dokumen/:id" element={<DokumenDetail />} />
       <Route path="dokumen/:id/edit" element={<DokumenForm />} />
+      <Route path="*" element={<Navigate to="/ppdb/gelombang" replace />} />
     </Routes>
   )
 }
