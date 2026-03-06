@@ -19,12 +19,14 @@
     "@lexical/rich-text": "^0.41.0",
     "@lexical/selection": "^0.41.0",
     "@lexical/utils": "^0.41.0",
-    "ag-grid-community": "^35.1.0",
-    "ag-grid-react": "^35.1.0",
+    "ag-grid-community": "^32.3.9",
+    "ag-grid-react": "^32.3.9",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
+    "laravel-echo": "^2.3.0",
     "lexical": "^0.41.0",
     "lucide-react": "^0.468.0",
+    "pusher-js": "^8.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
@@ -32,9 +34,7 @@
     "recharts": "^2.15.0",
     "sweetalert2": "^11.26.3",
     "zod": "^3.24.1",
-    "zustand": "^5.0.2",
-    "laravel-echo": "^2.3.0",
-    "pusher-js": "^8.4.0"
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
