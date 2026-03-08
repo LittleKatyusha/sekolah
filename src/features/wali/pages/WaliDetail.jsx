@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Phone, MapPin, Briefcase, Calendar, BookOpen, Shield } from 'lucide-react'
+import { ArrowLeft, User, Phone, MapPin, Briefcase, Calendar, BookOpen, Shield, Wallet } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { waliService } from '../services/waliService'
@@ -94,7 +94,7 @@ const WaliDetail = () => {
                 <User size={48} className="text-gray-400" />
               </div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{wali.nama}</h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">NIK: {wali.nik}</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">NIK: {wali.nik || '-'}</p>
 
               <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                 (wali.jenis_kelamin === 'Laki-Laki' || wali.jenis_kelamin === 'Laki-laki' || wali.jenis_kelamin === 1)
@@ -137,11 +137,11 @@ const WaliDetail = () => {
 
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mail size={20} className="text-purple-600" />
+                    <User size={20} className="text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{wali.email || '-'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Jenis Kelamin</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{getJenisKelaminLabel(wali.jenis_kelamin)}</p>
                   </div>
                 </div>
 
@@ -192,6 +192,16 @@ const WaliDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Agama</p>
                     <p className="font-medium text-gray-900 dark:text-white">{wali.agama || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Wallet size={20} className="text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Penghasilan</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{wali.penghasilan || '-'}</p>
                   </div>
                 </div>
 
