@@ -158,6 +158,24 @@ const WaliList = () => {
       minWidth: 180
     },
     {
+      field: 'nik',
+      headerName: 'NIK',
+      sortable: true,
+      filter: true,
+      width: 180,
+      minWidth: 160,
+      cellRenderer: (params) => params.value || '-'
+    },
+    {
+      field: 'jenis_kelamin',
+      headerName: 'Jenis Kelamin',
+      sortable: true,
+      filter: true,
+      width: 150,
+      minWidth: 140,
+      cellRenderer: (params) => params.value || '-'
+    },
+    {
       field: 'no_hp',
       headerName: 'No. HP',
       sortable: true,
@@ -173,6 +191,33 @@ const WaliList = () => {
       filter: true,
       flex: 1,
       minWidth: 250,
+      cellRenderer: (params) => params.value || '-'
+    },
+    {
+      field: 'pendidikan_terakhir',
+      headerName: 'Pendidikan Terakhir',
+      sortable: true,
+      filter: true,
+      width: 180,
+      minWidth: 170,
+      cellRenderer: (params) => params.value || '-'
+    },
+    {
+      field: 'pekerjaan',
+      headerName: 'Pekerjaan',
+      sortable: true,
+      filter: true,
+      width: 160,
+      minWidth: 140,
+      cellRenderer: (params) => params.value || '-'
+    },
+    {
+      field: 'penghasilan',
+      headerName: 'Penghasilan',
+      sortable: true,
+      filter: true,
+      width: 160,
+      minWidth: 140,
       cellRenderer: (params) => params.value || '-'
     },
     {
