@@ -47,7 +47,9 @@ const RolePermissionsList = () => {
   const handleDetail = useCallback((data) => navigate(`/admin/role-permissions/${data.id}`), [navigate])
 
   const handleDelete = useCallback(async (data) => {
-    const label = `Role "${data.name || ''}"`
+    const roleName = data.role?.name || data.name || ''
+    const permissionName = data.permission?.name || ''
+    const label = `Role Permission "${roleName} - ${permissionName}"`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await rolePermissionService.delete(data.id)
@@ -70,24 +72,11 @@ const RolePermissionsList = () => {
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
-    { field: 'name', headerName: 'Nama Role', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
-    { field: 'guard_name', headerName: 'Guard', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
-    {
-      headerName: 'Permissions',
-      sortable: false,
-      filter: false,
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (params) => {
-        const permissions = params.data?.permissions
-        return Array.isArray(permissions) ? permissions.length : 0
-      },
-      cellRenderer: (params) => (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-          {params.value} permissions
-        </span>
-      ),
-    },
+    { field: 'role.name', headerName: 'Nama Role', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
+    { field: 'role.code', headerName: 'Kode Role', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
+    { field: 'permission.name', headerName: 'Nama Permission', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
+    { field: 'permission.code', headerName: 'Kode Permission', sortable: true, filter: true, flex: 1, minWidth: 150, cellRenderer: (params) => params.value || '-' },
+    { field: 'permission.module', headerName: 'Modul', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
     {
       headerName: 'Actions',
       sortable: false,
@@ -113,7 +102,7 @@ const RolePermissionsList = () => {
           <div className="relative flex-1 sm:flex-initial sm:w-64">
             <input
               type="text"
-              placeholder="Cari role..."
+              placeholder="Cari permission..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
