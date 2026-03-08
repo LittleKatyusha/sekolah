@@ -40,6 +40,16 @@ export const ujianUserService = {
   },
 
   /**
+   * Update existing ujian user
+   * @param {number|string} id - Ujian User ID
+   * @param {Object} data - Updated ujian user data
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  update: async (id, data) => {
+    return await apiService.put(`${BASE_URL}/${id}`, data)
+  },
+
+  /**
    * Delete ujian user
    * @param {number|string} id - Ujian User ID
    * @returns {Promise<{data: any, error: any}>}

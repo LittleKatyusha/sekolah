@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -33,64 +33,118 @@ const AnggotaForm = () => {
 
   const [errors, setErrors] = useState({})
   const [organisasiOptions, setOrganisasiOptions] = useState([])
-  const [siswaOptions, setSiswaOptions] = useState([])
   const [jabatanOptions, setJabatanOptions] = useState([])
+  const [selectedOrganisasiOption, setSelectedOrganisasiOption] = useState(null)
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
+  const [selectedJabatanOption, setSelectedJabatanOption] = useState(null)
+
+  const buildOrganisasiOption = useCallback((organisasi) => ({
+    value: String(organisasi.id),
+    label: organisasi.nama || `Organisasi #${organisasi.id}`
+  }), [])
+
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: siswa.nama ? `${siswa.nama}${siswa.nis ? ` (${siswa.nis})` : ''}` : `Siswa #${siswa.id}`
+  }), [])
+
+  const buildJabatanOption = useCallback((jabatan) => ({
+    value: String(jabatan.id),
+    label: jabatan.nama || `Jabatan #${jabatan.id}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
+    }
+
+    console.error('Failed to fetch siswa options:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const fetchOptions = useCallback(async () => {
+    const [orgResult, jabatanResult] = await Promise.all([
+      organisasiService.getAktif(),
+      jabatanService.getAllList()
+    ])
+
+    if (orgResult.data?.data) {
+      setOrganisasiOptions(orgResult.data.data.map(buildOrganisasiOption))
+    }
+
+    if (jabatanResult.data?.data) {
+      setJabatanOptions(jabatanResult.data.data.map(buildJabatanOption))
+    }
+  }, [buildJabatanOption, buildOrganisasiOption])
+
+  const fetchAnggota = useCallback(async () => {
+    setFetchingData(true)
+    const { data, error } = await anggotaService.getById(id)
+    if (data) {
+      const anggota = data.data
+      const organisasiId = anggota.organisasi_id ? String(anggota.organisasi_id) : (anggota.organisasi?.id ? String(anggota.organisasi.id) : '')
+      const siswaId = anggota.siswa_id ? String(anggota.siswa_id) : (anggota.siswa?.id ? String(anggota.siswa.id) : '')
+      const jabatanId = anggota.jabatan_id ? String(anggota.jabatan_id) : (anggota.jabatan?.id ? String(anggota.jabatan.id) : '')
+
+      setFormData({
+        organisasi_id: organisasiId,
+        siswa_id: siswaId,
+        jabatan_id: jabatanId,
+        tanggal_mulai: anggota.tanggal_mulai || '',
+        tanggal_selesai: anggota.tanggal_selesai || '',
+        status: anggota.status || 'aktif',
+      })
+
+      if (anggota.organisasi?.id) {
+        setSelectedOrganisasiOption(buildOrganisasiOption(anggota.organisasi))
+      } else if (organisasiId) {
+        setSelectedOrganisasiOption({
+          value: organisasiId,
+          label: `Organisasi #${organisasiId}`
+        })
+      } else {
+        setSelectedOrganisasiOption(null)
+      }
+
+      if (anggota.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(anggota.siswa))
+      } else if (siswaId) {
+        setSelectedSiswaOption({
+          value: siswaId,
+          label: `Siswa #${siswaId}`
+        })
+      } else {
+        setSelectedSiswaOption(null)
+      }
+
+      if (anggota.jabatan?.id) {
+        setSelectedJabatanOption(buildJabatanOption(anggota.jabatan))
+      } else if (jabatanId) {
+        setSelectedJabatanOption({
+          value: jabatanId,
+          label: `Jabatan #${jabatanId}`
+        })
+      } else {
+        setSelectedJabatanOption(null)
+      }
+    } else {
+      showError('Gagal mengambil data anggota')
+      navigate('/organisasi/anggota')
+    }
+    setFetchingData(false)
+  }, [buildJabatanOption, buildOrganisasiOption, buildSiswaOption, id, navigate])
 
   useEffect(() => {
     fetchOptions()
     if (isEditMode) {
       fetchAnggota()
     }
-  }, [id])
-
-  const fetchOptions = async () => {
-    const [orgResult, siswaResult, jabatanResult] = await Promise.all([
-      organisasiService.getAktif(),
-      siswaService.getAll({ per_page: 100 }),
-      jabatanService.getAllList()
-    ])
-
-    if (orgResult.data?.data) {
-      setOrganisasiOptions(orgResult.data.data.map(o => ({
-        value: String(o.id),
-        label: o.nama || `Organisasi #${o.id}`
-      })))
-    }
-
-    if (siswaResult.data?.data) {
-      setSiswaOptions(siswaResult.data.data.map(s => ({
-        value: String(s.id),
-        label: s.nama ? `${s.nama}${s.nis ? ` (${s.nis})` : ''}` : `Siswa #${s.id}`
-      })))
-    }
-
-    if (jabatanResult.data?.data) {
-      setJabatanOptions(jabatanResult.data.data.map(j => ({
-        value: String(j.id),
-        label: j.nama || `Jabatan #${j.id}`
-      })))
-    }
-  }
-
-  const fetchAnggota = async () => {
-    setFetchingData(true)
-    const { data, error } = await anggotaService.getById(id)
-    if (data) {
-      const anggota = data.data
-      setFormData({
-        organisasi_id: anggota.organisasi_id ? String(anggota.organisasi_id) : (anggota.organisasi?.id ? String(anggota.organisasi.id) : ''),
-        siswa_id: anggota.siswa_id ? String(anggota.siswa_id) : (anggota.siswa?.id ? String(anggota.siswa.id) : ''),
-        jabatan_id: anggota.jabatan_id ? String(anggota.jabatan_id) : (anggota.jabatan?.id ? String(anggota.jabatan.id) : ''),
-        tanggal_mulai: anggota.tanggal_mulai || '',
-        tanggal_selesai: anggota.tanggal_selesai || '',
-        status: anggota.status || 'aktif',
-      })
-    } else {
-      showError('Gagal mengambil data anggota')
-      navigate('/organisasi/anggota')
-    }
-    setFetchingData(false)
-  }
+  }, [fetchAnggota, fetchOptions, isEditMode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -182,7 +236,7 @@ const AnggotaForm = () => {
                   name="organisasi_id"
                   value={formData.organisasi_id}
                   onChange={handleChange}
-                  options={organisasiOptions}
+                  options={selectedOrganisasiOption ? [selectedOrganisasiOption, ...organisasiOptions] : organisasiOptions}
                   placeholder="Pilih organisasi"
                   error={errors.organisasi_id}
                   disabled={isEditMode}
@@ -197,8 +251,11 @@ const AnggotaForm = () => {
                   name="siswa_id"
                   value={formData.siswa_id}
                   onChange={handleChange}
-                  options={siswaOptions}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
                   placeholder="Pilih siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.siswa_id}
                   disabled={isEditMode}
                 />
@@ -212,7 +269,7 @@ const AnggotaForm = () => {
                   name="jabatan_id"
                   value={formData.jabatan_id}
                   onChange={handleChange}
-                  options={jabatanOptions}
+                  options={selectedJabatanOption ? [selectedJabatanOption, ...jabatanOptions] : jabatanOptions}
                   placeholder="Pilih jabatan"
                   error={errors.jabatan_id}
                 />

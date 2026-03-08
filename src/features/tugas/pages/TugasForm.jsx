@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -34,84 +34,95 @@ const TugasForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [guruMapelOptions, setGuruMapelOptions] = useState([])
-  const [kelasOptions, setKelasOptions] = useState([])
+  const [selectedGuruMapelOption, setSelectedGuruMapelOption] = useState(null)
+  const [selectedKelasOption, setSelectedKelasOption] = useState(null)
 
-  useEffect(() => {
-    fetchGuruMapelOptions()
-    fetchKelasOptions()
-    if (isEditMode) {
-      fetchTugas()
+  const buildGuruMapelOption = useCallback((guruMapel) => {
+    const guruNama = guruMapel?.guru?.nama || guruMapel?.nama_guru || 'Guru'
+    const mapelNama =
+      guruMapel?.mapel?.nama ||
+      guruMapel?.mapel?.nama_mapel ||
+      guruMapel?.nama_mapel ||
+      'Mapel'
+
+    return {
+      value: String(guruMapel.id),
+      label: `${guruNama} - ${mapelNama}`
     }
-  }, [id])
+  }, [])
 
-  const fetchGuruMapelOptions = async () => {
-    const guruResult = await guruService.getAll({ per_page: 100 })
+  const buildKelasOption = useCallback((kelas) => ({
+    value: String(kelas.id),
+    label: kelas.nama_kelas || kelas.nama || `Kelas #${kelas.id}`
+  }), [])
+
+  const searchGuruMapelOptions = useCallback(async (keyword = '') => {
+    const guruResult = await guruService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
 
     const guruList = guruResult.data?.data || []
     const options = []
 
     for (const guru of guruList) {
-      if (guru.mapels && Array.isArray(guru.mapels)) {
+      if (Array.isArray(guru.mapels)) {
         for (const mapel of guru.mapels) {
+          const pivotId = mapel.pivot?.id
+          if (!pivotId) continue
+
           options.push({
-            value: String(mapel.pivot?.id || `${guru.id}-${mapel.id}`),
-            label: `${guru.nama} - ${mapel.nama || mapel.nama_mapel}`
+            value: String(pivotId),
+            label: `${guru.nama || 'Guru'} - ${mapel.nama || mapel.nama_mapel || 'Mapel'}`
           })
         }
-      } else if (guru.guru_mapel && Array.isArray(guru.guru_mapel)) {
-        for (const gm of guru.guru_mapel) {
-          options.push({
-            value: String(gm.id),
-            label: `${guru.nama} - ${gm.mapel?.nama || gm.mapel?.nama_mapel || 'Mapel'}`
-          })
+      }
+
+      if (Array.isArray(guru.guru_mapel)) {
+        for (const guruMapel of guru.guru_mapel) {
+          if (!guruMapel?.id) continue
+          options.push(buildGuruMapelOption({
+            ...guruMapel,
+            guru: guruMapel.guru || { nama: guru.nama }
+          }))
         }
       }
     }
 
-    // Fallback: create basic numbered options
-    if (options.length === 0) {
-      const { data: tugasData } = await tugasService.getAll({ per_page: 100 })
-      if (tugasData?.data) {
-        const seenIds = new Set()
-        for (const tugas of tugasData.data) {
-          if (tugas.guru_mapel && !seenIds.has(tugas.guru_mapel.id)) {
-            seenIds.add(tugas.guru_mapel.id)
-            const guruNama = tugas.guru_mapel.guru?.nama || 'Guru'
-            const mapelNama = tugas.guru_mapel.mapel?.nama || 'Mapel'
-            options.push({
-              value: String(tugas.guru_mapel.id),
-              label: `${guruNama} - ${mapelNama}`
-            })
-          }
-        }
-      }
+    const seen = new Set()
+    return options.filter((option) => {
+      const key = String(option.value)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [buildGuruMapelOption])
 
-      if (options.length === 0) {
-        for (let i = 1; i <= 14; i++) {
-          options.push({
-            value: String(i),
-            label: `Guru Mapel #${i}`
-          })
-        }
-      }
+  const searchKelasOptions = useCallback(async (keyword = '') => {
+    const { data } = await kelasService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    const list = data?.data || []
+    return list.map(buildKelasOption)
+  }, [buildKelasOption])
+
+  const hydrateSelectedKelasOption = useCallback(async (kelasId) => {
+    if (!kelasId) {
+      setSelectedKelasOption(null)
+      return
     }
 
-    setGuruMapelOptions(options)
-  }
+    const { data } = await kelasService.getById(kelasId)
+    const kelas = data?.data
 
-  const fetchKelasOptions = async () => {
-    const { data, error } = await kelasService.getAll({ per_page: 100 })
-    if (data?.data) {
-      const options = data.data.map(kelas => ({
-        value: String(kelas.id),
-        label: kelas.nama_kelas || kelas.nama || `Kelas #${kelas.id}`
-      }))
-      setKelasOptions(options)
+    if (kelas) {
+      setSelectedKelasOption(buildKelasOption(kelas))
     }
-  }
+  }, [buildKelasOption])
 
-  const fetchTugas = async () => {
+  const fetchTugas = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await tugasService.getById(id)
     if (data) {
@@ -122,21 +133,50 @@ const TugasForm = () => {
         const dt = new Date(tugas.tenggat_waktu)
         tenggatWaktu = dt.toISOString().slice(0, 16)
       }
+      const guruMapelId = tugas.guru_mapel?.id
+        ? String(tugas.guru_mapel.id)
+        : (tugas.mst_guru_mapel_id ? String(tugas.mst_guru_mapel_id) : '')
+      const kelasId = tugas.kelas?.id
+        ? String(tugas.kelas.id)
+        : (tugas.mst_kelas_id ? String(tugas.mst_kelas_id) : '')
+
       setFormData({
-        mst_guru_mapel_id: tugas.guru_mapel?.id ? String(tugas.guru_mapel.id) : (tugas.mst_guru_mapel_id ? String(tugas.mst_guru_mapel_id) : ''),
-        mst_kelas_id: tugas.kelas?.id ? String(tugas.kelas.id) : (tugas.mst_kelas_id ? String(tugas.mst_kelas_id) : ''),
+        mst_guru_mapel_id: guruMapelId,
+        mst_kelas_id: kelasId,
         judul: tugas.judul || '',
         deskripsi: tugas.deskripsi || '',
         tenggat_waktu: tenggatWaktu,
         file_path: tugas.file_path || '',
         status: tugas.status !== null && tugas.status !== undefined ? String(tugas.status) : '1'
       })
+
+      if (tugas.guru_mapel?.id) {
+        setSelectedGuruMapelOption(buildGuruMapelOption(tugas.guru_mapel))
+      }
+
+      if (tugas.kelas?.id) {
+        setSelectedKelasOption(buildKelasOption(tugas.kelas))
+      }
     } else {
       showError('Gagal mengambil data tugas')
       navigate('/akademik/tugas')
     }
     setFetchingData(false)
-  }
+  }, [buildGuruMapelOption, buildKelasOption, id, navigate])
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchTugas()
+    }
+  }, [fetchTugas, isEditMode])
+
+  useEffect(() => {
+    if (formData.mst_kelas_id) {
+      hydrateSelectedKelasOption(formData.mst_kelas_id)
+    } else {
+      setSelectedKelasOption(null)
+    }
+  }, [formData.mst_kelas_id, hydrateSelectedKelasOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -242,8 +282,11 @@ const TugasForm = () => {
                   name="mst_guru_mapel_id"
                   value={formData.mst_guru_mapel_id}
                   onChange={handleChange}
-                  options={guruMapelOptions}
+                  options={selectedGuruMapelOption ? [selectedGuruMapelOption] : []}
+                  loadOptions={searchGuruMapelOptions}
                   placeholder="Pilih guru & mata pelajaran"
+                  searchPlaceholder="Cari guru atau mata pelajaran..."
+                  noOptionsText="Tidak ada guru mapel yang cocok"
                   error={errors.mst_guru_mapel_id}
                 />
               </div>
@@ -257,8 +300,11 @@ const TugasForm = () => {
                   name="mst_kelas_id"
                   value={formData.mst_kelas_id}
                   onChange={handleChange}
-                  options={kelasOptions}
+                  options={selectedKelasOption ? [selectedKelasOption] : []}
+                  loadOptions={searchKelasOptions}
                   placeholder="Pilih kelas"
+                  searchPlaceholder="Cari kelas..."
+                  noOptionsText="Tidak ada kelas yang cocok"
                   error={errors.mst_kelas_id}
                 />
               </div>

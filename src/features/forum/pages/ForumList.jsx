@@ -21,9 +21,17 @@ function timeAgo(dateString) {
 
 function stripHtml(html) {
   if (!html) return ''
-  const tmp = document.createElement('div')
-  tmp.innerHTML = html
-  return tmp.textContent || tmp.innerText || ''
+
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&/gi, '&')
+    .replace(/</gi, '<')
+    .replace(/>/gi, '>')
+    .replace(/"/gi, '"')
+    .replace(/'|&#x27;/gi, '\'')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function getInitials(name) {

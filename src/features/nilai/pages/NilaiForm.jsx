@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -26,42 +26,96 @@ const NilaiForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [siswaOptions, setSiswaOptions] = useState([])
-  const [ujianOptions, setUjianOptions] = useState([])
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
+  const [selectedUjianOption, setSelectedUjianOption] = useState(null)
+
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
+  }), [])
+
+  const buildUjianOption = useCallback((ujian) => ({
+    value: String(ujian.id),
+    label: ujian.nama || `Ujian #${ujian.id}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
+    }
+
+    console.error('Failed to fetch siswa:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const searchUjianOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await ujianService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildUjianOption)
+    }
+
+    console.error('Failed to fetch ujian:', error)
+    return []
+  }, [buildUjianOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+    }
+  }, [buildSiswaOption])
+
+  const hydrateSelectedUjianOption = useCallback(async (ujianId) => {
+    if (!ujianId) {
+      setSelectedUjianOption(null)
+      return
+    }
+
+    const { data } = await ujianService.getById(ujianId)
+    const ujian = data?.data
+
+    if (ujian) {
+      setSelectedUjianOption(buildUjianOption(ujian))
+    }
+  }, [buildUjianOption])
 
   useEffect(() => {
-    fetchSiswa()
-    fetchUjian()
     if (isEditMode) {
       fetchNilai()
     }
   }, [id])
 
-  const fetchSiswa = async () => {
-    const { data, error } = await siswaService.getAll({ per_page: 100 })
-    if (data && data.data) {
-      const options = data.data.map(siswa => ({
-        value: String(siswa.id),
-        label: `${siswa.nis} - ${siswa.nama}`
-      }))
-      setSiswaOptions(options)
+  useEffect(() => {
+    if (formData.mst_siswa_id) {
+      hydrateSelectedSiswaOption(formData.mst_siswa_id)
     } else {
-      console.error('Failed to fetch siswa:', error)
+      setSelectedSiswaOption(null)
     }
-  }
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
 
-  const fetchUjian = async () => {
-    const { data, error } = await ujianService.getAll({ per_page: 100 })
-    if (data && data.data) {
-      const options = data.data.map(ujian => ({
-        value: String(ujian.id),
-        label: ujian.nama
-      }))
-      setUjianOptions(options)
+  useEffect(() => {
+    if (formData.trx_ujian_id) {
+      hydrateSelectedUjianOption(formData.trx_ujian_id)
     } else {
-      console.error('Failed to fetch ujian:', error)
+      setSelectedUjianOption(null)
     }
-  }
+  }, [formData.trx_ujian_id, hydrateSelectedUjianOption])
 
   const fetchNilai = async () => {
     setFetchingData(true)
@@ -171,8 +225,11 @@ const NilaiForm = () => {
                   name="mst_siswa_id"
                   value={formData.mst_siswa_id}
                   onChange={handleChange}
-                  options={siswaOptions}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
                   placeholder="Pilih siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.mst_siswa_id}
                 />
               </div>
@@ -186,8 +243,11 @@ const NilaiForm = () => {
                   name="trx_ujian_id"
                   value={formData.trx_ujian_id}
                   onChange={handleChange}
-                  options={ujianOptions}
+                  options={selectedUjianOption ? [selectedUjianOption] : []}
+                  loadOptions={searchUjianOptions}
                   placeholder="Pilih ujian"
+                  searchPlaceholder="Cari ujian..."
+                  noOptionsText="Tidak ada ujian yang cocok"
                   error={errors.trx_ujian_id}
                 />
               </div>

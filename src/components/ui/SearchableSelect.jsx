@@ -1,25 +1,58 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Search, X } from 'lucide-react'
 
-const SearchableSelect = ({ 
-  options = [], 
-  value, 
-  onChange, 
-  name, 
-  placeholder = 'Pilih...', 
+const mergeOptionsByValue = (...optionGroups) => {
+  const seen = new Set()
+  const merged = []
+
+  optionGroups.flat().forEach((option) => {
+    if (!option || typeof option.value === 'undefined' || seen.has(String(option.value))) return
+    seen.add(String(option.value))
+    merged.push(option)
+  })
+
+  return merged
+}
+
+const SearchableSelect = ({
+  options = [],
+  value,
+  onChange,
+  name,
+  placeholder = 'Pilih...',
   disabled = false,
-  error 
+  error,
+  loadOptions,
+  debounceMs = 300,
+  minSearchLength = 0,
+  searchPlaceholder = 'Cari...',
+  noOptionsText = 'Tidak ada data',
+  loadingText = 'Memuat data...',
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [asyncOptions, setAsyncOptions] = useState([])
+  const [loadingOptions, setLoadingOptions] = useState(false)
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+  const requestIdRef = useRef(0)
 
-  const selectedOption = options.find(opt => String(opt.value) === String(value))
+  const mergedOptions = useMemo(() => {
+    return mergeOptionsByValue(options, asyncOptions)
+  }, [options, asyncOptions])
 
-  const filteredOptions = options.filter(opt =>
-    opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const selectedOption = mergedOptions.find((opt) => String(opt.value) === String(value))
+
+  const filteredOptions = useMemo(() => {
+    if (loadOptions) return mergedOptions
+
+    const keyword = searchQuery.trim().toLowerCase()
+    if (!keyword) return mergedOptions
+
+    return mergedOptions.filter((opt) =>
+      String(opt.label || '').toLowerCase().includes(keyword)
+    )
+  }, [loadOptions, mergedOptions, searchQuery])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -28,6 +61,7 @@ const SearchableSelect = ({
         setSearchQuery('')
       }
     }
+
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
@@ -37,6 +71,43 @@ const SearchableSelect = ({
       inputRef.current.focus()
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen || !loadOptions) return
+
+    const keyword = searchQuery.trim()
+    if (keyword.length < minSearchLength) {
+      setAsyncOptions([])
+      setLoadingOptions(false)
+      return
+    }
+
+    const currentRequestId = ++requestIdRef.current
+    const timeoutId = window.setTimeout(async () => {
+      setLoadingOptions(true)
+
+      try {
+        const result = await loadOptions(keyword)
+
+        if (requestIdRef.current === currentRequestId) {
+          setAsyncOptions(Array.isArray(result) ? result : [])
+        }
+      } catch (err) {
+        if (requestIdRef.current === currentRequestId) {
+          setAsyncOptions([])
+        }
+        console.error('Failed to load searchable select options:', err)
+      } finally {
+        if (requestIdRef.current === currentRequestId) {
+          setLoadingOptions(false)
+        }
+      }
+    }, debounceMs)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [debounceMs, isOpen, loadOptions, minSearchLength, searchQuery])
 
   const handleSelect = (optionValue) => {
     onChange({ target: { name, value: optionValue } })
@@ -60,7 +131,7 @@ const SearchableSelect = ({
   return (
     <div ref={containerRef} className="relative">
       <div
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
         className={`w-full rounded-md border bg-white px-3 py-2 text-sm cursor-pointer flex items-center justify-between
           ${disabled ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-300 dark:border-gray-600' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-800'}
           ${isOpen ? 'border-primary-500 ring-1 ring-primary-500' : ''}
@@ -95,14 +166,18 @@ const SearchableSelect = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Cari..."
+                placeholder={searchPlaceholder}
                 className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:border-primary-500"
               />
             </div>
           </div>
           <ul className="max-h-48 overflow-y-auto py-1">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map(option => (
+            {loadingOptions ? (
+              <li className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 text-center">
+                {loadingText}
+              </li>
+            ) : filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
                 <li
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
@@ -114,7 +189,7 @@ const SearchableSelect = ({
               ))
             ) : (
               <li className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 text-center">
-                Tidak ada data
+                {noOptionsText}
               </li>
             )}
           </ul>

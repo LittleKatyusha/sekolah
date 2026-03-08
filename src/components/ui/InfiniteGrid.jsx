@@ -1,20 +1,39 @@
 import { useMemo, useCallback, useRef, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
+
+const EMPTY_STATIC_PARAMS = Object.freeze({})
+
+const normalizeStaticParams = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(normalizeStaticParams)
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .sort()
+      .reduce((accumulator, key) => {
+        accumulator[key] = normalizeStaticParams(value[key])
+        return accumulator
+      }, {})
+  }
+
+  return value
+}
 
 /**
  * InfiniteGrid - A reusable AG Grid component with Infinite Row Model support
- * 
+ *
  * This uses AG Grid's Infinite Row Model which is available in the Community version.
  * It provides server-side pagination, sorting, and filtering capabilities.
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.endpoint - API endpoint for fetching data
  * @param {Array} props.columnDefs - Column definitions for AG Grid
  * @param {Object} [props.defaultColDef] - Default column definition
  * @param {Function} [props.transformData] - Optional function to transform API response
- * @param {Object} [props.staticParams] - Static parameters to include in every request
+ * @param {Object} [props.staticParams] - Static parameters to include in every request.
+ * Prefer passing a memoized object from callers; this component also stabilizes
+ * equivalent object values internally to avoid unnecessary datasource resets.
  * @param {number} [props.cacheBlockSize=100] - Number of rows per block (default: 100)
  * @param {boolean} [props.pagination=true] - Enable pagination (default: true)
  * @param {number} [props.paginationPageSize=20] - Default page size (default: 20)
@@ -33,7 +52,7 @@ const InfiniteGrid = ({
   columnDefs,
   defaultColDef = {},
   transformData,
-  staticParams = {},
+  staticParams = EMPTY_STATIC_PARAMS,
   cacheBlockSize = 100,
   pagination = true,
   paginationPageSize = 20,
@@ -49,6 +68,16 @@ const InfiniteGrid = ({
 }) => {
   const gridRef = useRef(null)
 
+  const staticParamsKey = useMemo(
+    () => JSON.stringify(normalizeStaticParams(staticParams ?? EMPTY_STATIC_PARAMS)),
+    [staticParams]
+  )
+
+  const stabilizedStaticParams = useMemo(
+    () => JSON.parse(staticParamsKey),
+    [staticParamsKey]
+  )
+
   // Create the infinite row model datasource
   const dataSource = useMemo(() => ({
     getRows: async (params) => {
@@ -56,7 +85,7 @@ const InfiniteGrid = ({
       
       // Build query parameters
       const queryParams = {
-        ...staticParams,
+        ...stabilizedStaticParams,
         per_page: endRow - startRow,
         page: Math.floor(startRow / (endRow - startRow)) + 1,
       }
@@ -139,7 +168,7 @@ const InfiniteGrid = ({
         params.failCallback()
       }
     }
-  }), [endpoint, transformData, staticParams])
+  }), [endpoint, transformData, stabilizedStaticParams])
 
   // Default column definition
   const mergedDefaultColDef = useMemo(() => ({
@@ -158,6 +187,12 @@ const InfiniteGrid = ({
       onGridReady(params)
     }
   }, [dataSource, onGridReady])
+
+  useEffect(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.setGridOption('datasource', dataSource)
+    }
+  }, [dataSource])
 
   // Handle refresh - can be called externally to refresh the grid
   const refreshGrid = useCallback(() => {

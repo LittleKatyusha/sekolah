@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -40,51 +40,58 @@ const UjianForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [mapelOptions, setMapelOptions] = useState([])
-  const [kelasOptions, setKelasOptions] = useState([])
+  const [selectedMapelOption, setSelectedMapelOption] = useState(null)
+  const [selectedKelasOption, setSelectedKelasOption] = useState(null)
 
-  useEffect(() => {
-    fetchMapel()
-    fetchKelas()
-    if (isEditMode) {
-      fetchUjian()
+  const buildMapelOption = useCallback((mapel) => ({
+    value: String(mapel.id),
+    label: `${mapel.kode ? `${mapel.kode} - ` : ''}${mapel.nama || `Mapel #${mapel.id}`}`
+  }), [])
+
+  const buildKelasOption = useCallback((kelas) => ({
+    value: String(kelas.id),
+    label: kelas.nama_kelas || `Kelas #${kelas.id}`
+  }), [])
+
+  const searchMapelOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await mapelService.getMapel({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildMapelOption)
     }
-  }, [id])
 
-  const fetchMapel = async () => {
-    const { data, error } = await mapelService.getMapel({ per_page: 100 })
-    if (data && data.data) {
-      const options = data.data.map(mapel => ({
-        value: String(mapel.id),
-        label: `${mapel.kode} - ${mapel.nama}`
-      }))
-      setMapelOptions(options)
-    } else {
-      console.error('Failed to fetch mapel:', error)
+    console.error('Failed to fetch mapel:', error)
+    return []
+  }, [buildMapelOption])
+
+  const searchKelasOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await kelasService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildKelasOption)
     }
-  }
 
-  const fetchKelas = async () => {
-    const { data, error } = await kelasService.getAll({ per_page: 100 })
-    if (data && data.data) {
-      const options = data.data.map(kelas => ({
-        value: String(kelas.id),
-        label: kelas.nama_kelas
-      }))
-      setKelasOptions(options)
-    } else {
-      console.error('Failed to fetch kelas:', error)
-    }
-  }
+    console.error('Failed to fetch kelas:', error)
+    return []
+  }, [buildKelasOption])
 
-  const fetchUjian = async () => {
+  const fetchUjian = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await ujianService.getById(id)
     if (data) {
       const ujian = data.data
+      const mapelId = ujian.mst_mapel_id ? String(ujian.mst_mapel_id) : ''
+      const kelasId = ujian.mst_kelas_id ? String(ujian.mst_kelas_id) : ''
+
       setFormData({
-        mst_mapel_id: String(ujian.mst_mapel_id) || '',
-        mst_kelas_id: String(ujian.mst_kelas_id) || '',
+        mst_mapel_id: mapelId,
+        mst_kelas_id: kelasId,
         jenis: String(ujian.jenis) || '',
         nama: ujian.nama || '',
         tanggal: ujian.tanggal || '',
@@ -92,12 +99,40 @@ const UjianForm = () => {
         tahun_ajaran: ujian.tahun_ajaran || '',
         keterangan: ujian.keterangan || ''
       })
+
+      if (ujian.mapel?.id) {
+        setSelectedMapelOption(buildMapelOption(ujian.mapel))
+      } else if (mapelId) {
+        setSelectedMapelOption({
+          value: mapelId,
+          label: `Mapel #${mapelId}`
+        })
+      } else {
+        setSelectedMapelOption(null)
+      }
+
+      if (ujian.kelas?.id) {
+        setSelectedKelasOption(buildKelasOption(ujian.kelas))
+      } else if (kelasId) {
+        setSelectedKelasOption({
+          value: kelasId,
+          label: `Kelas #${kelasId}`
+        })
+      } else {
+        setSelectedKelasOption(null)
+      }
     } else {
       showError('Gagal mengambil data ujian')
       navigate('/akademik/ujian')
     }
     setFetchingData(false)
-  }
+  }, [buildKelasOption, buildMapelOption, id, navigate])
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchUjian()
+    }
+  }, [fetchUjian, isEditMode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -190,8 +225,11 @@ const UjianForm = () => {
                   name="mst_mapel_id"
                   value={formData.mst_mapel_id}
                   onChange={handleChange}
-                  options={mapelOptions}
+                  options={selectedMapelOption ? [selectedMapelOption] : []}
+                  loadOptions={searchMapelOptions}
                   placeholder="Pilih mata pelajaran"
+                  searchPlaceholder="Cari mata pelajaran berdasarkan kode atau nama..."
+                  noOptionsText="Tidak ada mata pelajaran yang cocok"
                   error={errors.mst_mapel_id}
                 />
               </div>
@@ -205,8 +243,11 @@ const UjianForm = () => {
                   name="mst_kelas_id"
                   value={formData.mst_kelas_id}
                   onChange={handleChange}
-                  options={kelasOptions}
+                  options={selectedKelasOption ? [selectedKelasOption] : []}
+                  loadOptions={searchKelasOptions}
                   placeholder="Pilih kelas"
+                  searchPlaceholder="Cari kelas berdasarkan nama..."
+                  noOptionsText="Tidak ada kelas yang cocok"
                   error={errors.mst_kelas_id}
                 />
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -19,10 +19,8 @@ const PeminjamanForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   
-  const [siswaOptions, setSiswaOptions] = useState([])
-  const [bukuOptions, setBukuOptions] = useState([])
-  const [fetchingSiswa, setFetchingSiswa] = useState(false)
-  const [fetchingBuku, setFetchingBuku] = useState(false)
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
+  const [selectedBukuOption, setSelectedBukuOption] = useState(null)
   
   const [formData, setFormData] = useState({
     mst_siswa_id: '',
@@ -34,12 +32,6 @@ const PeminjamanForm = () => {
 
   const [errors, setErrors] = useState({})
 
-  // Fetch siswa and buku lists on mount
-  useEffect(() => {
-    fetchSiswaList()
-    fetchBukuList()
-  }, [])
-
   // Fetch peminjaman data if in edit mode
   useEffect(() => {
     if (isEditMode) {
@@ -47,54 +39,117 @@ const PeminjamanForm = () => {
     }
   }, [id])
 
-  const fetchSiswaList = async () => {
-    setFetchingSiswa(true)
-    const { data, error } = await siswaService.getAll({ per_page: 1000 })
-    if (data && data.data) {
-      const options = data.data.map(siswa => ({
-        value: String(siswa.id),
-        label: `${siswa.nama} (${siswa.nis})`
-      }))
-      setSiswaOptions(options)
-    } else {
-      console.error('Error fetching siswa:', error)
-    }
-    setFetchingSiswa(false)
-  }
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nama || `Siswa #${siswa.id}`} (${siswa.nis || '-'})`
+  }), [])
 
-  const fetchBukuList = async () => {
-    setFetchingBuku(true)
-    const { data, error } = await bukuService.getAvailable({ per_page: 1000 })
-    if (data && data.data) {
-      const options = data.data.map(buku => ({
-        value: String(buku.id),
-        label: `${buku.judul} (${buku.isbn})`
-      }))
-      setBukuOptions(options)
-    } else {
-      console.error('Error fetching buku:', error)
+  const buildBukuOption = useCallback((buku) => ({
+    value: String(buku.id),
+    label: `${buku.judul || `Buku #${buku.id}`} (${buku.isbn || '-'})`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
     }
-    setFetchingBuku(false)
-  }
+
+    console.error('Error fetching siswa:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const searchBukuOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await bukuService.getAvailable({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildBukuOption)
+    }
+
+    console.error('Error fetching buku:', error)
+    return []
+  }, [buildBukuOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+    }
+  }, [buildSiswaOption])
+
+  const hydrateSelectedBukuOption = useCallback(async (bukuId) => {
+    if (!bukuId) {
+      setSelectedBukuOption(null)
+      return
+    }
+
+    const { data } = await bukuService.getById(bukuId)
+    const buku = data?.data
+
+    if (buku) {
+      setSelectedBukuOption(buildBukuOption(buku))
+    }
+  }, [buildBukuOption])
 
   const fetchPeminjaman = async () => {
     setFetchingData(true)
     const { data, error } = await peminjamanService.getById(id)
     if (data && data.data) {
       const peminjaman = data.data
+      const siswaId = String(peminjaman.mst_siswa_id || peminjaman.siswa?.id || '')
+      const bukuId = String(peminjaman.mst_buku_id || peminjaman.buku?.id || '')
+
       setFormData({
-        mst_siswa_id: String(peminjaman.mst_siswa_id || ''),
-        mst_buku_id: String(peminjaman.mst_buku_id || ''),
+        mst_siswa_id: siswaId,
+        mst_buku_id: bukuId,
         tanggal_pinjam: peminjaman.tanggal_pinjam || '',
         tanggal_jatuh_tempo: peminjaman.tanggal_jatuh_tempo || '',
         keterangan: peminjaman.keterangan || ''
       })
+
+      if (peminjaman.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(peminjaman.siswa))
+      }
+
+      if (peminjaman.buku?.id) {
+        setSelectedBukuOption(buildBukuOption(peminjaman.buku))
+      }
     } else {
       showError('Gagal mengambil data peminjaman')
       navigate('/perpustakaan/peminjaman')
     }
     setFetchingData(false)
   }
+
+  useEffect(() => {
+    if (formData.mst_siswa_id) {
+      hydrateSelectedSiswaOption(formData.mst_siswa_id)
+    } else {
+      setSelectedSiswaOption(null)
+    }
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
+
+  useEffect(() => {
+    if (formData.mst_buku_id) {
+      hydrateSelectedBukuOption(formData.mst_buku_id)
+    } else {
+      setSelectedBukuOption(null)
+    }
+  }, [formData.mst_buku_id, hydrateSelectedBukuOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -182,9 +237,12 @@ const PeminjamanForm = () => {
                   name="mst_siswa_id"
                   value={formData.mst_siswa_id}
                   onChange={handleChange}
-                  options={siswaOptions}
-                  placeholder={fetchingSiswa ? 'Memuat data siswa...' : 'Pilih Siswa'}
-                  disabled={fetchingSiswa || isEditMode}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
+                  placeholder="Pilih Siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
+                  disabled={isEditMode}
                   error={errors.mst_siswa_id}
                 />
                 {isEditMode && (
@@ -203,9 +261,12 @@ const PeminjamanForm = () => {
                   name="mst_buku_id"
                   value={formData.mst_buku_id}
                   onChange={handleChange}
-                  options={bukuOptions}
-                  placeholder={fetchingBuku ? 'Memuat data buku...' : 'Pilih Buku'}
-                  disabled={fetchingBuku || isEditMode}
+                  options={selectedBukuOption ? [selectedBukuOption] : []}
+                  loadOptions={searchBukuOptions}
+                  placeholder="Pilih Buku"
+                  searchPlaceholder="Cari buku tersedia berdasarkan judul atau ISBN..."
+                  noOptionsText="Tidak ada buku tersedia yang cocok"
+                  disabled={isEditMode}
                   error={errors.mst_buku_id}
                 />
                 {isEditMode && (

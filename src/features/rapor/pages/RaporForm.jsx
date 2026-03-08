@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -37,9 +37,9 @@ const RaporForm = () => {
 
   const [details, setDetails] = useState([])
   const [errors, setErrors] = useState({})
-  const [siswaOptions, setSiswaOptions] = useState([])
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
-  const [mapelOptions, setMapelOptions] = useState([])
+  const [selectedMapelOptions, setSelectedMapelOptions] = useState([])
 
   useEffect(() => {
     fetchDropdownOptions()
@@ -48,39 +48,82 @@ const RaporForm = () => {
     }
   }, [id])
 
-  const fetchDropdownOptions = async () => {
-    // Fetch siswa
-    const siswaResult = await siswaService.getAll({ per_page: 200 })
-    const siswaList = siswaResult.data?.data || []
-    setSiswaOptions(siswaList.map(s => ({
-      value: String(s.id),
-      label: `${s.nis || ''} - ${s.nama}`
-    })))
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
+  }), [])
 
-    // Fetch tahun ajaran
+  const buildMapelOption = useCallback((mapel) => ({
+    value: String(mapel.id),
+    label: `${mapel.kode || '-'} - ${mapel.nama || mapel.nama_mapel || `Mapel #${mapel.id}`}`
+  }), [])
+
+  const fetchDropdownOptions = async () => {
     const tahunResult = await apiService.get('/admin/tahun-ajaran/')
     const tahunList = tahunResult.data?.data || []
     setTahunAjaranOptions(tahunList.map(t => ({
       value: String(t.id),
       label: t.nama || t.tahun_ajaran || `${t.id}`
     })))
-
-    // Fetch mapel for details
-    const mapelResult = await mapelService.getMapel({ per_page: 200 })
-    const mapelList = mapelResult.data?.data || []
-    setMapelOptions(mapelList.map(m => ({
-      value: String(m.id),
-      label: `${m.kode || ''} - ${m.nama}`
-    })))
   }
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
+    }
+
+    console.error('Failed to fetch siswa options:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const searchMapelOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await mapelService.getMapel({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildMapelOption)
+    }
+
+    console.error('Failed to fetch mapel options:', error)
+    return []
+  }, [buildMapelOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+      return
+    }
+
+    setSelectedSiswaOption({
+      value: String(siswaId),
+      label: `Siswa #${siswaId}`
+    })
+  }, [buildSiswaOption])
 
   const fetchRapor = async () => {
     setFetchingData(true)
     const { data, error } = await raporService.getById(id)
     if (data) {
       const rapor = data.data
+      const siswaId = rapor.siswa?.id ? String(rapor.siswa.id) : ''
+
       setFormData({
-        mst_siswa_id: rapor.siswa?.id ? String(rapor.siswa.id) : '',
+        mst_siswa_id: siswaId,
         semester: rapor.semester ? String(rapor.semester) : '',
         tahun_ajaran_id: rapor.tahun_ajaran_id ? String(rapor.tahun_ajaran_id) : '',
         catatan_wali: rapor.catatan_wali || '',
@@ -88,6 +131,10 @@ const RaporForm = () => {
         izin: rapor.kehadiran?.izin !== null && rapor.kehadiran?.izin !== undefined ? String(rapor.kehadiran.izin) : '',
         tanpa_keterangan: rapor.kehadiran?.tanpa_keterangan !== null && rapor.kehadiran?.tanpa_keterangan !== undefined ? String(rapor.kehadiran.tanpa_keterangan) : '',
       })
+
+      if (rapor.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(rapor.siswa))
+      }
 
       if (rapor.detail && Array.isArray(rapor.detail)) {
         setDetails(rapor.detail.map(d => ({
@@ -98,6 +145,9 @@ const RaporForm = () => {
           predikat: d.predikat || '',
           deskripsi: d.deskripsi || '',
         })))
+        setSelectedMapelOptions(rapor.detail.map(d => (
+          d.mapel?.id ? buildMapelOption(d.mapel) : null
+        )))
       }
     } else {
       showError('Gagal mengambil data rapor')
@@ -120,6 +170,16 @@ const RaporForm = () => {
       updated[index] = { ...updated[index], [field]: value }
       return updated
     })
+
+    if (field === 'mst_mapel_id') {
+      setSelectedMapelOptions(prev => {
+        const updated = [...prev]
+        if (!value) {
+          updated[index] = null
+        }
+        return updated
+      })
+    }
   }
 
   const addDetail = () => {
@@ -131,11 +191,21 @@ const RaporForm = () => {
       predikat: '',
       deskripsi: '',
     }])
+    setSelectedMapelOptions(prev => [...prev, null])
   }
 
   const removeDetail = (index) => {
     setDetails(prev => prev.filter((_, i) => i !== index))
+    setSelectedMapelOptions(prev => prev.filter((_, i) => i !== index))
   }
+
+  useEffect(() => {
+    if (formData.mst_siswa_id) {
+      hydrateSelectedSiswaOption(formData.mst_siswa_id)
+    } else {
+      setSelectedSiswaOption(null)
+    }
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
 
   const validate = () => {
     const newErrors = {}
@@ -229,8 +299,11 @@ const RaporForm = () => {
                   name="mst_siswa_id"
                   value={formData.mst_siswa_id}
                   onChange={handleChange}
-                  options={siswaOptions}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
                   placeholder="Pilih siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.mst_siswa_id}
                 />
               </div>
@@ -364,8 +437,26 @@ const RaporForm = () => {
                               name={`detail_mapel_${index}`}
                               value={detail.mst_mapel_id}
                               onChange={(e) => handleDetailChange(index, 'mst_mapel_id', e.target.value)}
-                              options={mapelOptions}
+                              options={selectedMapelOptions[index] ? [selectedMapelOptions[index]] : []}
+                              loadOptions={async (keyword) => {
+                                const options = await searchMapelOptions(keyword)
+                                const selectedOption = options.find(
+                                  (option) => String(option.value) === String(detail.mst_mapel_id)
+                                )
+
+                                if (selectedOption) {
+                                  setSelectedMapelOptions(prev => {
+                                    const updated = [...prev]
+                                    updated[index] = selectedOption
+                                    return updated
+                                  })
+                                }
+
+                                return options
+                              }}
                               placeholder="Pilih mapel"
+                              searchPlaceholder="Cari mapel berdasarkan kode atau nama..."
+                              noOptionsText="Tidak ada mapel yang cocok"
                             />
                           </div>
                           <div>

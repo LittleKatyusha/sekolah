@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -25,38 +25,91 @@ const PenilaianForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [siswaOptions, setSiswaOptions] = useState([])
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [kriteriaOptions, setKriteriaOptions] = useState([])
+  const [selectedKriteriaOption, setSelectedKriteriaOption] = useState(null)
+
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
+  }), [])
+
+  const buildKriteriaOption = useCallback((kriteria) => ({
+    value: String(kriteria.id),
+    label: `${kriteria.kode_kriteria || '-'} - ${kriteria.nama_kriteria || `Kriteria #${kriteria.id}`}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    const list = data?.data || []
+    return list.map(buildSiswaOption)
+  }, [buildSiswaOption])
+
+  const fetchKriteriaOptions = useCallback(async () => {
+    const { data } = await kriteriaService.getAll({ per_page: 20 })
+    const list = data?.data || []
+    setKriteriaOptions(list.map(buildKriteriaOption))
+  }, [buildKriteriaOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+    }
+  }, [buildSiswaOption])
+
+  const hydrateSelectedKriteriaOption = useCallback(async (kriteriaId) => {
+    if (!kriteriaId) {
+      setSelectedKriteriaOption(null)
+      return
+    }
+
+    const { data } = await kriteriaService.getById(kriteriaId)
+    const kriteria = data?.data
+
+    if (kriteria) {
+      const option = buildKriteriaOption(kriteria)
+      setSelectedKriteriaOption(option)
+      setKriteriaOptions((prev) => {
+        const exists = prev.some((item) => String(item.value) === String(option.value))
+        return exists ? prev : [option, ...prev]
+      })
+    }
+  }, [buildKriteriaOption])
 
   useEffect(() => {
-    fetchOptions()
+    fetchKriteriaOptions()
     if (isEditMode) {
       fetchPenilaian()
     }
   }, [id])
 
-  const fetchOptions = async () => {
-    const [siswaResult, kriteriaResult] = await Promise.all([
-      siswaService.getAll({ per_page: 200 }),
-      kriteriaService.getAll({ per_page: 200 })
-    ])
-
-    if (siswaResult.data) {
-      const list = siswaResult.data.data || []
-      setSiswaOptions(list.map(s => ({
-        value: String(s.id),
-        label: `${s.nis || ''} - ${s.nama}`
-      })))
+  useEffect(() => {
+    if (formData.mst_siswa_id) {
+      hydrateSelectedSiswaOption(formData.mst_siswa_id)
+    } else {
+      setSelectedSiswaOption(null)
     }
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
 
-    if (kriteriaResult.data) {
-      const list = kriteriaResult.data.data || []
-      setKriteriaOptions(list.map(k => ({
-        value: String(k.id),
-        label: `${k.kode_kriteria || ''} - ${k.nama_kriteria}`
-      })))
+  useEffect(() => {
+    if (formData.spk_kriteria_id) {
+      hydrateSelectedKriteriaOption(formData.spk_kriteria_id)
+    } else {
+      setSelectedKriteriaOption(null)
     }
-  }
+  }, [formData.spk_kriteria_id, hydrateSelectedKriteriaOption])
 
   const fetchPenilaian = async () => {
     setFetchingData(true)
@@ -156,8 +209,11 @@ const PenilaianForm = () => {
                   name="mst_siswa_id"
                   value={formData.mst_siswa_id}
                   onChange={handleChange}
-                  options={siswaOptions}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
                   placeholder="Pilih siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.mst_siswa_id}
                 />
               </div>
@@ -170,8 +226,9 @@ const PenilaianForm = () => {
                   name="spk_kriteria_id"
                   value={formData.spk_kriteria_id}
                   onChange={handleChange}
-                  options={kriteriaOptions}
+                  options={selectedKriteriaOption ? [selectedKriteriaOption, ...kriteriaOptions] : kriteriaOptions}
                   placeholder="Pilih kriteria"
+                  searchPlaceholder="Cari kriteria..."
                   error={errors.spk_kriteria_id}
                 />
               </div>

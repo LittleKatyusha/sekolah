@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -59,42 +59,50 @@ const PembayaranSppForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [siswaOptions, setSiswaOptions] = useState([])
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [tarifOptions, setTarifOptions] = useState([])
 
-  useEffect(() => {
-    fetchOptions()
-    if (isEditMode) {
-      fetchPembayaran()
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: siswa.nis ? `${siswa.nama} (${siswa.nis})` : siswa.nama || `Siswa #${siswa.id}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
     }
-  }, [id])
 
-  const fetchOptions = async () => {
-    const [siswaRes, tarifRes] = await Promise.all([
-      siswaService.getAll({ per_page: 100 }),
-      tarifSppService.getAll({ per_page: 100 })
-    ])
+    console.error('Failed to fetch siswa options:', error)
+    return []
+  }, [buildSiswaOption])
 
-    const siswaList = siswaRes.data?.data || []
-    setSiswaOptions(siswaList.map(s => ({
-      value: String(s.id),
-      label: s.nis ? `${s.nama} (${s.nis})` : s.nama || `Siswa #${s.id}`
-    })))
+  const fetchOptions = useCallback(async () => {
+    const { data, error } = await tarifSppService.getAll({ per_page: 100 })
 
-    const tarifList = tarifRes.data?.data || []
-    setTarifOptions(tarifList.map(t => ({
-      value: String(t.id),
-      label: `${t.kelas?.nama_kelas || 'Kelas ?'} - Rp ${Number(t.nominal || 0).toLocaleString('id-ID')}`
-    })))
-  }
+    if (data?.data) {
+      setTarifOptions(data.data.map(t => ({
+        value: String(t.id),
+        label: `${t.kelas?.nama_kelas || 'Kelas ?'} - Rp ${Number(t.nominal || 0).toLocaleString('id-ID')}`
+      })))
+    } else {
+      console.error('Failed to fetch tarif SPP options:', error)
+    }
+  }, [])
 
-  const fetchPembayaran = async () => {
+  const fetchPembayaran = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await pembayaranSppService.getById(id)
     if (data) {
       const p = data.data
+      const siswaId = p.siswa?.id ? String(p.siswa.id) : ''
+
       setFormData({
-        mst_siswa_id: p.siswa?.id ? String(p.siswa.id) : '',
+        mst_siswa_id: siswaId,
         mst_tarif_spp_id: p.tarif_spp?.id ? String(p.tarif_spp.id) : '',
         bulan: p.bulan ? String(p.bulan) : '',
         tahun: p.tahun ? String(p.tahun) : '',
@@ -104,12 +112,30 @@ const PembayaranSppForm = () => {
         metode_pembayaran: p.metode_pembayaran !== null && p.metode_pembayaran !== undefined ? String(p.metode_pembayaran) : '1',
         keterangan: p.keterangan || ''
       })
+
+      if (p.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(p.siswa))
+      } else if (siswaId) {
+        setSelectedSiswaOption({
+          value: siswaId,
+          label: `Siswa #${siswaId}`
+        })
+      } else {
+        setSelectedSiswaOption(null)
+      }
     } else {
       showError('Gagal mengambil data pembayaran SPP')
       navigate('/keuangan/pembayaran-spp')
     }
     setFetchingData(false)
-  }
+  }, [buildSiswaOption, id, navigate])
+
+  useEffect(() => {
+    fetchOptions()
+    if (isEditMode) {
+      fetchPembayaran()
+    }
+  }, [fetchOptions, fetchPembayaran, isEditMode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -210,8 +236,11 @@ const PembayaranSppForm = () => {
                       name="mst_siswa_id"
                       value={formData.mst_siswa_id}
                       onChange={handleChange}
-                      options={siswaOptions}
+                      options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                      loadOptions={searchSiswaOptions}
                       placeholder="Pilih siswa"
+                      searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                      noOptionsText="Tidak ada siswa yang cocok"
                       error={errors.mst_siswa_id}
                     />
                   </div>

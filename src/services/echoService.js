@@ -49,16 +49,42 @@ class EchoService {
   // ─── Public API (same surface as websocketService) ────────────────────────
 
   /**
-   * Initialise (or reinitialise) the Echo connection with a new JWT token.
-   * Calling connect() when already connected will tear down the old instance
-   * first, so token rotation is handled transparently.
+   * Initialise the Echo connection with a JWT token.
+   * Subsequent token changes should use updateToken() to avoid reconnecting
+   * and resubscribing every active channel.
    */
   connect(token) {
     if (!token) return
     this._token = token
-    // Tear down any stale connection, then re-init
-    if (this._echo) this._teardown()
+
+    if (this._echo) {
+      this.updateToken(token)
+      return
+    }
+
     this._initEcho(token)
+  }
+
+  updateToken(token) {
+    if (!token) return
+
+    this._token = token
+
+    if (!this._echo) return
+
+    const authHeader = `Bearer ${token}`
+
+    if (this._echo.options?.auth?.headers) {
+      this._echo.options.auth.headers.Authorization = authHeader
+    }
+
+    if (this._echo.connector?.options?.auth?.headers) {
+      this._echo.connector.options.auth.headers.Authorization = authHeader
+    }
+
+    if (this._echo.connector?.pusher?.config?.channelAuthorization?.headers) {
+      this._echo.connector.pusher.config.channelAuthorization.headers.Authorization = authHeader
+    }
   }
 
   disconnect() {
@@ -184,12 +210,12 @@ class EchoService {
         wssPort: wsPort,
         forceTLS,
         enabledTransports: ['ws', 'wss'],
-      // Broadcasting auth endpoint (Laravel standard)
+        // Broadcasting auth endpoint (Laravel standard)
         authEndpoint: `${env.VITE_API_BASE_URL}/broadcasting/auth`,
         auth: {
           headers: {
             Authorization: `Bearer ${token}`,
-            Accept:        'application/json',
+            Accept: 'application/json',
           },
         },
       })
@@ -218,6 +244,7 @@ class EchoService {
     // Subscribe any channels that were requested before connect()
     this._pendingChannels.forEach(ch => this._joinChannel(ch))
     this._pendingChannels.clear()
+    this.updateToken(token)
   }
 
   _teardown() {

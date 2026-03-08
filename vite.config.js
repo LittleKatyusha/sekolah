@@ -60,6 +60,14 @@ export default defineConfig({
           if (id.includes('recharts')) {
             return 'chart-vendor'
           }
+          // Rich text editor
+          if (id.includes('lexical') || id.includes('@lexical/')) {
+            return 'lexical-vendor'
+          }
+          // Realtime
+          if (id.includes('pusher-js') || id.includes('laravel-echo')) {
+            return 'realtime-vendor'
+          }
           // AG Grid
           if (id.includes('ag-grid')) {
             return 'grid-vendor'

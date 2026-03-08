@@ -1,18 +1,42 @@
-import React, { useEffect, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
 import { Users, BookOpen, DollarSign, AlertTriangle, TrendingUp, GraduationCap, AlertCircle, UserPlus, UserCheck } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { dashboardService } from '../features/dashboard/services/dashboardService'
 import StatCard from '../features/dashboard/components/StatCard'
-import SPPTrendChart from '../features/dashboard/components/SPPTrendChart'
-import PaymentStatusChart from '../features/dashboard/components/PaymentStatusChart'
-import Attendance7DaysChart from '../features/dashboard/components/Attendance7DaysChart'
-import NilaiDistributionChart from '../features/dashboard/components/NilaiDistributionChart'
-import { TopKategoriKasusChart, StatusPenyelesaianChart, KasusPerBulanChart } from '../features/dashboard/components/CounselingCharts'
-import { PpdbStatusChart, PpdbMonthlyChart } from '../features/dashboard/components/PpdbCharts'
-import QuickActions from '../features/dashboard/components/QuickActions'
-import GuruDashboard from '../features/dashboard/components/GuruDashboard'
-import SiswaDashboard from '../features/dashboard/components/SiswaDashboard'
-import WaliDashboard from '../features/dashboard/components/WaliDashboard'
+
+const SPPTrendChart = lazy(() => import('../features/dashboard/components/SPPTrendChart'))
+const PaymentStatusChart = lazy(() => import('../features/dashboard/components/PaymentStatusChart'))
+const Attendance7DaysChart = lazy(() => import('../features/dashboard/components/Attendance7DaysChart'))
+const NilaiDistributionChart = lazy(() => import('../features/dashboard/components/NilaiDistributionChart'))
+const TopKategoriKasusChart = lazy(() =>
+  import('../features/dashboard/components/CounselingCharts').then((module) => ({
+    default: module.TopKategoriKasusChart,
+  }))
+)
+const StatusPenyelesaianChart = lazy(() =>
+  import('../features/dashboard/components/CounselingCharts').then((module) => ({
+    default: module.StatusPenyelesaianChart,
+  }))
+)
+const KasusPerBulanChart = lazy(() =>
+  import('../features/dashboard/components/CounselingCharts').then((module) => ({
+    default: module.KasusPerBulanChart,
+  }))
+)
+const PpdbStatusChart = lazy(() =>
+  import('../features/dashboard/components/PpdbCharts').then((module) => ({
+    default: module.PpdbStatusChart,
+  }))
+)
+const PpdbMonthlyChart = lazy(() =>
+  import('../features/dashboard/components/PpdbCharts').then((module) => ({
+    default: module.PpdbMonthlyChart,
+  }))
+)
+const QuickActions = lazy(() => import('../features/dashboard/components/QuickActions'))
+const GuruDashboard = lazy(() => import('../features/dashboard/components/GuruDashboard'))
+const SiswaDashboard = lazy(() => import('../features/dashboard/components/SiswaDashboard'))
+const WaliDashboard = lazy(() => import('../features/dashboard/components/WaliDashboard'))
 
 const LoadingSkeleton = () => (
   <div className="space-y-8 animate-pulse">
@@ -41,6 +65,13 @@ const LoadingSkeleton = () => (
         </div>
       ))}
     </div>
+  </div>
+)
+
+const DashboardSectionFallback = ({ height = 'h-[300px]' }) => (
+  <div className={`card p-6 animate-pulse ${height}`}>
+    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4" />
+    <div className="h-full bg-gray-200 dark:bg-gray-700 rounded" />
   </div>
 )
 
@@ -117,19 +148,35 @@ const Dashboard = () => {
   const role = dashboardData.role
 
   if (role === 'guru') {
-    return <GuruDashboard data={dashboardData} />
+    return (
+      <Suspense fallback={<LoadingSkeleton />}>
+        <GuruDashboard data={dashboardData} />
+      </Suspense>
+    )
   }
 
   if (role === 'siswa') {
-    return <SiswaDashboard data={dashboardData} />
+    return (
+      <Suspense fallback={<LoadingSkeleton />}>
+        <SiswaDashboard data={dashboardData} />
+      </Suspense>
+    )
   }
 
   if (role === 'wali') {
-    return <WaliDashboard data={dashboardData} />
+    return (
+      <Suspense fallback={<LoadingSkeleton />}>
+        <WaliDashboard data={dashboardData} />
+      </Suspense>
+    )
   }
 
   // Admin/Staff dashboard (default)
-  return <AdminDashboard data={dashboardData} user={user} />
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <AdminDashboard data={dashboardData} user={user} />
+    </Suspense>
+  )
 }
 
 const AdminDashboard = ({ data, user }) => {
@@ -207,17 +254,28 @@ const AdminDashboard = ({ data, user }) => {
       )}
 
       {/* Quick Actions */}
-      <QuickActions role="admin" />
+      <Suspense fallback={<DashboardSectionFallback height="h-32" />}>
+        <QuickActions role="admin" />
+      </Suspense>
 
       {/* Financial Section */}
       <div>
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
           Financial Overview
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <SPPTrendChart data={financial?.spp_trend} />
-          <PaymentStatusChart data={financial?.payment_status_distribution} />
-        </div>
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <DashboardSectionFallback />
+              <DashboardSectionFallback />
+            </div>
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <SPPTrendChart data={financial?.spp_trend} />
+            <PaymentStatusChart data={financial?.payment_status_distribution} />
+          </div>
+        </Suspense>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard
             title="Total Pendapatan SPP"
@@ -246,10 +304,19 @@ const AdminDashboard = ({ data, user }) => {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
           Academic & Attendance
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <Attendance7DaysChart data={academic_attendance?.attendance_7_days} />
-          <NilaiDistributionChart data={academic_attendance?.nilai_distribution} />
-        </div>
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <DashboardSectionFallback />
+              <DashboardSectionFallback />
+            </div>
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Attendance7DaysChart data={academic_attendance?.attendance_7_days} />
+            <NilaiDistributionChart data={academic_attendance?.nilai_distribution} />
+          </div>
+        </Suspense>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Rata-rata Kehadiran"
@@ -283,13 +350,27 @@ const AdminDashboard = ({ data, user }) => {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
           Counseling (BK)
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <TopKategoriKasusChart data={counseling?.top_kategori_kasus} />
-          <StatusPenyelesaianChart data={counseling?.status_penyelesaian} />
-        </div>
-        <div className="mb-6">
-          <KasusPerBulanChart data={counseling?.kasus_per_bulan} />
-        </div>
+        <Suspense
+          fallback={
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <DashboardSectionFallback />
+                <DashboardSectionFallback />
+              </div>
+              <div className="mb-6">
+                <DashboardSectionFallback />
+              </div>
+            </>
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <TopKategoriKasusChart data={counseling?.top_kategori_kasus} />
+            <StatusPenyelesaianChart data={counseling?.status_penyelesaian} />
+          </div>
+          <div className="mb-6">
+            <KasusPerBulanChart data={counseling?.kasus_per_bulan} />
+          </div>
+        </Suspense>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard
             title="Total Kasus"
@@ -318,10 +399,19 @@ const AdminDashboard = ({ data, user }) => {
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
             PPDB (Penerimaan Peserta Didik Baru)
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PpdbStatusChart data={ppdb?.status_distribution} />
-            <PpdbMonthlyChart data={ppdb?.registrations_per_month} />
-          </div>
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DashboardSectionFallback />
+                <DashboardSectionFallback />
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <PpdbStatusChart data={ppdb?.status_distribution} />
+              <PpdbMonthlyChart data={ppdb?.registrations_per_month} />
+            </div>
+          </Suspense>
         </div>
       )}
     </div>

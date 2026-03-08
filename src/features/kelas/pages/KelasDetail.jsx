@@ -2,8 +2,6 @@
  import { useParams, useNavigate } from 'react-router-dom'
  import { ArrowLeft, Edit, Trash2, Users, BookOpen, Calendar } from 'lucide-react'
  import { AgGridReact } from 'ag-grid-react'
- import 'ag-grid-community/styles/ag-grid.css'
- import 'ag-grid-community/styles/ag-theme-alpine.css'
  import Card from '../../../components/ui/Card'
  import Button from '../../../components/ui/Button'
  import { kelasService } from '../services/kelasService'

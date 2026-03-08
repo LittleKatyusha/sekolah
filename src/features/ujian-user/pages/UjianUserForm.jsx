@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -17,11 +17,8 @@ const UjianUserForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   
-  // Data for searchable selects
-  const [ujianList, setUjianList] = useState([])
-  const [siswaList, setSiswaList] = useState([])
-  const [loadingUjian, setLoadingUjian] = useState(false)
-  const [loadingSiswa, setLoadingSiswa] = useState(false)
+  const [selectedUjianOption, setSelectedUjianOption] = useState(null)
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   
   const [formData, setFormData] = useState({
     trx_ujian_id: '',
@@ -30,43 +27,43 @@ const UjianUserForm = () => {
 
   const [errors, setErrors] = useState({})
 
-  // Fetch ujian list
-  useEffect(() => {
-    const fetchUjianList = async () => {
-      setLoadingUjian(true)
-      const { data, error } = await ujianService.getAll({ per_page: 100 })
-      if (data && data.data) {
-        const options = data.data.map(ujian => ({
-          value: ujian.id,
-          label: ujian.nama || `Ujian #${ujian.id} - ${ujian.mapel?.nama || 'Unknown'}`
-        }))
-        setUjianList(options)
-      } else {
-        console.error('Error fetching ujian:', error)
-      }
-      setLoadingUjian(false)
-    }
-    fetchUjianList()
-  }, [])
+  const buildUjianOption = useCallback((ujian) => ({
+    value: String(ujian.id),
+    label: ujian.nama || `Ujian #${ujian.id} - ${ujian.mapel?.nama || 'Unknown'}`
+  }), [])
 
-  // Fetch siswa list
-  useEffect(() => {
-    const fetchSiswaList = async () => {
-      setLoadingSiswa(true)
-      const { data, error } = await siswaService.getAll({ per_page: 100 })
-      if (data && data.data) {
-        const options = data.data.map(siswa => ({
-          value: siswa.id,
-          label: `${siswa.nama} (${siswa.nis}) - ${siswa.kelas?.nama_kelas || 'No Class'}`
-        }))
-        setSiswaList(options)
-      } else {
-        console.error('Error fetching siswa:', error)
-      }
-      setLoadingSiswa(false)
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nama || `Siswa #${siswa.id}`} (${siswa.nis || '-'}) - ${siswa.kelas?.nama_kelas || 'No Class'}`
+  }), [])
+
+  const searchUjianOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await ujianService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildUjianOption)
     }
-    fetchSiswaList()
-  }, [])
+
+    console.error('Error fetching ujian:', error)
+    return []
+  }, [buildUjianOption])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
+    }
+
+    console.error('Error fetching siswa:', error)
+    return []
+  }, [buildSiswaOption])
 
   // Fetch existing data if in edit mode
   useEffect(() => {
@@ -80,16 +77,83 @@ const UjianUserForm = () => {
     const { data, error } = await ujianUserService.getById(id)
     if (data) {
       const ujianUser = data.data
+      const ujianId = ujianUser.trx_ujian_id?.toString() || ujianUser.ujian?.id?.toString() || ''
+      const siswaId = ujianUser.mst_siswa_id?.toString() || ujianUser.siswa?.id?.toString() || ''
+
       setFormData({
-        trx_ujian_id: ujianUser.trx_ujian_id?.toString() || '',
-        mst_siswa_id: ujianUser.mst_siswa_id?.toString() || ''
+        trx_ujian_id: ujianId,
+        mst_siswa_id: siswaId
       })
+
+      if (ujianUser.ujian?.id) {
+        setSelectedUjianOption(buildUjianOption(ujianUser.ujian))
+      }
+
+      if (ujianUser.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(ujianUser.siswa))
+      }
     } else {
       showError('Gagal mengambil data ujian user')
       navigate('/akademik/ujian-user')
     }
     setFetchingData(false)
   }
+
+  const hydrateSelectedUjianOption = useCallback(async (ujianId) => {
+    if (!ujianId) {
+      setSelectedUjianOption(null)
+      return
+    }
+
+    const { data } = await ujianService.getById(ujianId)
+    const ujian = data?.data
+
+    if (ujian) {
+      setSelectedUjianOption(buildUjianOption(ujian))
+      return
+    }
+
+    setSelectedUjianOption({
+      value: String(ujianId),
+      label: `Ujian #${ujianId}`
+    })
+  }, [buildUjianOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+      return
+    }
+
+    setSelectedSiswaOption({
+      value: String(siswaId),
+      label: `Siswa #${siswaId}`
+    })
+  }, [buildSiswaOption])
+
+  useEffect(() => {
+    if (formData.trx_ujian_id) {
+      hydrateSelectedUjianOption(formData.trx_ujian_id)
+    } else {
+      setSelectedUjianOption(null)
+    }
+  }, [formData.trx_ujian_id, hydrateSelectedUjianOption])
+
+  useEffect(() => {
+    if (formData.mst_siswa_id) {
+      hydrateSelectedSiswaOption(formData.mst_siswa_id)
+    } else {
+      setSelectedSiswaOption(null)
+    }
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -169,21 +233,17 @@ const UjianUserForm = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Ujian <span className="text-red-500">*</span>
                 </label>
-                {loadingUjian ? (
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 py-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                    <span className="text-sm">Memuat data ujian...</span>
-                  </div>
-                ) : (
-                  <SearchableSelect
-                    name="trx_ujian_id"
-                    value={formData.trx_ujian_id}
-                    onChange={handleChange}
-                    options={ujianList}
-                    placeholder="Pilih Ujian"
-                    error={errors.trx_ujian_id}
-                  />
-                )}
+                <SearchableSelect
+                  name="trx_ujian_id"
+                  value={formData.trx_ujian_id}
+                  onChange={handleChange}
+                  options={selectedUjianOption ? [selectedUjianOption] : []}
+                  loadOptions={searchUjianOptions}
+                  placeholder="Pilih Ujian"
+                  searchPlaceholder="Cari ujian berdasarkan nama..."
+                  noOptionsText="Tidak ada ujian yang cocok"
+                  error={errors.trx_ujian_id}
+                />
                 {errors.trx_ujian_id && (
                   <p className="mt-1 text-sm text-red-500">
                     {Array.isArray(errors.trx_ujian_id) ? errors.trx_ujian_id[0] : errors.trx_ujian_id}
@@ -196,21 +256,17 @@ const UjianUserForm = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Siswa <span className="text-red-500">*</span>
                 </label>
-                {loadingSiswa ? (
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 py-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                    <span className="text-sm">Memuat data siswa...</span>
-                  </div>
-                ) : (
-                  <SearchableSelect
-                    name="mst_siswa_id"
-                    value={formData.mst_siswa_id}
-                    onChange={handleChange}
-                    options={siswaList}
-                    placeholder="Pilih Siswa"
-                    error={errors.mst_siswa_id}
-                  />
-                )}
+                <SearchableSelect
+                  name="mst_siswa_id"
+                  value={formData.mst_siswa_id}
+                  onChange={handleChange}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
+                  placeholder="Pilih Siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
+                  error={errors.mst_siswa_id}
+                />
                 {errors.mst_siswa_id && (
                   <p className="mt-1 text-sm text-red-500">
                     {Array.isArray(errors.mst_siswa_id) ? errors.mst_siswa_id[0] : errors.mst_siswa_id}
@@ -233,7 +289,7 @@ const UjianUserForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/ujian-user')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading || loadingUjian || loadingSiswa}>
+              <Button type="submit" disabled={loading}>
                 <Save size={18} className="mr-2" />
                 {loading ? 'Menyimpan...' : 'Simpan'}
               </Button>

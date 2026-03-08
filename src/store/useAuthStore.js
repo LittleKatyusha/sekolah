@@ -1,6 +1,22 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+const clearSessionCaches = () => {
+  if (typeof window === 'undefined') return
+
+  const cachePrefixes = ['sidebar-menu-cache:']
+
+  try {
+    Object.keys(window.sessionStorage).forEach((key) => {
+      if (cachePrefixes.some((prefix) => key.startsWith(prefix))) {
+        window.sessionStorage.removeItem(key)
+      }
+    })
+  } catch {
+    // Ignore sessionStorage cleanup failures during logout.
+  }
+}
+
 const useAuthStore = create(
   persist(
     (set) => ({
@@ -23,6 +39,7 @@ const useAuthStore = create(
       },
 
       logout: () => {
+        clearSessionCaches()
         set({
           user: null,
           token: null,

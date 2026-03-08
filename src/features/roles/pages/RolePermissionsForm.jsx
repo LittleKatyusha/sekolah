@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight, Search } from 'lucide-react'
 import Button from '../../../components/ui/Button'
+import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { rolePermissionService, roleService, permissionService } from '../services/rolesService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -62,6 +63,55 @@ const mapApiErrorsToFormErrors = (apiErrors = {}) => {
   return mapped
 }
 
+const dedupePermissionsById = (permissionList = []) => {
+  const seen = new Set()
+
+  return permissionList.filter((permission) => {
+    const id = Number(permission?.id ?? permission?.permission_id ?? permission)
+    if (!id || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+}
+
+const normalizePermissionRecords = (responseData) => {
+  const candidates = [
+    responseData?.data?.permissions,
+    responseData?.data,
+    responseData?.permissions,
+    responseData,
+  ]
+
+  const permissionList = candidates.find((candidate) => Array.isArray(candidate)) || []
+
+  return dedupePermissionsById(
+    permissionList
+      .map((permission) => {
+        if (permission && typeof permission === 'object') {
+          const id = Number(permission.id ?? permission.permission_id)
+          if (!id) return null
+
+          return {
+            ...permission,
+            id,
+            name: permission.name || permission.slug || `Permission #${id}`,
+            module: permission.module || 'other',
+          }
+        }
+
+        const id = Number(permission)
+        return id
+          ? {
+              id,
+              name: `Permission #${id}`,
+              module: 'other',
+            }
+          : null
+      })
+      .filter(Boolean)
+  )
+}
+
 const RolePermissionsForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -75,20 +125,25 @@ const RolePermissionsForm = () => {
     permission_ids: [],
   })
   const [errors, setErrors] = useState({})
-  const [roles, setRoles] = useState([])
+  const [selectedRoleOption, setSelectedRoleOption] = useState(null)
   const [permissions, setPermissions] = useState([])
+  const [selectedPermissionOptions, setSelectedPermissionOptions] = useState([])
   const [expandedModules, setExpandedModules] = useState({})
   const [permissionSearch, setPermissionSearch] = useState('')
+
+  const mergedPermissions = useMemo(() => {
+    return dedupePermissionsById([...selectedPermissionOptions, ...permissions])
+  }, [permissions, selectedPermissionOptions])
 
   const groupedPermissions = useMemo(() => {
     const keyword = permissionSearch.trim().toLowerCase()
 
     const filteredPermissions = keyword
-      ? permissions.filter((permission) =>
+      ? mergedPermissions.filter((permission) =>
           [permission.name, permission.slug, permission.description, permission.module]
             .some((value) => String(value || '').toLowerCase().includes(keyword))
         )
-      : permissions
+      : mergedPermissions
 
     return filteredPermissions.reduce((groups, permission) => {
       const moduleName = permission.module || 'other'
@@ -96,24 +151,67 @@ const RolePermissionsForm = () => {
       groups[moduleName].push(permission)
       return groups
     }, {})
-  }, [permissions, permissionSearch])
+  }, [mergedPermissions, permissionSearch])
 
   const sortedModules = useMemo(() => {
     return Object.entries(groupedPermissions).sort(([a], [b]) => a.localeCompare(b))
   }, [groupedPermissions])
 
-  const fetchRolesAndPermissions = useCallback(async () => {
-    const [rolesRes, permsRes] = await Promise.all([
-      roleService.getAll({ per_page: 1000 }),
-      permissionService.getAll({ per_page: 1000 }),
-    ])
+  const buildRoleOption = useCallback((role) => ({
+    value: String(role.id),
+    label: role.name || `Role #${role.id}`,
+  }), [])
 
-    if (rolesRes.data) {
-      setRoles(rolesRes.data.data || [])
+  const searchRoleOptions = useCallback(async (keyword = '') => {
+    const { data } = await roleService.getAll({
+      search: keyword || undefined,
+      per_page: 20,
+    })
+
+    const roleList = data?.data || []
+    return roleList.map(buildRoleOption)
+  }, [buildRoleOption])
+
+  const hydrateSelectedRoleOption = useCallback(async (roleId) => {
+    if (!roleId) {
+      setSelectedRoleOption(null)
+      return
     }
-    if (permsRes.data) {
-      setPermissions(permsRes.data.data || [])
+
+    const { data } = await roleService.getById(roleId)
+    const role = data?.data
+
+    if (role) {
+      setSelectedRoleOption(buildRoleOption(role))
     }
+  }, [buildRoleOption])
+
+  const hydratePermissionDetails = useCallback(async (permissionIds = [], fallbackPermissions = []) => {
+    const fallbackMap = new Map(
+      dedupePermissionsById(fallbackPermissions).map((permission) => [Number(permission.id), permission])
+    )
+
+    const hydratedPermissions = await Promise.all(
+      permissionIds.map(async (permissionId) => {
+        if (fallbackMap.has(Number(permissionId))) {
+          return fallbackMap.get(Number(permissionId))
+        }
+
+        const { data } = await permissionService.getById(permissionId)
+        const permission = data?.data
+
+        return permission
+          ? {
+              ...permission,
+              id: Number(permission.id ?? permissionId),
+              name: permission.name || permission.slug || `Permission #${permissionId}`,
+              module: permission.module || 'other',
+            }
+          : null
+      })
+    )
+
+    setSelectedPermissionOptions(dedupePermissionsById(hydratedPermissions.filter(Boolean)))
   }, [])
 
   const fetchRolePermission = useCallback(async () => {
@@ -126,23 +224,33 @@ const RolePermissionsForm = () => {
       if (selectedRoleId) {
         const { data: rolePermissionsData } = await roleService.getPermissions(selectedRoleId)
         const existingPermissionIds = normalizeRolePermissions(rolePermissionsData)
+        const existingPermissionRecords = normalizePermissionRecords(rolePermissionsData)
 
         setFormData({
           role_id: String(selectedRoleId),
           permission_ids: existingPermissionIds,
         })
+        setSelectedRoleOption({
+          value: String(selectedRoleId),
+          label: rolePermission.role?.name || rolePermission.role_name || `Role #${selectedRoleId}`,
+        })
+        await hydratePermissionDetails(existingPermissionIds, existingPermissionRecords)
       } else {
+        const existingPermissionIds = normalizePermissionIds(rolePermission)
+        const existingPermissionRecords = normalizePermissionRecords(rolePermission)
+
         setFormData({
           role_id: '',
-          permission_ids: normalizePermissionIds(rolePermission),
+          permission_ids: existingPermissionIds,
         })
+        await hydratePermissionDetails(existingPermissionIds, existingPermissionRecords)
       }
     } else {
       showError('Gagal mengambil data role permission')
       navigate('/admin/role-permissions')
     }
     setFetchingData(false)
-  }, [id, navigate])
+  }, [hydratePermissionDetails, id, navigate])
 
   const fetchRolePermissionsByRoleId = useCallback(async (roleId) => {
     if (!roleId) return
@@ -152,24 +260,43 @@ const RolePermissionsForm = () => {
 
     if (data) {
       const permissionIds = normalizeRolePermissions(data)
+      const permissionRecords = normalizePermissionRecords(data)
+
       setFormData((prev) => ({
         ...prev,
         permission_ids: permissionIds,
       }))
+      await hydratePermissionDetails(permissionIds, permissionRecords)
       setErrors((prev) => ({ ...prev, permission_ids: '' }))
     } else if (error) {
       showError('Gagal mengambil permission dari role terpilih')
     }
 
     setLoadingRolePermissions(false)
-  }, [])
+  }, [hydratePermissionDetails])
 
   useEffect(() => {
-    fetchRolesAndPermissions()
     if (isEditMode) {
       fetchRolePermission()
     }
-  }, [fetchRolesAndPermissions, fetchRolePermission, isEditMode])
+  }, [fetchRolePermission, isEditMode])
+
+  useEffect(() => {
+    hydrateSelectedRoleOption(formData.role_id)
+  }, [formData.role_id, hydrateSelectedRoleOption])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(async () => {
+      const { data } = await permissionService.getAll({
+        search: permissionSearch.trim() || undefined,
+        per_page: 20,
+      })
+
+      setPermissions(dedupePermissionsById(data?.data || []))
+    }, 300)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [permissionSearch])
 
   useEffect(() => {
     if (sortedModules.length === 0) return
@@ -192,6 +319,7 @@ const RolePermissionsForm = () => {
       role_id: value,
       permission_ids: [],
     }))
+    setSelectedPermissionOptions([])
 
     if (errors.role_id || errors.permission_ids) {
       setErrors((prev) => ({ ...prev, role_id: '', permission_ids: '' }))
@@ -304,20 +432,17 @@ const RolePermissionsForm = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Role <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <SearchableSelect
                     name="role_id"
                     value={formData.role_id}
                     onChange={handleRoleChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Pilih Role</option>
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.role_id && <p className="mt-1 text-sm text-red-500">{errors.role_id}</p>}
+                    options={selectedRoleOption ? [selectedRoleOption] : []}
+                    loadOptions={searchRoleOptions}
+                    placeholder="Pilih Role"
+                    searchPlaceholder="Cari role..."
+                    noOptionsText="Tidak ada role yang cocok"
+                    error={errors.role_id}
+                  />
                 </div>
 
                 <div>
@@ -326,7 +451,7 @@ const RolePermissionsForm = () => {
                       Permissions <span className="text-red-500">*</span>
                     </label>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {formData.permission_ids.length}/{permissions.length} dipilih
+                      {formData.permission_ids.length}/{mergedPermissions.length} dipilih
                     </span>
                   </div>
 

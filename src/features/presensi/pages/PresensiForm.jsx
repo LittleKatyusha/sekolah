@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -18,8 +18,7 @@ const PresensiForm = () => {
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
-  const [fetchingSiswa, setFetchingSiswa] = useState(true)
-  const [siswaList, setSiswaList] = useState([])
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [statusOptions, setStatusOptions] = useState([])
   const [fetchingStatus, setFetchingStatus] = useState(true)
   const [rawPresensiStatus, setRawPresensiStatus] = useState(null)
@@ -36,7 +35,6 @@ const PresensiForm = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    fetchSiswaList()
     fetchStatusOptions()
     if (isEditMode) {
       fetchPresensi()
@@ -71,25 +69,48 @@ const PresensiForm = () => {
     setFetchingStatus(false)
   }
 
-  const fetchSiswaList = async () => {
-    setFetchingSiswa(true)
-    const { data, error } = await siswaService.getAll({ per_page: 1000 })
-    if (data && !error) {
-      setSiswaList(data.data || [])
-    } else {
-      console.error('Error fetching siswa:', error)
-      showError('Gagal mengambil data siswa')
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
     }
-    setFetchingSiswa(false)
-  }
+
+    console.error('Error fetching siswa:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+    }
+  }, [buildSiswaOption])
 
   const fetchPresensi = async () => {
     setFetchingData(true)
     const { data, error } = await presensiService.getPresensiById(id)
     if (data) {
       const presensi = data.data
+      const siswaId = String(presensi.mst_siswa_id || presensi.siswa?.id || '')
+
       setFormData({
-        mst_siswa_id: presensi.mst_siswa_id || presensi.siswa?.id || '',
+        mst_siswa_id: siswaId,
         mst_guru_mapel_id: presensi.mst_guru_mapel_id || presensi.guru_mapel?.id || '',
         tanggal: presensi.tanggal || '',
         jam_masuk: presensi.jam_masuk || '',
@@ -97,12 +118,24 @@ const PresensiForm = () => {
         keterangan: presensi.keterangan || ''
       })
       setRawPresensiStatus(presensi.status)
+
+      if (presensi.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(presensi.siswa))
+      }
     } else {
       showError('Gagal mengambil data presensi')
       navigate('/akademik/presensi')
     }
     setFetchingData(false)
   }
+
+  useEffect(() => {
+    if (formData.mst_siswa_id) {
+      hydrateSelectedSiswaOption(formData.mst_siswa_id)
+    } else {
+      setSelectedSiswaOption(null)
+    }
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -176,7 +209,7 @@ const PresensiForm = () => {
       </div>
 
       <Card>
-        {fetchingData || fetchingSiswa || fetchingStatus ? (
+        {fetchingData || fetchingStatus ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
@@ -194,10 +227,10 @@ const PresensiForm = () => {
                   onChange={handleChange}
                   disabled={isEditMode}
                   placeholder="Cari dan pilih siswa..."
-                  options={siswaList.map(siswa => ({
-                    value: siswa.id,
-                    label: `${siswa.nis} - ${siswa.nama}`
-                  }))}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.mst_siswa_id ? (Array.isArray(errors.mst_siswa_id) ? errors.mst_siswa_id[0] : errors.mst_siswa_id) : null}
                 />
               </div>

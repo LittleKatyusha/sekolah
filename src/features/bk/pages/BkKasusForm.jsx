@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -32,10 +32,10 @@ const BkKasusForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
 
-  const [siswaOptions, setSiswaOptions] = useState([])
-  const [guruOptions, setGuruOptions] = useState([])
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
+  const [selectedGuruOption, setSelectedGuruOption] = useState(null)
   const [jenisOptions, setJenisOptions] = useState([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
+  const [loadingJenisOptions, setLoadingJenisOptions] = useState(false)
 
   const [formData, setFormData] = useState({
     siswa_id: '',
@@ -49,23 +49,87 @@ const BkKasusForm = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    fetchOptions()
+    fetchJenisOptions()
     if (isEditMode) {
       fetchKasus()
     }
   }, [id])
 
-  const fetchOptions = async () => {
-    setLoadingOptions(true)
-    const [siswaRes, guruRes, jenisRes] = await Promise.all([
-      siswaService.getAll(),
-      guruService.getAll(),
-      bkJenisService.getAll()
-    ])
-    if (siswaRes.data) setSiswaOptions((siswaRes.data.data || []).map(s => ({ value: s.id, label: `${s.nis} - ${s.nama}` })))
-    if (guruRes.data) setGuruOptions((guruRes.data.data || []).map(g => ({ value: g.id, label: `${g.nip} - ${g.nama}` })))
-    if (jenisRes.data) setJenisOptions((jenisRes.data.data || []).map(j => ({ value: j.id, label: j.nama })))
-    setLoadingOptions(false)
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
+  }), [])
+
+  const buildGuruOption = useCallback((guru) => ({
+    value: String(guru.id),
+    label: `${guru.nip || '-'} - ${guru.nama || `Guru #${guru.id}`}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
+    }
+
+    console.error('Error fetching siswa options:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const searchGuruOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await guruService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildGuruOption)
+    }
+
+    console.error('Error fetching guru options:', error)
+    return []
+  }, [buildGuruOption])
+
+  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
+    if (!siswaId) {
+      setSelectedSiswaOption(null)
+      return
+    }
+
+    const { data } = await siswaService.getById(siswaId)
+    const siswa = data?.data
+
+    if (siswa) {
+      setSelectedSiswaOption(buildSiswaOption(siswa))
+    }
+  }, [buildSiswaOption])
+
+  const hydrateSelectedGuruOption = useCallback(async (guruId) => {
+    if (!guruId) {
+      setSelectedGuruOption(null)
+      return
+    }
+
+    const { data } = await guruService.getById(guruId)
+    const guru = data?.data
+
+    if (guru) {
+      setSelectedGuruOption(buildGuruOption(guru))
+    }
+  }, [buildGuruOption])
+
+  const fetchJenisOptions = async () => {
+    setLoadingJenisOptions(true)
+    const { data, error } = await bkJenisService.getAll({ per_page: 100 })
+    if (data?.data) {
+      setJenisOptions((data.data || []).map((j) => ({ value: String(j.id), label: j.nama })))
+    } else {
+      console.error('Error fetching jenis BK options:', error)
+    }
+    setLoadingJenisOptions(false)
   }
 
   const fetchKasus = async () => {
@@ -78,20 +142,49 @@ const BkKasusForm = () => {
       if (typeof statusValue === 'string' && statusStringToInt[statusValue] !== undefined) {
         statusValue = statusStringToInt[statusValue]
       }
+
+      const siswaId = String(kasus.siswa?.id || kasus.siswa_id || '')
+      const guruId = String(kasus.guru?.id || kasus.guru_id || '')
+      const jenisId = String(kasus.jenis?.id || kasus.jenis_id || '')
+
       setFormData({
-        siswa_id: kasus.siswa?.id || kasus.siswa_id || '',
-        guru_id: kasus.guru?.id || kasus.guru_id || '',
-        jenis_id: kasus.jenis?.id || kasus.jenis_id || '',
+        siswa_id: siswaId,
+        guru_id: guruId,
+        jenis_id: jenisId,
         tanggal: kasus.tanggal || '',
         keterangan: kasus.keterangan || '',
         status: statusValue
       })
+
+      if (kasus.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(kasus.siswa))
+      }
+
+      if (kasus.guru?.id) {
+        setSelectedGuruOption(buildGuruOption(kasus.guru))
+      }
     } else {
       showError('Gagal mengambil data kasus BK')
       navigate('/bk/kasus')
     }
     setFetchingData(false)
   }
+
+  useEffect(() => {
+    if (formData.siswa_id) {
+      hydrateSelectedSiswaOption(formData.siswa_id)
+    } else {
+      setSelectedSiswaOption(null)
+    }
+  }, [formData.siswa_id, hydrateSelectedSiswaOption])
+
+  useEffect(() => {
+    if (formData.guru_id) {
+      hydrateSelectedGuruOption(formData.guru_id)
+    } else {
+      setSelectedGuruOption(null)
+    }
+  }, [formData.guru_id, hydrateSelectedGuruOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -120,8 +213,13 @@ const BkKasusForm = () => {
 
     setLoading(true)
 
-    // Prepare submit data - convert status to integer if it's a string number
-    const submitData = { ...formData }
+    // Prepare submit data - preserve numeric payload shape for selected relations and status
+    const submitData = {
+      ...formData,
+      siswa_id: parseInt(formData.siswa_id, 10),
+      guru_id: parseInt(formData.guru_id, 10),
+      jenis_id: parseInt(formData.jenis_id, 10),
+    }
     if (submitData.status !== '' && submitData.status !== null && submitData.status !== undefined) {
       submitData.status = parseInt(submitData.status, 10) || submitData.status
     }
@@ -177,12 +275,14 @@ const BkKasusForm = () => {
                 </label>
                 <SearchableSelect
                   name="siswa_id"
-                  options={siswaOptions}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
                   value={formData.siswa_id}
                   onChange={handleChange}
+                  loadOptions={searchSiswaOptions}
                   placeholder="Pilih Siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.siswa_id}
-                  disabled={loadingOptions}
                 />
               </div>
 
@@ -193,12 +293,14 @@ const BkKasusForm = () => {
                 </label>
                 <SearchableSelect
                   name="guru_id"
-                  options={guruOptions}
+                  options={selectedGuruOption ? [selectedGuruOption] : []}
                   value={formData.guru_id}
                   onChange={handleChange}
+                  loadOptions={searchGuruOptions}
                   placeholder="Pilih Guru BK"
+                  searchPlaceholder="Cari guru BK berdasarkan nama atau NIP..."
+                  noOptionsText="Tidak ada guru yang cocok"
                   error={errors.guru_id}
-                  disabled={loadingOptions}
                 />
               </div>
 
@@ -214,7 +316,7 @@ const BkKasusForm = () => {
                   onChange={handleChange}
                   placeholder="Pilih Jenis BK"
                   error={errors.jenis_id}
-                  disabled={loadingOptions}
+                  disabled={loadingJenisOptions}
                 />
               </div>
 

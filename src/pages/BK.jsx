@@ -16,17 +16,22 @@ const BK = () => {
     const fetchStats = async () => {
       setLoadingStats(true)
       try {
+        const countParams = { per_page: 1 }
+
         const [kasusRes, sesiRes, jenisRes, kategoriRes] = await Promise.all([
-          bkKasusService.getAll(),
-          bkSesiService.getAll(),
-          bkJenisService.getAll(),
-          bkKategoriService.getAll(),
+          bkKasusService.getAll(countParams),
+          bkSesiService.getAll(countParams),
+          bkJenisService.getAll(countParams),
+          bkKategoriService.getAll(countParams),
         ])
+
+        const getTotalCount = (response) => response.data?.meta?.total ?? response.data?.total ?? response.data?.data?.length ?? '-'
+
         setStats({
-          kasus: kasusRes.data?.data?.length ?? '-',
-          sesi: sesiRes.data?.data?.length ?? '-',
-          jenis: jenisRes.data?.data?.length ?? '-',
-          kategori: kategoriRes.data?.data?.length ?? '-',
+          kasus: getTotalCount(kasusRes),
+          sesi: getTotalCount(sesiRes),
+          jenis: getTotalCount(jenisRes),
+          kategori: getTotalCount(kategoriRes),
         })
       } catch (error) {
         console.error('Failed to fetch BK stats:', error)

@@ -19,6 +19,47 @@ import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
 import { apiService } from '../../utils/api'
 
+const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
+const sidebarMenuRequestCache = new Map()
+
+const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${userId}`
+
+const readSidebarMenuCache = (userId) => {
+  if (!userId || typeof window === 'undefined') return null
+
+  try {
+    const cached = window.sessionStorage.getItem(getSidebarMenuCacheKey(userId))
+    if (!cached) return null
+
+    const parsed = JSON.parse(cached)
+    return Array.isArray(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+const writeSidebarMenuCache = (userId, menus) => {
+  if (!userId || typeof window === 'undefined') return
+
+  try {
+    window.sessionStorage.setItem(getSidebarMenuCacheKey(userId), JSON.stringify(menus))
+  } catch {
+    // Ignore sessionStorage write failures and fall back to in-memory state only.
+  }
+}
+
+const clearSidebarMenuCache = (userId) => {
+  if (!userId || typeof window === 'undefined') return
+
+  sidebarMenuRequestCache.delete(userId)
+
+  try {
+    window.sessionStorage.removeItem(getSidebarMenuCacheKey(userId))
+  } catch {
+    // Ignore sessionStorage cleanup failures.
+  }
+}
+
 // Icon mapping - maps Bootstrap icon names from backend to Lucide components
 const ICON_MAP = {
   // Bootstrap Icons to Lucide mapping
@@ -82,6 +123,15 @@ const MenuItem = ({ item, onClose }) => {
   const [isOpen, setIsOpen] = useState(false)
   const hasChildren = item.children && item.children.length > 0
 
+  if (typeof item.icon !== 'function' && typeof item.icon !== 'object') {
+    console.error('[Sidebar][MenuItem] Invalid icon type detected', {
+      id: item?.id,
+      name: item?.name,
+      iconType: typeof item?.icon,
+      iconValue: item?.icon
+    })
+  }
+
   if (hasChildren) {
     return (
       <li>
@@ -129,28 +179,71 @@ const Sidebar = ({ isOpen, onClose }) => {
   useEffect(() => {
     const fetchMenus = async () => {
       if (!user?.id) {
+        setNavigation([])
         setLoading(false)
+        clearSidebarMenuCache(user?.id)
         return
+      }
+
+      const cachedMenus = readSidebarMenuCache(user.id)
+      if (cachedMenus) {
+        const invalidCachedIcon = cachedMenus.find((menu) => {
+          const stack = [menu]
+          while (stack.length > 0) {
+            const current = stack.pop()
+            if (!current) continue
+
+            if (current.icon && typeof current.icon === 'object' && !('$$typeof' in current.icon)) {
+              return true
+            }
+
+            if (Array.isArray(current.children) && current.children.length > 0) {
+              stack.push(...current.children)
+            }
+          }
+          return false
+        })
+
+        if (invalidCachedIcon) {
+          console.warn('[Sidebar] Cached menu contains non-renderable icon object. Clearing cache and refetching.', {
+            userId: user.id
+          })
+          clearSidebarMenuCache(user.id)
+        } else {
+          setNavigation(cachedMenus)
+          setError(null)
+          setLoading(false)
+          return
+        }
       }
 
       try {
         setLoading(true)
         setError(null)
-        
-        const { data, error: apiError } = await apiService.get('/admin/menus/tree/')
-        
+
+        let request = sidebarMenuRequestCache.get(user.id)
+
+        if (!request) {
+          request = apiService.get('/admin/menus/tree/')
+          sidebarMenuRequestCache.set(user.id, request)
+        }
+
+        const { data, error: apiError } = await request
+
         if (apiError) {
           console.error('Failed to fetch menus:', apiError)
           setError('Failed to load menu')
           setNavigation([])
+          clearSidebarMenuCache(user.id)
           return
         }
 
         // Extract menu data from response
         const menuData = data?.data
-        
+
         if (!menuData || !Array.isArray(menuData)) {
           setNavigation([])
+          writeSidebarMenuCache(user.id, [])
           return
         }
 
@@ -187,12 +280,15 @@ const Sidebar = ({ isOpen, onClose }) => {
           .filter(item => item.is_active)
           .map(mapMenuItem)
 
+        writeSidebarMenuCache(user.id, mappedMenus)
         setNavigation(mappedMenus)
       } catch (err) {
         console.error('Error fetching menus:', err)
         setError('Failed to load menu')
         setNavigation([])
+        clearSidebarMenuCache(user.id)
       } finally {
+        sidebarMenuRequestCache.delete(user.id)
         setLoading(false)
       }
     }

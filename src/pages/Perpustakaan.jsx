@@ -21,25 +21,22 @@ const Perpustakaan = () => {
     const fetchStats = async () => {
       setLoadingStats(true)
       try {
-        const [bukuRes, availableRes, peminjamanRes] = await Promise.all([
-          bukuService.getAll(),
-          bukuService.getAvailable(),
-          peminjamanService.getAll(),
+        const countParams = { per_page: 1 }
+
+        const [bukuRes, availableRes, peminjamanAktifRes, peminjamanSelesaiRes] = await Promise.all([
+          bukuService.getAll(countParams),
+          bukuService.getAvailable(countParams),
+          peminjamanService.getAll({ ...countParams, status: 'dipinjam' }),
+          peminjamanService.getAll({ ...countParams, status: 'dikembalikan' }),
         ])
 
-        const totalBuku = bukuRes.data?.data?.length ?? 0
-        const bukuTersedia = availableRes.data?.data?.length ?? 0
-        const peminjamanList = peminjamanRes.data?.data ?? []
-        
-        // Count active and completed peminjaman
-        const peminjamanAktif = peminjamanList.filter(p => p.status === 'dipinjam').length
-        const peminjamanSelesai = peminjamanList.filter(p => p.status === 'dikembalikan').length
+        const getTotalCount = (response) => response.data?.meta?.total ?? response.data?.total ?? response.data?.data?.length ?? 0
 
         setStats({
-          totalBuku,
-          bukuTersedia,
-          peminjamanAktif,
-          peminjamanSelesai,
+          totalBuku: getTotalCount(bukuRes),
+          bukuTersedia: getTotalCount(availableRes),
+          peminjamanAktif: getTotalCount(peminjamanAktifRes),
+          peminjamanSelesai: getTotalCount(peminjamanSelesaiRes),
         })
       } catch (error) {
         console.error('Failed to fetch perpustakaan stats:', error)

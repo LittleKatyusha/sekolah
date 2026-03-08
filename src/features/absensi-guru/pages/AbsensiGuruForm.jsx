@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -24,7 +24,7 @@ const AbsensiGuruForm = () => {
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
-  const [guruOptions, setGuruOptions] = useState([])
+  const [selectedGuruOption, setSelectedGuruOption] = useState(null)
 
   const [formData, setFormData] = useState({
     mst_guru_id: '',
@@ -35,32 +35,64 @@ const AbsensiGuruForm = () => {
 
   const [errors, setErrors] = useState({})
 
+  const buildGuruOption = useCallback((guru) => ({
+    value: String(guru.id),
+    label: `${guru.nip || '-'} - ${guru.nama || `Guru #${guru.id}`}`
+  }), [])
+
+  const searchGuruOptions = useCallback(async (keyword = '') => {
+    const { data } = await guruService.getAll({
+      search: keyword || undefined,
+      per_page: 20,
+    })
+
+    const list = data?.data || []
+    return list.map(buildGuruOption)
+  }, [buildGuruOption])
+
+  const hydrateSelectedGuruOption = useCallback(async (guruId) => {
+    if (!guruId) {
+      setSelectedGuruOption(null)
+      return
+    }
+
+    const { data } = await guruService.getById(guruId)
+    const guru = data?.data
+
+    if (guru) {
+      setSelectedGuruOption(buildGuruOption(guru))
+    }
+  }, [buildGuruOption])
+
   useEffect(() => {
-    fetchGuruOptions()
     if (isEditMode) fetchAbsensi()
   }, [id])
 
-  const fetchGuruOptions = async () => {
-    const { data } = await guruService.getAll({ per_page: 1000 })
-    if (data?.data) {
-      setGuruOptions(data.data.map(g => ({
-        value: g.id,
-        label: `${g.nip} - ${g.nama}`
-      })))
+  useEffect(() => {
+    if (formData.mst_guru_id) {
+      hydrateSelectedGuruOption(formData.mst_guru_id)
+    } else {
+      setSelectedGuruOption(null)
     }
-  }
+  }, [formData.mst_guru_id, hydrateSelectedGuruOption])
 
   const fetchAbsensi = async () => {
     setFetchingData(true)
     const { data, error } = await absensiGuruService.getById(id)
     if (data) {
       const absensi = data.data
+      const guruId = absensi.mst_guru_id ? String(absensi.mst_guru_id) : ''
+
       setFormData({
-        mst_guru_id: absensi.mst_guru_id || '',
+        mst_guru_id: guruId,
         tanggal: absensi.tanggal || '',
         status: absensi.status ?? 1,
         keterangan: absensi.keterangan || ''
       })
+
+      if (absensi.guru?.id) {
+        setSelectedGuruOption(buildGuruOption(absensi.guru))
+      }
     } else {
       showError('Gagal mengambil data absensi')
       navigate('/absensi-guru')
@@ -144,8 +176,11 @@ const AbsensiGuruForm = () => {
                   name="mst_guru_id"
                   value={formData.mst_guru_id}
                   onChange={handleChange}
-                  options={guruOptions}
+                  options={selectedGuruOption ? [selectedGuruOption] : []}
+                  loadOptions={searchGuruOptions}
                   placeholder="Pilih Guru..."
+                  searchPlaceholder="Cari guru berdasarkan nama atau NIP..."
+                  noOptionsText="Tidak ada guru yang cocok"
                 />
                 {errors.mst_guru_id && (
                   <p className="mt-1 text-sm text-red-500">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -31,53 +31,92 @@ const EksSiswaForm = () => {
 
   const [errors, setErrors] = useState({})
   const [ekskulOptions, setEkskulOptions] = useState([])
-  const [siswaOptions, setSiswaOptions] = useState([])
+  const [selectedEkskulOption, setSelectedEkskulOption] = useState(null)
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
+
+  const buildEkskulOption = useCallback((ekskul) => ({
+    value: String(ekskul.id),
+    label: ekskul.nama || `Ekskul #${ekskul.id}`
+  }), [])
+
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: siswa.nama ? `${siswa.nama}${siswa.nis ? ` (${siswa.nis})` : ''}` : `Siswa #${siswa.id}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildSiswaOption)
+    }
+
+    console.error('Failed to fetch siswa options:', error)
+    return []
+  }, [buildSiswaOption])
+
+  const fetchOptions = useCallback(async () => {
+    const { data, error } = await ekstrakurikulerService.getAll({ per_page: 100 })
+
+    if (data?.data) {
+      setEkskulOptions(data.data.map(buildEkskulOption))
+    } else {
+      console.error('Failed to fetch ekstrakurikuler options:', error)
+    }
+  }, [buildEkskulOption])
+
+  const fetchPendaftaran = useCallback(async () => {
+    setFetchingData(true)
+    const { data, error } = await eksSiswaService.getById(id)
+    if (data) {
+      const pendaftaran = data.data
+      const ekstrakurikulerId = pendaftaran.ekstrakurikuler_id ? String(pendaftaran.ekstrakurikuler_id) : (pendaftaran.ekstrakurikuler?.id ? String(pendaftaran.ekstrakurikuler.id) : '')
+      const siswaId = pendaftaran.siswa_id ? String(pendaftaran.siswa_id) : (pendaftaran.siswa?.id ? String(pendaftaran.siswa.id) : '')
+
+      setFormData({
+        ekstrakurikuler_id: ekstrakurikulerId,
+        siswa_id: siswaId,
+        tanggal_daftar: pendaftaran.tanggal_daftar || '',
+        status: pendaftaran.status || 'aktif',
+      })
+
+      if (pendaftaran.ekstrakurikuler?.id) {
+        setSelectedEkskulOption(buildEkskulOption(pendaftaran.ekstrakurikuler))
+      } else if (ekstrakurikulerId) {
+        setSelectedEkskulOption({
+          value: ekstrakurikulerId,
+          label: `Ekskul #${ekstrakurikulerId}`
+        })
+      } else {
+        setSelectedEkskulOption(null)
+      }
+
+      if (pendaftaran.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(pendaftaran.siswa))
+      } else if (siswaId) {
+        setSelectedSiswaOption({
+          value: siswaId,
+          label: `Siswa #${siswaId}`
+        })
+      } else {
+        setSelectedSiswaOption(null)
+      }
+    } else {
+      showError('Gagal mengambil data pendaftaran')
+      navigate('/ekstrakurikuler/siswa')
+    }
+    setFetchingData(false)
+  }, [buildEkskulOption, buildSiswaOption, id, navigate])
 
   useEffect(() => {
     fetchOptions()
     if (isEditMode) {
       fetchPendaftaran()
     }
-  }, [id])
-
-  const fetchOptions = async () => {
-    const [ekskulResult, siswaResult] = await Promise.all([
-      ekstrakurikulerService.getAll({ per_page: 100 }),
-      siswaService.getAll({ per_page: 100 })
-    ])
-
-    if (ekskulResult.data?.data) {
-      setEkskulOptions(ekskulResult.data.data.map(e => ({
-        value: String(e.id),
-        label: e.nama || `Ekskul #${e.id}`
-      })))
-    }
-
-    if (siswaResult.data?.data) {
-      setSiswaOptions(siswaResult.data.data.map(s => ({
-        value: String(s.id),
-        label: s.nama ? `${s.nama}${s.nis ? ` (${s.nis})` : ''}` : `Siswa #${s.id}`
-      })))
-    }
-  }
-
-  const fetchPendaftaran = async () => {
-    setFetchingData(true)
-    const { data, error } = await eksSiswaService.getById(id)
-    if (data) {
-      const pendaftaran = data.data
-      setFormData({
-        ekstrakurikuler_id: pendaftaran.ekstrakurikuler_id ? String(pendaftaran.ekstrakurikuler_id) : (pendaftaran.ekstrakurikuler?.id ? String(pendaftaran.ekstrakurikuler.id) : ''),
-        siswa_id: pendaftaran.siswa_id ? String(pendaftaran.siswa_id) : (pendaftaran.siswa?.id ? String(pendaftaran.siswa.id) : ''),
-        tanggal_daftar: pendaftaran.tanggal_daftar || '',
-        status: pendaftaran.status || 'aktif',
-      })
-    } else {
-      showError('Gagal mengambil data pendaftaran')
-      navigate('/ekstrakurikuler/siswa')
-    }
-    setFetchingData(false)
-  }
+  }, [fetchOptions, fetchPendaftaran, isEditMode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -161,8 +200,11 @@ const EksSiswaForm = () => {
                   name="siswa_id"
                   value={formData.siswa_id}
                   onChange={handleChange}
-                  options={siswaOptions}
+                  options={selectedSiswaOption ? [selectedSiswaOption] : []}
+                  loadOptions={searchSiswaOptions}
                   placeholder="Pilih siswa"
+                  searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                  noOptionsText="Tidak ada siswa yang cocok"
                   error={errors.siswa_id}
                   disabled={isEditMode}
                 />
@@ -176,7 +218,7 @@ const EksSiswaForm = () => {
                   name="ekstrakurikuler_id"
                   value={formData.ekstrakurikuler_id}
                   onChange={handleChange}
-                  options={ekskulOptions}
+                  options={selectedEkskulOption ? [selectedEkskulOption, ...ekskulOptions] : ekskulOptions}
                   placeholder="Pilih ekstrakurikuler"
                   error={errors.ekstrakurikuler_id}
                   disabled={isEditMode}

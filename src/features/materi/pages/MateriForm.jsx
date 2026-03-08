@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -8,8 +8,6 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import { materiService } from '../services/materiService'
-import { guruService } from '../../guru/services/guruService'
-import { mapelService } from '../../mapel/services/mapelService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const TIPE_OPTIONS = [
@@ -44,81 +42,92 @@ const MateriForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [guruMapelOptions, setGuruMapelOptions] = useState([])
+  const [selectedGuruMapelOption, setSelectedGuruMapelOption] = useState(null)
 
   useEffect(() => {
-    fetchGuruMapelOptions()
     if (isEditMode) {
       fetchMateri()
     }
   }, [id])
 
-  const fetchGuruMapelOptions = async () => {
-    const [guruResult, mapelResult] = await Promise.all([
-      guruService.getAll({ per_page: 100 }),
-      mapelService.getMapel({ per_page: 100 })
-    ])
+  const buildGuruMapelOption = useCallback((guruMapel) => {
+    if (!guruMapel) return null
 
-    const guruList = guruResult.data?.data || []
-    const mapelList = mapelResult.data?.data || []
+    const guruNama = guruMapel.guru?.nama || guruMapel.nama_guru || 'Guru'
+    const mapelNama = guruMapel.mapel?.nama || guruMapel.mapel?.nama_mapel || guruMapel.nama_mapel || 'Mapel'
+    const rawId = guruMapel.id ?? guruMapel.mst_guru_mapel_id
 
-    const options = []
-    for (const guru of guruList) {
-      if (guru.mapels && Array.isArray(guru.mapels)) {
-        for (const mapel of guru.mapels) {
-          options.push({
-            value: String(mapel.pivot?.id || `${guru.id}-${mapel.id}`),
-            label: `${guru.nama} - ${mapel.nama || mapel.nama_mapel}`
-          })
+    if (!rawId) return null
+
+    return {
+      value: String(rawId),
+      label: `${guruNama} - ${mapelNama}`
+    }
+  }, [])
+
+  const searchGuruMapelOptions = useCallback(async (keyword = '') => {
+    const normalizedKeyword = keyword.trim()
+
+    const { data, error } = await materiService.getAll({
+      search: normalizedKeyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      const seenIds = new Set()
+      return data.data.reduce((options, materi) => {
+        const option = buildGuruMapelOption(materi.guru_mapel)
+        if (!option || seenIds.has(option.value)) return options
+
+        const label = option.label.toLowerCase()
+        if (normalizedKeyword && !label.includes(normalizedKeyword.toLowerCase())) {
+          return options
         }
-      } else if (guru.guru_mapel && Array.isArray(guru.guru_mapel)) {
-        for (const gm of guru.guru_mapel) {
-          options.push({
-            value: String(gm.id),
-            label: `${guru.nama} - ${gm.mapel?.nama || gm.mapel?.nama_mapel || 'Mapel'}`
-          })
-        }
-      }
+
+        seenIds.add(option.value)
+        options.push(option)
+        return options
+      }, [])
     }
 
-    // Fallback: create basic numbered options
-    if (options.length === 0) {
-      const { data: materiData } = await materiService.getAll({ per_page: 100 })
-      if (materiData?.data) {
-        const seenIds = new Set()
-        for (const materi of materiData.data) {
-          if (materi.guru_mapel && !seenIds.has(materi.guru_mapel.id)) {
-            seenIds.add(materi.guru_mapel.id)
-            const guruNama = materi.guru_mapel.guru?.nama || 'Guru'
-            const mapelNama = materi.guru_mapel.mapel?.nama || 'Mapel'
-            options.push({
-              value: String(materi.guru_mapel.id),
-              label: `${guruNama} - ${mapelNama}`
-            })
-          }
-        }
-      }
+    console.error('Failed to fetch guru mapel options:', error)
+    return []
+  }, [buildGuruMapelOption])
 
-      if (options.length === 0) {
-        for (let i = 1; i <= 14; i++) {
-          options.push({
-            value: String(i),
-            label: `Guru Mapel #${i}`
-          })
-        }
-      }
+  const hydrateSelectedGuruMapelOption = useCallback(async (guruMapelId) => {
+    if (!guruMapelId) {
+      setSelectedGuruMapelOption(null)
+      return
     }
 
-    setGuruMapelOptions(options)
-  }
+    const { data } = await materiService.getAll({ per_page: 20 })
+    const materiList = data?.data || []
+    const matchedMateri = materiList.find(
+      (materi) => String(materi.guru_mapel?.id) === String(guruMapelId)
+    )
+
+    const option = buildGuruMapelOption(matchedMateri?.guru_mapel)
+
+    if (option) {
+      setSelectedGuruMapelOption(option)
+      return
+    }
+
+    setSelectedGuruMapelOption({
+      value: String(guruMapelId),
+      label: `Guru Mapel #${guruMapelId}`
+    })
+  }, [buildGuruMapelOption])
 
   const fetchMateri = async () => {
     setFetchingData(true)
     const { data, error } = await materiService.getById(id)
     if (data) {
       const materi = data.data
+      const guruMapelId = materi.guru_mapel?.id ? String(materi.guru_mapel.id) : (materi.mst_guru_mapel_id ? String(materi.mst_guru_mapel_id) : '')
+
       setFormData({
-        mst_guru_mapel_id: materi.guru_mapel?.id ? String(materi.guru_mapel.id) : (materi.mst_guru_mapel_id ? String(materi.mst_guru_mapel_id) : ''),
+        mst_guru_mapel_id: guruMapelId,
         judul: materi.judul || '',
         konten: materi.konten || '',
         tipe: materi.tipe || '',
@@ -127,12 +136,27 @@ const MateriForm = () => {
         status: materi.status !== null && materi.status !== undefined ? String(materi.status) : '1',
         urutan: materi.urutan !== null && materi.urutan !== undefined ? String(materi.urutan) : ''
       })
+
+      if (materi.guru_mapel) {
+        const option = buildGuruMapelOption(materi.guru_mapel)
+        if (option) {
+          setSelectedGuruMapelOption(option)
+        }
+      }
     } else {
       showError('Gagal mengambil data materi')
       navigate('/akademik/materi')
     }
     setFetchingData(false)
   }
+
+  useEffect(() => {
+    if (formData.mst_guru_mapel_id) {
+      hydrateSelectedGuruMapelOption(formData.mst_guru_mapel_id)
+    } else {
+      setSelectedGuruMapelOption(null)
+    }
+  }, [formData.mst_guru_mapel_id, hydrateSelectedGuruMapelOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -237,8 +261,11 @@ const MateriForm = () => {
                   name="mst_guru_mapel_id"
                   value={formData.mst_guru_mapel_id}
                   onChange={handleChange}
-                  options={guruMapelOptions}
+                  options={selectedGuruMapelOption ? [selectedGuruMapelOption] : []}
+                  loadOptions={searchGuruMapelOptions}
                   placeholder="Pilih guru & mata pelajaran"
+                  searchPlaceholder="Cari guru mapel berdasarkan guru atau mapel..."
+                  noOptionsText="Tidak ada guru mapel yang cocok"
                   error={errors.mst_guru_mapel_id}
                 />
               </div>

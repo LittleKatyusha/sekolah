@@ -1,6 +1,6 @@
 
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleGuard from './components/guards/RoleGuard'
@@ -11,6 +11,7 @@ import Unauthorized from './pages/Unauthorized'
 import useAuthStore from './store/useAuthStore'
 import echoService from './services/echoService'
 import useNotificationStore from './store/useNotificationStore'
+import { setAuthExpiredHandler } from './utils/api'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -201,7 +202,7 @@ function WebSocketManager() {
       return
     }
 
-    // Connect via Laravel Echo (Reverb) and wire up global listeners
+    // Connect once for the authenticated lifecycle.
     echoService.connect(token)
 
     const offStatus = echoService.on('status', (status) => {
@@ -222,7 +223,32 @@ function WebSocketManager() {
       echoService.disconnect()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) return
+
+    // Refresh auth headers for future private channel auth without reconnecting.
+    echoService.updateToken(token)
   }, [isAuthenticated, token])
+
+  return null
+}
+
+function AuthExpiryNavigator() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      navigate('/login', { replace: true })
+    }
+
+    setAuthExpiredHandler(handleAuthExpired)
+
+    return () => {
+      setAuthExpiredHandler(null)
+    }
+  }, [navigate])
 
   return null
 }
@@ -233,6 +259,7 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <TitleUpdater />
+        <AuthExpiryNavigator />
         <WebSocketManager />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>

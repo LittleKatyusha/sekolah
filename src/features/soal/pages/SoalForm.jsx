@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Plus, Trash2, Check } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -31,8 +31,8 @@ const SoalForm = () => {
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
-  const [mapelOptions, setMapelOptions] = useState([])
-  const [ujianOptions, setUjianOptions] = useState([])
+  const [selectedMapelOption, setSelectedMapelOption] = useState(null)
+  const [selectedUjianOption, setSelectedUjianOption] = useState(null)
   const [tipeSoalOptions, setTipeSoalOptions] = useState(TIPE_SOAL_FALLBACK)
   const [tingkatKesulitanOptions, setTingkatKesulitanOptions] = useState(TINGKAT_KESULITAN_FALLBACK)
   
@@ -51,49 +51,63 @@ const SoalForm = () => {
 
   const [errors, setErrors] = useState({})
 
+  const buildMapelOption = useCallback((mapel) => ({
+    value: String(mapel.id),
+    label: `${mapel.kode_mapel || mapel.kode || '-'} - ${mapel.nama_mapel || mapel.nama || `Mapel #${mapel.id}`}`
+  }), [])
+
+  const buildUjianOption = useCallback((ujian) => ({
+    value: String(ujian.id),
+    label: ujian.nama || `Ujian #${ujian.id}`
+  }), [])
+
   useEffect(() => {
-    fetchMapelOptions()
-    fetchUjianOptions()
     fetchTipeSoalOptions()
     fetchTingkatKesulitanOptions()
-    
+
     if (isEditMode) {
       fetchSoal()
     }
   }, [id])
 
-  const fetchMapelOptions = async () => {
+  const searchMapelOptions = useCallback(async (keyword = '') => {
     try {
-      const { data, error } = await mapelService.getMapel({ per_page: 100 })
-      if (data && data.data) {
-        setMapelOptions(data.data.map(mapel => ({
-          value: String(mapel.id),
-          label: `${mapel.kode_mapel || mapel.kode} - ${mapel.nama_mapel || mapel.nama}`
-        })))
-      } else {
-        console.error('Failed to fetch mapel:', error)
+      const { data, error } = await mapelService.getMapel({
+        search: keyword || undefined,
+        per_page: 20
+      })
+
+      if (data?.data) {
+        return data.data.map(buildMapelOption)
       }
+
+      console.error('Failed to fetch mapel:', error)
+      return []
     } catch (err) {
       console.error('Error fetching mapel options:', err)
+      return []
     }
-  }
+  }, [buildMapelOption])
 
-  const fetchUjianOptions = async () => {
+  const searchUjianOptions = useCallback(async (keyword = '') => {
     try {
-      const { data, error } = await ujianService.getAll({ per_page: 100 })
-      if (data && data.data) {
+      const { data, error } = await ujianService.getAll({
+        search: keyword || undefined,
+        per_page: 20
+      })
+
+      if (data?.data) {
         const ujianList = Array.isArray(data.data) ? data.data : (data.data.data || [])
-        setUjianOptions(ujianList.map(ujian => ({
-          value: String(ujian.id),
-          label: ujian.nama || `Ujian #${ujian.id}`
-        })))
-      } else {
-        console.error('Failed to fetch ujian:', error)
+        return ujianList.map(buildUjianOption)
       }
+
+      console.error('Failed to fetch ujian:', error)
+      return []
     } catch (err) {
       console.error('Error fetching ujian options:', err)
+      return []
     }
-  }
+  }, [buildUjianOption])
 
   const fetchTipeSoalOptions = async () => {
     try {
@@ -138,12 +152,15 @@ const SoalForm = () => {
     const { data, error } = await showSoal(id)
     if (data) {
       const soal = data.data
+      const mapelId = soal.mst_mapel_id ? String(soal.mst_mapel_id) : ''
+      const ujianId = soal.trx_ujian_id ? String(soal.trx_ujian_id) : ''
+
       setFormData({
         pertanyaan: soal.pertanyaan || '',
         tipe: soal.tipe || '',
         tingkat_kesulitan: soal.tingkat_kesulitan || '',
-        mst_mapel_id: soal.mst_mapel_id || '',
-        trx_ujian_id: soal.trx_ujian_id || '',
+        mst_mapel_id: mapelId,
+        trx_ujian_id: ujianId,
         bobot: soal.bobot || 1,
         options: soal.opsi?.length > 0
           ? soal.opsi
@@ -152,6 +169,14 @@ const SoalForm = () => {
               { teks_opsi: '', is_jawaban: false }
             ]
       })
+
+      if (soal.mapel?.id) {
+        setSelectedMapelOption(buildMapelOption(soal.mapel))
+      }
+
+      if (soal.ujian?.id) {
+        setSelectedUjianOption(buildUjianOption(soal.ujian))
+      }
     } else {
       showError('Gagal mengambil data soal')
       navigate('/akademik/soals')
@@ -356,11 +381,14 @@ const SoalForm = () => {
                     Mata Pelajaran <span className="text-red-500">*</span>
                   </label>
                   <SearchableSelect
-                    options={mapelOptions}
+                    options={selectedMapelOption ? [selectedMapelOption] : []}
                     value={formData.mst_mapel_id}
                     name="mst_mapel_id"
                     onChange={handleMapelChange}
+                    loadOptions={searchMapelOptions}
                     placeholder="Pilih mata pelajaran"
+                    searchPlaceholder="Cari mata pelajaran..."
+                    noOptionsText="Tidak ada mata pelajaran yang cocok"
                     error={errors.mst_mapel_id}
                   />
                 </div>
@@ -373,11 +401,14 @@ const SoalForm = () => {
                     Ujian <span className="text-red-500">*</span>
                   </label>
                   <SearchableSelect
-                    options={ujianOptions}
+                    options={selectedUjianOption ? [selectedUjianOption] : []}
                     value={formData.trx_ujian_id}
                     name="trx_ujian_id"
                     onChange={handleChange}
+                    loadOptions={searchUjianOptions}
                     placeholder="Pilih ujian"
+                    searchPlaceholder="Cari ujian..."
+                    noOptionsText="Tidak ada ujian yang cocok"
                     error={errors.trx_ujian_id}
                   />
                 </div>

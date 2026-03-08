@@ -19,6 +19,7 @@ const api = axios.create({
 // Flag to prevent multiple token refresh attempts
 let isRefreshing = false
 let failedQueue = []
+let authExpiredHandler = null
 
 // Process queue of failed requests after token refresh
 const processQueue = (error, token = null) => {
@@ -33,6 +34,13 @@ const processQueue = (error, token = null) => {
 }
 
 // Token refresh function
+export const setAuthExpiredHandler = (handler) => {
+  authExpiredHandler = typeof handler === 'function' ? handler : null
+}
+
+const notifyAuthExpired = () => {
+  authExpiredHandler?.()
+}
 const refreshToken = async () => {
   const { refreshToken: refreshTokenValue } = useAuthStore.getState()
   
@@ -109,10 +117,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null)
         // Token refresh failed - logout user
         useAuthStore.getState().logout()
-        // Only redirect if not already on login page to prevent refresh
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login'
-        }
+        notifyAuthExpired()
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
