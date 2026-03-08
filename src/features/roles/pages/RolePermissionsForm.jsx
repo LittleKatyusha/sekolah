@@ -43,6 +43,25 @@ const normalizeRolePermissions = (responseData) => {
     .filter(Boolean)
 }
 
+const mapApiErrorsToFormErrors = (apiErrors = {}) => {
+  const mapped = { ...apiErrors }
+
+  if (apiErrors.sys_role_id && !mapped.role_id) {
+    mapped.role_id = Array.isArray(apiErrors.sys_role_id) ? apiErrors.sys_role_id[0] : apiErrors.sys_role_id
+  }
+
+  if (apiErrors.sys_permission_id && !mapped.permission_ids) {
+    mapped.permission_ids = Array.isArray(apiErrors.sys_permission_id)
+      ? apiErrors.sys_permission_id[0]
+      : apiErrors.sys_permission_id
+  }
+
+  if (Array.isArray(mapped.role_id)) mapped.role_id = mapped.role_id[0]
+  if (Array.isArray(mapped.permission_ids)) mapped.permission_ids = mapped.permission_ids[0]
+
+  return mapped
+}
+
 const RolePermissionsForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -102,10 +121,22 @@ const RolePermissionsForm = () => {
     const { data } = await rolePermissionService.getById(id)
     if (data) {
       const rolePermission = data.data
-      setFormData({
-        role_id: rolePermission.role_id ? String(rolePermission.role_id) : '',
-        permission_ids: normalizePermissionIds(rolePermission),
-      })
+      const selectedRoleId = rolePermission.role_id ? Number(rolePermission.role_id) : null
+
+      if (selectedRoleId) {
+        const { data: rolePermissionsData } = await roleService.getPermissions(selectedRoleId)
+        const existingPermissionIds = normalizeRolePermissions(rolePermissionsData)
+
+        setFormData({
+          role_id: String(selectedRoleId),
+          permission_ids: existingPermissionIds,
+        })
+      } else {
+        setFormData({
+          role_id: '',
+          permission_ids: normalizePermissionIds(rolePermission),
+        })
+      }
     } else {
       showError('Gagal mengambil data role permission')
       navigate('/admin/role-permissions')
@@ -229,18 +260,10 @@ const RolePermissionsForm = () => {
 
     setSubmitting(true)
 
-    const submitData = {
-      role_id: Number(formData.role_id),
-      permission_ids: formData.permission_ids.map((permissionId) => Number(permissionId)),
-    }
+    const selectedRoleId = Number(formData.role_id)
+    const selectedPermissionIds = formData.permission_ids.map((permissionId) => Number(permissionId))
 
-    let result
-    if (isEditMode) {
-      result = await rolePermissionService.update(id, submitData)
-    } else {
-      result = await rolePermissionService.create(submitData)
-    }
-
+    const result = await roleService.assignPermissions(selectedRoleId, selectedPermissionIds)
     const { error } = result
     setSubmitting(false)
 
@@ -248,8 +271,8 @@ const RolePermissionsForm = () => {
       showSuccess(`Role permission berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
       navigate('/admin/role-permissions')
     } else {
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors)
+      if (error?.errors) {
+        setErrors(mapApiErrorsToFormErrors(error.errors))
       } else {
         showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} role permission`)
       }
