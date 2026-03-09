@@ -185,6 +185,27 @@ class EchoService {
     return echoChannel
   }
 
+  _resolveBroadcastAuthEndpoint(env) {
+    // Explicit full endpoint override for split-container deployments.
+    if (env.VITE_BROADCAST_AUTH_ENDPOINT) {
+      return env.VITE_BROADCAST_AUTH_ENDPOINT
+    }
+
+    // Optional base URL override when API host is different from frontend host.
+    const rawBase = env.VITE_BROADCAST_AUTH_BASE_URL || env.VITE_API_BASE_URL || '/api/v1'
+
+    // Laravel Broadcast::routes in backend is registered under /api,
+    // while regular REST endpoints in this frontend use /api/v1.
+    const normalizedBase = rawBase.replace(/\/?v\d+\/?$/, '').replace(/\/$/, '')
+
+    if (/^https?:\/\//i.test(normalizedBase)) {
+      return `${normalizedBase}/broadcasting/auth`
+    }
+
+    const pathname = normalizedBase.startsWith('/') ? normalizedBase : `/${normalizedBase}`
+    return `${pathname}/broadcasting/auth`
+  }
+
   _initEcho(token) {
     this._setStatus('connecting')
 
@@ -210,8 +231,9 @@ class EchoService {
         wssPort: wsPort,
         forceTLS,
         enabledTransports: ['ws', 'wss'],
-        // Broadcasting auth endpoint (Laravel standard)
-        authEndpoint: `${env.VITE_API_BASE_URL}/broadcasting/auth`,
+        // Backend registers Broadcast::routes(['middleware' => ['auth:api']])
+        // under /api/broadcasting/auth.
+        authEndpoint: this._resolveBroadcastAuthEndpoint(env),
         auth: {
           headers: {
             Authorization: `Bearer ${token}`,
