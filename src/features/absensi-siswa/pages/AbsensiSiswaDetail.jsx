@@ -1,10 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Calendar } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiSiswaService } from '../services/absensiSiswaService'
 import { showError } from '../../../utils/sweetalert'
+
+// Module-level date formatters — no per-render allocation
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -42,17 +65,13 @@ const StatusBadge = ({ status }) => {
 const AbsensiSiswaDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  
+
   const [loading, setLoading] = useState(false)
   const [absensi, setAbsensi] = useState(null)
 
-  useEffect(() => {
-    fetchAbsensi()
-  }, [id])
-
-  const fetchAbsensi = async () => {
+  const fetchAbsensi = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await absensiSiswaService.getAbsensiSiswaById(id)
+    const { data } = await absensiSiswaService.getAbsensiSiswaById(id)
     if (data) {
       setAbsensi(data.data)
     } else {
@@ -60,29 +79,11 @@ const AbsensiSiswaDetail = () => {
       navigate('/absensi-siswa')
     }
     setLoading(false)
-  }
+  }, [id, navigate])
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  useEffect(() => {
+    fetchAbsensi()
+  }, [fetchAbsensi])
 
   if (loading || !absensi) {
     return (

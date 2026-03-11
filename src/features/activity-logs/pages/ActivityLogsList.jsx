@@ -1,18 +1,25 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { Search, RefreshCw, Eye, MoreVertical } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import ActionBadge from '../components/ActionBadge'
 
-const ActionsMenu = ({ onDetail }) => {
+// Module-level pure function — no re-creation per render
+const formatDateTime = (val) => {
+  if (!val) return '-'
+  return new Date(val).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+const ActionsMenu = memo(({ onDetail }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
   const menuRef = useRef(null)
 
-  const handleButtonClick = (e) => {
+  const handleButtonClick = useCallback((e) => {
     e.stopPropagation()
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
@@ -21,19 +28,18 @@ const ActionsMenu = ({ onDetail }) => {
         left: rect.right + window.scrollX - 192
       })
     }
-    setIsOpen(!isOpen)
-  }
+    setIsOpen(prev => !prev)
+  }, [])
 
   useEffect(() => {
+    if (!isOpen) return
     const handleClickOutside = (e) => {
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
       const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
       if (isOutsideButton && isOutsideMenu) setIsOpen(false)
     }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen])
 
   return (
@@ -54,31 +60,28 @@ const ActionsMenu = ({ onDetail }) => {
       )}
     </div>
   )
-}
-
-const ActionBadge = ({ action }) => {
-  const config = {
-    create: { label: 'Create', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-    update: { label: 'Update', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-    delete: { label: 'Delete', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-    login: { label: 'Login', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-    logout: { label: 'Logout', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  }
-  const c = config[action?.toLowerCase()] || { label: action || '-', className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400' }
-  return <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.className}`}>{c.label}</span>
-}
+})
+ActionsMenu.displayName = 'ActionsMenu'
 
 const ActivityLogsList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
+  // Debounce search input — 300ms delay prevents excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchText), 300)
+    return () => clearTimeout(timer)
+  }, [searchText])
+
+  // Use debounced value so staticParams only changes after debounce settles
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
+    search: debouncedSearch || '',
     filter: '{}',
-  }), [searchText])
+  }), [debouncedSearch])
 
   const handleDetail = useCallback((data) => {
     if (!data?.id) return
@@ -90,11 +93,6 @@ const ActivityLogsList = () => {
       gridRef.current.refreshGrid()
     }
   }, [])
-
-  const formatDateTime = (val) => {
-    if (!val) return '-'
-    return new Date(val).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  }
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', width: 80, minWidth: 60, sortable: true },
@@ -116,7 +114,6 @@ const ActivityLogsList = () => {
       cellRenderer: (p) => {
         const row = p.data
         if (!row) return null
-
         return (
           <div className="h-full flex items-center justify-center">
             <ActionsMenu onDetail={() => handleDetail(row)} />
@@ -151,7 +148,6 @@ const ActivityLogsList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`activity-logs-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/activity-logs/"
           staticParams={staticParams}

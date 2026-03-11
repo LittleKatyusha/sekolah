@@ -1,34 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Activity, Monitor, Globe, Clock, FileText } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { activityLogsService } from '../services/activityLogsService'
 import { showError } from '../../../utils/sweetalert'
+import ActionBadge from '../components/ActionBadge'
 
-const ActionBadge = ({ action }) => {
-  const config = {
-    create: { label: 'Create', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-    update: { label: 'Update', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-    delete: { label: 'Delete', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-    login: { label: 'Login', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-    logout: { label: 'Logout', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  }
-  const c = config[action?.toLowerCase()] || { label: action || '-', className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400' }
-  return <span className={`px-3 py-1 rounded-full text-sm font-medium ${c.className}`}>{c.label}</span>
+// Module-level pure function — no re-creation per render
+const formatDateTime = (val) => {
+  if (!val) return '-'
+  return new Date(val).toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
 const ActivityLogDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [log, setLog] = useState(null)
+  const isMountedRef = useRef(true)
 
-  useEffect(() => { fetchLog() }, [id])
-
-  const fetchLog = async () => {
+  const fetchLog = useCallback(async () => {
     setLoading(true)
     const { data, error } = await activityLogsService.getById(id)
+    // Guard: don't set state if component unmounted during fetch
+    if (!isMountedRef.current) return
     if (data) {
       setLog(data.data)
     } else {
@@ -36,12 +32,13 @@ const ActivityLogDetail = () => {
       navigate('/admin/activity-logs')
     }
     setLoading(false)
-  }
+  }, [id, navigate])
 
-  const formatDateTime = (val) => {
-    if (!val) return '-'
-    return new Date(val).toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }
+  useEffect(() => {
+    isMountedRef.current = true
+    fetchLog()
+    return () => { isMountedRef.current = false }
+  }, [fetchLog])
 
   if (loading || !log) {
     return (
@@ -72,7 +69,7 @@ const ActivityLogDetail = () => {
                 {log.user?.name || log.user?.email || 'System'}
               </h2>
               <p className="text-gray-500 dark:text-gray-400 mb-4">ID: {log.id}</p>
-              <ActionBadge action={log.action} />
+              <ActionBadge action={log.action} size="md" />
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
                 <div className="flex justify-between">
