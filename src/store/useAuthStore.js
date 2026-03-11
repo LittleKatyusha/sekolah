@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware'
 const clearSessionCaches = () => {
   if (typeof window === 'undefined') return
 
-  const cachePrefixes = ['sidebar-menu-cache:']
+  const cachePrefixes = ['sidebar-menu-cache:', 'reference-options-cache:']
 
   try {
     Object.keys(window.sessionStorage).forEach((key) => {
@@ -67,8 +67,10 @@ const useAuthStore = create(
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        // Tokens are kept in memory only (not persisted) to mitigate XSS token theft.
-        // The backend should issue refresh tokens via httpOnly cookies for full protection.
+        // Access token is NOT persisted (in-memory only) to reduce XSS exposure.
+        // Refresh token is persisted to enable silent re-authentication after page reload.
+        // For maximum security, migrate refresh token to an httpOnly cookie on the backend.
+        refreshToken: state.refreshToken,
         tokenType: state.tokenType,
         isAuthenticated: state.isAuthenticated,
       }),

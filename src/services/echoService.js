@@ -30,8 +30,9 @@ import Pusher from 'pusher-js'
 // Make Pusher available globally (required by laravel-echo)
 window.Pusher = Pusher
 
-// Channels that require a private subscription (auth)
-const PRIVATE_CHANNELS = new Set(['notifications'])
+// Channels that require a private subscription (auth).
+// App.Models.User.* channels are matched dynamically — see _isPrivate().
+const PRIVATE_CHANNELS = new Set([])
 
 // Pusher internal event prefixes to suppress from listeners
 const PUSHER_INTERNAL = 'pusher:'
@@ -142,7 +143,11 @@ class EchoService {
   // ─── Internal ─────────────────────────────────────────────────────────────
 
   _isPrivate(channel) {
-    return PRIVATE_CHANNELS.has(channel) || channel.startsWith('private-')
+    return (
+      PRIVATE_CHANNELS.has(channel) ||
+      channel.startsWith('private-') ||
+      /^App\.Models\.User\.\d+$/.test(channel)
+    )
   }
 
   _stripPrivatePrefix(channel) {
@@ -176,8 +181,10 @@ class EchoService {
       this._emit('message', { channel, event, data })
 
       // Surface notification-channel events as top-level "notification"
-      // so App.jsx / useNotificationStore works the same as before
-      if (channel === 'notifications') {
+      // so App.jsx / useNotificationStore works the same as before.
+      // Matches both the legacy 'notifications' channel and the standard
+      // Laravel per-user channel App.Models.User.{id}.
+      if (channel === 'notifications' || /^App\.Models\.User\.\d+$/.test(channel)) {
         this._emit('notification', data)
       }
     })
