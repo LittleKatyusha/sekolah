@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { Search, Plus, RefreshCw, Edit, Trash2, MoreVertical, Eye } from 'lucide-react'
@@ -8,7 +8,14 @@ import Button from '../../../components/ui/Button'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-const ActionsMenu = ({ onEdit, onDelete, onDetail }) => {
+const DEBOUNCE_DELAY = 400
+
+const formatDate = (value) => {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+const ActionsMenu = memo(({ onEdit, onDelete, onDetail }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -68,9 +75,11 @@ const ActionsMenu = ({ onEdit, onDelete, onDetail }) => {
       )}
     </div>
   )
-}
+})
 
-const StatusBadge = ({ status }) => {
+ActionsMenu.displayName = 'ActionsMenu'
+
+const StatusBadge = memo(({ status }) => {
   const statusConfig = {
     1: { label: 'Hadir', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
     2: { label: 'Sakit', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
@@ -79,19 +88,29 @@ const StatusBadge = ({ status }) => {
   }
   const config = statusConfig[status] || { label: status || '-', className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400' }
   return <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.className}`}>{config.label}</span>
-}
+})
+
+StatusBadge.displayName = 'StatusBadge'
 
 const AbsensiGuruList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const [debouncedSearchText, setDebouncedSearchText] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchText(searchText)
+    }, DEBOUNCE_DELAY)
+    return () => clearTimeout(timer)
+  }, [searchText])
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
+    search: debouncedSearchText || '',
     filter: '{}',
-  }), [searchText])
+  }), [debouncedSearchText])
 
   const handleDetail = useCallback((data) => {
     if (!data?.id) return
@@ -157,10 +176,7 @@ const AbsensiGuruList = () => {
       filter: true,
       width: 130,
       minWidth: 110,
-      cellRenderer: (params) => {
-        if (!params.value) return '-'
-        return new Date(params.value).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      }
+      cellRenderer: (params) => formatDate(params.value)
     },
     {
       field: 'status',
@@ -234,7 +250,6 @@ const AbsensiGuruList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`absensi-guru-grid-${searchText}`}
           ref={gridRef}
           endpoint="/absensi-guru"
           staticParams={staticParams}

@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { AgGridReact } from 'ag-grid-react'
+import { apiService } from '../../utils/api'
 
 /**
  * ServerGrid - A reusable AG Grid component with Server-side Row Model support
@@ -101,8 +102,6 @@ const ServerGrid = ({
       }
 
       try {
-        // Use dynamic import to avoid issues if ag-grid-enterprise is not installed
-        const { apiService } = await import('../utils/api')
         const { data, error } = await apiService.get(endpoint, { params: queryParams })
         
         if (error) {

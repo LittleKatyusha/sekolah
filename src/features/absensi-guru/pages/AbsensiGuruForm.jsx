@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -15,12 +15,14 @@ const AbsensiGuruForm = () => {
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const { options: statusOptions } = useReferenceOptions('status_presensi', [
+  const defaultStatusOptions = useMemo(() => [
     { value: '1', label: 'Hadir' },
     { value: '2', label: 'Sakit' },
     { value: '3', label: 'Izin' },
     { value: '4', label: 'Alpha' },
-  ])
+  ], [])
+
+  const { options: statusOptions } = useReferenceOptions('status_presensi', defaultStatusOptions)
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -64,19 +66,7 @@ const AbsensiGuruForm = () => {
     }
   }, [buildGuruOption])
 
-  useEffect(() => {
-    if (isEditMode) fetchAbsensi()
-  }, [id])
-
-  useEffect(() => {
-    if (formData.mst_guru_id) {
-      hydrateSelectedGuruOption(formData.mst_guru_id)
-    } else {
-      setSelectedGuruOption(null)
-    }
-  }, [formData.mst_guru_id, hydrateSelectedGuruOption])
-
-  const fetchAbsensi = async () => {
+  const fetchAbsensi = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await absensiGuruService.getById(id)
     if (data) {
@@ -98,24 +88,45 @@ const AbsensiGuruForm = () => {
       navigate('/absensi-guru')
     }
     setFetchingData(false)
-  }
+  }, [id, navigate, buildGuruOption])
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    if (isEditMode) fetchAbsensi()
+  }, [isEditMode, fetchAbsensi])
+
+  useEffect(() => {
+    if (formData.mst_guru_id) {
+      // Skip the fetch if selectedGuruOption is already set and matches the current ID
+      if (selectedGuruOption && selectedGuruOption.value === String(formData.mst_guru_id)) {
+        return
+      }
+      hydrateSelectedGuruOption(formData.mst_guru_id)
+    } else {
+      setSelectedGuruOption(null)
+    }
+  }, [formData.mst_guru_id, hydrateSelectedGuruOption, selectedGuruOption])
+
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }))
-  }
+    setErrors(prev => {
+      if (prev[name]) {
+        return { ...prev, [name]: null }
+      }
+      return prev
+    })
+  }, [])
 
-  const validate = () => {
+  const validate = useCallback(() => {
     const newErrors = {}
     if (!formData.mst_guru_id) newErrors.mst_guru_id = 'Guru wajib dipilih'
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal wajib diisi'
     if (!formData.status) newErrors.status = 'Status wajib dipilih'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
+  }, [formData])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
     if (!validate()) return
 
@@ -146,7 +157,7 @@ const AbsensiGuruForm = () => {
       }
     }
     setLoading(false)
-  }
+  }, [formData, isEditMode, id, navigate, validate])
 
   return (
     <div className="space-y-6">

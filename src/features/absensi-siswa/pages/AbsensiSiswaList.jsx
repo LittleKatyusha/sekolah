@@ -141,25 +141,44 @@ const AbsensiSiswaList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filters, setFilters] = useState({
     tanggal_mulai: '',
     tanggal_akhir: ''
   })
   const [showFilter, setShowFilter] = useState(false)
 
+  const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [selectedSiswaId, setSelectedSiswaId] = useState('')
   const [summaryData, setSummaryData] = useState(null)
 
-  const loadSiswaOptions = useCallback(async (keyword = '') => {
-    const { data } = await siswaService.getAll({
-      search: keyword || undefined,
-      per_page: 20,
-    })
-    return (data?.data || []).map(s => ({
-      value: s.id,
-      label: `${s.nis} - ${s.nama}`,
-    }))
-  }, [])
+  // Debounce search input to avoid triggering refetch on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchText])
+
+  const buildSiswaOption = useCallback((siswa) => ({
+    value: String(siswa.id),
+    label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
+  }), [])
+
+  const searchSiswaOptions = useCallback(async (keyword = '') => {
+    try {
+      const { data } = await siswaService.getAll({
+        search: keyword || undefined,
+        per_page: 20
+      })
+      if (data?.data) {
+        return data.data.map(buildSiswaOption)
+      }
+    } catch (error) {
+      console.error('Error fetching siswa options:', error)
+    }
+    return []
+  }, [buildSiswaOption])
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -187,7 +206,7 @@ const AbsensiSiswaList = () => {
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
+    search: debouncedSearch || '',
     filter: JSON.stringify({
       tanggal_mulai: filters.tanggal_mulai || '',
       tanggal_akhir: filters.tanggal_akhir || '',
@@ -195,11 +214,13 @@ const AbsensiSiswaList = () => {
     }),
     tanggal_mulai: filters.tanggal_mulai || undefined,
     tanggal_akhir: filters.tanggal_akhir || undefined,
-  }), [filters.tanggal_akhir, filters.tanggal_mulai, searchText, selectedSiswaId])
+  }), [filters.tanggal_akhir, filters.tanggal_mulai, debouncedSearch, selectedSiswaId])
 
-  const handleSiswaChange = (e) => {
-    setSelectedSiswaId(e.target.value)
-  }
+  const handleSiswaChange = useCallback((e) => {
+    const val = e.target.value
+    setSelectedSiswaId(val)
+    if (!val) setSelectedSiswaOption(null)
+  }, [])
 
   const handleDetail = useCallback((data) => {
     if (!data?.id) return
@@ -231,30 +252,30 @@ const AbsensiSiswaList = () => {
     }
   }, [])
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     navigate('/absensi-siswa/tambah')
-  }
+  }, [navigate])
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target
     setFilters(prev => ({
       ...prev,
       [name]: value
     }))
-  }
+  }, [])
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
     }
-  }
+  }, [])
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       tanggal_mulai: '',
       tanggal_akhir: ''
     })
-  }
+  }, [])
 
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
@@ -359,8 +380,11 @@ const AbsensiSiswaList = () => {
               name="siswa_id"
               value={selectedSiswaId}
               onChange={handleSiswaChange}
-              loadOptions={loadSiswaOptions}
-              placeholder="Cari siswa..."
+              options={selectedSiswaOption ? [selectedSiswaOption] : []}
+              loadOptions={searchSiswaOptions}
+              placeholder="Cari Siswa..."
+              searchPlaceholder="Cari berdasarkan nama/NIS..."
+              noOptionsText="Siswa tidak ditemukan"
             />
           </div>
           <div className="relative">
@@ -464,7 +488,7 @@ const AbsensiSiswaList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`absensi-siswa-grid-${selectedSiswaId}-${searchText}-${filters.tanggal_mulai}-${filters.tanggal_akhir}`}
+          key={`absensi-siswa-grid-${endpoint}`}
           ref={gridRef}
           endpoint={endpoint}
           staticParams={staticParams}

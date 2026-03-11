@@ -9,6 +9,20 @@ import { siswaService } from '../../siswa/services/siswaService'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
+// Module-level status mapper — avoids per-render allocation
+const STATUS_MAP = {
+  'hadir': '1', 'sakit': '2', 'izin': '3', 'alpha': '4', 'alpa': '4',
+  '1': '1', '2': '2', '3': '3', '4': '4'
+}
+
+const mapStatus = (raw) => {
+  const mapped = STATUS_MAP[String(raw).toLowerCase()]
+  if (mapped) return mapped
+  const parsed = parseInt(raw)
+  if (!isNaN(parsed)) return String(parsed)
+  return ''
+}
+
 const AbsensiSiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -34,12 +48,6 @@ const AbsensiSiswaForm = () => {
 
   const [errors, setErrors] = useState({})
 
-  useEffect(() => {
-    if (isEditMode) {
-      fetchAbsensiSiswa()
-    }
-  }, [id])
-
   const buildSiswaOption = useCallback((siswa) => ({
     value: String(siswa.id),
     label: `${siswa.nama || `Siswa #${siswa.id}`} (${siswa.nis || '-'})`
@@ -59,32 +67,7 @@ const AbsensiSiswaForm = () => {
     return []
   }, [buildSiswaOption])
 
-  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
-    if (!siswaId) {
-      setSelectedSiswaOption(null)
-      return
-    }
-
-    const { data } = await siswaService.getById(siswaId)
-    const siswa = data?.data
-
-    if (siswa) {
-      setSelectedSiswaOption(buildSiswaOption(siswa))
-    }
-  }, [buildSiswaOption])
-
-  const mapStatus = (raw) => {
-    const statusMap = {
-      'hadir': '1', 'sakit': '2', 'izin': '3', 'alpha': '4', 'alpa': '4',
-      '1': '1', '2': '2', '3': '3', '4': '4'
-    }
-    const mapped = statusMap[String(raw).toLowerCase()]
-    if (mapped) return mapped
-    if (!isNaN(parseInt(raw))) return String(parseInt(raw))
-    return ''
-  }
-
-  const fetchAbsensiSiswa = async () => {
+  const fetchAbsensiSiswa = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await absensiSiswaService.getAbsensiSiswaById(id)
     if (data) {
@@ -106,15 +89,13 @@ const AbsensiSiswaForm = () => {
       navigate('/absensi-siswa')
     }
     setFetchingData(false)
-  }
+  }, [id, navigate, buildSiswaOption])
 
   useEffect(() => {
-    if (formData.mst_siswa_id) {
-      hydrateSelectedSiswaOption(formData.mst_siswa_id)
-    } else {
-      setSelectedSiswaOption(null)
+    if (isEditMode) {
+      fetchAbsensiSiswa()
     }
-  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
+  }, [isEditMode, fetchAbsensiSiswa])
 
   const handleChange = (e) => {
     const { name, value } = e.target
