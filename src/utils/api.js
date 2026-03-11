@@ -41,7 +41,7 @@ export const setAuthExpiredHandler = (handler) => {
 const notifyAuthExpired = () => {
   authExpiredHandler?.()
 }
-const refreshToken = async () => {
+export const refreshToken = async () => {
   const { refreshToken: refreshTokenValue } = useAuthStore.getState()
   
   if (!refreshTokenValue) {
