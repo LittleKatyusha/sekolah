@@ -1,139 +1,34 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { Search, Plus, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { bkKasusService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-// Status color classes (explicit for Tailwind purge)
-const statusColorClasses = {
-  blue: 'bg-blue-100 text-blue-700',
-  yellow: 'bg-yellow-100 text-yellow-700',
-  green: 'bg-green-100 text-green-700',
-  gray: 'bg-gray-100 text-gray-700',
-}
-
-const getStatusInfo = (status) => {
-  const statusMap = {
-    dibuka: { label: 'Dibuka', color: 'blue' },
-    dalam_proses: { label: 'Dalam Proses', color: 'yellow' },
-    selesai: { label: 'Selesai', color: 'green' },
-    ditutup: { label: 'Ditutup', color: 'gray' },
-    1: { label: 'Dibuka', color: 'blue' },
-    2: { label: 'Dalam Proses', color: 'yellow' },
-    3: { label: 'Selesai', color: 'green' },
-    4: { label: 'Ditutup', color: 'gray' },
-  }
-  return statusMap[status] || { label: status || '-', color: 'gray' }
-}
-
-// Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [position, setPosition] = useState({ top: 0, left: 0 })
-  const buttonRef = useRef(null)
-  const menuRef = useRef(null)
-
-  const handleAction = (action) => {
-    setIsOpen(false)
-    action()
-  }
-
-  const handleButtonClick = (e) => {
-    e.stopPropagation()
-
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 192
-      })
-    }
-
-    setIsOpen(!isOpen)
-  }
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
-      const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-
-      if (isOutsideButton && isOutsideMenu) {
-        setIsOpen(false)
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
-
-  return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={handleButtonClick}
-        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-        title="Actions"
-      >
-        <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
-      </button>
-
-      {isOpen && createPortal(
-        <div
-          ref={menuRef}
-          className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]"
-          style={{
-            top: `${position.top}px`,
-            left: `${position.left}px`
-          }}
-        >
-          <div className="py-1">
-            <button
-              onClick={() => handleAction(onDetail)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
-            <button
-              onClick={() => handleAction(onEdit)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit size={16} className="text-yellow-600" />
-              Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button
-              onClick={() => handleAction(onDelete)}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-            >
-              <Trash2 size={16} />
-              Hapus
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  )
-}
+import { formatDateShort } from '../../../utils/formatters'
+import { getStatusBadge } from '../../../utils/bkBadges.jsx'
 
 const BkKasusList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchText])
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
+    search: debouncedSearch || '',
     filter: '{}',
-  }), [searchText])
+  }), [debouncedSearch])
 
   const handleEdit = useCallback((data) => {
     navigate(`/bk/kasus/${data.id}/edit`)
@@ -157,15 +52,6 @@ const BkKasusList = () => {
       }
     }
   }, [])
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    return `${day}/${month}/${year}`
-  }
 
   const columnDefs = useMemo(() => [
     {
@@ -212,7 +98,7 @@ const BkKasusList = () => {
       flex: 1,
       sortable: true,
       filter: true,
-      cellRenderer: (params) => formatDate(params.value)
+      cellRenderer: (params) => formatDateShort(params.value)
     },
     {
       field: 'status',
@@ -220,14 +106,7 @@ const BkKasusList = () => {
       width: 140,
       sortable: true,
       filter: true,
-      cellRenderer: (params) => {
-        const s = getStatusInfo(params.value)
-        return (
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColorClasses[s.color]}`}>
-            {s.label}
-          </span>
-        )
-      }
+      cellRenderer: (params) => getStatusBadge(params.value)
     },
     {
       headerName: 'Aksi',
@@ -295,7 +174,7 @@ const BkKasusList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`bk-kasus-grid-${searchText}`}
+          key="bk-kasus-grid"
           ref={gridRef}
           endpoint="/bk/kasus/"
           staticParams={staticParams}

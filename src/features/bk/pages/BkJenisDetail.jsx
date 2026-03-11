@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkJenisService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatDateTime } from '../../../utils/formatters'
 
 const BkJenisDetail = () => {
   const { id } = useParams()
@@ -14,20 +15,25 @@ const BkJenisDetail = () => {
   const [jenis, setJenis] = useState(null)
 
   useEffect(() => {
-    fetchJenis()
-  }, [id])
-
-  const fetchJenis = async () => {
-    setLoading(true)
-    const { data, error } = await bkJenisService.getById(id)
-    if (data) {
-      setJenis(data.data)
-    } else {
-      showError('Gagal mengambil data jenis BK')
-      navigate('/bk/jenis')
+    const controller = new AbortController()
+    
+    const fetchJenis = async () => {
+      setLoading(true)
+      const { data, error } = await bkJenisService.getById(id)
+      if (controller.signal.aborted) return
+      
+      if (data) {
+        setJenis(data.data)
+      } else {
+        showError('Gagal mengambil data jenis BK')
+        navigate('/bk/jenis')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    
+    fetchJenis()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm(jenis.nama)
@@ -42,17 +48,6 @@ const BkJenisDetail = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   if (loading || !jenis) {
     return (
@@ -129,7 +124,7 @@ const BkJenisDetail = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Dibuat</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatDate(jenis.created_at)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatDateTime(jenis.created_at)}</p>
                 </div>
               </div>
 
@@ -139,7 +134,7 @@ const BkJenisDetail = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Diperbarui</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatDate(jenis.updated_at)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatDateTime(jenis.updated_at)}</p>
                 </div>
               </div>
             </div>

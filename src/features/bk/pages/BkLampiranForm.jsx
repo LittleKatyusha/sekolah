@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -11,8 +11,6 @@ const BkLampiranForm = () => {
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(false)
-  const [kasusOptions, setKasusOptions] = useState([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
 
   const [formData, setFormData] = useState({
     trx_bk_kasus_id: '',
@@ -21,21 +19,22 @@ const BkLampiranForm = () => {
   const [file, setFile] = useState(null)
   const [errors, setErrors] = useState({})
 
-  useEffect(() => {
-    fetchKasusOptions()
-  }, [])
+  const buildKasusOption = useCallback((k) => ({
+    value: k.id,
+    label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
+  }), [])
 
-  const fetchKasusOptions = async () => {
-    setLoadingOptions(true)
-    const { data } = await bkKasusService.getAll()
-    if (data) {
-      setKasusOptions((data.data || []).map(k => ({
-        value: k.id,
-        label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
-      })))
+  const searchKasusOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await bkKasusService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+    if (data?.data) {
+      return data.data.map(buildKasusOption)
     }
-    setLoadingOptions(false)
-  }
+    console.error('Error fetching kasus options:', error)
+    return []
+  }, [buildKasusOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -109,12 +108,14 @@ const BkLampiranForm = () => {
               </label>
               <SearchableSelect
                 name="trx_bk_kasus_id"
-                options={kasusOptions}
+                options={[]}
                 value={formData.trx_bk_kasus_id}
                 onChange={handleChange}
+                loadOptions={searchKasusOptions}
                 placeholder="Pilih Kasus BK"
+                searchPlaceholder="Cari kasus BK..."
+                noOptionsText="Tidak ada kasus yang cocok"
                 error={errors.trx_bk_kasus_id}
-                disabled={loadingOptions}
               />
             </div>
 

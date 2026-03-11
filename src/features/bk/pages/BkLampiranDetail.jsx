@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkLampiranService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatDateTime } from '../../../utils/formatters'
 
 const BkLampiranDetail = () => {
   const { id } = useParams()
@@ -14,20 +15,22 @@ const BkLampiranDetail = () => {
   const [lampiran, setLampiran] = useState(null)
 
   useEffect(() => {
-    fetchLampiran()
-  }, [id])
-
-  const fetchLampiran = async () => {
-    setLoading(true)
-    const { data, error } = await bkLampiranService.getById(id)
-    if (data) {
-      setLampiran(data.data)
-    } else {
-      showError('Gagal mengambil data lampiran')
-      navigate('/bk/lampiran')
+    const controller = new AbortController()
+    const fetchLampiran = async () => {
+      setLoading(true)
+      const { data, error } = await bkLampiranService.getById(id)
+      if (controller.signal.aborted) return
+      if (data) {
+        setLampiran(data.data)
+      } else {
+        showError('Gagal mengambil data lampiran')
+        navigate('/bk/lampiran')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    fetchLampiran()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm('lampiran ini')
@@ -40,18 +43,6 @@ const BkLampiranDetail = () => {
         showError('Gagal menghapus lampiran')
       }
     }
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   if (loading || !lampiran) {

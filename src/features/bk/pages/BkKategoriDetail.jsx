@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkKategoriService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatDateTime } from '../../../utils/formatters'
 
 const BkKategoriDetail = () => {
   const { id } = useParams()
@@ -14,20 +15,25 @@ const BkKategoriDetail = () => {
   const [kategori, setKategori] = useState(null)
 
   useEffect(() => {
-    fetchKategori()
-  }, [id])
-
-  const fetchKategori = async () => {
-    setLoading(true)
-    const { data, error } = await bkKategoriService.getById(id)
-    if (data) {
-      setKategori(data.data)
-    } else {
-      showError('Gagal mengambil data kategori BK')
-      navigate('/bk/kategori')
+    const controller = new AbortController()
+    
+    const fetchKategori = async () => {
+      setLoading(true)
+      const { data, error } = await bkKategoriService.getById(id)
+      if (controller.signal.aborted) return
+      
+      if (data) {
+        setKategori(data.data)
+      } else {
+        showError('Gagal mengambil data kategori BK')
+        navigate('/bk/kategori')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    
+    fetchKategori()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm(kategori.nama)
@@ -42,17 +48,6 @@ const BkKategoriDetail = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   if (loading || !kategori) {
     return (
@@ -109,7 +104,7 @@ const BkKategoriDetail = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Dibuat</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatDate(kategori.created_at)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatDateTime(kategori.created_at)}</p>
                 </div>
               </div>
 
@@ -119,7 +114,7 @@ const BkKategoriDetail = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Diperbarui</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatDate(kategori.updated_at)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatDateTime(kategori.updated_at)}</p>
                 </div>
               </div>
             </div>

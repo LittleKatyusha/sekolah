@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -16,9 +16,8 @@ const BkWaliForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
 
-  const [kasusOptions, setKasusOptions] = useState([])
-  const [waliOptions, setWaliOptions] = useState([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
+  const [selectedKasusOption, setSelectedKasusOption] = useState(null)
+  const [selectedWaliOption, setSelectedWaliOption] = useState(null)
 
   const [formData, setFormData] = useState({
     trx_bk_kasus_id: '',
@@ -28,50 +27,97 @@ const BkWaliForm = () => {
 
   const [errors, setErrors] = useState({})
 
+  const buildKasusOption = useCallback((k) => ({
+    value: k.id,
+    label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
+  }), [])
+
+  const buildWaliOption = useCallback((w) => ({
+    value: w.id,
+    label: `${w.nama}${w.notelp ? ' (' + w.notelp + ')' : ''}`
+  }), [])
+
+  const searchKasusOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await bkKasusService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+    if (data?.data) {
+      return data.data.map(buildKasusOption)
+    }
+    console.error('Error fetching kasus options:', error)
+    return []
+  }, [buildKasusOption])
+
+  const searchWaliOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await waliService.getWalis({
+      search: keyword || undefined,
+      per_page: 20
+    })
+    if (data?.data) {
+      return data.data.map(buildWaliOption)
+    }
+    console.error('Error fetching wali options:', error)
+    return []
+  }, [buildWaliOption])
+
   useEffect(() => {
-    fetchOptions()
-    if (isEditMode) {
-      fetchWali()
-    }
-  }, [id])
+    if (!isEditMode) return
 
-  const fetchOptions = async () => {
-    setLoadingOptions(true)
-    const [kasusRes, waliRes] = await Promise.all([
-      bkKasusService.getAll(),
-      waliService.getWalis()
-    ])
-    if (kasusRes.data) {
-      setKasusOptions((kasusRes.data.data || []).map(k => ({
-        value: k.id,
-        label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
-      })))
-    }
-    if (waliRes.data) {
-      setWaliOptions((waliRes.data.data || []).map(w => ({
-        value: w.id,
-        label: `${w.nama}${w.notelp ? ' (' + w.notelp + ')' : ''}`
-      })))
-    }
-    setLoadingOptions(false)
-  }
+    const controller = new AbortController()
 
-  const fetchWali = async () => {
-    setFetchingData(true)
-    const { data, error } = await bkWaliService.getById(id)
-    if (data) {
-      const wali = data.data
-      setFormData({
-        trx_bk_kasus_id: wali.trx_bk_kasus_id || '',
-        mst_wali_id: wali.mst_wali_id || wali.wali_murid?.id || '',
-        peran: wali.peran || ''
-      })
-    } else {
-      showError('Gagal mengambil data wali')
-      navigate('/bk/wali')
+    const fetchWali = async () => {
+      setFetchingData(true)
+      try {
+        const { data } = await bkWaliService.getById(id)
+        if (controller.signal.aborted) return
+
+        if (data) {
+          const wali = data.data
+          setFormData({
+            trx_bk_kasus_id: wali.trx_bk_kasus_id || '',
+            mst_wali_id: wali.mst_wali_id || wali.wali_murid?.id || '',
+            peran: wali.peran || ''
+          })
+
+          if (wali.kasus) {
+            setSelectedKasusOption(buildKasusOption(wali.kasus))
+          } else if (wali.trx_bk_kasus_id) {
+            setSelectedKasusOption({
+              value: wali.trx_bk_kasus_id,
+              label: `Kasus #${wali.trx_bk_kasus_id}`
+            })
+          }
+
+          if (wali.wali_murid) {
+            setSelectedWaliOption(buildWaliOption(wali.wali_murid))
+          } else if (wali.mst_wali_id) {
+            setSelectedWaliOption({
+              value: wali.mst_wali_id,
+              label: `Wali #${wali.mst_wali_id}`
+            })
+          }
+        } else {
+          showError('Gagal mengambil data wali')
+          navigate('/bk/wali')
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching wali:', err)
+          showError('Gagal mengambil data wali')
+          navigate('/bk/wali')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setFetchingData(false)
+        }
+      }
     }
-    setFetchingData(false)
-  }
+
+    fetchWali()
+
+    return () => controller.abort()
+  }, [id, isEditMode, navigate, buildKasusOption, buildWaliOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -151,12 +197,14 @@ const BkWaliForm = () => {
                 </label>
                 <SearchableSelect
                   name="trx_bk_kasus_id"
-                  options={kasusOptions}
+                  options={selectedKasusOption ? [selectedKasusOption] : []}
                   value={formData.trx_bk_kasus_id}
                   onChange={handleChange}
+                  loadOptions={searchKasusOptions}
                   placeholder="Pilih Kasus BK"
+                  searchPlaceholder="Cari kasus BK..."
+                  noOptionsText="Tidak ada kasus yang cocok"
                   error={errors.trx_bk_kasus_id}
-                  disabled={loadingOptions}
                 />
               </div>
 
@@ -167,12 +215,14 @@ const BkWaliForm = () => {
                 </label>
                 <SearchableSelect
                   name="mst_wali_id"
-                  options={waliOptions}
+                  options={selectedWaliOption ? [selectedWaliOption] : []}
                   value={formData.mst_wali_id}
                   onChange={handleChange}
+                  loadOptions={searchWaliOptions}
                   placeholder="Pilih Wali Murid"
+                  searchPlaceholder="Cari wali murid..."
+                  noOptionsText="Tidak ada wali yang cocok"
                   error={errors.mst_wali_id}
-                  disabled={loadingOptions}
                 />
               </div>
 

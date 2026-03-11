@@ -5,21 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkWaliService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-const getPeranBadge = (peran) => {
-  switch (peran) {
-    case 1:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">Pelapor</span>
-    case 2:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Pendamping</span>
-    case 3:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">Wali Siswa</span>
-    case 4:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">Saksi</span>
-    default:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">-</span>
-  }
-}
+import { formatDateTime } from '../../../utils/formatters'
+import { getPeranBadge } from '../../../utils/bkBadges.jsx'
 
 const BkWaliDetail = () => {
   const { id } = useParams()
@@ -29,20 +16,22 @@ const BkWaliDetail = () => {
   const [bkWali, setBkWali] = useState(null)
 
   useEffect(() => {
-    fetchWali()
-  }, [id])
-
-  const fetchWali = async () => {
-    setLoading(true)
-    const { data, error } = await bkWaliService.getById(id)
-    if (data) {
-      setBkWali(data.data)
-    } else {
-      showError('Gagal mengambil data wali')
-      navigate('/bk/wali')
+    const controller = new AbortController()
+    const fetchWali = async () => {
+      setLoading(true)
+      const { data, error } = await bkWaliService.getById(id)
+      if (controller.signal.aborted) return
+      if (data) {
+        setBkWali(data.data)
+      } else {
+        showError('Gagal mengambil data wali')
+        navigate('/bk/wali')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    fetchWali()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm('data wali ini')
@@ -55,18 +44,6 @@ const BkWaliDetail = () => {
         showError('Gagal menghapus wali')
       }
     }
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   if (loading || !bkWali) {

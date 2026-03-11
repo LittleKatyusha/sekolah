@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -23,8 +23,7 @@ const BkSesiForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
 
-  const [kasusOptions, setKasusOptions] = useState([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
+  const [selectedKasusOption, setSelectedKasusOption] = useState(null)
 
   const [formData, setFormData] = useState({
     trx_bk_kasus_id: '',
@@ -35,42 +34,72 @@ const BkSesiForm = () => {
 
   const [errors, setErrors] = useState({})
 
+  const buildKasusOption = useCallback((k) => ({
+    value: k.id,
+    label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
+  }), [])
+
+  const searchKasusOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await bkKasusService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+    if (data?.data) {
+      return data.data.map(buildKasusOption)
+    }
+    console.error('Error fetching kasus options:', error)
+    return []
+  }, [buildKasusOption])
+
   useEffect(() => {
-    fetchKasusOptions()
-    if (isEditMode) {
-      fetchSesi()
-    }
-  }, [id])
+    if (!isEditMode) return
 
-  const fetchKasusOptions = async () => {
-    setLoadingOptions(true)
-    const { data } = await bkKasusService.getAll()
-    if (data) {
-      setKasusOptions((data.data || []).map(k => ({
-        value: k.id,
-        label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
-      })))
-    }
-    setLoadingOptions(false)
-  }
+    const controller = new AbortController()
 
-  const fetchSesi = async () => {
-    setFetchingData(true)
-    const { data, error } = await bkSesiService.getById(id)
-    if (data) {
-      const sesi = data.data
-      setFormData({
-        trx_bk_kasus_id: sesi.trx_bk_kasus_id || '',
-        tanggal: sesi.tanggal || '',
-        metode: sesi.metode || '',
-        catatan: sesi.catatan || ''
-      })
-    } else {
-      showError('Gagal mengambil data sesi konseling')
-      navigate('/bk/sesi')
+    const fetchSesi = async () => {
+      setFetchingData(true)
+      try {
+        const { data } = await bkSesiService.getById(id)
+        if (controller.signal.aborted) return
+
+        if (data) {
+          const sesi = data.data
+          setFormData({
+            trx_bk_kasus_id: sesi.trx_bk_kasus_id || '',
+            tanggal: sesi.tanggal || '',
+            metode: sesi.metode || '',
+            catatan: sesi.catatan || ''
+          })
+
+          if (sesi.kasus) {
+            setSelectedKasusOption(buildKasusOption(sesi.kasus))
+          } else if (sesi.trx_bk_kasus_id) {
+            setSelectedKasusOption({
+              value: sesi.trx_bk_kasus_id,
+              label: `Kasus #${sesi.trx_bk_kasus_id}`
+            })
+          }
+        } else {
+          showError('Gagal mengambil data sesi konseling')
+          navigate('/bk/sesi')
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching sesi:', err)
+          showError('Gagal mengambil data sesi konseling')
+          navigate('/bk/sesi')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setFetchingData(false)
+        }
+      }
     }
-    setFetchingData(false)
-  }
+
+    fetchSesi()
+
+    return () => controller.abort()
+  }, [id, isEditMode, navigate, buildKasusOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -151,12 +180,14 @@ const BkSesiForm = () => {
                 </label>
                 <SearchableSelect
                   name="trx_bk_kasus_id"
-                  options={kasusOptions}
+                  options={selectedKasusOption ? [selectedKasusOption] : []}
                   value={formData.trx_bk_kasus_id}
                   onChange={handleChange}
+                  loadOptions={searchKasusOptions}
                   placeholder="Pilih Kasus BK"
+                  searchPlaceholder="Cari kasus BK..."
+                  noOptionsText="Tidak ada kasus yang cocok"
                   error={errors.trx_bk_kasus_id}
-                  disabled={loadingOptions}
                 />
               </div>
 

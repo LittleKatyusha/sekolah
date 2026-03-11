@@ -24,27 +24,44 @@ const BkJenisForm = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    if (isEditMode) {
-      fetchJenis()
-    }
-  }, [id])
+    if (!isEditMode) return
 
-  const fetchJenis = async () => {
-    setFetchingData(true)
-    const { data, error } = await bkJenisService.getById(id)
-    if (data) {
-      const jenis = data.data
-      setFormData({
-        kode: jenis.kode || '',
-        nama: jenis.nama || '',
-        keterangan: jenis.keterangan || ''
-      })
-    } else {
-      showError('Gagal mengambil data jenis BK')
-      navigate('/bk/jenis')
+    const controller = new AbortController()
+
+    const fetchJenis = async () => {
+      setFetchingData(true)
+      try {
+        const { data } = await bkJenisService.getById(id)
+        if (controller.signal.aborted) return
+
+        if (data) {
+          const jenis = data.data
+          setFormData({
+            kode: jenis.kode || '',
+            nama: jenis.nama || '',
+            keterangan: jenis.keterangan || ''
+          })
+        } else {
+          showError('Gagal mengambil data jenis BK')
+          navigate('/bk/jenis')
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching jenis:', err)
+          showError('Gagal mengambil data jenis BK')
+          navigate('/bk/jenis')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setFetchingData(false)
+        }
+      }
     }
-    setFetchingData(false)
-  }
+
+    fetchJenis()
+
+    return () => controller.abort()
+  }, [id, isEditMode, navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -15,8 +15,7 @@ const BkHasilForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
 
-  const [kasusOptions, setKasusOptions] = useState([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
+  const [selectedKasusOption, setSelectedKasusOption] = useState(null)
 
   const [formData, setFormData] = useState({
     trx_bk_kasus_id: '',
@@ -26,41 +25,68 @@ const BkHasilForm = () => {
 
   const [errors, setErrors] = useState({})
 
+  const buildKasusOption = useCallback((kasus) => ({
+    value: String(kasus.id),
+    label: `Kasus #${kasus.id} - ${kasus.siswa?.nama || kasus.keterangan || `Kasus ${kasus.id}`}`
+  }), [])
+
+  const searchKasusOptions = useCallback(async (keyword = '') => {
+    const { data } = await bkKasusService.getAll({
+      search: keyword || undefined,
+      per_page: 20,
+    })
+    const list = data?.data || []
+    return list.map(buildKasusOption)
+  }, [buildKasusOption])
+
   useEffect(() => {
-    fetchKasusOptions()
-    if (isEditMode) {
-      fetchHasil()
-    }
-  }, [id])
+    if (!isEditMode) return
 
-  const fetchKasusOptions = async () => {
-    setLoadingOptions(true)
-    const { data } = await bkKasusService.getAll()
-    if (data) {
-      setKasusOptions((data.data || []).map(k => ({
-        value: k.id,
-        label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
-      })))
-    }
-    setLoadingOptions(false)
-  }
+    const controller = new AbortController()
 
-  const fetchHasil = async () => {
-    setFetchingData(true)
-    const { data, error } = await bkHasilService.getById(id)
-    if (data) {
-      const hasil = data.data
-      setFormData({
-        trx_bk_kasus_id: hasil.trx_bk_kasus_id || '',
-        hasil: hasil.hasil || '',
-        rekomendasi: hasil.rekomendasi || ''
-      })
-    } else {
-      showError('Gagal mengambil data hasil konseling')
-      navigate('/bk/hasil')
+    const fetchHasil = async () => {
+      setFetchingData(true)
+      try {
+        const { data } = await bkHasilService.getById(id)
+        if (controller.signal.aborted) return
+
+        if (data) {
+          const hasil = data.data
+          setFormData({
+            trx_bk_kasus_id: String(hasil.trx_bk_kasus_id || hasil.kasus?.id || ''),
+            hasil: hasil.hasil || '',
+            rekomendasi: hasil.rekomendasi || ''
+          })
+
+          if (hasil.kasus?.id) {
+            setSelectedKasusOption(buildKasusOption(hasil.kasus))
+          } else if (hasil.trx_bk_kasus_id) {
+            setSelectedKasusOption({
+              value: String(hasil.trx_bk_kasus_id),
+              label: `Kasus #${hasil.trx_bk_kasus_id}`
+            })
+          }
+        } else {
+          showError('Gagal mengambil data hasil konseling')
+          navigate('/bk/hasil')
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching hasil:', err)
+          showError('Gagal mengambil data hasil konseling')
+          navigate('/bk/hasil')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setFetchingData(false)
+        }
+      }
     }
-    setFetchingData(false)
-  }
+
+    fetchHasil()
+
+    return () => controller.abort()
+  }, [id, isEditMode, navigate, buildKasusOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -140,12 +166,14 @@ const BkHasilForm = () => {
                 </label>
                 <SearchableSelect
                   name="trx_bk_kasus_id"
-                  options={kasusOptions}
+                  options={selectedKasusOption ? [selectedKasusOption] : []}
                   value={formData.trx_bk_kasus_id}
                   onChange={handleChange}
                   placeholder="Pilih Kasus BK"
+                  loadOptions={searchKasusOptions}
+                  searchPlaceholder="Cari kasus BK..."
+                  noOptionsText="Tidak ada kasus yang cocok"
                   error={errors.trx_bk_kasus_id}
-                  disabled={loadingOptions}
                 />
               </div>
 

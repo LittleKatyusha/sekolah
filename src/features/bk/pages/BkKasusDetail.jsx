@@ -5,33 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkKasusService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-// Explicit color classes for Tailwind purge safety
-const colorClasses = {
-  blue: 'bg-blue-100 text-blue-700',
-  yellow: 'bg-yellow-100 text-yellow-700',
-  green: 'bg-green-100 text-green-700',
-  gray: 'bg-gray-100 text-gray-700',
-}
-
-const getStatusBadge = (status) => {
-  const statusMap = {
-    'dibuka': { label: 'Dibuka', color: 'blue' },
-    'dalam_proses': { label: 'Dalam Proses', color: 'yellow' },
-    'selesai': { label: 'Selesai', color: 'green' },
-    'ditutup': { label: 'Ditutup', color: 'gray' },
-    1: { label: 'Dibuka', color: 'blue' },
-    2: { label: 'Dalam Proses', color: 'yellow' },
-    3: { label: 'Selesai', color: 'green' },
-    4: { label: 'Ditutup', color: 'gray' },
-  }
-  const s = statusMap[status] || { label: status || '-', color: 'gray' }
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${colorClasses[s.color]}`}>
-      {s.label}
-    </span>
-  )
-}
+import { formatDate, formatDateTime } from '../../../utils/formatters'
+import { getStatusBadge } from '../../../utils/bkBadges.jsx'
 
 const BkKasusDetail = () => {
   const { id } = useParams()
@@ -41,20 +16,25 @@ const BkKasusDetail = () => {
   const [kasus, setKasus] = useState(null)
 
   useEffect(() => {
-    fetchKasus()
-  }, [id])
-
-  const fetchKasus = async () => {
-    setLoading(true)
-    const { data, error } = await bkKasusService.getById(id)
-    if (data) {
-      setKasus(data.data)
-    } else {
-      showError('Gagal mengambil data kasus BK')
-      navigate('/bk/kasus')
+    const controller = new AbortController()
+    
+    const fetchKasus = async () => {
+      setLoading(true)
+      const { data, error } = await bkKasusService.getById(id)
+      if (controller.signal.aborted) return
+      
+      if (data) {
+        setKasus(data.data)
+      } else {
+        showError('Gagal mengambil data kasus BK')
+        navigate('/bk/kasus')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    
+    fetchKasus()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm('kasus ini')
@@ -69,27 +49,6 @@ const BkKasusDetail = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   if (loading || !kasus) {
     return (
