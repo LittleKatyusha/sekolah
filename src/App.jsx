@@ -194,11 +194,11 @@ const TitleUpdater = () => {
 // ── WebSocket lifecycle manager ───────────────────────────────────────────────
 // Mounted once inside BrowserRouter; manages connection based on auth state.
 function WebSocketManager() {
-  const { isAuthenticated, token } = useAuthStore()
+  const { isAuthenticated, token, user } = useAuthStore()
   const { addNotification, setWsStatus } = useNotificationStore()
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated || !token || !user?.id) {
       echoService.disconnect()
       return
     }
@@ -214,13 +214,16 @@ function WebSocketManager() {
       addNotification(data)
     })
 
-    // Subscribe to user-level notification channel once authenticated
-    echoService.subscribe('notifications')
+    // Subscribe to the per-user Laravel notification channel.
+    // App.Models.User.{id} is registered in channels.php and is the
+    // standard Laravel private notification channel for this user only.
+    const userChannel = `App.Models.User.${user.id}`
+    echoService.subscribe(userChannel)
 
     return () => {
       offStatus()
       offNotif()
-      echoService.unsubscribe('notifications')
+      echoService.unsubscribe(userChannel)
       echoService.disconnect()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
