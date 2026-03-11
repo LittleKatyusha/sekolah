@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, User, Calendar, ClipboardCheck, FileText } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -27,9 +27,7 @@ const AbsensiGuruDetail = () => {
   const [loading, setLoading] = useState(false)
   const [absensi, setAbsensi] = useState(null)
 
-  useEffect(() => { fetchAbsensi() }, [id])
-
-  const fetchAbsensi = async () => {
+  const fetchAbsensi = useCallback(async () => {
     setLoading(true)
     const { data, error } = await absensiGuruService.getById(id)
     if (data) {
@@ -39,9 +37,12 @@ const AbsensiGuruDetail = () => {
       navigate('/absensi-guru')
     }
     setLoading(false)
-  }
+  }, [id, navigate])
 
-  const handleDelete = async () => {
+  useEffect(() => { fetchAbsensi() }, [fetchAbsensi])
+
+  const handleDelete = useCallback(async () => {
+    if (!absensi) return
     const result = await showDeleteConfirm(absensi.guru?.nama || 'absensi ini')
     if (result.isConfirmed) {
       const { error } = await absensiGuruService.deleteById(absensi.id)
@@ -52,7 +53,7 @@ const AbsensiGuruDetail = () => {
         showError('Gagal menghapus absensi guru')
       }
     }
-  }
+  }, [absensi, navigate])
 
   const formatDate = (val) => {
     if (!val) return '-'

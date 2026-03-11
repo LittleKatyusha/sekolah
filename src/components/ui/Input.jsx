@@ -1,5 +1,5 @@
 import { clsx } from 'clsx'
-import { forwardRef } from 'react'
+import { forwardRef, memo } from 'react'
 
 const Input = forwardRef(({ 
   label, 
@@ -34,4 +34,4 @@ const Input = forwardRef(({
 
 Input.displayName = 'Input'
 
-export default Input
+export default memo(Input)

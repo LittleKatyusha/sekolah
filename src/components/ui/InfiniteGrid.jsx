@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useRef, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
+import { apiService } from '../../utils/api'
 
 const EMPTY_STATIC_PARAMS = Object.freeze({})
 
@@ -142,7 +143,6 @@ const InfiniteGrid = ({
       }
 
       try {
-        const { apiService } = await import('../../utils/api')
         const { data, error } = await apiService.get(endpoint, { params: queryParams })
         
         if (error) {
