@@ -120,6 +120,52 @@ const KalenderTipeList = lazy(() => import('./features/kalender-tipe/pages/Kalen
 const KalenderTipeForm = lazy(() => import('./features/kalender-tipe/pages/KalenderTipeForm'))
 const Files = lazy(() => import('./features/files/pages/FileUploadPage'))
 
+const PAGE_TITLES = {
+  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
+  '/admin/users': 'Users Management',
+  '/analytics': 'Analytics',
+  '/data-grid': 'Data Grid',
+  '/settings': 'Settings',
+  '/login': 'Login',
+  '/register': 'Register',
+  '/siswa': 'Data Siswa',
+  '/kelas': 'Data Kelas',
+  '/guru': 'Data Guru',
+  '/mapel': 'Mata Pelajaran',
+  '/wali': 'Wali Murid',
+  '/absensi-siswa': 'Absensi Siswa',
+  '/absensi-guru': 'Absensi Guru',
+  '/akademik/nilai': 'Nilai',
+  '/akademik/tugas': 'Tugas',
+  '/akademik/tugas-siswa': 'Pengumpulan Tugas',
+  '/akademik/ranking': 'Ranking',
+  '/akademik/rapor': 'Rapor',
+  '/akademik/forum': 'Forum',
+  '/akademik/materi': 'Materi',
+  '/akademik/presensi': 'Presensi',
+  '/akademik/ujian-jawaban': 'Jawaban Ujian',
+  '/akademik/log-akses-materi': 'Log Akses Materi',
+  '/admin/tahun-ajaran': 'Tahun Ajaran',
+  '/admin/semester': 'Semester',
+  '/admin/kalender-akademik': 'Kalender Akademik',
+  '/admin/roles': 'Roles',
+  '/admin/role-permissions': 'Role Permissions',
+  '/admin/hari-operasional': 'Hari Operasional',
+  '/admin/kalender-harian': 'Kalender Harian',
+  '/admin/references': 'System References',
+  '/admin/kalender-tipe': 'Kalender Tipe',
+  '/keuangan/tarif-spp': 'Tarif SPP',
+  '/keuangan/pembayaran-spp': 'Pembayaran SPP',
+  '/statistik': 'Statistik',
+  '/jadwal-pelajaran': 'Jadwal Pelajaran',
+  '/files': 'Files Management',
+  '/bk': 'Bimbingan Konseling',
+  '/unauthorized': 'Unauthorized',
+  '/admin/activity-logs': 'Activity Logs',
+  '/admin/menus': 'Manajemen Menu',
+}
+
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -129,53 +175,8 @@ const LoadingFallback = () => (
 const TitleUpdater = () => {
   const location = useLocation()
   useEffect(() => {
-    const titles = {
-      '/': 'Dashboard',
-      '/dashboard': 'Dashboard',
-      '/admin/users': 'Users Management',
-      '/analytics': 'Analytics',
-      '/data-grid': 'Data Grid',
-      '/settings': 'Settings',
-      '/login': 'Login',
-      '/register': 'Register',
-      '/siswa': 'Data Siswa',
-      '/kelas': 'Data Kelas',
-      '/guru': 'Data Guru',
-      '/mapel': 'Mata Pelajaran',
-      '/wali': 'Wali Murid',
-      '/absensi-siswa': 'Absensi Siswa',
-      '/absensi-guru': 'Absensi Guru',
-      '/akademik/nilai': 'Nilai',
-      '/akademik/tugas': 'Tugas',
-      '/akademik/tugas-siswa': 'Pengumpulan Tugas',
-      '/akademik/ranking': 'Ranking',
-      '/akademik/rapor': 'Rapor',
-      '/akademik/forum': 'Forum',
-      '/akademik/materi': 'Materi',
-      '/akademik/presensi': 'Presensi',
-      '/akademik/ujian-jawaban': 'Jawaban Ujian',
-      '/akademik/log-akses-materi': 'Log Akses Materi',
-      '/admin/tahun-ajaran': 'Tahun Ajaran',
-      '/admin/semester': 'Semester',
-      '/admin/kalender-akademik': 'Kalender Akademik',
-      '/admin/roles': 'Roles',
-      '/admin/role-permissions': 'Role Permissions',
-      '/admin/hari-operasional': 'Hari Operasional',
-      '/admin/kalender-harian': 'Kalender Harian',
-      '/admin/references': 'System References',
-      '/admin/kalender-tipe': 'Kalender Tipe',
-      '/keuangan/tarif-spp': 'Tarif SPP',
-      '/keuangan/pembayaran-spp': 'Pembayaran SPP',
-      '/statistik': 'Statistik',
-      '/jadwal-pelajaran': 'Jadwal Pelajaran',
-      '/files': 'Files Management',
-      '/bk': 'Bimbingan Konseling',
-      '/unauthorized': 'Unauthorized',
-      '/admin/activity-logs': 'Activity Logs',
-      '/admin/menus': 'Manajemen Menu',
-    }
     const path = location.pathname
-    let title = titles[path]
+    let title = PAGE_TITLES[path]
     if (!title) {
       if (path.startsWith('/perpustakaan')) title = 'Perpustakaan'
       else if (path.startsWith('/akademik/ujian-user')) title = 'Ujian User'

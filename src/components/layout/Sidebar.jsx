@@ -119,7 +119,7 @@ const ICON_MAP = {
   Clock
 }
 
-const MenuItem = ({ item, onClose }) => {
+const MenuItem = memo(({ item, onClose }) => {
   const [isOpen, setIsOpen] = useState(false)
   const hasChildren = item.children && item.children.length > 0
 
@@ -168,7 +168,7 @@ const MenuItem = ({ item, onClose }) => {
       </NavLink>
     </li>
   )
-}
+})
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useAuthStore()

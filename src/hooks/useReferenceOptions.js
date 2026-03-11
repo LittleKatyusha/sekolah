@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { referenceService } from '../services/referenceService'
 
 const REFERENCE_OPTIONS_CACHE_PREFIX = 'reference-options-cache:'
+const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
 const referenceOptionsRequestCache = new Map()
 
 const getReferenceOptionsCacheKey = (category) => `${REFERENCE_OPTIONS_CACHE_PREFIX}${category}`
@@ -14,7 +15,16 @@ const readReferenceOptionsCache = (category) => {
     if (!cached) return null
 
     const parsed = JSON.parse(cached)
-    return Array.isArray(parsed) ? parsed : null
+    // Support both legacy format (plain array) and new format ({ data, cachedAt })
+    if (Array.isArray(parsed)) {
+      // Legacy entry without TTL – treat as expired so it gets refreshed
+      return null
+    }
+    if (parsed && Array.isArray(parsed.data)) {
+      if (Date.now() - parsed.cachedAt > CACHE_TTL_MS) return null
+      return parsed.data
+    }
+    return null
   } catch {
     return null
   }
@@ -24,7 +34,8 @@ const writeReferenceOptionsCache = (category, options) => {
   if (!category || typeof window === 'undefined') return
 
   try {
-    window.sessionStorage.setItem(getReferenceOptionsCacheKey(category), JSON.stringify(options))
+    const cacheEntry = { data: options, cachedAt: Date.now() }
+    window.sessionStorage.setItem(getReferenceOptionsCacheKey(category), JSON.stringify(cacheEntry))
   } catch {
     // Ignore sessionStorage write failures and rely on in-memory state only.
   }

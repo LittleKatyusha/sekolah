@@ -78,28 +78,37 @@ const DashboardSectionFallback = ({ height = 'h-[300px]' }) => (
 const Dashboard = () => {
   const { user } = useAuthStore()
   const [dashboardData, setDashboardData] = useState(null)
+  const [summaryCards, setSummaryCards] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await dashboardService.getDashboardData()
+    let mounted = true
+    setLoading(true)
+    setError(null)
+
+    // Fast path: summary cards rendered as soon as they arrive
+    dashboardService.getSummaryCards()
+      .then((data) => { if (mounted) setSummaryCards(data) })
+      .catch(() => {}) // fallback: full data fetch will cover this
+
+    // Full data fetch in parallel — provides role + chart data
+    dashboardService.getDashboardData()
+      .then((data) => {
+        if (!mounted) return
         setDashboardData(data)
-      } catch (error) {
-        console.error('Failed to fetch dashboard data', error)
-        setError(error.message || 'Failed to load dashboard data')
-      } finally {
-        setLoading(false)
-      }
-    }
+        // If summary cards haven't arrived yet, use the ones embedded in full data
+        if (!summaryCards && data?.summary_cards) setSummaryCards(data.summary_cards)
+      })
+      .catch((err) => {
+        if (mounted) setError(err.message || 'Failed to load dashboard data')
+      })
+      .finally(() => { if (mounted) setLoading(false) })
 
-    fetchDashboardData()
-  }, [])
+    return () => { mounted = false }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) {
+  if (loading && !summaryCards) {
     return <LoadingSkeleton />
   }
 
@@ -128,7 +137,7 @@ const Dashboard = () => {
     )
   }
 
-  if (!dashboardData) {
+  if (!dashboardData && !summaryCards) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <AlertCircle className="h-16 w-16 text-yellow-500" />
@@ -144,8 +153,8 @@ const Dashboard = () => {
     )
   }
 
-  // Role-based rendering
-  const role = dashboardData.role
+  // Role-based rendering (requires full data to determine role)
+  const role = dashboardData?.role
 
   if (role === 'guru') {
     return (
@@ -174,13 +183,14 @@ const Dashboard = () => {
   // Admin/Staff dashboard (default)
   return (
     <Suspense fallback={<LoadingSkeleton />}>
-      <AdminDashboard data={dashboardData} user={user} />
+      <AdminDashboard data={dashboardData} summaryCardsOverride={summaryCards} user={user} />
     </Suspense>
   )
 }
 
-const AdminDashboard = ({ data, user }) => {
-  const { summary_cards, financial, academic_attendance, counseling, ppdb } = data
+const AdminDashboard = ({ data, summaryCardsOverride, user }) => {
+  const { financial, academic_attendance, counseling, ppdb } = data || {}
+  const summary_cards = summaryCardsOverride || data?.summary_cards
 
   return (
     <div className="space-y-8">
@@ -193,9 +203,9 @@ const AdminDashboard = ({ data, user }) => {
             School Management System Analytics
           </p>
         </div>
-        {data.generated_at && (
+        {data?.generated_at && (
           <p className="text-xs text-gray-400">
-            Updated: {new Date(data.generated_at).toLocaleString('id-ID')}
+            Updated: {new Date(data?.generated_at).toLocaleString('id-ID')}
           </p>
         )}
       </div>

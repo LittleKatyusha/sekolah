@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -7,7 +7,7 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 import { siswaService } from '../services/siswaService'
 
 // Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -105,7 +105,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       )}
     </div>
   )
-}
+})
 
 const SiswaList = () => {
   const navigate = useNavigate()

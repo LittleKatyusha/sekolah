@@ -187,31 +187,46 @@ const RolePermissionsForm = () => {
   }, [buildRoleOption])
 
   const hydratePermissionDetails = useCallback(async (permissionIds = [], fallbackPermissions = []) => {
+    if (permissionIds.length === 0) {
+      setSelectedPermissionOptions([])
+      return
+    }
+
     const fallbackMap = new Map(
       dedupePermissionsById(fallbackPermissions).map((permission) => [Number(permission.id), permission])
     )
 
-    const hydratedPermissions = await Promise.all(
-      permissionIds.map(async (permissionId) => {
-        if (fallbackMap.has(Number(permissionId))) {
-          return fallbackMap.get(Number(permissionId))
+    // Check if all IDs are already covered by the fallback records
+    const missingIds = permissionIds.filter((id) => !fallbackMap.has(Number(id)))
+
+    if (missingIds.length === 0) {
+      const hydrated = permissionIds.map((id) => fallbackMap.get(Number(id))).filter(Boolean)
+      setSelectedPermissionOptions(dedupePermissionsById(hydrated))
+      return
+    }
+
+    // Bulk fetch: load all permissions in one request, then filter by IDs needed.
+    // This replaces the previous N individual getById() calls.
+    const { data } = await permissionService.getAll({ per_page: 500 })
+    const allPermissions = data?.data || []
+    const bulkMap = new Map(allPermissions.map((p) => [Number(p.id), p]))
+
+    // Merge: prefer bulk data, fall back to fallback records, then create placeholder
+    const hydrated = permissionIds.map((permissionId) => {
+      const id = Number(permissionId)
+      const source = bulkMap.get(id) || fallbackMap.get(id)
+      if (source) {
+        return {
+          ...source,
+          id,
+          name: source.name || source.slug || `Permission #${id}`,
+          module: source.module || 'other',
         }
+      }
+      return { id, name: `Permission #${id}`, module: 'other' }
+    })
 
-        const { data } = await permissionService.getById(permissionId)
-        const permission = data?.data
-
-        return permission
-          ? {
-              ...permission,
-              id: Number(permission.id ?? permissionId),
-              name: permission.name || permission.slug || `Permission #${permissionId}`,
-              module: permission.module || 'other',
-            }
-          : null
-      })
-    )
-
-    setSelectedPermissionOptions(dedupePermissionsById(hydratedPermissions.filter(Boolean)))
+    setSelectedPermissionOptions(dedupePermissionsById(hydrated.filter(Boolean)))
   }, [])
 
   const fetchRolePermission = useCallback(async () => {
@@ -286,16 +301,20 @@ const RolePermissionsForm = () => {
   }, [formData.role_id, hydrateSelectedRoleOption])
 
   useEffect(() => {
+    let mounted = true
     const timeoutId = window.setTimeout(async () => {
       const { data } = await permissionService.getAll({
         search: permissionSearch.trim() || undefined,
         per_page: 20,
       })
 
-      setPermissions(dedupePermissionsById(data?.data || []))
+      if (mounted) setPermissions(dedupePermissionsById(data?.data || []))
     }, 300)
 
-    return () => window.clearTimeout(timeoutId)
+    return () => {
+      mounted = false
+      window.clearTimeout(timeoutId)
+    }
   }, [permissionSearch])
 
   useEffect(() => {

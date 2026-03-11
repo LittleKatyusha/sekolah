@@ -73,52 +73,59 @@ const SiswaForm = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    fetchKelasOptions()
-    if (isEditMode) {
-      fetchSiswa()
-    }
-  }, [id])
+    let mounted = true
+    const controller = new AbortController()
 
-  const fetchKelasOptions = async () => {
-    const { data } = await kelasService.getAll()
-    if (data) {
-      setKelasOptions(data.data || [])
-    }
-  }
+    const init = async () => {
+      const { data: kelasData } = await kelasService.getAll({ signal: controller.signal })
+      if (mounted && kelasData) setKelasOptions(kelasData.data || [])
 
-  const fetchSiswa = async () => {
-    setFetchingData(true)
-    const { data, error } = await siswaService.getById(id)
-    if (data) {
-      const siswa = data.data
-      setFormData({
-        nis: siswa.nis || '',
-        nisn: siswa.nisn || '',
-        nik: siswa.nik || '',
-        nama: siswa.nama || '',
-        jenis_kelamin: siswa.jenis_kelamin || 'Laki-Laki',
-        tempat_lahir: siswa.tempat_lahir || '',
-        tanggal_lahir: siswa.tanggal_lahir || '',
-        agama: siswa.agama || '',
-        alamat: siswa.alamat || '',
-        email: siswa.email || '',
-        no_hp: siswa.no_hp || '',
-        golongan_darah: siswa.golongan_darah || '',
-        tinggi_badan: siswa.tinggi_badan || '',
-        berat_badan: siswa.berat_badan || '',
-        tanggal_masuk: siswa.tanggal_masuk || '',
-        asal_sekolah: siswa.asal_sekolah || '',
-        anak_ke: siswa.anak_ke || '',
-        mst_kelas_id: siswa.kelas?.id || '',
-        status: siswa.status || 'Aktif',
-        foto: siswa.foto || ''
-      })
-    } else {
-      showError('Gagal mengambil data siswa')
-      navigate('/siswa')
+      if (!isEditMode) return
+      if (mounted) setFetchingData(true)
+      const { data } = await siswaService.getById(id, { signal: controller.signal })
+      if (!mounted) return
+      if (data) {
+        const siswa = data.data
+        setFormData({
+          nis: siswa.nis || '',
+          nisn: siswa.nisn || '',
+          nik: siswa.nik || '',
+          nama: siswa.nama || '',
+          jenis_kelamin: siswa.jenis_kelamin || 'Laki-Laki',
+          tempat_lahir: siswa.tempat_lahir || '',
+          tanggal_lahir: siswa.tanggal_lahir || '',
+          agama: siswa.agama || '',
+          alamat: siswa.alamat || '',
+          email: siswa.email || '',
+          no_hp: siswa.no_hp || '',
+          golongan_darah: siswa.golongan_darah || '',
+          tinggi_badan: siswa.tinggi_badan || '',
+          berat_badan: siswa.berat_badan || '',
+          tanggal_masuk: siswa.tanggal_masuk || '',
+          asal_sekolah: siswa.asal_sekolah || '',
+          anak_ke: siswa.anak_ke || '',
+          mst_kelas_id: siswa.kelas?.id || '',
+          status: siswa.status || 'Aktif',
+          foto: siswa.foto || ''
+        })
+      } else {
+        showError('Gagal mengambil data siswa')
+        navigate('/siswa')
+      }
+      if (mounted) setFetchingData(false)
     }
-    setFetchingData(false)
-  }
+
+    init().catch((err) => {
+      if (err?.name !== 'CanceledError' && err?.name !== 'AbortError' && mounted) {
+        showError('Gagal memuat data')
+      }
+    })
+
+    return () => {
+      mounted = false
+      controller.abort()
+    }
+  }, [id, isEditMode, navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target

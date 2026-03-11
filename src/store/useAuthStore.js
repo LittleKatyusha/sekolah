@@ -67,8 +67,8 @@ const useAuthStore = create(
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
-        refreshToken: state.refreshToken,
+        // Tokens are kept in memory only (not persisted) to mitigate XSS token theft.
+        // The backend should issue refresh tokens via httpOnly cookies for full protection.
         tokenType: state.tokenType,
         isAuthenticated: state.isAuthenticated,
       }),

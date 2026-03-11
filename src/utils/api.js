@@ -127,29 +127,31 @@ api.interceptors.response.use(
     // Handle other error status codes
     if (error.response) {
       const { status, data } = error.response
-      
-      switch (status) {
-        case 403:
-          console.error('Access forbidden:', data.message || data)
-          break
-        case 404:
-          console.error('Resource not found:', data.message || data)
-          break
-        case 422:
-          // Validation error - return the errors for form handling
-          console.error('Validation error:', data.errors || data.message)
-          break
-        case 500:
-          console.error('Server error:', data.message || data)
-          break
-        default:
-          console.error('API Error:', data.message || data)
+
+      if (import.meta.env.DEV) {
+        switch (status) {
+          case 403:
+            console.error('Access forbidden:', data.message || data)
+            break
+          case 404:
+            console.error('Resource not found:', data.message || data)
+            break
+          case 422:
+            // Validation error - return the errors for form handling
+            console.error('Validation error:', data.errors || data.message)
+            break
+          case 500:
+            console.error('Server error:', data.message || data)
+            break
+          default:
+            console.error('API Error:', data.message || data)
+        }
       }
     } else if (error.request) {
       // Network error
-      console.error('Network error: Unable to connect to server')
+      if (import.meta.env.DEV) console.error('Network error: Unable to connect to server')
     } else {
-      console.error('Error:', error.message)
+      if (import.meta.env.DEV) console.error('Error:', error.message)
     }
 
     return Promise.reject(error)

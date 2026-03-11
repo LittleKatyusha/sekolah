@@ -16,28 +16,32 @@ const SiswaDetail = () => {
   const [absensiSummary, setAbsensiSummary] = useState(null)
 
   useEffect(() => {
+    let mounted = true
+    const controller = new AbortController()
+
+    const fetchSiswa = async () => {
+      setLoading(true)
+      const { data, error } = await siswaService.getById(id, { signal: controller.signal })
+      if (!mounted) return
+      if (data) {
+        setSiswa(data.data)
+        // Fetch summary in background after main data arrives
+        siswaService.getAbsensiSummary(id, { signal: controller.signal }).then(({ data: sd }) => {
+          if (mounted && sd) setAbsensiSummary(sd.data)
+        })
+      } else {
+        showError('Gagal mengambil data siswa')
+        navigate('/siswa')
+      }
+      if (mounted) setLoading(false)
+    }
+
     fetchSiswa()
-  }, [id])
-
-  const fetchSiswa = async () => {
-    setLoading(true)
-    const { data, error } = await siswaService.getById(id)
-    if (data) {
-      setSiswa(data.data)
-      fetchAbsensiSummary()
-    } else {
-      showError('Gagal mengambil data siswa')
-      navigate('/siswa')
+    return () => {
+      mounted = false
+      controller.abort()
     }
-    setLoading(false)
-  }
-
-  const fetchAbsensiSummary = async () => {
-    const { data } = await siswaService.getAbsensiSummary(id)
-    if (data) {
-      setAbsensiSummary(data.data)
-    }
-  }
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm(siswa.nama)

@@ -147,23 +147,18 @@ const AbsensiSiswaList = () => {
   })
   const [showFilter, setShowFilter] = useState(false)
 
-  const [siswaOptions, setSiswaOptions] = useState([])
   const [selectedSiswaId, setSelectedSiswaId] = useState('')
   const [summaryData, setSummaryData] = useState(null)
 
-  const fetchSiswaOptions = async () => {
-    const { data } = await siswaService.getAll({ per_page: 1000 })
-    if (data?.data) {
-      const options = data.data.map(s => ({
-        value: s.id,
-        label: `${s.nis} - ${s.nama}`
-      }))
-      setSiswaOptions(options)
-    }
-  }
-
-  useEffect(() => {
-    fetchSiswaOptions()
+  const loadSiswaOptions = useCallback(async (keyword = '') => {
+    const { data } = await siswaService.getAll({
+      search: keyword || undefined,
+      per_page: 20,
+    })
+    return (data?.data || []).map(s => ({
+      value: s.id,
+      label: `${s.nis} - ${s.nama}`,
+    }))
   }, [])
 
   useEffect(() => {
@@ -364,8 +359,8 @@ const AbsensiSiswaList = () => {
               name="siswa_id"
               value={selectedSiswaId}
               onChange={handleSiswaChange}
-              options={siswaOptions}
-              placeholder="Pilih Siswa..."
+              loadOptions={loadSiswaOptions}
+              placeholder="Cari siswa..."
             />
           </div>
           <div className="relative">
