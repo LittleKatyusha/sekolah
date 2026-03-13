@@ -224,7 +224,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         let request = sidebarMenuRequestCache.get(user.id)
 
         if (!request) {
-          request = apiService.get('/admin/menus/tree/')
+          request = apiService.get('/menus/tree/')
           sidebarMenuRequestCache.set(user.id, request)
         }
 
