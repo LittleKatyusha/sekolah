@@ -22,25 +22,42 @@ const BkKategoriForm = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    if (isEditMode) {
-      fetchKategori()
-    }
-  }, [id])
+    if (!isEditMode) return
 
-  const fetchKategori = async () => {
-    setFetchingData(true)
-    const { data, error } = await bkKategoriService.getById(id)
-    if (data) {
-      const kategori = data.data
-      setFormData({
-        nama: kategori.nama || ''
-      })
-    } else {
-      showError('Gagal mengambil data kategori BK')
-      navigate('/bk/kategori')
+    const controller = new AbortController()
+
+    const fetchKategori = async () => {
+      setFetchingData(true)
+      try {
+        const { data } = await bkKategoriService.getById(id)
+        if (controller.signal.aborted) return
+
+        if (data) {
+          const kategori = data.data
+          setFormData({
+            nama: kategori.nama || ''
+          })
+        } else {
+          showError('Gagal mengambil data kategori BK')
+          navigate('/bk/kategori')
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching kategori:', err)
+          showError('Gagal mengambil data kategori BK')
+          navigate('/bk/kategori')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setFetchingData(false)
+        }
+      }
     }
-    setFetchingData(false)
-  }
+
+    fetchKategori()
+
+    return () => controller.abort()
+  }, [id, isEditMode, navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target

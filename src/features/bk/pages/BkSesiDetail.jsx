@@ -5,34 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkSesiService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-// Metode color classes (explicit for Tailwind purge)
-const metodeColorClasses = {
-  blue: 'bg-blue-100 text-blue-700',
-  purple: 'bg-purple-100 text-purple-700',
-  orange: 'bg-orange-100 text-orange-700',
-  teal: 'bg-teal-100 text-teal-700',
-  gray: 'bg-gray-100 text-gray-700',
-}
-
-const getMetodeInfo = (metode) => {
-  const metodeMap = {
-    1: { label: 'Konseling Individual', color: 'blue' },
-    2: { label: 'Konseling Kelompok', color: 'purple' },
-    3: { label: 'Mediasi', color: 'orange' },
-    4: { label: 'Kunjungan Rumah', color: 'teal' },
-  }
-  return metodeMap[metode] || { label: metode || '-', color: 'gray' }
-}
-
-const getMetodeBadge = (metode) => {
-  const m = getMetodeInfo(metode)
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${metodeColorClasses[m.color]}`}>
-      {m.label}
-    </span>
-  )
-}
+import { formatDate, formatDateTime } from '../../../utils/formatters'
+import { getMetodeBadge } from '../../../utils/bkBadges.jsx'
 
 const BkSesiDetail = () => {
   const { id } = useParams()
@@ -42,20 +16,22 @@ const BkSesiDetail = () => {
   const [sesi, setSesi] = useState(null)
 
   useEffect(() => {
-    fetchSesi()
-  }, [id])
-
-  const fetchSesi = async () => {
-    setLoading(true)
-    const { data, error } = await bkSesiService.getById(id)
-    if (data) {
-      setSesi(data.data)
-    } else {
-      showError('Gagal mengambil data sesi konseling')
-      navigate('/bk/sesi')
+    const controller = new AbortController()
+    const fetchSesi = async () => {
+      setLoading(true)
+      const { data, error } = await bkSesiService.getById(id)
+      if (controller.signal.aborted) return
+      if (data) {
+        setSesi(data.data)
+      } else {
+        showError('Gagal mengambil data sesi konseling')
+        navigate('/bk/sesi')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    fetchSesi()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm('sesi ini')
@@ -68,28 +44,6 @@ const BkSesiDetail = () => {
         showError('Gagal menghapus sesi konseling')
       }
     }
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   if (loading || !sesi) {

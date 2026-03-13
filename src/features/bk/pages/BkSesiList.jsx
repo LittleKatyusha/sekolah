@@ -1,136 +1,34 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { Search, Plus, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { bkSesiService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-// Metode color classes (explicit for Tailwind purge)
-const metodeColorClasses = {
-  blue: 'bg-blue-100 text-blue-700',
-  purple: 'bg-purple-100 text-purple-700',
-  orange: 'bg-orange-100 text-orange-700',
-  teal: 'bg-teal-100 text-teal-700',
-  gray: 'bg-gray-100 text-gray-700',
-}
-
-const getMetodeInfo = (metode) => {
-  const metodeMap = {
-    1: { label: 'Konseling Individual', color: 'blue' },
-    2: { label: 'Konseling Kelompok', color: 'purple' },
-    3: { label: 'Mediasi', color: 'orange' },
-    4: { label: 'Kunjungan Rumah', color: 'teal' },
-  }
-  return metodeMap[metode] || { label: metode || '-', color: 'gray' }
-}
-
-// Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [position, setPosition] = useState({ top: 0, left: 0 })
-  const buttonRef = useRef(null)
-  const menuRef = useRef(null)
-
-  const handleAction = (action) => {
-    setIsOpen(false)
-    action()
-  }
-
-  const handleButtonClick = (e) => {
-    e.stopPropagation()
-
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 192
-      })
-    }
-
-    setIsOpen(!isOpen)
-  }
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(e.target)
-      const isOutsideMenu = !menuRef.current || !menuRef.current.contains(e.target)
-
-      if (isOutsideButton && isOutsideMenu) {
-        setIsOpen(false)
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
-
-  return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={handleButtonClick}
-        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-        title="Actions"
-      >
-        <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
-      </button>
-
-      {isOpen && createPortal(
-        <div
-          ref={menuRef}
-          className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]"
-          style={{
-            top: `${position.top}px`,
-            left: `${position.left}px`
-          }}
-        >
-          <div className="py-1">
-            <button
-              onClick={() => handleAction(onDetail)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
-            <button
-              onClick={() => handleAction(onEdit)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit size={16} className="text-yellow-600" />
-              Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button
-              onClick={() => handleAction(onDelete)}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-            >
-              <Trash2 size={16} />
-              Hapus
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  )
-}
+import { formatDateShort } from '../../../utils/formatters'
+import { getMetodeBadge } from '../../../utils/bkBadges.jsx'
 
 const BkSesiList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchText])
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
+    search: debouncedSearch || '',
     filter: '{}',
-  }), [searchText])
+  }), [debouncedSearch])
 
   const handleEdit = useCallback((data) => {
     navigate(`/bk/sesi/${data.id}/edit`)
@@ -155,15 +53,6 @@ const BkSesiList = () => {
     }
   }, [])
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    return `${day}/${month}/${year}`
-  }
-
   const columnDefs = useMemo(() => [
     {
       field: 'id',
@@ -186,7 +75,7 @@ const BkSesiList = () => {
       flex: 1,
       sortable: true,
       filter: true,
-      cellRenderer: (params) => formatDate(params.value)
+      cellRenderer: (params) => formatDateShort(params.value)
     },
     {
       field: 'metode',
@@ -194,14 +83,7 @@ const BkSesiList = () => {
       flex: 1,
       sortable: true,
       filter: true,
-      cellRenderer: (params) => {
-        const m = getMetodeInfo(params.value)
-        return (
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${metodeColorClasses[m.color]}`}>
-            {m.label}
-          </span>
-        )
-      }
+      cellRenderer: (params) => getMetodeBadge(params.value)
     },
     {
       field: 'catatan',
@@ -285,7 +167,7 @@ const BkSesiList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`bk-sesi-grid-${searchText}`}
+          key="bk-sesi-grid"
           ref={gridRef}
           endpoint="/bk/sesi/"
           staticParams={staticParams}

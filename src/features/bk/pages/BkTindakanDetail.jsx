@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkTindakanService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatDateTime } from '../../../utils/formatters'
 
 const BkTindakanDetail = () => {
   const { id } = useParams()
@@ -14,20 +15,22 @@ const BkTindakanDetail = () => {
   const [tindakan, setTindakan] = useState(null)
 
   useEffect(() => {
-    fetchTindakan()
-  }, [id])
-
-  const fetchTindakan = async () => {
-    setLoading(true)
-    const { data, error } = await bkTindakanService.getById(id)
-    if (data) {
-      setTindakan(data.data)
-    } else {
-      showError('Gagal mengambil data tindakan')
-      navigate('/bk/tindakan')
+    const controller = new AbortController()
+    const fetchTindakan = async () => {
+      setLoading(true)
+      const { data, error } = await bkTindakanService.getById(id)
+      if (controller.signal.aborted) return
+      if (data) {
+        setTindakan(data.data)
+      } else {
+        showError('Gagal mengambil data tindakan')
+        navigate('/bk/tindakan')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    fetchTindakan()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm('tindakan ini')
@@ -40,18 +43,6 @@ const BkTindakanDetail = () => {
         showError('Gagal menghapus tindakan')
       }
     }
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   if (loading || !tindakan) {

@@ -34,8 +34,7 @@ const BkKasusForm = () => {
 
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [selectedGuruOption, setSelectedGuruOption] = useState(null)
-  const [jenisOptions, setJenisOptions] = useState([])
-  const [loadingJenisOptions, setLoadingJenisOptions] = useState(false)
+  const [selectedJenisOption, setSelectedJenisOption] = useState(null)
 
   const [formData, setFormData] = useState({
     siswa_id: '',
@@ -48,13 +47,6 @@ const BkKasusForm = () => {
 
   const [errors, setErrors] = useState({})
 
-  useEffect(() => {
-    fetchJenisOptions()
-    if (isEditMode) {
-      fetchKasus()
-    }
-  }, [id])
-
   const buildSiswaOption = useCallback((siswa) => ({
     value: String(siswa.id),
     label: `${siswa.nis || '-'} - ${siswa.nama || `Siswa #${siswa.id}`}`
@@ -63,6 +55,11 @@ const BkKasusForm = () => {
   const buildGuruOption = useCallback((guru) => ({
     value: String(guru.id),
     label: `${guru.nip || '-'} - ${guru.nama || `Guru #${guru.id}`}`
+  }), [])
+
+  const buildJenisOption = useCallback((jenis) => ({
+    value: String(jenis.id),
+    label: jenis.nama || `Jenis BK #${jenis.id}`
   }), [])
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {
@@ -93,98 +90,86 @@ const BkKasusForm = () => {
     return []
   }, [buildGuruOption])
 
-  const hydrateSelectedSiswaOption = useCallback(async (siswaId) => {
-    if (!siswaId) {
-      setSelectedSiswaOption(null)
-      return
-    }
+  const searchJenisOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await bkJenisService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
 
-    const { data } = await siswaService.getById(siswaId)
-    const siswa = data?.data
-
-    if (siswa) {
-      setSelectedSiswaOption(buildSiswaOption(siswa))
-    }
-  }, [buildSiswaOption])
-
-  const hydrateSelectedGuruOption = useCallback(async (guruId) => {
-    if (!guruId) {
-      setSelectedGuruOption(null)
-      return
-    }
-
-    const { data } = await guruService.getById(guruId)
-    const guru = data?.data
-
-    if (guru) {
-      setSelectedGuruOption(buildGuruOption(guru))
-    }
-  }, [buildGuruOption])
-
-  const fetchJenisOptions = async () => {
-    setLoadingJenisOptions(true)
-    const { data, error } = await bkJenisService.getAll({ per_page: 100 })
     if (data?.data) {
-      setJenisOptions((data.data || []).map((j) => ({ value: String(j.id), label: j.nama })))
-    } else {
-      console.error('Error fetching jenis BK options:', error)
+      return data.data.map(buildJenisOption)
     }
-    setLoadingJenisOptions(false)
-  }
 
-  const fetchKasus = async () => {
-    setFetchingData(true)
-    const { data, error } = await bkKasusService.getById(id)
-    if (data) {
-      const kasus = data.data
-      let statusValue = kasus.status || ''
-      // Convert string status to integer for the select
-      if (typeof statusValue === 'string' && statusStringToInt[statusValue] !== undefined) {
-        statusValue = statusStringToInt[statusValue]
-      }
+    console.error('Error fetching jenis BK options:', error)
+    return []
+  }, [buildJenisOption])
 
-      const siswaId = String(kasus.siswa?.id || kasus.siswa_id || '')
-      const guruId = String(kasus.guru?.id || kasus.guru_id || '')
-      const jenisId = String(kasus.jenis?.id || kasus.jenis_id || '')
-
-      setFormData({
-        siswa_id: siswaId,
-        guru_id: guruId,
-        jenis_id: jenisId,
-        tanggal: kasus.tanggal || '',
-        keterangan: kasus.keterangan || '',
-        status: statusValue
-      })
-
-      if (kasus.siswa?.id) {
-        setSelectedSiswaOption(buildSiswaOption(kasus.siswa))
-      }
-
-      if (kasus.guru?.id) {
-        setSelectedGuruOption(buildGuruOption(kasus.guru))
-      }
-    } else {
-      showError('Gagal mengambil data kasus BK')
-      navigate('/bk/kasus')
-    }
-    setFetchingData(false)
-  }
-
+  // Fetch kasus data for edit mode with AbortController support
   useEffect(() => {
-    if (formData.siswa_id) {
-      hydrateSelectedSiswaOption(formData.siswa_id)
-    } else {
-      setSelectedSiswaOption(null)
-    }
-  }, [formData.siswa_id, hydrateSelectedSiswaOption])
+    if (!isEditMode) return
 
-  useEffect(() => {
-    if (formData.guru_id) {
-      hydrateSelectedGuruOption(formData.guru_id)
-    } else {
-      setSelectedGuruOption(null)
+    const controller = new AbortController()
+
+    const fetchKasus = async () => {
+      setFetchingData(true)
+      try {
+        const { data } = await bkKasusService.getById(id)
+        if (controller.signal.aborted) return
+
+        if (data) {
+          const kasus = data.data
+          let statusValue = kasus.status || ''
+          // Convert string status to integer for the select
+          if (typeof statusValue === 'string' && statusStringToInt[statusValue] !== undefined) {
+            statusValue = statusStringToInt[statusValue]
+          }
+
+          const siswaId = String(kasus.siswa?.id || kasus.siswa_id || '')
+          const guruId = String(kasus.guru?.id || kasus.guru_id || '')
+          const jenisId = String(kasus.jenis?.id || kasus.jenis_id || '')
+
+          setFormData({
+            siswa_id: siswaId,
+            guru_id: guruId,
+            jenis_id: jenisId,
+            tanggal: kasus.tanggal || '',
+            keterangan: kasus.keterangan || '',
+            status: statusValue
+          })
+
+          // Hydrate selected options directly from the response to avoid extra API calls
+          if (kasus.siswa?.id) {
+            setSelectedSiswaOption(buildSiswaOption(kasus.siswa))
+          }
+
+          if (kasus.guru?.id) {
+            setSelectedGuruOption(buildGuruOption(kasus.guru))
+          }
+
+          if (kasus.jenis?.id) {
+            setSelectedJenisOption(buildJenisOption(kasus.jenis))
+          }
+        } else {
+          showError('Gagal mengambil data kasus BK')
+          navigate('/bk/kasus')
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching kasus:', err)
+          showError('Gagal mengambil data kasus BK')
+          navigate('/bk/kasus')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setFetchingData(false)
+        }
+      }
     }
-  }, [formData.guru_id, hydrateSelectedGuruOption])
+
+    fetchKasus()
+
+    return () => controller.abort()
+  }, [id, isEditMode, navigate, buildSiswaOption, buildGuruOption, buildJenisOption])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -311,12 +296,14 @@ const BkKasusForm = () => {
                 </label>
                 <SearchableSelect
                   name="jenis_id"
-                  options={jenisOptions}
+                  options={selectedJenisOption ? [selectedJenisOption] : []}
                   value={formData.jenis_id}
                   onChange={handleChange}
+                  loadOptions={searchJenisOptions}
                   placeholder="Pilih Jenis BK"
+                  searchPlaceholder="Cari jenis BK..."
+                  noOptionsText="Tidak ada jenis BK yang cocok"
                   error={errors.jenis_id}
-                  disabled={loadingJenisOptions}
                 />
               </div>
 

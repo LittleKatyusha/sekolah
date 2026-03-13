@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { bkHasilService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatDateTime } from '../../../utils/formatters'
 
 const BkHasilDetail = () => {
   const { id } = useParams()
@@ -14,20 +15,22 @@ const BkHasilDetail = () => {
   const [hasil, setHasil] = useState(null)
 
   useEffect(() => {
-    fetchHasil()
-  }, [id])
-
-  const fetchHasil = async () => {
-    setLoading(true)
-    const { data, error } = await bkHasilService.getById(id)
-    if (data) {
-      setHasil(data.data)
-    } else {
-      showError('Gagal mengambil data hasil konseling')
-      navigate('/bk/hasil')
+    const controller = new AbortController()
+    const fetchHasil = async () => {
+      setLoading(true)
+      const { data, error } = await bkHasilService.getById(id)
+      if (controller.signal.aborted) return
+      if (data) {
+        setHasil(data.data)
+      } else {
+        showError('Gagal mengambil data hasil konseling')
+        navigate('/bk/hasil')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
+    fetchHasil()
+    return () => controller.abort()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const result = await showDeleteConfirm('hasil konseling ini')
@@ -40,18 +43,6 @@ const BkHasilDetail = () => {
         showError('Gagal menghapus hasil konseling')
       }
     }
-  }
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   if (loading || !hasil) {
