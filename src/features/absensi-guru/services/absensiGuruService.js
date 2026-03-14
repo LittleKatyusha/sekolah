@@ -9,5 +9,5 @@ export const absensiGuruService = {
   update: (id, data) => apiService.put(`${BASE_URL}/${id}`, data),
   deleteById: (id) => apiService.delete(`${BASE_URL}/${id}`),
   getByGuru: (guruId, params = {}) => apiService.get(`${BASE_URL}/guru/${guruId}`, params),
-  getSummary: (params = {}) => apiService.get(`${BASE_URL}/summary`, params),
+  getSummary: (guruId, params = {}) => apiService.get(`${BASE_URL}/guru/${guruId}/summary`, params),
 }
