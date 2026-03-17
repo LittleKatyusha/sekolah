@@ -225,8 +225,12 @@ const RaporDetail = () => {
                         {rapor.detail.map((d, index) => (
                           <tr key={d.id || index} className="border-b border-gray-100 dark:border-gray-800">
                             <td className="py-2 px-3 text-gray-700 dark:text-gray-300">{index + 1}</td>
-                            <td className="py-2 px-3 text-gray-700 dark:text-gray-300">{d.mapel?.kode || '-'}</td>
-                            <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">{d.mapel?.nama || '-'}</td>
+                            <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
+                              {d.mapel?.kode || d.mapel?.kode_mapel || '-'}
+                            </td>
+                            <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
+                              {d.mapel?.nama || d.mapel?.nama_mapel || '-'}
+                            </td>
                             <td className="py-2 px-3 text-center text-gray-700 dark:text-gray-300">{d.nilai_pengetahuan ?? '-'}</td>
                             <td className="py-2 px-3 text-center text-gray-700 dark:text-gray-300">{d.nilai_keterampilan ?? '-'}</td>
                             <td className="py-2 px-3 text-center font-semibold text-gray-900 dark:text-white">{d.nilai_akhir ?? '-'}</td>

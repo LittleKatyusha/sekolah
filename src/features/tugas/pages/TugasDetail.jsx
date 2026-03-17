@@ -319,7 +319,7 @@ const TugasDetail = () => {
                         {submission.siswa?.nama || submission.siswa?.name || '-'}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                        {formatDateTime(submission.tanggal_kumpul)}
+                        {formatDateTime(submission.waktu_kumpl)}
                       </td>
                       <td className="px-4 py-3">
                         {getSubmissionStatusBadge(submission.status_kumpl)}

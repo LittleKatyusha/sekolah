@@ -9,82 +9,64 @@ const PENDAFTARAN_LIST = '/ekstrakurikuler/pendaftaran/'
  * Service for managing master Ekstrakurikuler
  */
 export const ekstrakurikulerService = {
-  getAll: async (params = {}) => {
-    return await apiService.get(EKSKUL_LIST, { params })
-  },
+  getAll: (params = {}) =>
+    apiService.get(EKSKUL_LIST, { params }),
 
-  getById: async (id) => {
-    return await apiService.get(`${EKSKUL_BASE}/${id}`)
-  },
+  getById: (id) =>
+    apiService.get(`${EKSKUL_BASE}/${id}`),
 
-  create: async (data) => {
-    return await apiService.post(EKSKUL_BASE, data)
-  },
+  create: (data) =>
+    apiService.post(EKSKUL_BASE, data),
 
-  update: async (id, data) => {
-    return await apiService.put(`${EKSKUL_BASE}/${id}`, data)
-  },
+  update: (id, data) =>
+    apiService.put(`${EKSKUL_BASE}/${id}`, data),
 
-  delete: async (id) => {
-    return await apiService.delete(`${EKSKUL_BASE}/${id}`)
-  },
+  delete: (id) =>
+    apiService.delete(`${EKSKUL_BASE}/${id}`),
 
-  getAktif: async () => {
-    return await apiService.get(`${EKSKUL_BASE}/aktif`)
-  },
+  getAktif: () =>
+    apiService.get(`${EKSKUL_BASE}/aktif`),
 
-  getByPembina: async (pembinaGuruId) => {
-    return await apiService.get(`${EKSKUL_BASE}/pembina/${pembinaGuruId}`)
-  },
+  getByPembina: (pembinaGuruId) =>
+    apiService.get(`${EKSKUL_BASE}/pembina/${pembinaGuruId}`),
 
-  getStatistik: async (id) => {
-    return await apiService.get(`${EKSKUL_BASE}/${id}/statistik`)
-  },
+  getStatistik: (id) =>
+    apiService.get(`${EKSKUL_BASE}/${id}/statistik`),
 }
 
 /**
  * Service for managing Ekstrakurikuler Siswa (student enrollment)
  */
 export const eksSiswaService = {
-  getAll: async (params = {}) => {
-    return await apiService.get(PENDAFTARAN_LIST, { params })
-  },
+  getAll: (params = {}) =>
+    apiService.get(PENDAFTARAN_LIST, { params }),
 
-  getById: async (id) => {
-    return await apiService.get(`${PENDAFTARAN_BASE}/${id}`)
-  },
+  getById: (id) =>
+    apiService.get(`${PENDAFTARAN_BASE}/${id}`),
 
-  create: async (data) => {
-    return await apiService.post(PENDAFTARAN_BASE, data)
-  },
+  create: (data) =>
+    apiService.post(PENDAFTARAN_BASE, data),
 
-  updateStatus: async (id, status) => {
-    return await apiService.put(`${PENDAFTARAN_BASE}/${id}/status`, { status })
-  },
+  updateStatus: (id, status) =>
+    apiService.put(`${PENDAFTARAN_BASE}/${id}/status`, { status }),
 
-  keluar: async (id) => {
-    return await apiService.post(`${PENDAFTARAN_BASE}/${id}/keluar`)
-  },
+  keluar: (id) =>
+    apiService.post(`${PENDAFTARAN_BASE}/${id}/keluar`),
 
-  delete: async (id) => {
-    return await apiService.delete(`${PENDAFTARAN_BASE}/${id}`)
-  },
+  delete: (id) =>
+    apiService.delete(`${PENDAFTARAN_BASE}/${id}`),
 
-  getByEkstrakurikuler: async (ekstrakurikulerId) => {
-    return await apiService.get(`${PENDAFTARAN_BASE}/ekstrakurikuler/${ekstrakurikulerId}`)
-  },
+  getByEkstrakurikuler: (ekstrakurikulerId) =>
+    apiService.get(`${PENDAFTARAN_BASE}/ekstrakurikuler/${ekstrakurikulerId}`),
 
-  getBySiswa: async (siswaId) => {
-    return await apiService.get(`${PENDAFTARAN_BASE}/siswa/${siswaId}`)
-  },
+  getBySiswa: (siswaId) =>
+    apiService.get(`${PENDAFTARAN_BASE}/siswa/${siswaId}`),
 
-  getRiwayatBySiswa: async (siswaId) => {
-    return await apiService.get(`${PENDAFTARAN_BASE}/siswa/${siswaId}/riwayat`)
-  },
+  getRiwayatBySiswa: (siswaId) =>
+    apiService.get(`${PENDAFTARAN_BASE}/siswa/${siswaId}/riwayat`),
 
-  checkStatus: async (data) => {
-    return await apiService.post(`${PENDAFTARAN_BASE}/check-status`, data)
-  },
+  checkStatus: (data) =>
+    apiService.post(`${PENDAFTARAN_BASE}/check-status`, data),
 }
 
 export default {

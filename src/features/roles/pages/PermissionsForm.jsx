@@ -16,8 +16,7 @@ const PermissionsForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
 
   const [formData, setFormData] = useState({
-    name: '',
-    guard_name: 'web',
+  name: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -34,8 +33,7 @@ const PermissionsForm = () => {
     if (data) {
       const permission = data.data
       setFormData({
-        name: permission.name || '',
-        guard_name: permission.guard_name || 'web',
+      name: permission.name || '',
       })
     } else {
       showError('Gagal mengambil data permission')
@@ -66,8 +64,7 @@ const PermissionsForm = () => {
     setLoading(true)
 
     const submitData = {
-      name: formData.name,
-      guard_name: formData.guard_name || 'web',
+    name: formData.name,
     }
 
     let result
@@ -127,19 +124,6 @@ const PermissionsForm = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Guard Name
-                </label>
-                <Input
-                  type="text"
-                  name="guard_name"
-                  value={formData.guard_name}
-                  onChange={handleChange}
-                  placeholder="web"
-                  error={errors.guard_name}
-                />
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

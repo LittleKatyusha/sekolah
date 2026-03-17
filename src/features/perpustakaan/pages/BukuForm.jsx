@@ -19,14 +19,12 @@ const BukuForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
   
   const [formData, setFormData] = useState({
-    isbn: '',
-    judul: '',
-    penulis: '',
-    penerbit: '',
-    tahun_terbit: '',
-    jumlah_halaman: '',
-    stok: '',
-    deskripsi: ''
+  isbn: '',
+  judul: '',
+  penulis: '',
+  penerbit: '',
+  tahun: '',
+  stok: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -43,14 +41,12 @@ const BukuForm = () => {
     if (data) {
       const buku = data.data
       setFormData({
-        isbn: buku.isbn || '',
-        judul: buku.judul || '',
-        penulis: buku.penulis || '',
-        penerbit: buku.penerbit || '',
-        tahun_terbit: buku.tahun_terbit || '',
-        jumlah_halaman: buku.jumlah_halaman || '',
-        stok: buku.stok || '',
-        deskripsi: buku.deskripsi || ''
+      isbn: buku.isbn || '',
+      judul: buku.judul || '',
+      penulis: buku.penulis || '',
+      penerbit: buku.penerbit || '',
+      tahun: buku.tahun || '',
+      stok: buku.stok || '',
       })
     } else {
       showError('Gagal mengambil data buku')
@@ -92,29 +88,21 @@ const BukuForm = () => {
       newErrors.penerbit = 'Penerbit maksimal 100 karakter'
     }
     
-    // Tahun terbit validation
-    if (formData.tahun_terbit) {
-      const year = parseInt(formData.tahun_terbit)
-      const currentYear = new Date().getFullYear()
-      if (isNaN(year) || year < 1900 || year > currentYear) {
-        newErrors.tahun_terbit = `Tahun terbit harus antara 1900 dan ${currentYear}`
-      }
+    // Tahun validation
+    if (formData.tahun) {
+    const year = parseInt(formData.tahun)
+    const currentYear = new Date().getFullYear()
+    if (isNaN(year) || year < 1900 || year > currentYear) {
+    newErrors.tahun = `Tahun harus antara 1900 dan ${currentYear}`
     }
-    
-    // Jumlah halaman validation
-    if (formData.jumlah_halaman) {
-      const pages = parseInt(formData.jumlah_halaman)
-      if (isNaN(pages) || pages < 1) {
-        newErrors.jumlah_halaman = 'Jumlah halaman minimal 1'
-      }
     }
-    
+   
     // Stok validation
     if (formData.stok) {
-      const stok = parseInt(formData.stok)
-      if (isNaN(stok) || stok < 0) {
-        newErrors.stok = 'Stok minimal 0'
-      }
+    const stok = parseInt(formData.stok)
+    if (isNaN(stok) || stok < 0) {
+    newErrors.stok = 'Stok minimal 0'
+    }
     }
 
     setErrors(newErrors)
@@ -130,14 +118,12 @@ const BukuForm = () => {
     
     // Convert numeric fields
     const submitData = {
-      ...formData,
-      isbn: formData.isbn || null,
-      penulis: formData.penulis || null,
-      penerbit: formData.penerbit || null,
-      tahun_terbit: formData.tahun_terbit ? parseInt(formData.tahun_terbit) : null,
-      jumlah_halaman: formData.jumlah_halaman ? parseInt(formData.jumlah_halaman) : null,
-      stok: formData.stok ? parseInt(formData.stok) : null,
-      deskripsi: formData.deskripsi || null
+    ...formData,
+    isbn: formData.isbn || null,
+    penulis: formData.penulis || null,
+    penerbit: formData.penerbit || null,
+    tahun: formData.tahun ? parseInt(formData.tahun) : null,
+    stok: formData.stok ? parseInt(formData.stok) : null,
     }
 
     let result
@@ -245,43 +231,24 @@ const BukuForm = () => {
                 />
               </div>
 
-              {/* Tahun Terbit */}
+              {/* Tahun */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tahun Terbit
-                </label>
-                <input
-                  type="number"
-                  name="tahun_terbit"
-                  value={formData.tahun_terbit}
-                  onChange={handleChange}
-                  min="1900"
-                  max={currentYear}
-                  placeholder={`1900 - ${currentYear}`}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                />
-                {errors.tahun_terbit && (
-                  <p className="mt-1 text-sm text-red-500">{errors.tahun_terbit}</p>
-                )}
-              </div>
-
-              {/* Jumlah Halaman */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Jumlah Halaman
-                </label>
-                <input
-                  type="number"
-                  name="jumlah_halaman"
-                  value={formData.jumlah_halaman}
-                  onChange={handleChange}
-                  min="1"
-                  placeholder="Jumlah halaman"
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                />
-                {errors.jumlah_halaman && (
-                  <p className="mt-1 text-sm text-red-500">{errors.jumlah_halaman}</p>
-                )}
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Tahun
+              </label>
+              <input
+              type="number"
+              name="tahun"
+              value={formData.tahun}
+              onChange={handleChange}
+              min="1900"
+              max={currentYear}
+              placeholder={`1900 - ${currentYear}`}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              />
+              {errors.tahun && (
+              <p className="mt-1 text-sm text-red-500">{errors.tahun}</p>
+              )}
               </div>
 
               {/* Stok */}
@@ -303,21 +270,6 @@ const BukuForm = () => {
                 )}
               </div>
 
-              {/* Deskripsi */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Deskripsi
-                </label>
-                <textarea
-                  name="deskripsi"
-                  value={formData.deskripsi}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                  placeholder="Deskripsi singkat tentang buku"
-                />
-                {errors.deskripsi && <p className="mt-1 text-sm text-red-500">{errors.deskripsi}</p>}
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

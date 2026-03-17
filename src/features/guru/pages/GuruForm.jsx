@@ -7,6 +7,7 @@ import Input from '../../../components/ui/Input'
 import { guruService } from '../services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
 
 const GuruForm = () => {
   const { id } = useParams()
@@ -14,20 +15,20 @@ const GuruForm = () => {
   const isEditMode = !!id
 
   const { options: jenisKelaminOptions, loading: loadingJK } = useReferenceOptions('jenis_kelamin', [
-    { value: 'Laki-Laki', label: 'Laki-Laki' },
-    { value: 'Perempuan', label: 'Perempuan' },
+    { value: '1', label: 'Laki-Laki' },
+    { value: '2', label: 'Perempuan' },
   ])
 
   const { options: pendidikanOptions, loading: loadingPendidikan } = useReferenceOptions('pendidikan_terakhir', [
-    { value: 'SD / Sederajat', label: 'SD / Sederajat' },
-    { value: 'SMP / Sederajat', label: 'SMP / Sederajat' },
-    { value: 'SMA / Sederajat', label: 'SMA / Sederajat' },
-    { value: 'Diploma 1 (D1)', label: 'Diploma 1 (D1)' },
-    { value: 'Diploma 2 (D2)', label: 'Diploma 2 (D2)' },
-    { value: 'Diploma 3 (D3)', label: 'Diploma 3 (D3)' },
-    { value: 'Sarjana (S1) / Diploma 4 (D4)', label: 'Sarjana (S1) / Diploma 4 (D4)' },
-    { value: 'Magister (S2)', label: 'Magister (S2)' },
-    { value: 'Doktor (S3)', label: 'Doktor (S3)' },
+    { value: '1', label: 'SD / Sederajat' },
+    { value: '2', label: 'SMP / Sederajat' },
+    { value: '3', label: 'SMA / Sederajat' },
+    { value: '4', label: 'Diploma 1 (D1)' },
+    { value: '5', label: 'Diploma 2 (D2)' },
+    { value: '6', label: 'Diploma 3 (D3)' },
+    { value: '7', label: 'Sarjana (S1) / Diploma 4 (D4)' },
+    { value: '8', label: 'Magister (S2)' },
+    { value: '9', label: 'Doktor (S3)' },
   ])
 
   const [loading, setLoading] = useState(false)
@@ -37,7 +38,7 @@ const GuruForm = () => {
     nip: '',
     nuptk: '',
     nama: '',
-    jenis_kelamin: 'Laki-Laki',
+    jenis_kelamin: '1',
     tanggal_lahir: '',
     alamat: '',
     no_hp: '',
@@ -51,23 +52,25 @@ const GuruForm = () => {
     if (isEditMode) {
       fetchGuru()
     }
-  }, [id])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEditMode])
 
   const fetchGuru = async () => {
     setFetchingData(true)
-    const { data, error } = await guruService.getById(id)
+    const { data } = await guruService.getById(id)
     if (data) {
       const guru = data.data
       setFormData({
         nip: guru.nip || '',
         nuptk: guru.nuptk || '',
         nama: guru.nama || '',
-        jenis_kelamin: guru.jenis_kelamin || 'Laki-Laki',
+        // API kadang mengembalikan label ("Laki-Laki") bukan kode ("1").
+        jenis_kelamin: normalizeReferenceCode(guru.jenis_kelamin, jenisKelaminOptions),
         tanggal_lahir: guru.tanggal_lahir || '',
         alamat: guru.alamat || '',
         no_hp: guru.no_hp || '',
         email: guru.email || '',
-        pendidikan_terakhir: guru.pendidikan_terakhir || ''
+        pendidikan_terakhir: normalizeReferenceCode(guru.pendidikan_terakhir, pendidikanOptions),
       })
     } else {
       showError('Gagal mengambil data guru')
@@ -106,9 +109,13 @@ const GuruForm = () => {
 
     setLoading(true)
     
+    const pendidikanTerakhir = formData.pendidikan_terakhir ? safeParseInt(formData.pendidikan_terakhir) : null
+    
     const submitData = {
       ...formData,
-      pendidikan_terakhir: formData.pendidikan_terakhir || null
+      // Simpan sebagai kode numerik agar konsisten dengan sys_references.
+      jenis_kelamin: safeParseInt(formData.jenis_kelamin),
+      pendidikan_terakhir: pendidikanTerakhir,
     }
 
     let result

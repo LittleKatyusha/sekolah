@@ -56,7 +56,7 @@ const LogAksesMateriDetail = () => {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informasi Akses</h2>
             <InfoRow label="ID" value={data.id} icon={FileText} />
             <InfoRow label="Materi" value={data.materi?.judul || data.mst_materi_id} icon={BookOpen} />
-            <InfoRow label="Siswa" value={data.siswa?.nama_lengkap || data.mst_siswa_id} icon={User} />
+            <InfoRow label="Siswa" value={data.siswa?.nama || data.mst_siswa_id} icon={User} />
             <InfoRow label="Waktu Akses" value={data.waktu_akses ? new Date(data.waktu_akses).toLocaleString('id-ID') : '-'} icon={Clock} />
             <InfoRow label="Durasi" value={formatDurasi(data.durasi_detik)} icon={Clock} />
             <InfoRow label="Perangkat" value={data.perangkat} icon={Monitor} />

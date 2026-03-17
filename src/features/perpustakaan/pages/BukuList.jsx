@@ -183,22 +183,13 @@ const BukuList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
-      field: 'tahun_terbit',
-      headerName: 'Tahun',
-      sortable: true,
-      filter: true,
-      width: 100,
-      minWidth: 80,
-      cellRenderer: (params) => params.value || '-'
-    },
-    {
-      field: 'jumlah_halaman',
-      headerName: 'Halaman',
-      sortable: true,
-      filter: true,
-      width: 100,
-      minWidth: 80,
-      cellRenderer: (params) => params.value || '-'
+    field: 'tahun',
+    headerName: 'Tahun',
+    sortable: true,
+    filter: true,
+    width: 100,
+    minWidth: 80,
+    cellRenderer: (params) => params.value || '-'
     },
     {
       field: 'stok',
@@ -220,18 +211,6 @@ const BukuList = () => {
             {stok}
           </span>
         )
-      }
-    },
-    {
-      field: 'deskripsi',
-      headerName: 'Deskripsi',
-      sortable: true,
-      filter: true,
-      flex: 1,
-      minWidth: 150,
-      cellRenderer: (params) => {
-        const value = params.value || '-'
-        return value.length > 50 ? `${value.substring(0, 50)}...` : value
       }
     },
     {

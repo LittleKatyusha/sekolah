@@ -43,8 +43,8 @@ const writeReferenceOptionsCache = (category, options) => {
 
 const mapReferenceOptions = (responseData) =>
   (responseData || []).map((item) => ({
-    value: item.kode,
-    label: item.nama,
+    value: item?.kode !== undefined && item?.kode !== null ? String(item.kode) : '',
+    label: item?.nama ?? '',
   }))
 
 const getReferenceOptionsByCategory = async (category) => {

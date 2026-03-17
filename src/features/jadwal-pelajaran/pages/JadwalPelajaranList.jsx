@@ -212,13 +212,15 @@ const JadwalPelajaranList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
-      field: 'guru_mapel.mapel.nama',
       headerName: 'Mata Pelajaran',
       sortable: true,
       filter: true,
       flex: 1,
       minWidth: 150,
-      cellRenderer: (params) => params.value || '-'
+      valueGetter: (params) => {
+        const mapel = params.data?.guru_mapel?.mapel
+        return mapel?.nama || mapel?.nama_mapel || '-'
+      },
     },
     {
       field: 'guru_mapel.guru.nama',

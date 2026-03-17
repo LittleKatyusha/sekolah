@@ -224,8 +224,8 @@ const SoalList = () => {
       }
     },
     {
-      field: 'mapel_nama',
-      headerName: 'Mata Pelajaran',
+    headerName: 'Mata Pelajaran',
+    valueGetter: (params) => params.data?.mapel?.nama || params.data?.mapel?.nama_mapel || '-',
       sortable: true,
       filter: true,
       width: 180,

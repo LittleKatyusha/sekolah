@@ -28,7 +28,7 @@ const TugasSiswaForm = () => {
     mst_siswa_id: '',
     jawaban: '',
     file_path: '',
-    tanggal_kumpul: '',
+    waktu_kumpl: '',
     status_kumpl: '',
     nilai: '',
     catatan: ''
@@ -74,17 +74,17 @@ const TugasSiswaForm = () => {
     if (data) {
       const ts = data.data
       // Format datetime for datetime-local input
-      let tanggalKumpul = ''
-      if (ts.tanggal_kumpul) {
-        const dt = new Date(ts.tanggal_kumpul)
-        tanggalKumpul = dt.toISOString().slice(0, 16)
+      let waktuKumpl = ''
+      if (ts.waktu_kumpl) {
+        const dt = new Date(ts.waktu_kumpl)
+        waktuKumpl = dt.toISOString().slice(0, 16)
       }
       setFormData({
         mst_tugas_id: ts.tugas?.id ? String(ts.tugas.id) : (ts.mst_tugas_id ? String(ts.mst_tugas_id) : ''),
         mst_siswa_id: ts.siswa?.id ? String(ts.siswa.id) : (ts.mst_siswa_id ? String(ts.mst_siswa_id) : ''),
         jawaban: ts.jawaban || '',
         file_path: ts.file_path || '',
-        tanggal_kumpul: tanggalKumpul,
+        waktu_kumpl: waktuKumpl,
         status_kumpl: ts.status_kumpl !== null && ts.status_kumpl !== undefined ? String(ts.status_kumpl) : '',
         nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
         catatan: ts.catatan || ''
@@ -125,7 +125,7 @@ const TugasSiswaForm = () => {
       mst_siswa_id: parseInt(formData.mst_siswa_id),
       jawaban: formData.jawaban || null,
       file_path: formData.file_path || null,
-      tanggal_kumpul: formData.tanggal_kumpul || null,
+      waktu_kumpl: formData.waktu_kumpl || null,
       status_kumpl: formData.status_kumpl || null,
       nilai: formData.nilai !== '' ? parseFloat(formData.nilai) : null,
       catatan: formData.catatan || null
@@ -245,13 +245,13 @@ const TugasSiswaForm = () => {
                 </label>
                 <input
                   type="datetime-local"
-                  name="tanggal_kumpul"
-                  value={formData.tanggal_kumpul}
+                  name="waktu_kumpl"
+                  value={formData.waktu_kumpl}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 />
-                {errors.tanggal_kumpul && (
-                  <p className="mt-1 text-sm text-red-500">{errors.tanggal_kumpul}</p>
+                {errors.waktu_kumpl && (
+                  <p className="mt-1 text-sm text-red-500">{errors.waktu_kumpl}</p>
                 )}
               </div>
 

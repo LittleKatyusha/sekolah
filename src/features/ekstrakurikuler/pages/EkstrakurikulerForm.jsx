@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -23,6 +23,11 @@ const STATUS_OPTIONS = [
   { value: 'nonaktif', label: 'Nonaktif' },
 ]
 
+const buildGuruOption = (guru) => ({
+  value: String(guru.id),
+  label: guru.nama || `Guru #${guru.id}`
+})
+
 const EkstrakurikulerForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -44,65 +49,75 @@ const EkstrakurikulerForm = () => {
   })
 
   const [errors, setErrors] = useState({})
-  const [guruOptions, setGuruOptions] = useState([])
+  const [selectedGuruOption, setSelectedGuruOption] = useState(null)
+
+  // Lazy search for guru options — avoids fetching all 100+ guru upfront
+  const searchGuruOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await guruService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildGuruOption)
+    }
+
+    console.error('Failed to fetch guru options:', error)
+    return []
+  }, [])
 
   useEffect(() => {
-    fetchGuruOptions()
-    if (isEditMode) {
-      fetchEkstrakurikuler()
-    }
-  }, [id])
+    if (!isEditMode) return
 
-  const fetchGuruOptions = async () => {
-    const { data } = await guruService.getAll({ per_page: 100 })
-    if (data?.data) {
-      setGuruOptions(data.data.map(guru => ({
-        value: String(guru.id),
-        label: guru.nama || `Guru #${guru.id}`
-      })))
-    }
-  }
+    const fetchData = async () => {
+      setFetchingData(true)
 
-  const fetchEkstrakurikuler = async () => {
-    setFetchingData(true)
-    const { data, error } = await ekstrakurikulerService.getById(id)
-    if (data) {
-      const ekskul = data.data
-      setFormData({
-        kode: ekskul.kode || '',
-        nama: ekskul.nama || '',
-        deskripsi: ekskul.deskripsi || '',
-        pembina_guru_id: ekskul.pembina_guru_id ? String(ekskul.pembina_guru_id) : (ekskul.pembina_guru?.id ? String(ekskul.pembina_guru.id) : ''),
-        hari: ekskul.hari || '',
-        jam_mulai: ekskul.jam_mulai || '',
-        jam_selesai: ekskul.jam_selesai || '',
-        lokasi: ekskul.lokasi || '',
-        status: ekskul.status || 'aktif',
-      })
-    } else {
-      showError('Gagal mengambil data ekstrakurikuler')
-      navigate('/ekstrakurikuler')
-    }
-    setFetchingData(false)
-  }
+      const ekskulResult = await ekstrakurikulerService.getById(id)
 
-  const handleChange = (e) => {
+      if (ekskulResult.data) {
+        const ekskul = ekskulResult.data.data
+        setFormData({
+          kode: ekskul.kode || '',
+          nama: ekskul.nama || '',
+          deskripsi: ekskul.deskripsi || '',
+          pembina_guru_id: ekskul.pembina_guru_id ? String(ekskul.pembina_guru_id) : (ekskul.pembina_guru?.id ? String(ekskul.pembina_guru.id) : ''),
+          hari: ekskul.hari || '',
+          jam_mulai: ekskul.jam_mulai || '',
+          jam_selesai: ekskul.jam_selesai || '',
+          lokasi: ekskul.lokasi || '',
+          status: ekskul.status || 'aktif',
+        })
+
+        // Pre-populate the selected guru option from the existing data
+        if (ekskul.pembina_guru?.id) {
+          setSelectedGuruOption(buildGuruOption(ekskul.pembina_guru))
+        }
+      } else {
+        showError('Gagal mengambil data ekstrakurikuler')
+        navigate('/ekstrakurikuler')
+      }
+
+      setFetchingData(false)
+    }
+
+    fetchData()
+  }, [id, isEditMode, navigate])
+
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }))
-    }
-  }
+    setErrors(prev => prev[name] ? { ...prev, [name]: null } : prev)
+  }, [])
 
-  const validate = () => {
+  const validate = useCallback(() => {
     const newErrors = {}
     if (!formData.kode.trim()) newErrors.kode = 'Kode wajib diisi'
     if (!formData.nama.trim()) newErrors.nama = 'Nama wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
+  }, [formData.kode, formData.nama])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
     if (!validate()) return
 
@@ -120,12 +135,9 @@ const EkstrakurikulerForm = () => {
       status: formData.status,
     }
 
-    let result
-    if (isEditMode) {
-      result = await ekstrakurikulerService.update(id, submitData)
-    } else {
-      result = await ekstrakurikulerService.create(submitData)
-    }
+    const result = isEditMode
+      ? await ekstrakurikulerService.update(id, submitData)
+      : await ekstrakurikulerService.create(submitData)
 
     const { error } = result
 
@@ -141,7 +153,7 @@ const EkstrakurikulerForm = () => {
       }
     }
     setLoading(false)
-  }
+  }, [formData, id, isEditMode, navigate, validate])
 
   return (
     <div className="space-y-6">
@@ -199,8 +211,11 @@ const EkstrakurikulerForm = () => {
                   name="pembina_guru_id"
                   value={formData.pembina_guru_id}
                   onChange={handleChange}
-                  options={guruOptions}
+                  options={selectedGuruOption ? [selectedGuruOption] : []}
+                  loadOptions={searchGuruOptions}
                   placeholder="Pilih pembina/guru"
+                  searchPlaceholder="Cari guru berdasarkan nama..."
+                  noOptionsText="Tidak ada guru yang cocok"
                   error={errors.pembina_guru_id}
                 />
               </div>

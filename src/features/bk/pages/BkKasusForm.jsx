@@ -12,16 +12,16 @@ import { showSuccess, showError } from '../../../utils/sweetalert'
 const statusOptions = [
   { value: '', label: 'Pilih Status' },
   { value: 1, label: 'Dibuka' },
-  { value: 2, label: 'Dalam Proses' },
+  { value: 2, label: 'Proses' },
   { value: 3, label: 'Selesai' },
-  { value: 4, label: 'Ditutup' },
+  { value: 4, label: 'Dirujuk' },
 ]
 
 const statusStringToInt = {
   'dibuka': 1,
-  'dalam_proses': 2,
+  'proses': 2, // ✅ bukan 'dalam_proses'
   'selesai': 3,
-  'ditutup': 4,
+  'dirujuk': 4, // ✅ bukan 'ditutup'
 }
 
 const BkKasusForm = () => {

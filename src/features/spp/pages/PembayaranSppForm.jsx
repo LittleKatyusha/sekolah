@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { normalizeReferenceCode, safeParseFloat, safeParseInt } from '../../../utils/referenceUtils'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -24,18 +25,20 @@ const BULAN_OPTIONS = [
   { value: '12', label: 'Desember' },
 ]
 
+// Sesuaikan dengan sys_references (lihat FIELD_MISMATCH_REPORT.md)
 const STATUS_OPTIONS = [
-  { value: '1', label: 'Belum Bayar' },
-  { value: '2', label: 'Lunas' },
-  { value: '3', label: 'Cicilan' },
-  { value: '4', label: 'Dispensasi' },
+  { value: '1', label: 'Lunas' },
+  { value: '2', label: 'Belum Lunas' },
+  { value: '3', label: 'Pending' },
+  { value: '4', label: 'Batal' },
 ]
 
+// Sesuaikan dengan sys_references (lihat FIELD_MISMATCH_REPORT.md)
 const METODE_OPTIONS = [
   { value: '1', label: 'Tunai' },
-  { value: '2', label: 'Transfer Bank' },
-  { value: '3', label: 'E-Wallet' },
-  { value: '4', label: 'Lainnya' },
+  { value: '2', label: 'Transfer' },
+  { value: '3', label: 'Virtual Account' },
+  { value: '4', label: 'QRIS' },
 ]
 
 const PembayaranSppForm = () => {
@@ -108,8 +111,9 @@ const PembayaranSppForm = () => {
         tahun: p.tahun ? String(p.tahun) : '',
         tanggal_bayar: p.tanggal_bayar || '',
         jumlah_bayar: p.jumlah_bayar !== null && p.jumlah_bayar !== undefined ? String(p.jumlah_bayar) : '',
-        status: p.status !== null && p.status !== undefined ? String(p.status) : '2',
-        metode_pembayaran: p.metode_pembayaran !== null && p.metode_pembayaran !== undefined ? String(p.metode_pembayaran) : '1',
+        // API kadang mengembalikan label, select pakai kode
+        status: normalizeReferenceCode(p.status, STATUS_OPTIONS),
+        metode_pembayaran: normalizeReferenceCode(p.metode_pembayaran, METODE_OPTIONS),
         keterangan: p.keterangan || ''
       })
 
@@ -148,12 +152,19 @@ const PembayaranSppForm = () => {
   const validate = () => {
     const newErrors = {}
     if (!isEditMode) {
-      if (!formData.mst_siswa_id) newErrors.mst_siswa_id = 'Siswa wajib dipilih'
-      if (!formData.mst_tarif_spp_id) newErrors.mst_tarif_spp_id = 'Tarif SPP wajib dipilih'
-      if (!formData.bulan) newErrors.bulan = 'Bulan wajib dipilih'
-      if (!formData.tahun) newErrors.tahun = 'Tahun wajib diisi'
-      if (!formData.jumlah_bayar || parseFloat(formData.jumlah_bayar) < 0) newErrors.jumlah_bayar = 'Jumlah bayar wajib diisi'
+      if (!safeParseInt(formData.mst_siswa_id)) newErrors.mst_siswa_id = 'Siswa wajib dipilih'
+      if (!safeParseInt(formData.mst_tarif_spp_id)) newErrors.mst_tarif_spp_id = 'Tarif SPP wajib dipilih'
+      if (!safeParseInt(formData.bulan)) newErrors.bulan = 'Bulan wajib dipilih'
+      if (!safeParseInt(formData.tahun)) newErrors.tahun = 'Tahun wajib diisi'
+  
+      const jumlah = safeParseFloat(formData.jumlah_bayar)
+      if (jumlah === null || jumlah < 0) newErrors.jumlah_bayar = 'Jumlah bayar wajib diisi'
     }
+  
+    // Status/metode harus selalu valid kodenya jika diisi
+    if (formData.status && !safeParseInt(formData.status)) newErrors.status = 'Status tidak valid'
+    if (formData.metode_pembayaran && !safeParseInt(formData.metode_pembayaran)) newErrors.metode_pembayaran = 'Metode pembayaran tidak valid'
+  
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -170,22 +181,22 @@ const PembayaranSppForm = () => {
     if (isEditMode) {
       submitData = {
         tanggal_bayar: formData.tanggal_bayar || null,
-        jumlah_bayar: formData.jumlah_bayar ? parseFloat(formData.jumlah_bayar) : null,
-        status: formData.status ? parseInt(formData.status) : null,
-        metode_pembayaran: formData.metode_pembayaran ? parseInt(formData.metode_pembayaran) : null,
+        jumlah_bayar: formData.jumlah_bayar ? safeParseFloat(formData.jumlah_bayar) : null,
+        status: formData.status ? safeParseInt(formData.status) : null,
+        metode_pembayaran: formData.metode_pembayaran ? safeParseInt(formData.metode_pembayaran) : null,
         keterangan: formData.keterangan || null
       }
       result = await pembayaranSppService.update(id, submitData)
     } else {
       submitData = {
-        mst_siswa_id: parseInt(formData.mst_siswa_id),
-        mst_tarif_spp_id: parseInt(formData.mst_tarif_spp_id),
-        bulan: parseInt(formData.bulan),
-        tahun: parseInt(formData.tahun),
+        mst_siswa_id: safeParseInt(formData.mst_siswa_id),
+        mst_tarif_spp_id: safeParseInt(formData.mst_tarif_spp_id),
+        bulan: safeParseInt(formData.bulan),
+        tahun: safeParseInt(formData.tahun),
         tanggal_bayar: formData.tanggal_bayar || null,
-        jumlah_bayar: parseFloat(formData.jumlah_bayar),
-        status: formData.status ? parseInt(formData.status) : null,
-        metode_pembayaran: formData.metode_pembayaran ? parseInt(formData.metode_pembayaran) : null,
+        jumlah_bayar: safeParseFloat(formData.jumlah_bayar),
+        status: formData.status ? safeParseInt(formData.status) : null,
+        metode_pembayaran: formData.metode_pembayaran ? safeParseInt(formData.metode_pembayaran) : null,
         keterangan: formData.keterangan || null
       }
       result = await pembayaranSppService.create(submitData)

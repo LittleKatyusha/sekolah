@@ -247,22 +247,22 @@ const SoalDetail = () => {
                       <div 
                         key={opsi.id} 
                         className={`p-4 rounded-lg border ${
-                          opsi.is_correct 
+                          opsi.is_benar
                             ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
                             : 'border-gray-200 dark:border-gray-700'
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-                            opsi.is_correct 
+                            opsi.is_benar
                               ? 'bg-green-500 text-white' 
                               : 'bg-gray-200 dark:bg-gray-700'
                           }`}>
                             {String.fromCharCode(65 + index)}
                           </div>
                           <div className="flex-1">
-                            <p className="text-gray-900 dark:text-white">{opsi.opsi}</p>
-                            {opsi.is_correct && (
+                            <p className="text-gray-900 dark:text-white">{opsi.opsi_teks}</p>
+                            {opsi.is_benar && (
                               <div className="mt-2 flex items-center text-green-600 dark:text-green-400 text-sm">
                                 <CheckCircle size={16} className="mr-1" />
                                 Jawaban Benar

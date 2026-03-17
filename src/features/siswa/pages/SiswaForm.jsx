@@ -9,6 +9,7 @@ import { siswaService } from '../services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
 
 const GOLONGAN_DARAH_OPTIONS = [
   { value: 'A', label: 'A' },
@@ -52,7 +53,7 @@ const SiswaForm = () => {
     nisn: '',
     nik: '',
     nama: '',
-    jenis_kelamin: 'Laki-Laki',
+    jenis_kelamin: '1',
     tempat_lahir: '',
     tanggal_lahir: '',
     agama: '',
@@ -91,10 +92,11 @@ const SiswaForm = () => {
           nisn: siswa.nisn || '',
           nik: siswa.nik || '',
           nama: siswa.nama || '',
-          jenis_kelamin: siswa.jenis_kelamin || 'Laki-Laki',
+          // API kadang mengembalikan label; select memakai kode dari sys_references.
+          jenis_kelamin: normalizeReferenceCode(siswa.jenis_kelamin, jenisKelaminOptions),
           tempat_lahir: siswa.tempat_lahir || '',
           tanggal_lahir: siswa.tanggal_lahir || '',
-          agama: siswa.agama || '',
+          agama: normalizeReferenceCode(siswa.agama, agamaOptions),
           alamat: siswa.alamat || '',
           email: siswa.email || '',
           no_hp: siswa.no_hp || '',
@@ -161,10 +163,13 @@ const SiswaForm = () => {
     // Build submit data, converting empty strings to null for optional fields
     const submitData = {
       ...formData,
+      // kirim sebagai kode numerik agar konsisten dengan sys_references
+      jenis_kelamin: safeParseInt(formData.jenis_kelamin),
+      agama: formData.agama ? safeParseInt(formData.agama) : null,
+    
       nisn: formData.nisn || null,
       nik: formData.nik || null,
       tempat_lahir: formData.tempat_lahir || null,
-      agama: formData.agama || null,
       alamat: formData.alamat || null,
       email: formData.email || null,
       no_hp: formData.no_hp || null,

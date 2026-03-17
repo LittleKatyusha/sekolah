@@ -124,17 +124,11 @@ const BukuDetail = () => {
                     <span className="font-medium text-gray-900 dark:text-white">{buku.penerbit}</span>
                   </div>
                 )}
-                {buku.tahun_terbit && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Tahun Terbit</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{buku.tahun_terbit}</span>
-                  </div>
-                )}
-                {buku.jumlah_halaman && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Halaman</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{buku.jumlah_halaman}</span>
-                  </div>
+                {buku.tahun && (
+                <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Tahun</span>
+                <span className="font-medium text-gray-900 dark:text-white">{buku.tahun}</span>
+                </div>
                 )}
               </div>
             </div>
@@ -192,28 +186,16 @@ const BukuDetail = () => {
                   </div>
                 </div>
 
-                {/* Tahun Terbit */}
+                {/* Tahun */}
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar size={20} className="text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Tahun Terbit</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{buku.tahun_terbit || '-'}</p>
-                  </div>
+                <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Calendar size={20} className="text-yellow-600" />
                 </div>
-
-                {/* Jumlah Halaman */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText size={20} className="text-indigo-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Jumlah Halaman</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{buku.jumlah_halaman || '-'}</p>
-                  </div>
+                <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Tahun</p>
+                <p className="font-medium text-gray-900 dark:text-white">{buku.tahun || '-'}</p>
                 </div>
-
+                </div>
                 {/* Stok */}
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -225,16 +207,6 @@ const BukuDetail = () => {
                   </div>
                 </div>
 
-                {/* Deskripsi */}
-                <div className="flex items-start gap-3 md:col-span-2">
-                  <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Package size={20} className="text-cyan-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Deskripsi</p>
-                    <p className="font-medium text-gray-900 dark:text-white whitespace-pre-wrap">{buku.deskripsi || '-'}</p>
-                  </div>
-                </div>
               </div>
 
               {/* Timestamps */}

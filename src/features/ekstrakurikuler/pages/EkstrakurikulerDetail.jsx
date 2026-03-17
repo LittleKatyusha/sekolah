@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Award, User, MapPin, Clock, Calendar, Hash, Users } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -22,28 +22,25 @@ const EkstrakurikulerDetail = () => {
   const [enrolledStudents, setEnrolledStudents] = useState([])
 
   useEffect(() => {
-    fetchEkstrakurikuler()
-    fetchEnrolledStudents()
-  }, [id])
-
-  const fetchEkstrakurikuler = async () => {
-    setLoading(true)
-    const { data, error } = await ekstrakurikulerService.getById(id)
-    if (data) {
-      setEkskul(data.data)
-    } else {
-      showError('Gagal mengambil data ekstrakurikuler')
-      navigate('/ekstrakurikuler')
-    }
-    setLoading(false)
+  const fetchData = async () => {
+  setLoading(true)
+  const [ekskulResult, studentsResult] = await Promise.all([
+  ekstrakurikulerService.getById(id),
+  eksSiswaService.getByEkstrakurikuler(id)
+  ])
+  if (ekskulResult.data) {
+  setEkskul(ekskulResult.data.data)
+  } else {
+  showError('Gagal mengambil data ekstrakurikuler')
+  navigate('/ekstrakurikuler')
   }
-
-  const fetchEnrolledStudents = async () => {
-    const { data } = await eksSiswaService.getByEkstrakurikuler(id)
-    if (data?.data) {
-      setEnrolledStudents(data.data)
-    }
+  if (studentsResult.data?.data) {
+  setEnrolledStudents(studentsResult.data.data)
   }
+  setLoading(false)
+  }
+  fetchData()
+  }, [id, navigate])
 
   const handleDelete = async () => {
     const label = `Ekstrakurikuler "${ekskul.nama || ''}"`
@@ -59,25 +56,25 @@ const EkstrakurikulerDetail = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
-  const getStatusBadge = (status) => {
-    if (!status) return '-'
-    const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-        {statusInfo.label}
-      </span>
-    )
-  }
+  const formatDate = useCallback((dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('id-ID', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+  })
+  }, [])
+  
+  const getStatusBadge = useCallback((status) => {
+  if (!status) return '-'
+  const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+  return (
+  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
+  {statusInfo.label}
+  </span>
+  )
+  }, [])
 
   if (loading || !ekskul) {
     return (

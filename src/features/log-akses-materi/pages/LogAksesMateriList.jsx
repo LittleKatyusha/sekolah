@@ -75,7 +75,7 @@ const LogAksesMateriList = () => {
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', width: 80, sortable: true },
     { field: 'materi.judul', headerName: 'Materi', flex: 1, minWidth: 200, valueGetter: (p) => p.data?.materi?.judul || p.data?.mst_materi_id || '-' },
-    { field: 'siswa.nama_lengkap', headerName: 'Siswa', width: 180, valueGetter: (p) => p.data?.siswa?.nama_lengkap || p.data?.mst_siswa_id || '-' },
+    { field: 'siswa.nama', headerName: 'Siswa', width: 180, valueGetter: (p) => p.data?.siswa?.nama || p.data?.mst_siswa_id || '-' },
     {
       field: 'waktu_akses', headerName: 'Waktu Akses', width: 170, sortable: true,
       cellRenderer: (p) => p.value ? new Date(p.value).toLocaleString('id-ID') : '-'

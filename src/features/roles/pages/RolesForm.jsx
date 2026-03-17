@@ -16,8 +16,7 @@ const RolesForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
 
   const [formData, setFormData] = useState({
-    name: '',
-    guard_name: 'web',
+  name: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -44,8 +43,7 @@ const RolesForm = () => {
     if (data) {
       const role = data.data
       setFormData({
-        name: role.name || '',
-        guard_name: role.guard_name || 'web',
+      name: role.name || '',
       })
       if (role.permissions && Array.isArray(role.permissions)) {
         setSelectedPermissions(role.permissions.map(p => p.id || p))
@@ -95,8 +93,7 @@ const RolesForm = () => {
     setLoading(true)
 
     const submitData = {
-      name: formData.name,
-      guard_name: formData.guard_name || 'web',
+    name: formData.name,
     }
 
     let result
@@ -170,19 +167,6 @@ const RolesForm = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Guard Name
-                </label>
-                <Input
-                  type="text"
-                  name="guard_name"
-                  value={formData.guard_name}
-                  onChange={handleChange}
-                  placeholder="web"
-                  error={errors.guard_name}
-                />
-              </div>
             </div>
 
             {/* Permissions Section */}

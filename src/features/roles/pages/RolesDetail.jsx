@@ -100,9 +100,6 @@ const RolesDetail = () => {
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                 {role.name || '-'}
               </h2>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                {role.guard_name || 'web'}
-              </span>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
                 <div className="flex justify-between">
@@ -137,15 +134,6 @@ const RolesDetail = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Key size={20} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Guard Name</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{role.guard_name || '-'}</p>
-                  </div>
-                </div>
               </div>
 
               {/* Permissions Section */}

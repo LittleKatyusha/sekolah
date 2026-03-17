@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Users, Award, Calendar, Hash } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -11,6 +11,26 @@ const STATUS_MAP = {
   keluar: { label: 'Keluar', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
 }
 
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+const getStatusBadge = (status) => {
+  if (!status) return '-'
+  const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
+      {statusInfo.label}
+    </span>
+  )
+}
+
 const EksSiswaDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -19,22 +39,23 @@ const EksSiswaDetail = () => {
   const [pendaftaran, setPendaftaran] = useState(null)
 
   useEffect(() => {
-    fetchPendaftaran()
-  }, [id])
-
-  const fetchPendaftaran = async () => {
-    setLoading(true)
-    const { data, error } = await eksSiswaService.getById(id)
-    if (data) {
-      setPendaftaran(data.data)
-    } else {
-      showError('Gagal mengambil data pendaftaran')
-      navigate('/ekstrakurikuler/siswa')
+    const fetchPendaftaran = async () => {
+      setLoading(true)
+      const { data, error } = await eksSiswaService.getById(id)
+      if (data) {
+        setPendaftaran(data.data)
+      } else {
+        showError('Gagal mengambil data pendaftaran')
+        navigate('/ekstrakurikuler/siswa')
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }
 
-  const handleDelete = async () => {
+    fetchPendaftaran()
+  }, [id, navigate])
+
+  const handleDelete = useCallback(async () => {
+    if (!pendaftaran) return
     const label = `Pendaftaran #${pendaftaran.id}`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
@@ -46,27 +67,7 @@ const EksSiswaDetail = () => {
         showError('Gagal menghapus pendaftaran')
       }
     }
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
-  const getStatusBadge = (status) => {
-    if (!status) return '-'
-    const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-        {statusInfo.label}
-      </span>
-    )
-  }
+  }, [pendaftaran, navigate])
 
   if (loading || !pendaftaran) {
     return (

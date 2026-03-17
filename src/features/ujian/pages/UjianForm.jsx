@@ -10,6 +10,7 @@ import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
 
 const UjianForm = () => {
   const { id } = useParams()
@@ -92,10 +93,11 @@ const UjianForm = () => {
       setFormData({
         mst_mapel_id: mapelId,
         mst_kelas_id: kelasId,
-        jenis: String(ujian.jenis) || '',
+        // API kadang mengembalikan label ("Harian") bukan kode ("1").
+        jenis: normalizeReferenceCode(ujian.jenis, jenisUjianOptions),
         nama: ujian.nama || '',
         tanggal: ujian.tanggal || '',
-        semester: String(ujian.semester) || '',
+        semester: normalizeReferenceCode(ujian.semester, semesterOptions),
         tahun_ajaran: ujian.tahun_ajaran || '',
         keterangan: ujian.keterangan || ''
       })
@@ -144,14 +146,15 @@ const UjianForm = () => {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.mst_mapel_id) newErrors.mst_mapel_id = 'Mata pelajaran wajib dipilih'
-    if (!formData.mst_kelas_id) newErrors.mst_kelas_id = 'Kelas wajib dipilih'
-    if (!formData.jenis) newErrors.jenis = 'Jenis ujian wajib dipilih'
+  
+    if (!safeParseInt(formData.mst_mapel_id)) newErrors.mst_mapel_id = 'Mata pelajaran wajib dipilih'
+    if (!safeParseInt(formData.mst_kelas_id)) newErrors.mst_kelas_id = 'Kelas wajib dipilih'
+    if (!safeParseInt(formData.jenis)) newErrors.jenis = 'Jenis ujian wajib dipilih'
     if (!formData.nama) newErrors.nama = 'Nama ujian wajib diisi'
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal ujian wajib diisi'
-    if (!formData.semester) newErrors.semester = 'Semester wajib dipilih'
+    if (!safeParseInt(formData.semester)) newErrors.semester = 'Semester wajib dipilih'
     if (!formData.tahun_ajaran) newErrors.tahun_ajaran = 'Tahun ajaran wajib diisi'
-
+  
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -165,10 +168,10 @@ const UjianForm = () => {
     
     const submitData = {
       ...formData,
-      mst_mapel_id: parseInt(formData.mst_mapel_id),
-      mst_kelas_id: parseInt(formData.mst_kelas_id),
-      jenis: parseInt(formData.jenis),
-      semester: parseInt(formData.semester),
+      mst_mapel_id: safeParseInt(formData.mst_mapel_id),
+      mst_kelas_id: safeParseInt(formData.mst_kelas_id),
+      jenis: safeParseInt(formData.jenis),
+      semester: safeParseInt(formData.semester),
       keterangan: formData.keterangan || null
     }
 

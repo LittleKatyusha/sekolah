@@ -198,8 +198,8 @@ const TugasSiswaList = () => {
       }
     },
     {
-      field: 'tanggal_kumpul',
-      headerName: 'Tanggal Kumpul',
+    field: 'waktu_kumpl',
+    headerName: 'Tanggal Kumpul',
       sortable: true,
       filter: true,
       width: 180,
