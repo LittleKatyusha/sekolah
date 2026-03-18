@@ -4,17 +4,24 @@ const BASE_URL = '/admin/kalender-harian'
 const LIST_URL = '/admin/kalender-harian/'
 
 export const kalenderHarianService = {
-  getAll: async (params = {}) => {
-    return await apiService.get(LIST_URL, { params })
-  },
+ getAll: async (params = {}) => {
+ return await apiService.get(LIST_URL, { params })
+ },
 
-  generate: async (data) => {
-    return await apiService.post(`${BASE_URL}/generate`, data)
-  },
+ getByMonth: async (year, month) => {
+  // month is 1-12, fetch with enough rows and sort by date ascending
+  return await apiService.get(LIST_URL, {
+   params: { per_page: 100, sort_by: 'tanggal', sort_dir: 'asc', search: '' }
+  })
+ },
 
-  update: async (id, data) => {
-    return await apiService.put(`${BASE_URL}/${id}`, data)
-  },
+ generate: async (data) => {
+ return await apiService.post(`${BASE_URL}/generate`, data)
+ },
+
+ update: async (id, data) => {
+ return await apiService.put(`${BASE_URL}/${id}`, data)
+ },
 }
 
 export default kalenderHarianService

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Search, Plus, RefreshCw, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -26,7 +26,7 @@ const VISIBILITY_MAP = {
 }
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -89,13 +89,6 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
         >
           <div className="py-1">
             <button
-              onClick={() => handleAction(onDetail)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
-            <button
               onClick={() => handleAction(onEdit)}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
@@ -132,10 +125,6 @@ const KalenderAkademikList = () => {
 
   const handleEdit = useCallback((data) => {
     navigate(`/admin/kalender-akademik/${data.id}/edit`)
-  }, [navigate])
-
-  const handleDetail = useCallback((data) => {
-    navigate(`/admin/kalender-akademik/${data.id}`)
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
@@ -284,19 +273,18 @@ const KalenderAkademikList = () => {
       sortable: false,
       filter: false,
       cellRenderer: (params) => {
-        return (
-          <div className="h-full flex items-center justify-center">
-            <ActionsMenu
-              data={params.data}
-              onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
-              onDelete={() => handleDelete(params.data)}
-            />
-          </div>
-        )
-      }
+          return (
+            <div className="h-full flex items-center justify-center">
+              <ActionsMenu
+                data={params.data}
+                onEdit={() => handleEdit(params.data)}
+                onDelete={() => handleDelete(params.data)}
+              />
+            </div>
+          )
+        }
     }
-  ], [handleDetail, handleEdit, handleDelete])
+  ], [handleEdit, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
