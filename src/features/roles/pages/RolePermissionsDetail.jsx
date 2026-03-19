@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import Button from '../../../components/ui/Button'
@@ -22,13 +22,9 @@ const RolePermissionsDetail = () => {
   const [loading, setLoading] = useState(false)
   const [rolePermission, setRolePermission] = useState(null)
 
-  useEffect(() => {
-    fetchRolePermission()
-  }, [id])
-
-  const fetchRolePermission = async () => {
+  const fetchRolePermission = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await rolePermissionService.getById(id)
+    const { data } = await rolePermissionService.getById(id)
     if (data) {
       setRolePermission(data.data)
     } else {
@@ -36,10 +32,14 @@ const RolePermissionsDetail = () => {
       navigate('/admin/role-permissions')
     }
     setLoading(false)
-  }
+  }, [id, navigate])
 
-  const handleDelete = async () => {
-    const label = `Role Permission ID "${rolePermission.id || ''}"`
+  useEffect(() => {
+    fetchRolePermission()
+  }, [fetchRolePermission])
+
+  const handleDelete = useCallback(async () => {
+    const label = `Role Permission ID "${rolePermission?.id || ''}"`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await rolePermissionService.delete(rolePermission.id)
@@ -50,7 +50,7 @@ const RolePermissionsDetail = () => {
         showError('Gagal menghapus role permission')
       }
     }
-  }
+  }, [rolePermission, navigate])
 
   if (loading || !rolePermission) {
     return (

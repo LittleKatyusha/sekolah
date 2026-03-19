@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -23,8 +23,8 @@ const getSavedCredentials = () => {
 }
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Format email tidak valid'),
+  password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
 })
 
 const Login = () => {
@@ -68,7 +68,7 @@ const Login = () => {
 
       if (apiError) {
         // Handle API errors - stay on page, show error
-        const errorMessage = apiError.message || apiError.error || 'Login failed. Please check your credentials.'
+        const errorMessage = apiError.message || apiError.error || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.'
         setError(errorMessage)
         setLoading(false)
         return
@@ -77,7 +77,7 @@ const Login = () => {
       // Response format: { success, message, data: { access_token, refresh_token, token_type, expires_in, user } }
       if (!response?.success) {
         // Handle unsuccessful response - stay on page, show error
-        const errorMessage = response?.message || 'Login failed. Please check your credentials.'
+        const errorMessage = response?.message || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.'
         setError(errorMessage)
         setLoading(false)
         return
@@ -89,7 +89,7 @@ const Login = () => {
       navigate('/dashboard')
     } catch (err) {
       // Handle unexpected errors - stay on page, show error
-      setError('An unexpected error occurred. Please try again.')
+      setError('Terjadi kesalahan. Silakan coba lagi beberapa saat.')
       setLoading(false)
     }
   }
@@ -112,10 +112,10 @@ const Login = () => {
               <Shield className="text-white" size={32} />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Welcome Back
+              Selamat Datang
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Sign in to access your dashboard
+              Masuk ke akun Anda
             </p>
           </div>
 
@@ -131,7 +131,7 @@ const Login = () => {
             {/* Email Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -139,7 +139,7 @@ const Login = () => {
                 </div>
                 <input
                   type="email"
-                  placeholder="admin@example.com"
+                  placeholder="nama@sekolah.id"
                   {...register('email')}
                   className={`w-full pl-10 pr-4 py-3 border ${
                     errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
@@ -154,7 +154,7 @@ const Login = () => {
             {/* Password Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
+                Kata Sandi
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -162,7 +162,7 @@ const Login = () => {
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="Masukkan kata sandi"
                   {...register('password')}
                   className={`w-full pl-10 pr-12 py-3 border ${
                     errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
@@ -191,7 +191,7 @@ const Login = () => {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
-                  Remember me
+                  Ingat saya
                 </span>
               </label>
             </div>
@@ -203,34 +203,22 @@ const Login = () => {
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
             >
               {loading ? (
-                <span>Signing in...</span>
+                <span>Memproses...</span>
               ) : (
                 <>
                   <LogIn size={20} className="mr-2" />
-                  Sign In
+                  Masuk
                 </>
               )}
             </Button>
           </form>
 
-          {/* Register Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold transition-colors"
-              >
-                Register
-              </Link>
-            </p>
-          </div>
         </div>
 
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-white/90 text-sm backdrop-blur-sm bg-white/10 rounded-full px-4 py-2 inline-block">
-            &copy; 2024 Admin Dashboard. All rights reserved.
+            &copy; 2026 Sekolah Pintar. Hak cipta dilindungi.
           </p>
         </div>
       </div>

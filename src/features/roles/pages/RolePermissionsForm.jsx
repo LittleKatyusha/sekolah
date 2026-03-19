@@ -207,7 +207,7 @@ const RolePermissionsForm = () => {
 
     // Bulk fetch: load all permissions in one request, then filter by IDs needed.
     // This replaces the previous N individual getById() calls.
-    const { data } = await permissionService.getAll({ per_page: 500 })
+    const { data } = await permissionService.getAll({ per_page: 9999 })
     const allPermissions = data?.data || []
     const bulkMap = new Map(allPermissions.map((p) => [Number(p.id), p]))
 
@@ -300,22 +300,16 @@ const RolePermissionsForm = () => {
     hydrateSelectedRoleOption(formData.role_id)
   }, [formData.role_id, hydrateSelectedRoleOption])
 
+  // Fetch ALL permissions once on mount — client-side search handles filtering
+  // so we avoid re-fetching 9999 records on every keystroke.
   useEffect(() => {
     let mounted = true
-    const timeoutId = window.setTimeout(async () => {
-      const { data } = await permissionService.getAll({
-        search: permissionSearch.trim() || undefined,
-        per_page: 20,
-      })
-
+    ;(async () => {
+      const { data } = await permissionService.getAll({ per_page: 9999 })
       if (mounted) setPermissions(dedupePermissionsById(data?.data || []))
-    }, 300)
-
-    return () => {
-      mounted = false
-      window.clearTimeout(timeoutId)
-    }
-  }, [permissionSearch])
+    })()
+    return () => { mounted = false }
+  }, [])
 
   useEffect(() => {
     if (sortedModules.length === 0) return

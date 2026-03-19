@@ -6,7 +6,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import RoleGuard from './components/guards/RoleGuard'
 import MainLayout from './components/layout/MainLayout'
 import Login from './pages/Login'
-import Register from './pages/Register'
 import Unauthorized from './pages/Unauthorized'
 import useAuthStore from './store/useAuthStore'
 import echoService from './services/echoService'
@@ -128,7 +127,6 @@ const PAGE_TITLES = {
   '/data-grid': 'Data Grid',
   '/settings': 'Settings',
   '/login': 'Login',
-  '/register': 'Register',
   '/siswa': 'Data Siswa',
   '/kelas': 'Data Kelas',
   '/guru': 'Data Guru',
@@ -268,7 +266,6 @@ function App() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
-            <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
