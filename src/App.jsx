@@ -101,6 +101,7 @@ const Ppdb = lazy(() => import('./pages/Ppdb'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
+const EWS = lazy(() => import('./pages/EWS'))
 const JadwalPelajaran = lazy(() => import('./pages/JadwalPelajaran'))
 const HariOperasional = lazy(() => import('./features/hari-operasional/pages/HariOperasionalList'))
 const KalenderHarian = lazy(() => import('./features/kalender-harian/pages/KalenderHarianList'))
@@ -156,6 +157,7 @@ const PAGE_TITLES = {
   '/keuangan/tarif-spp': 'Tarif SPP',
   '/keuangan/pembayaran-spp': 'Pembayaran SPP',
   '/statistik': 'Statistik',
+  '/ews': 'Early Warning System',
   '/jadwal-pelajaran': 'Jadwal Pelajaran',
   '/files': 'Files Management',
   '/bk': 'Bimbingan Konseling',
@@ -181,6 +183,7 @@ const TitleUpdater = () => {
       else if (path.startsWith('/akademik/ujian')) title = 'Ujian'
       else if (path.startsWith('/akademik/soals')) title = 'Bank Soal'
       else if (path.startsWith('/statistik/')) title = 'Statistik'
+      else if (path.startsWith('/ews')) title = 'Early Warning System'
       else if (path.startsWith('/bk/')) title = 'Bimbingan Konseling'
       else title = 'Admin Dashboard'
     }
@@ -377,6 +380,9 @@ function App() {
 
               {/* SPK */}
               <Route path="/spk/*" element={<Spk />} />
+
+              {/* EWS */}
+              <Route path="/ews/*" element={<EWS />} />
 
               {/* Jadwal Pelajaran */}
               <Route path="/jadwal-pelajaran/*" element={<JadwalPelajaran />} />
