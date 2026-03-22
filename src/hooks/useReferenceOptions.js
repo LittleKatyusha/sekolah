@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { referenceService } from '../services/referenceService'
 
 const REFERENCE_OPTIONS_CACHE_PREFIX = 'reference-options-cache:'
@@ -47,6 +47,23 @@ const mapReferenceOptions = (responseData) =>
     label: item?.nama ?? '',
   }))
 
+const serializeFallbackOptions = (fallbackOptions) => {
+  try {
+    return JSON.stringify(Array.isArray(fallbackOptions) ? fallbackOptions : [])
+  } catch {
+    return '[]'
+  }
+}
+
+const deserializeFallbackOptions = (serializedFallbackOptions) => {
+  try {
+    const parsed = JSON.parse(serializedFallbackOptions)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 const getReferenceOptionsByCategory = async (category) => {
   const cachedOptions = readReferenceOptionsCache(category)
   if (cachedOptions) {
@@ -74,16 +91,29 @@ export function useReferenceOptions(category, fallbackOptions = []) {
   const isArray = Array.isArray(category)
   const categoryKey = isArray ? category.join(',') : category
   const hasCategory = Boolean(category) && (!isArray || category.length > 0)
-  const [options, setOptions] = useState(isArray ? {} : fallbackOptions)
+  const fallbackOptionsKey = useMemo(() => serializeFallbackOptions(fallbackOptions), [fallbackOptions])
+  const stableFallbackOptions = useMemo(
+    () => deserializeFallbackOptions(fallbackOptionsKey),
+    [fallbackOptionsKey]
+  )
+  const [options, setOptions] = useState(() => (isArray ? {} : stableFallbackOptions))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!hasCategory) return
+    if (!hasCategory) {
+      setOptions(isArray ? {} : stableFallbackOptions)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
+    let cancelled = false
 
     const fetchOptions = async () => {
       setLoading(true)
       setError(null)
+
       try {
         if (isArray) {
           const results = {}
@@ -92,25 +122,37 @@ export function useReferenceOptions(category, fallbackOptions = []) {
               results[cat] = await getReferenceOptionsByCategory(cat)
             })
           )
-          setOptions(results)
+          if (!cancelled) {
+            setOptions(results)
+          }
         } else {
           const result = await getReferenceOptionsByCategory(category)
-          setOptions(result)
+          if (!cancelled) {
+            setOptions(result)
+          }
         }
       } catch (err) {
-        setError(err)
-        if (isArray) {
-          setOptions({})
-        } else if (fallbackOptions.length > 0) {
-          setOptions(fallbackOptions)
+        if (!cancelled) {
+          setError(err)
+          if (isArray) {
+            setOptions({})
+          } else if (stableFallbackOptions.length > 0) {
+            setOptions(stableFallbackOptions)
+          }
         }
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
 
     fetchOptions()
-  }, [category, categoryKey, fallbackOptions, hasCategory, isArray])
+
+    return () => {
+      cancelled = true
+    }
+  }, [category, categoryKey, hasCategory, isArray, stableFallbackOptions])
 
   return { options, loading, error }
 }

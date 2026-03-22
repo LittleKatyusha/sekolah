@@ -103,19 +103,25 @@ const NilaiForm = () => {
 
   useEffect(() => {
     if (formData.mst_siswa_id) {
+      if (String(selectedSiswaOption?.value) === String(formData.mst_siswa_id)) {
+        return
+      }
       hydrateSelectedSiswaOption(formData.mst_siswa_id)
     } else {
       setSelectedSiswaOption(null)
     }
-  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption, selectedSiswaOption?.value])
 
   useEffect(() => {
     if (formData.trx_ujian_id) {
+      if (String(selectedUjianOption?.value) === String(formData.trx_ujian_id)) {
+        return
+      }
       hydrateSelectedUjianOption(formData.trx_ujian_id)
     } else {
       setSelectedUjianOption(null)
     }
-  }, [formData.trx_ujian_id, hydrateSelectedUjianOption])
+  }, [formData.trx_ujian_id, hydrateSelectedUjianOption, selectedUjianOption?.value])
 
   const fetchNilai = async () => {
     setFetchingData(true)
@@ -128,6 +134,14 @@ const NilaiForm = () => {
         nilai: nilai.nilai !== null && nilai.nilai !== undefined ? String(nilai.nilai) : '',
         keterangan: nilai.keterangan || ''
       })
+
+      if (nilai.siswa?.id) {
+        setSelectedSiswaOption(buildSiswaOption(nilai.siswa))
+      }
+
+      if (nilai.ujian?.id) {
+        setSelectedUjianOption(buildUjianOption(nilai.ujian))
+      }
     } else {
       showError('Gagal mengambil data nilai')
       navigate('/akademik/nilai')

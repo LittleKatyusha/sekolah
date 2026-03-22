@@ -201,11 +201,14 @@ const RaporForm = () => {
 
   useEffect(() => {
     if (formData.mst_siswa_id) {
+      if (String(selectedSiswaOption?.value) === String(formData.mst_siswa_id)) {
+        return
+      }
       hydrateSelectedSiswaOption(formData.mst_siswa_id)
     } else {
       setSelectedSiswaOption(null)
     }
-  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption])
+  }, [formData.mst_siswa_id, hydrateSelectedSiswaOption, selectedSiswaOption?.value])
 
   const validate = () => {
     const newErrors = {}
@@ -446,6 +449,14 @@ const RaporForm = () => {
 
                                 if (selectedOption) {
                                   setSelectedMapelOptions(prev => {
+                                    const currentOption = prev[index]
+                                    if (
+                                      String(currentOption?.value) === String(selectedOption.value) &&
+                                      currentOption?.label === selectedOption.label
+                                    ) {
+                                      return prev
+                                    }
+
                                     const updated = [...prev]
                                     updated[index] = selectedOption
                                     return updated

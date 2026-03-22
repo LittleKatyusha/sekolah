@@ -35,6 +35,7 @@ const SearchableSelect = ({
   const [loadingOptions, setLoadingOptions] = useState(false)
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+  const loadOptionsRef = useRef(loadOptions)
   const requestIdRef = useRef(0)
 
   const mergedOptions = useMemo(() => {
@@ -67,13 +68,18 @@ const SearchableSelect = ({
   }, [])
 
   useEffect(() => {
+    loadOptionsRef.current = loadOptions
+  }, [loadOptions])
+
+  useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus()
     }
   }, [isOpen])
 
   useEffect(() => {
-    if (!isOpen || !loadOptions) return
+    const activeLoadOptions = loadOptionsRef.current
+    if (!isOpen || !activeLoadOptions) return
 
     const keyword = searchQuery.trim()
     if (keyword.length < minSearchLength) {
@@ -87,7 +93,7 @@ const SearchableSelect = ({
       setLoadingOptions(true)
 
       try {
-        const result = await loadOptions(keyword)
+        const result = await activeLoadOptions(keyword)
 
         if (requestIdRef.current === currentRequestId) {
           setAsyncOptions(Array.isArray(result) ? result : [])
@@ -107,7 +113,7 @@ const SearchableSelect = ({
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [debounceMs, isOpen, loadOptions, minSearchLength, searchQuery])
+  }, [debounceMs, isOpen, minSearchLength, searchQuery])
 
   const handleSelect = (optionValue) => {
     onChange({ target: { name, value: optionValue } })
