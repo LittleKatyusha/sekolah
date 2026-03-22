@@ -149,6 +149,7 @@ const MapelList = () => {
   const columnDefs = useMemo(() => [
     {
       field: 'kode',
+      backendField: 'kode_mapel',
       headerName: 'Kode',
       sortable: true,
       filter: true,
@@ -157,6 +158,7 @@ const MapelList = () => {
     },
     {
       field: 'nama',
+      backendField: 'nama_mapel',
       headerName: 'Nama Mata Pelajaran',
       sortable: true,
       filter: true,
@@ -222,6 +224,7 @@ const MapelList = () => {
           key={`mapel-grid-${searchText}`}
           ref={gridRef}
           endpoint="/mapel/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

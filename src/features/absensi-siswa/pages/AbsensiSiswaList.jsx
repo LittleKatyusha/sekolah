@@ -286,8 +286,9 @@ const AbsensiSiswaList = () => {
   const columnDefs = useMemo(() => [
     {
       field: 'siswa.nama',
+      backendField: 'siswa.nama',
       headerName: 'Nama Siswa',
-      sortable: true,
+      sortable: false,
       filter: true,
       flex: 1,
       minWidth: 180,
@@ -296,8 +297,9 @@ const AbsensiSiswaList = () => {
     },
     {
       field: 'siswa.nis',
+      backendField: 'siswa.nis',
       headerName: 'NIS',
-      sortable: true,
+      sortable: false,
       filter: true,
       width: 160,
       minWidth: 130,
@@ -306,6 +308,7 @@ const AbsensiSiswaList = () => {
     },
     {
       field: 'tanggal',
+      backendField: 'tanggal',
       headerName: 'Tanggal',
       sortable: true,
       filter: true,
@@ -323,6 +326,7 @@ const AbsensiSiswaList = () => {
     },
     {
       field: 'status_absensi',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
       filter: true,
@@ -332,6 +336,7 @@ const AbsensiSiswaList = () => {
     },
     {
       field: 'keterangan',
+      backendField: 'keterangan',
       headerName: 'Keterangan',
       sortable: true,
       filter: true,
@@ -491,6 +496,7 @@ const AbsensiSiswaList = () => {
           key={`absensi-siswa-grid-${endpoint}`}
           ref={gridRef}
           endpoint={endpoint}
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

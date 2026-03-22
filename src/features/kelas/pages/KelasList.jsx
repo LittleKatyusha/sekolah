@@ -160,6 +160,7 @@ const KelasList = () => {
   const columnDefs = useMemo(() => [
     {
       field: 'id',
+      backendField: 'id',
       headerName: 'ID',
       sortable: true,
       filter: true,
@@ -169,6 +170,7 @@ const KelasList = () => {
     },
     {
       field: 'nama_kelas',
+      backendField: 'nama_kelas',
       headerName: 'Nama Kelas',
       sortable: true,
       filter: true,
@@ -177,6 +179,7 @@ const KelasList = () => {
     },
     {
       field: 'tingkat',
+      backendField: 'tingkat',
       headerName: 'Tingkat',
       sortable: true,
       filter: true,
@@ -199,14 +202,16 @@ const KelasList = () => {
     },
     {
       field: 'tahun_ajaran',
+      backendField: 'tahunAjaran.nama',
       headerName: 'Tahun Ajaran',
-      sortable: true,
+      sortable: false,
       filter: true,
       width: 130,
       minWidth: 110
     },
     {
       field: 'kapasitas',
+      backendField: 'kapasitas',
       headerName: 'Kapasitas',
       sortable: true,
       filter: true,
@@ -219,8 +224,8 @@ const KelasList = () => {
     {
       field: 'jumlah_siswa',
       headerName: 'Jumlah Siswa',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       width: 130,
       minWidth: 110,
       cellRenderer: (params) => {
@@ -240,8 +245,9 @@ const KelasList = () => {
     },
     {
       field: 'wali_guru',
+      backendField: 'waliGuru.nama',
       headerName: 'Wali Kelas',
-      sortable: true,
+      sortable: false,
       filter: true,
       flex: 1,
       minWidth: 150,
@@ -309,6 +315,7 @@ const KelasList = () => {
           key={`kelas-grid-${searchText}`}
           ref={gridRef}
           endpoint="/kelas/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

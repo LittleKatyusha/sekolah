@@ -1,6 +1,14 @@
 import { useMemo, useCallback, useRef, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { apiService } from '../../utils/api'
+import {
+  buildAgGridRequestParams,
+  buildLegacyRequestParams,
+  extractGridRows,
+  handleGridFailure,
+  handleGridSuccess,
+  normalizeColumnDefsForQuery,
+} from './agGridQuery'
 
 const EMPTY_STATIC_PARAMS = Object.freeze({})
 
@@ -65,6 +73,7 @@ const InfiniteGrid = ({
   onRowClicked,
   onSelectionChanged,
   rowSelection = false,
+  requestMode = 'ag-grid',
   ...restProps
 }) => {
   const gridRef = useRef(null)
@@ -79,96 +88,48 @@ const InfiniteGrid = ({
     [staticParamsKey]
   )
 
+  const normalizedColumnDefs = useMemo(
+    () => normalizeColumnDefsForQuery(columnDefs),
+    [columnDefs]
+  )
+
   // Create the infinite row model datasource
   const dataSource = useMemo(() => ({
     getRows: async (params) => {
       const { startRow, endRow, sortModel, filterModel } = params
-      
-      // Build query parameters
-      const queryParams = {
-        ...stabilizedStaticParams,
-        per_page: endRow - startRow,
-        page: Math.floor(startRow / (endRow - startRow)) + 1,
-      }
-
-      // Add sorting
-      if (sortModel && sortModel.length > 0) {
-        const sort = sortModel[0]
-        // Map field names to API sort parameters
-        queryParams.sort_by = sort.colId
-        queryParams.sort_dir = sort.sort === 'asc' ? 'asc' : 'desc'
-      }
-
-      // Add filtering - convert AG Grid filter model to API params
-      if (filterModel && Object.keys(filterModel).length > 0) {
-        Object.entries(filterModel).forEach(([key, filter]) => {
-          if (filter.filter !== undefined && filter.filter !== '') {
-            switch (filter.type) {
-              case 'contains':
-                queryParams[key] = filter.filter
-                break
-              case 'equals':
-                queryParams[`${key}_eq`] = filter.filter
-                break
-              case 'notEqual':
-                queryParams[`${key}_ne`] = filter.filter
-                break
-              case 'startsWith':
-                queryParams[`${key}_starts_with`] = filter.filter
-                break
-              case 'endsWith':
-                queryParams[`${key}_ends_with`] = filter.filter
-                break
-              case 'greaterThan':
-                queryParams[`${key}_gt`] = filter.filter
-                break
-              case 'greaterThanOrEqual':
-                queryParams[`${key}_gte`] = filter.filter
-                break
-              case 'lessThan':
-                queryParams[`${key}_lt`] = filter.filter
-                break
-              case 'lessThanOrEqual':
-                queryParams[`${key}_lte`] = filter.filter
-                break
-              case 'inRange':
-                queryParams[`${key}_min`] = filter.filter
-                queryParams[`${key}_max`] = filter.filterTo
-                break
-              default:
-                queryParams[key] = filter.filter
-            }
-          }
-        })
-      }
+      const queryParams = requestMode === 'ag-grid'
+        ? buildAgGridRequestParams({
+            startRow,
+            endRow,
+            sortModel,
+            filterModel,
+            staticParams: stabilizedStaticParams,
+          })
+        : buildLegacyRequestParams({
+            startRow,
+            endRow,
+            sortModel,
+            filterModel,
+            staticParams: stabilizedStaticParams,
+          })
 
       try {
         const { data, error } = await apiService.get(endpoint, { params: queryParams })
         
         if (error) {
           console.error('Error fetching data:', error)
-          params.failCallback()
+          handleGridFailure(params)
           return
         }
 
-        // Transform data if transformer is provided
-        let rows = data.data || []
-        if (transformData) {
-          rows = transformData(rows)
-        }
-
-        // Get total count from meta
-        const totalCount = data.meta?.total || data.total || -1
-
-        // AG Grid Infinite Row Model expects: successCallback(rows, lastRow)
-        // lastRow is the total row count if known, otherwise -1
-        params.successCallback(rows, totalCount)
+        const { rows, totalCount } = extractGridRows(data, transformData)
+        handleGridSuccess(params, rows, totalCount)
       } catch (error) {
         console.error('Exception fetching data:', error)
-        params.failCallback()
+        handleGridFailure(params)
       }
     }
-  }), [endpoint, transformData, stabilizedStaticParams])
+  }), [endpoint, requestMode, transformData, stabilizedStaticParams])
 
   // Default column definition
   const mergedDefaultColDef = useMemo(() => ({
@@ -212,7 +173,7 @@ const InfiniteGrid = ({
     <div className={themeClass} style={{ height }}>
       <AgGridReact
         ref={gridRef}
-        columnDefs={columnDefs}
+        columnDefs={normalizedColumnDefs}
         defaultColDef={mergedDefaultColDef}
         rowModelType="infinite"
         cacheBlockSize={cacheBlockSize}

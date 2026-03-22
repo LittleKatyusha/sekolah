@@ -1,6 +1,14 @@
 import { useMemo, useCallback } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { apiService } from '../../utils/api'
+import {
+  buildAgGridRequestParams,
+  buildLegacyRequestParams,
+  extractGridRows,
+  handleGridFailure,
+  handleGridSuccess,
+  normalizeColumnDefsForQuery,
+} from './agGridQuery'
 
 /**
  * ServerGrid - A reusable AG Grid component with Server-side Row Model support
@@ -37,97 +45,51 @@ const ServerGrid = ({
   themeClass = 'ag-theme-alpine dark:ag-theme-alpine-dark',
   height = 600,
   onGridReady,
+  requestMode = 'ag-grid',
   ...restProps
 }) => {
+  const normalizedColumnDefs = useMemo(
+    () => normalizeColumnDefsForQuery(columnDefs),
+    [columnDefs]
+  )
+
   // Create the server-side datasource
   const dataSource = useMemo(() => ({
     getRows: async (params) => {
       const { startRow, endRow, sortModel, filterModel } = params
-      
-      // Build query parameters
-      const queryParams = {
-        ...staticParams,
-        per_page: endRow - startRow,
-        page: Math.floor(startRow / (endRow - startRow)) + 1,
-      }
-
-      // Add sorting
-      if (sortModel && sortModel.length > 0) {
-        const sort = sortModel[0]
-        queryParams.sort_by = sort.colId
-        queryParams.sort_dir = sort.sort === 'asc' ? 'asc' : 'desc'
-      }
-
-      // Add filtering - convert AG Grid filter model to API params
-      if (filterModel && Object.keys(filterModel).length > 0) {
-        Object.entries(filterModel).forEach(([key, filter]) => {
-          if (filter.filter !== undefined && filter.filter !== '') {
-            switch (filter.type) {
-              case 'contains':
-                queryParams[key] = filter.filter
-                break
-              case 'equals':
-                queryParams[`${key}_eq`] = filter.filter
-                break
-              case 'notEqual':
-                queryParams[`${key}_ne`] = filter.filter
-                break
-              case 'startsWith':
-                queryParams[`${key}_starts_with`] = filter.filter
-                break
-              case 'endsWith':
-                queryParams[`${key}_ends_with`] = filter.filter
-                break
-              case 'greaterThan':
-                queryParams[`${key}_gt`] = filter.filter
-                break
-              case 'greaterThanOrEqual':
-                queryParams[`${key}_gte`] = filter.filter
-                break
-              case 'lessThan':
-                queryParams[`${key}_lt`] = filter.filter
-                break
-              case 'lessThanOrEqual':
-                queryParams[`${key}_lte`] = filter.filter
-                break
-              case 'inRange':
-                queryParams[`${key}_min`] = filter.filter
-                queryParams[`${key}_max`] = filter.filterTo
-                break
-              default:
-                queryParams[key] = filter.filter
-            }
-          }
-        })
-      }
+      const queryParams = requestMode === 'ag-grid'
+        ? buildAgGridRequestParams({
+            startRow,
+            endRow,
+            sortModel,
+            filterModel,
+            staticParams,
+          })
+        : buildLegacyRequestParams({
+            startRow,
+            endRow,
+            sortModel,
+            filterModel,
+            staticParams,
+          })
 
       try {
         const { data, error } = await apiService.get(endpoint, { params: queryParams })
         
         if (error) {
           console.error('Error fetching data:', error)
-          params.failCallback()
+          handleGridFailure(params)
           return
         }
 
-        // Transform data if transformer is provided
-        let rows = data.data || []
-        if (transformData) {
-          rows = transformData(rows)
-        }
-
-        // Get total count from meta
-        const totalCount = data.meta?.total || data.total || rows.length
-
-        // AG Grid expects: successCallback(rows, lastRow)
-        // lastRow is the total row count if known, otherwise -1
-        params.successCallback(rows, totalCount)
+        const { rows, totalCount } = extractGridRows(data, transformData)
+        handleGridSuccess(params, rows, totalCount)
       } catch (error) {
         console.error('Exception fetching data:', error)
-        params.failCallback()
+        handleGridFailure(params)
       }
     }
-  }), [endpoint, transformData, staticParams])
+  }), [endpoint, requestMode, transformData, staticParams])
 
   // Default column definition
   const mergedDefaultColDef = useMemo(() => ({
@@ -150,7 +112,7 @@ const ServerGrid = ({
   return (
     <div className={themeClass} style={{ height }}>
       <AgGridReact
-        columnDefs={columnDefs}
+        columnDefs={normalizedColumnDefs}
         defaultColDef={mergedDefaultColDef}
         rowModelType="serverSide"
         cacheBlockSize={cacheBlockSize}

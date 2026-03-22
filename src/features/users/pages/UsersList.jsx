@@ -214,6 +214,7 @@ const UsersList = () => {
   const columnDefs = useMemo(() => [
     {
       field: 'name',
+      backendField: 'name',
       headerName: 'Nama',
       sortable: true,
       filter: true,
@@ -222,6 +223,7 @@ const UsersList = () => {
     },
     {
       field: 'email',
+      backendField: 'email',
       headerName: 'Email',
       sortable: true,
       filter: true,
@@ -231,8 +233,8 @@ const UsersList = () => {
     {
       field: 'role',
       headerName: 'Role',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       width: 150,
       minWidth: 120,
       cellRenderer: (params) => {
@@ -248,6 +250,7 @@ const UsersList = () => {
     },
     {
       field: 'is_active',
+      backendField: 'is_active',
       headerName: 'Status',
       sortable: true,
       filter: true,
@@ -267,6 +270,7 @@ const UsersList = () => {
     },
     {
       field: 'created_at',
+      backendField: 'created_at',
       headerName: 'Dibuat',
       sortable: true,
       filter: true,
@@ -347,6 +351,7 @@ const UsersList = () => {
           key={`users-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/users/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
