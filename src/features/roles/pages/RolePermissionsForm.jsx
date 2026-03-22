@@ -207,7 +207,7 @@ const RolePermissionsForm = () => {
 
     // Bulk fetch: load all permissions in one request, then filter by IDs needed.
     // This replaces the previous N individual getById() calls.
-    const { data } = await permissionService.getAll({ per_page: 9999 })
+    const { data } = await permissionService.getAll({ per_page: 'all' })
     const allPermissions = data?.data || []
     const bulkMap = new Map(allPermissions.map((p) => [Number(p.id), p]))
 
@@ -305,7 +305,7 @@ const RolePermissionsForm = () => {
   useEffect(() => {
     let mounted = true
     ;(async () => {
-      const { data } = await permissionService.getAll({ per_page: 9999 })
+      const { data } = await permissionService.getAll({ per_page: 'all' })
       if (mounted) setPermissions(dedupePermissionsById(data?.data || []))
     })()
     return () => { mounted = false }
