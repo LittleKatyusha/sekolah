@@ -57,6 +57,8 @@ const EksSiswaList = () => {
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
     {
+      field: 'siswa',
+      backendField: 'siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -65,6 +67,8 @@ const EksSiswaList = () => {
       valueGetter: (params) => params.data?.siswa?.nama || '-'
     },
     {
+      field: 'ekstrakurikuler',
+      backendField: 'ekstrakurikuler.nama',
       headerName: 'Ekstrakurikuler',
       sortable: true,
       filter: true,
@@ -160,6 +164,7 @@ const EksSiswaList = () => {
           key={`eks-siswa-grid-${searchText}`}
           ref={gridRef}
           endpoint="/ekstrakurikuler/pendaftaran/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

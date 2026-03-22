@@ -104,6 +104,7 @@ const InfiniteGrid = ({
             sortModel,
             filterModel,
             staticParams: stabilizedStaticParams,
+            columnDefs: normalizedColumnDefs,
           })
         : buildLegacyRequestParams({
             startRow,
@@ -129,7 +130,7 @@ const InfiniteGrid = ({
         handleGridFailure(params)
       }
     }
-  }), [endpoint, requestMode, transformData, stabilizedStaticParams])
+  }), [endpoint, normalizedColumnDefs, requestMode, transformData, stabilizedStaticParams])
 
   // Default column definition
   const mergedDefaultColDef = useMemo(() => ({

@@ -150,6 +150,7 @@ const NilaiList = () => {
   const columnDefs = useMemo(() => [
     { 
       field: 'id', 
+      backendField: 'id',
       headerName: 'ID',
       sortable: true,
       filter: true,
@@ -158,6 +159,7 @@ const NilaiList = () => {
     },
     { 
       field: 'siswa.nama', 
+      backendField: 'siswa.nama',
       headerName: 'Nama Siswa',
       sortable: true,
       filter: true,
@@ -167,6 +169,7 @@ const NilaiList = () => {
     },
     { 
       field: 'ujian.nama', 
+      backendField: 'ujian.nama',
       headerName: 'Nama Ujian',
       sortable: true,
       filter: true,
@@ -176,6 +179,7 @@ const NilaiList = () => {
     },
     { 
       field: 'nilai', 
+      backendField: 'nilai',
       headerName: 'Nilai',
       sortable: true,
       filter: true,
@@ -202,6 +206,7 @@ const NilaiList = () => {
     },
     { 
       field: 'keterangan', 
+      backendField: 'keterangan',
       headerName: 'Keterangan',
       sortable: true,
       filter: true,

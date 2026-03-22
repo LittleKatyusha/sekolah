@@ -161,6 +161,7 @@ const JadwalPelajaranList = () => {
   const columnDefs = useMemo(() => [
     {
       field: 'id',
+      backendField: 'id',
       headerName: 'ID',
       sortable: true,
       filter: true,
@@ -169,6 +170,7 @@ const JadwalPelajaranList = () => {
     },
     {
       field: 'kelas.nama_kelas',
+      backendField: 'kelas.nama_kelas',
       headerName: 'Kelas',
       sortable: true,
       filter: true,
@@ -178,6 +180,7 @@ const JadwalPelajaranList = () => {
     },
     {
       field: 'hari',
+      backendField: 'hari',
       headerName: 'Hari',
       sortable: true,
       filter: true,
@@ -195,6 +198,7 @@ const JadwalPelajaranList = () => {
     },
     {
       field: 'jam_mulai',
+      backendField: 'jam_mulai',
       headerName: 'Jam Mulai',
       sortable: true,
       filter: true,
@@ -204,6 +208,7 @@ const JadwalPelajaranList = () => {
     },
     {
       field: 'jam_selesai',
+      backendField: 'jam_selesai',
       headerName: 'Jam Selesai',
       sortable: true,
       filter: true,
@@ -212,6 +217,8 @@ const JadwalPelajaranList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
+      field: 'guru_mapel.mapel.nama',
+      backendField: 'guru_mapel.mapel.nama',
       headerName: 'Mata Pelajaran',
       sortable: true,
       filter: true,
@@ -224,6 +231,7 @@ const JadwalPelajaranList = () => {
     },
     {
       field: 'guru_mapel.guru.nama',
+      backendField: 'guru_mapel.guru.nama',
       headerName: 'Guru',
       sortable: true,
       filter: true,

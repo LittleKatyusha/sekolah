@@ -170,6 +170,8 @@ const RankingList = () => {
       }
     },
     {
+      field: 'siswa',
+      backendField: 'rapor.siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -178,18 +180,22 @@ const RankingList = () => {
       valueGetter: (params) => {
         const siswa = params.data?.siswa
         if (!siswa) return '-'
-        return siswa.nama || '-'
+        return siswa.nama || siswa || '-'
       }
     },
     {
+      field: 'nis',
+      backendField: 'rapor.siswa.nis',
       headerName: 'NIS',
       sortable: true,
       filter: true,
       width: 120,
       minWidth: 100,
-      valueGetter: (params) => params.data?.siswa?.nis || '-'
+      valueGetter: (params) => params.data?.siswa?.nis || params.data?.nis || '-'
     },
     {
+      field: 'kelas',
+      backendField: 'kelas.nama_kelas',
       headerName: 'Kelas',
       sortable: true,
       filter: true,
@@ -199,15 +205,17 @@ const RankingList = () => {
     },
     {
       field: 'semester',
+      backendField: 'rapor.semester',
       headerName: 'Semester',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => params.value || '-'
     },
     {
       field: 'tahun_ajaran',
+      backendField: 'rapor.tahunAjaran.nama',
       headerName: 'Tahun Ajaran',
       sortable: true,
       filter: true,
@@ -217,6 +225,7 @@ const RankingList = () => {
     },
     {
       field: 'rata_rata_nilai',
+      backendField: 'rapor.rata_rata',
       headerName: 'Rata-rata',
       sortable: true,
       filter: true,
@@ -289,6 +298,7 @@ const RankingList = () => {
           key={`ranking-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/ranking/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

@@ -64,6 +64,7 @@ const ServerGrid = ({
             sortModel,
             filterModel,
             staticParams,
+            columnDefs: normalizedColumnDefs,
           })
         : buildLegacyRequestParams({
             startRow,
@@ -89,7 +90,7 @@ const ServerGrid = ({
         handleGridFailure(params)
       }
     }
-  }), [endpoint, requestMode, transformData, staticParams])
+  }), [endpoint, normalizedColumnDefs, requestMode, transformData, staticParams])
 
   // Default column definition
   const mergedDefaultColDef = useMemo(() => ({

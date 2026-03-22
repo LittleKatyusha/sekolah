@@ -141,6 +141,8 @@ const AnggotaList = () => {
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
     {
+      field: 'siswa',
+      backendField: 'siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -149,6 +151,8 @@ const AnggotaList = () => {
       valueGetter: (params) => params.data?.siswa?.nama || '-'
     },
     {
+      field: 'organisasi',
+      backendField: 'organisasi.nama',
       headerName: 'Organisasi',
       sortable: true,
       filter: true,
@@ -157,6 +161,8 @@ const AnggotaList = () => {
       valueGetter: (params) => params.data?.organisasi?.nama || '-'
     },
     {
+      field: 'jabatan',
+      backendField: 'jabatan.nama',
       headerName: 'Jabatan',
       sortable: true,
       filter: true,
@@ -252,6 +258,7 @@ const AnggotaList = () => {
           key={`anggota-grid-${searchText}`}
           ref={gridRef}
           endpoint="/organisasi/anggota/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

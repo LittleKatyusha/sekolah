@@ -151,6 +151,7 @@ const AbsensiGuruList = () => {
   const columnDefs = useMemo(() => [
     {
       field: 'guru.nama',
+      backendField: 'guru.nama',
       headerName: 'Nama Guru',
       sortable: true,
       filter: true,
@@ -161,6 +162,7 @@ const AbsensiGuruList = () => {
     },
     {
       field: 'guru.nip',
+      backendField: 'guru.nip',
       headerName: 'NIP',
       sortable: true,
       filter: true,
@@ -171,6 +173,7 @@ const AbsensiGuruList = () => {
     },
     {
       field: 'tanggal',
+      backendField: 'tanggal',
       headerName: 'Tanggal',
       sortable: true,
       filter: true,
@@ -180,6 +183,7 @@ const AbsensiGuruList = () => {
     },
     {
       field: 'status',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
       filter: true,
@@ -189,6 +193,7 @@ const AbsensiGuruList = () => {
     },
     {
       field: 'keterangan',
+      backendField: 'keterangan',
       headerName: 'Keterangan',
       sortable: true,
       filter: true,

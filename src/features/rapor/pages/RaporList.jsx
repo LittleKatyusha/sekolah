@@ -146,6 +146,8 @@ const RaporList = () => {
       minWidth: 70
     },
     {
+      field: 'siswa',
+      backendField: 'siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -158,6 +160,8 @@ const RaporList = () => {
       }
     },
     {
+      field: 'nis',
+      backendField: 'siswa.nis',
       headerName: 'NIS',
       sortable: true,
       filter: true,
@@ -167,6 +171,7 @@ const RaporList = () => {
     },
     {
       field: 'kelas',
+      backendField: 'siswa.kelas.nama_kelas',
       headerName: 'Kelas',
       sortable: true,
       filter: true,
@@ -176,9 +181,10 @@ const RaporList = () => {
     },
     {
       field: 'semester',
+      backendField: 'semester',
       headerName: 'Semester',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 130,
       minWidth: 110,
       cellRenderer: (params) => {
@@ -193,6 +199,7 @@ const RaporList = () => {
     },
     {
       field: 'tahun_ajaran',
+      backendField: 'tahunAjaran.nama',
       headerName: 'Tahun Ajaran',
       sortable: true,
       filter: true,
@@ -271,6 +278,7 @@ const RaporList = () => {
           key={`rapor-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/rapor/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

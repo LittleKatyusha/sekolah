@@ -131,9 +131,14 @@ export const normalizeColumnDefsForQuery = (columnDefs = []) => {
     const normalizedField = typeof columnDef.field === 'string' ? columnDef.field : ''
     const hasUnsafeField = normalizedField.includes('.') || UNSAFE_RESPONSE_FIELDS.has(normalizedField)
     const hasDerivedColumnWithoutField = !normalizedField && !hasBackendField
+    const queryField = typeof columnDef.backendField === 'string' ? columnDef.backendField : normalizedField
+    const canUseAdvancedFilter = Boolean(queryField)
+      && !queryField.includes('.')
+      && (!hasBackendField || normalizedField === queryField)
 
     const normalizedColumnDef = {
       ...columnDef,
+      advancedFilter: columnDef.advancedFilter ?? canUseAdvancedFilter,
     }
 
     if (hasBackendField && !columnDef.colId) {
@@ -149,7 +154,17 @@ export const normalizeColumnDefsForQuery = (columnDefs = []) => {
   })
 }
 
-export const buildAgGridRequestParams = ({ startRow, endRow, sortModel = [], filterModel = {}, staticParams = {} }) => {
+const flattenColumnDefs = (columnDefs = []) => {
+  return columnDefs.flatMap((columnDef) => {
+    if (Array.isArray(columnDef.children)) {
+      return flattenColumnDefs(columnDef.children)
+    }
+
+    return [columnDef]
+  })
+}
+
+export const buildAgGridRequestParams = ({ startRow, endRow, sortModel = [], filterModel = {}, staticParams = {}, columnDefs = [] }) => {
   const queryParams = {
     ...sanitizeStaticParams(staticParams),
     startRow,
@@ -166,7 +181,15 @@ export const buildAgGridRequestParams = ({ startRow, endRow, sortModel = [], fil
   if (filterModel && Object.keys(filterModel).length > 0) {
     queryParams.filterModel = filterModel
 
+    const advancedFilterableColIds = new Set(
+      flattenColumnDefs(columnDefs)
+        .filter((columnDef) => columnDef.advancedFilter !== false)
+        .map((columnDef) => columnDef.colId || columnDef.field)
+        .filter(Boolean)
+    )
+
     const conditions = Object.entries(filterModel)
+      .filter(([colId]) => advancedFilterableColIds.has(colId))
       .map(([colId, filter]) => buildConditionNode(colId, filter))
       .filter(Boolean)
 

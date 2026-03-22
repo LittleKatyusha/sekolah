@@ -267,6 +267,7 @@ const UjianUserList = () => {
     },
     {
       field: 'ujian',
+      backendField: 'ujian.nama',
       headerName: 'Nama Ujian',
       sortable: true,
       filter: true,
@@ -280,6 +281,7 @@ const UjianUserList = () => {
     },
     {
       field: 'siswa',
+      backendField: 'siswa_display',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -297,9 +299,10 @@ const UjianUserList = () => {
     },
     {
       field: 'status',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 150,
       minWidth: 130,
       cellRenderer: (params) => {
@@ -474,6 +477,7 @@ const UjianUserList = () => {
           key={`ujian-user-grid-${searchText}-${selectedUjian}-${selectedSiswa}`}
           ref={gridRef}
           endpoint="/akademik/ujian-user/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

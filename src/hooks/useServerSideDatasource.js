@@ -6,6 +6,7 @@ import {
   extractGridRows,
   handleGridFailure,
   handleGridSuccess,
+  normalizeColumnDefsForQuery,
 } from '../components/ui/agGridQuery'
 
 /**
@@ -17,7 +18,12 @@ import {
  * @param {Object} [options.staticParams] - Static parameters to include in every request
  * @returns {Object} AG Grid datasource object with getRows function
  */
-export const useServerSideDatasource = ({ endpoint, transformData, staticParams = {}, requestMode = 'ag-grid' }) => {
+export const useServerSideDatasource = ({ endpoint, transformData, staticParams = {}, requestMode = 'ag-grid', columnDefs = [] }) => {
+  const normalizedColumnDefs = useMemo(
+    () => normalizeColumnDefsForQuery(columnDefs),
+    [columnDefs]
+  )
+
   const getRows = useCallback(async (params) => {
     const { startRow, endRow, sortModel, filterModel } = params
     const queryParams = requestMode === 'ag-grid'
@@ -27,6 +33,7 @@ export const useServerSideDatasource = ({ endpoint, transformData, staticParams 
           sortModel,
           filterModel,
           staticParams,
+          columnDefs: normalizedColumnDefs,
         })
       : buildLegacyRequestParams({
           startRow,
@@ -51,7 +58,7 @@ export const useServerSideDatasource = ({ endpoint, transformData, staticParams 
       console.error('Exception fetching data:', error)
       handleGridFailure(params)
     }
-  }, [endpoint, requestMode, transformData, staticParams])
+  }, [endpoint, normalizedColumnDefs, requestMode, transformData, staticParams])
 
   return useMemo(() => ({
     getRows

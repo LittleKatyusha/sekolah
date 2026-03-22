@@ -132,6 +132,7 @@ const SiswaList = () => {
     },
     { 
       field: 'nama', 
+      backendField: 'nama',
       headerName: 'Nama Lengkap',
       sortable: true,
       filter: 'agTextColumnFilter',
@@ -140,6 +141,7 @@ const SiswaList = () => {
     },
     {
       field: 'jenis_kelamin',
+      backendField: 'jenis_kelamin',
       headerName: 'Jenis Kelamin',
       sortable: true,
       filter: 'agTextColumnFilter',
@@ -162,6 +164,7 @@ const SiswaList = () => {
     },
     { 
       field: 'kelas', 
+      backendField: 'kelas.nama_kelas',
       headerName: 'Kelas',
       sortable: true,
       filter: 'agTextColumnFilter',
@@ -172,6 +175,7 @@ const SiswaList = () => {
     },
     { 
       field: 'status', 
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
       filter: 'agTextColumnFilter',
@@ -227,7 +231,7 @@ const SiswaList = () => {
   const handleRowClicked = useCallback((event) => {
     // Optional: navigate to detail on row click
     // navigate(`/siswa/${event.data.id}`)
-  }, [navigate])
+  }, [])
 
   // Handle delete
   const handleDelete = async (data) => {

@@ -55,8 +55,8 @@ const RolePermissionsList = () => {
       const { error } = await rolePermissionService.delete(data.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        if (gridRef.current?.refreshData) {
-          gridRef.current.refreshData()
+        if (gridRef.current?.refreshGrid) {
+          gridRef.current.refreshGrid()
         }
       } else {
         showError('Gagal menghapus role permission')
@@ -65,18 +65,18 @@ const RolePermissionsList = () => {
   }, [])
 
   const handleSearch = useCallback(() => {
-    if (gridRef.current?.refreshData) {
-      gridRef.current.refreshData()
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
     }
   }, [])
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
-    { field: 'role.name', headerName: 'Nama Role', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
-    { field: 'role.code', headerName: 'Kode Role', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
-    { field: 'permission.name', headerName: 'Nama Permission', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
-    { field: 'permission.code', headerName: 'Kode Permission', sortable: true, filter: true, flex: 1, minWidth: 150, cellRenderer: (params) => params.value || '-' },
-    { field: 'permission.module', headerName: 'Modul', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
+    { field: 'role.name', backendField: 'role.name', headerName: 'Nama Role', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
+    { field: 'role.code', backendField: 'role.code', headerName: 'Kode Role', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
+    { field: 'permission.name', backendField: 'permission.name', headerName: 'Nama Permission', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
+    { field: 'permission.code', backendField: 'permission.code', headerName: 'Kode Permission', sortable: true, filter: true, flex: 1, minWidth: 150, cellRenderer: (params) => params.value || '-' },
+    { field: 'permission.module', backendField: 'permission.module', headerName: 'Modul', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
     {
       headerName: 'Actions',
       sortable: false,
@@ -122,6 +122,7 @@ const RolePermissionsList = () => {
           key={`role-permissions-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/role-permissions/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={{

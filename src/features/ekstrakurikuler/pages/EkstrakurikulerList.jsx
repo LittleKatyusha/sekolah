@@ -63,6 +63,8 @@ const EkstrakurikulerList = () => {
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
     { field: 'nama', headerName: 'Nama', sortable: true, filter: true, flex: 2, minWidth: 180, cellRenderer: (params) => params.value || '-' },
     {
+      field: 'pembina_guru',
+      backendField: 'pembina.nama',
       headerName: 'Pembina/Guru',
       sortable: true,
       filter: true,
@@ -158,6 +160,7 @@ const EkstrakurikulerList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/ekstrakurikuler/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
