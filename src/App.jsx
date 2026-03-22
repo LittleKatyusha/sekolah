@@ -273,176 +273,176 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
 
               {/* Siswa */}
-              <Route path="/siswa/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Siswa /></RoleGuard>} />
+              <Route path="/siswa/*" element={<Siswa />} />
 
               {/* Kelas */}
-              <Route path="/kelas/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Kelas /></RoleGuard>} />
+              <Route path="/kelas/*" element={<Kelas />} />
 
               {/* Guru */}
-              <Route path="/guru/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Guru /></RoleGuard>} />
+              <Route path="/guru/*" element={<Guru />} />
 
               {/* Mapel */}
-              <Route path="/mapel" element={<RoleGuard allowedRoles={[1, 'admin']}><MapelList /></RoleGuard>} />
-              <Route path="/mapel/create" element={<RoleGuard allowedRoles={[1, 'admin']}><MapelForm /></RoleGuard>} />
-              <Route path="/mapel/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><MapelDetail /></RoleGuard>} />
-              <Route path="/mapel/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><MapelForm /></RoleGuard>} />
+              <Route path="/mapel" element={<MapelList />} />
+              <Route path="/mapel/create" element={<MapelForm />} />
+              <Route path="/mapel/:id" element={<MapelDetail />} />
+              <Route path="/mapel/:id/edit" element={<MapelForm />} />
 
               {/* Wali */}
-              <Route path="/wali" element={<RoleGuard allowedRoles={[1, 'admin']}><WaliList /></RoleGuard>} />
-              <Route path="/wali/create" element={<RoleGuard allowedRoles={[1, 'admin']}><WaliForm /></RoleGuard>} />
-              <Route path="/wali/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><WaliDetail /></RoleGuard>} />
-              <Route path="/wali/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><WaliForm /></RoleGuard>} />
+              <Route path="/wali" element={<WaliList />} />
+              <Route path="/wali/create" element={<WaliForm />} />
+              <Route path="/wali/:id" element={<WaliDetail />} />
+              <Route path="/wali/:id/edit" element={<WaliForm />} />
 
               {/* Absensi Siswa */}
-              <Route path="/absensi-siswa" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiSiswaList /></RoleGuard>} />
-              <Route path="/absensi-siswa/tambah" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiSiswaForm /></RoleGuard>} />
-              <Route path="/absensi-siswa/edit/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiSiswaForm /></RoleGuard>} />
-              <Route path="/absensi-siswa/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiSiswaDetail /></RoleGuard>} />
+              <Route path="/absensi-siswa" element={<AbsensiSiswaList />} />
+              <Route path="/absensi-siswa/tambah" element={<AbsensiSiswaForm />} />
+              <Route path="/absensi-siswa/edit/:id" element={<AbsensiSiswaForm />} />
+              <Route path="/absensi-siswa/:id" element={<AbsensiSiswaDetail />} />
 
               {/* Absensi Guru */}
-              <Route path="/absensi-guru" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiGuruList /></RoleGuard>} />
-              <Route path="/absensi-guru/tambah" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiGuruForm /></RoleGuard>} />
-              <Route path="/absensi-guru/edit/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiGuruForm /></RoleGuard>} />
-              <Route path="/absensi-guru/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><AbsensiGuruDetail /></RoleGuard>} />
+              <Route path="/absensi-guru" element={<AbsensiGuruList />} />
+              <Route path="/absensi-guru/tambah" element={<AbsensiGuruForm />} />
+              <Route path="/absensi-guru/edit/:id" element={<AbsensiGuruForm />} />
+              <Route path="/absensi-guru/:id" element={<AbsensiGuruDetail />} />
 
               {/* ===== AKADEMIK ===== */}
-              <Route path="/akademik/nilai/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Nilai /></RoleGuard>} />
-              <Route path="/akademik/tugas/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Tugas /></RoleGuard>} />
-              <Route path="/akademik/tugas-siswa/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><TugasSiswa /></RoleGuard>} />
-              <Route path="/akademik/ranking/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Ranking /></RoleGuard>} />
-              <Route path="/akademik/rapor/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Rapor /></RoleGuard>} />
-              <Route path="/akademik/forum/*" element={<RoleGuard allowedRoles={[1, 2, 3, 4, 'admin', 'guru', 'staff', 'siswa']}><Forum /></RoleGuard>} />
-              <Route path="/akademik/materi/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Materi /></RoleGuard>} />
-              <Route path="/akademik/presensi" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiList /></RoleGuard>} />
-              <Route path="/akademik/presensi/tambah" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiForm /></RoleGuard>} />
-              <Route path="/akademik/presensi/edit/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiForm /></RoleGuard>} />
-              <Route path="/akademik/presensi/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><PresensiDetail /></RoleGuard>} />
-              <Route path="/akademik/ujian-jawaban" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawabanList /></RoleGuard>} />
-              <Route path="/akademik/ujian-jawaban/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawabanDetail /></RoleGuard>} />
-              <Route path="/akademik/ujian-jawaban/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianJawabanForm /></RoleGuard>} />
-              <Route path="/akademik/log-akses-materi" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><LogAksesMateriList /></RoleGuard>} />
-              <Route path="/akademik/log-akses-materi/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><LogAksesMateriDetail /></RoleGuard>} />
+              <Route path="/akademik/nilai/*" element={<Nilai />} />
+              <Route path="/akademik/tugas/*" element={<Tugas />} />
+              <Route path="/akademik/tugas-siswa/*" element={<TugasSiswa />} />
+              <Route path="/akademik/ranking/*" element={<Ranking />} />
+              <Route path="/akademik/rapor/*" element={<Rapor />} />
+              <Route path="/akademik/forum/*" element={<Forum />} />
+              <Route path="/akademik/materi/*" element={<Materi />} />
+              <Route path="/akademik/presensi" element={<PresensiList />} />
+              <Route path="/akademik/presensi/tambah" element={<PresensiForm />} />
+              <Route path="/akademik/presensi/edit/:id" element={<PresensiForm />} />
+              <Route path="/akademik/presensi/:id" element={<PresensiDetail />} />
+              <Route path="/akademik/ujian-jawaban" element={<UjianJawabanList />} />
+              <Route path="/akademik/ujian-jawaban/:id" element={<UjianJawabanDetail />} />
+              <Route path="/akademik/ujian-jawaban/:id/edit" element={<UjianJawabanForm />} />
+              <Route path="/akademik/log-akses-materi" element={<LogAksesMateriList />} />
+              <Route path="/akademik/log-akses-materi/:id" element={<LogAksesMateriDetail />} />
 
               {/* Ujian */}
-              <Route path="/akademik/ujian" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianList /></RoleGuard>} />
-              <Route path="/akademik/ujian/create" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianForm /></RoleGuard>} />
-              <Route path="/akademik/ujian/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianDetail /></RoleGuard>} />
-              <Route path="/akademik/ujian/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianForm /></RoleGuard>} />
-              <Route path="/akademik/ujian/:id/nilai" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianNilai /></RoleGuard>} />
+              <Route path="/akademik/ujian" element={<UjianList />} />
+              <Route path="/akademik/ujian/create" element={<UjianForm />} />
+              <Route path="/akademik/ujian/:id" element={<UjianDetail />} />
+              <Route path="/akademik/ujian/:id/edit" element={<UjianForm />} />
+              <Route path="/akademik/ujian/:id/nilai" element={<UjianNilai />} />
 
               {/* Soal (Bank Soal) */}
-              <Route path="/akademik/soals" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><SoalList /></RoleGuard>} />
-              <Route path="/akademik/soals/create" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><SoalForm /></RoleGuard>} />
-              <Route path="/akademik/soals/:id" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><SoalDetail /></RoleGuard>} />
-              <Route path="/akademik/soals/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><SoalForm /></RoleGuard>} />
+              <Route path="/akademik/soals" element={<SoalList />} />
+              <Route path="/akademik/soals/create" element={<SoalForm />} />
+              <Route path="/akademik/soals/:id" element={<SoalDetail />} />
+              <Route path="/akademik/soals/:id/edit" element={<SoalForm />} />
 
               {/* Ujian User */}
-              <Route path="/akademik/ujian-user/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><UjianUser /></RoleGuard>} />
+              <Route path="/akademik/ujian-user/*" element={<UjianUser />} />
 
               {/* ===== ADMIN ===== */}
-              <Route path="/admin/tahun-ajaran/*" element={<RoleGuard allowedRoles={[1, 'admin']}><TahunAjaran /></RoleGuard>} />
-              <Route path="/admin/semester/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Semester /></RoleGuard>} />
-              <Route path="/admin/kalender-akademik/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><KalenderAkademik /></RoleGuard>} />
-              <Route path="/admin/roles/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Roles /></RoleGuard>} />
-              <Route path="/admin/permissions/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Permissions /></RoleGuard>} />
-              <Route path="/admin/role-permissions/*" element={<RoleGuard allowedRoles={[1, 'admin']}><RolePermissions /></RoleGuard>} />
-              <Route path="/admin/hari-operasional" element={<RoleGuard allowedRoles={[1, 'admin']}><HariOperasional /></RoleGuard>} />
-              <Route path="/admin/kalender-harian" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderHarian /></RoleGuard>} />
-              <Route path="/admin/references" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceList /></RoleGuard>} />
-              <Route path="/admin/references/create" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceForm /></RoleGuard>} />
-              <Route path="/admin/references/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceDetail /></RoleGuard>} />
-              <Route path="/admin/references/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><ReferenceForm /></RoleGuard>} />
-              <Route path="/admin/kalender-tipe" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipeList /></RoleGuard>} />
-              <Route path="/admin/kalender-tipe/create" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipeForm /></RoleGuard>} />
-              <Route path="/admin/kalender-tipe/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><KalenderTipeForm /></RoleGuard>} />
+              <Route path="/admin/tahun-ajaran/*" element={<TahunAjaran />} />
+              <Route path="/admin/semester/*" element={<Semester />} />
+              <Route path="/admin/kalender-akademik/*" element={<KalenderAkademik />} />
+              <Route path="/admin/roles/*" element={<Roles />} />
+              <Route path="/admin/permissions/*" element={<Permissions />} />
+              <Route path="/admin/role-permissions/*" element={<RolePermissions />} />
+              <Route path="/admin/hari-operasional" element={<HariOperasional />} />
+              <Route path="/admin/kalender-harian" element={<KalenderHarian />} />
+              <Route path="/admin/references" element={<ReferenceList />} />
+              <Route path="/admin/references/create" element={<ReferenceForm />} />
+              <Route path="/admin/references/:id" element={<ReferenceDetail />} />
+              <Route path="/admin/references/:id/edit" element={<ReferenceForm />} />
+              <Route path="/admin/kalender-tipe" element={<KalenderTipeList />} />
+              <Route path="/admin/kalender-tipe/create" element={<KalenderTipeForm />} />
+              <Route path="/admin/kalender-tipe/:id/edit" element={<KalenderTipeForm />} />
 
               {/* ===== KEUANGAN (SPP split) ===== */}
-              <Route path="/keuangan/tarif-spp/*" element={<RoleGuard allowedRoles={[1, 'admin']}><TarifSpp /></RoleGuard>} />
-              <Route path="/keuangan/pembayaran-spp/*" element={<RoleGuard allowedRoles={[1, 'admin']}><PembayaranSpp /></RoleGuard>} />
+              <Route path="/keuangan/tarif-spp/*" element={<TarifSpp />} />
+              <Route path="/keuangan/pembayaran-spp/*" element={<PembayaranSpp />} />
 
               {/* Ekstrakurikuler */}
-              <Route path="/ekstrakurikuler/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Ekstrakurikuler /></RoleGuard>} />
+              <Route path="/ekstrakurikuler/*" element={<Ekstrakurikuler />} />
 
               {/* Organisasi */}
-              <Route path="/organisasi/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Organisasi /></RoleGuard>} />
+              <Route path="/organisasi/*" element={<Organisasi />} />
 
               {/* PPDB */}
-              <Route path="/ppdb/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Ppdb /></RoleGuard>} />
+              <Route path="/ppdb/*" element={<Ppdb />} />
 
               {/* Sekolah */}
-              <Route path="/sekolah/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Sekolah /></RoleGuard>} />
+              <Route path="/sekolah/*" element={<Sekolah />} />
 
               {/* Statistik */}
-              <Route path="/statistik/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><Statistik /></RoleGuard>} />
+              <Route path="/statistik/*" element={<Statistik />} />
 
               {/* SPK */}
-              <Route path="/spk/*" element={<RoleGuard allowedRoles={[1, 'admin']}><Spk /></RoleGuard>} />
+              <Route path="/spk/*" element={<Spk />} />
 
               {/* Jadwal Pelajaran */}
-              <Route path="/jadwal-pelajaran/*" element={<RoleGuard allowedRoles={[1, 2, 'admin', 'guru']}><JadwalPelajaran /></RoleGuard>} />
+              <Route path="/jadwal-pelajaran/*" element={<JadwalPelajaran />} />
 
               {/* Files */}
-              <Route path="/files" element={<RoleGuard allowedRoles={[1, 'admin']}><Files /></RoleGuard>} />
+              <Route path="/files" element={<Files />} />
 
               {/* BK Module */}
-              <Route path="/bk" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BK /></RoleGuard>} />
-              <Route path="/bk/jenis" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisList /></RoleGuard>} />
-              <Route path="/bk/jenis/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisForm /></RoleGuard>} />
-              <Route path="/bk/jenis/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisDetail /></RoleGuard>} />
-              <Route path="/bk/jenis/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkJenisForm /></RoleGuard>} />
-              <Route path="/bk/kategori" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriList /></RoleGuard>} />
-              <Route path="/bk/kategori/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriForm /></RoleGuard>} />
-              <Route path="/bk/kategori/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriDetail /></RoleGuard>} />
-              <Route path="/bk/kategori/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKategoriForm /></RoleGuard>} />
-              <Route path="/bk/kasus" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusList /></RoleGuard>} />
-              <Route path="/bk/kasus/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusForm /></RoleGuard>} />
-              <Route path="/bk/kasus/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusDetail /></RoleGuard>} />
-              <Route path="/bk/kasus/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkKasusForm /></RoleGuard>} />
-              <Route path="/bk/sesi" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiList /></RoleGuard>} />
-              <Route path="/bk/sesi/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiForm /></RoleGuard>} />
-              <Route path="/bk/sesi/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiDetail /></RoleGuard>} />
-              <Route path="/bk/sesi/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkSesiForm /></RoleGuard>} />
-              <Route path="/bk/hasil" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilList /></RoleGuard>} />
-              <Route path="/bk/hasil/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilForm /></RoleGuard>} />
-              <Route path="/bk/hasil/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilDetail /></RoleGuard>} />
-              <Route path="/bk/hasil/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkHasilForm /></RoleGuard>} />
-              <Route path="/bk/tindakan" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanList /></RoleGuard>} />
-              <Route path="/bk/tindakan/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanForm /></RoleGuard>} />
-              <Route path="/bk/tindakan/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanDetail /></RoleGuard>} />
-              <Route path="/bk/tindakan/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkTindakanForm /></RoleGuard>} />
-              <Route path="/bk/lampiran" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkLampiranList /></RoleGuard>} />
-              <Route path="/bk/lampiran/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkLampiranForm /></RoleGuard>} />
-              <Route path="/bk/lampiran/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkLampiranDetail /></RoleGuard>} />
-              <Route path="/bk/wali" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliList /></RoleGuard>} />
-              <Route path="/bk/wali/create" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliForm /></RoleGuard>} />
-              <Route path="/bk/wali/:id" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliDetail /></RoleGuard>} />
-              <Route path="/bk/wali/:id/edit" element={<RoleGuard allowedRoles={[1, 2, 3, 'admin', 'guru', 'staff']}><BkWaliForm /></RoleGuard>} />
+              <Route path="/bk" element={<BK />} />
+              <Route path="/bk/jenis" element={<BkJenisList />} />
+              <Route path="/bk/jenis/create" element={<BkJenisForm />} />
+              <Route path="/bk/jenis/:id" element={<BkJenisDetail />} />
+              <Route path="/bk/jenis/:id/edit" element={<BkJenisForm />} />
+              <Route path="/bk/kategori" element={<BkKategoriList />} />
+              <Route path="/bk/kategori/create" element={<BkKategoriForm />} />
+              <Route path="/bk/kategori/:id" element={<BkKategoriDetail />} />
+              <Route path="/bk/kategori/:id/edit" element={<BkKategoriForm />} />
+              <Route path="/bk/kasus" element={<BkKasusList />} />
+              <Route path="/bk/kasus/create" element={<BkKasusForm />} />
+              <Route path="/bk/kasus/:id" element={<BkKasusDetail />} />
+              <Route path="/bk/kasus/:id/edit" element={<BkKasusForm />} />
+              <Route path="/bk/sesi" element={<BkSesiList />} />
+              <Route path="/bk/sesi/create" element={<BkSesiForm />} />
+              <Route path="/bk/sesi/:id" element={<BkSesiDetail />} />
+              <Route path="/bk/sesi/:id/edit" element={<BkSesiForm />} />
+              <Route path="/bk/hasil" element={<BkHasilList />} />
+              <Route path="/bk/hasil/create" element={<BkHasilForm />} />
+              <Route path="/bk/hasil/:id" element={<BkHasilDetail />} />
+              <Route path="/bk/hasil/:id/edit" element={<BkHasilForm />} />
+              <Route path="/bk/tindakan" element={<BkTindakanList />} />
+              <Route path="/bk/tindakan/create" element={<BkTindakanForm />} />
+              <Route path="/bk/tindakan/:id" element={<BkTindakanDetail />} />
+              <Route path="/bk/tindakan/:id/edit" element={<BkTindakanForm />} />
+              <Route path="/bk/lampiran" element={<BkLampiranList />} />
+              <Route path="/bk/lampiran/create" element={<BkLampiranForm />} />
+              <Route path="/bk/lampiran/:id" element={<BkLampiranDetail />} />
+              <Route path="/bk/wali" element={<BkWaliList />} />
+              <Route path="/bk/wali/create" element={<BkWaliForm />} />
+              <Route path="/bk/wali/:id" element={<BkWaliDetail />} />
+              <Route path="/bk/wali/:id/edit" element={<BkWaliForm />} />
 
               {/* Perpustakaan */}
-              <Route path="/perpustakaan" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><Perpustakaan /></RoleGuard>} />
-              <Route path="/perpustakaan/buku" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuList /></RoleGuard>} />
-              <Route path="/perpustakaan/buku/create" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuForm /></RoleGuard>} />
-              <Route path="/perpustakaan/buku/:id" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuDetail /></RoleGuard>} />
-              <Route path="/perpustakaan/buku/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><BukuForm /></RoleGuard>} />
-              <Route path="/perpustakaan/peminjaman" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanList /></RoleGuard>} />
-              <Route path="/perpustakaan/peminjaman/create" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanForm /></RoleGuard>} />
-              <Route path="/perpustakaan/peminjaman/:id" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanDetail /></RoleGuard>} />
-              <Route path="/perpustakaan/peminjaman/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin', 'petugas_perpustakaan']}><PeminjamanForm /></RoleGuard>} />
+              <Route path="/perpustakaan" element={<Perpustakaan />} />
+              <Route path="/perpustakaan/buku" element={<BukuList />} />
+              <Route path="/perpustakaan/buku/create" element={<BukuForm />} />
+              <Route path="/perpustakaan/buku/:id" element={<BukuDetail />} />
+              <Route path="/perpustakaan/buku/:id/edit" element={<BukuForm />} />
+              <Route path="/perpustakaan/peminjaman" element={<PeminjamanList />} />
+              <Route path="/perpustakaan/peminjaman/create" element={<PeminjamanForm />} />
+              <Route path="/perpustakaan/peminjaman/:id" element={<PeminjamanDetail />} />
+              <Route path="/perpustakaan/peminjaman/:id/edit" element={<PeminjamanForm />} />
 
               {/* Users (Admin) */}
-              <Route path="/admin/users" element={<RoleGuard allowedRoles={[1, 'admin']}><UsersList /></RoleGuard>} />
-              <Route path="/admin/users/create" element={<RoleGuard allowedRoles={[1, 'admin']}><UsersForm /></RoleGuard>} />
-              <Route path="/admin/users/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><UsersDetail /></RoleGuard>} />
-              <Route path="/admin/users/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><UsersForm /></RoleGuard>} />
-              <Route path="/analytics" element={<RoleGuard allowedRoles={[1, 'admin']}><Analytics /></RoleGuard>} />
-              <Route path="/data-grid" element={<RoleGuard allowedRoles={[1, 'admin']}><DataGrid /></RoleGuard>} />
-              <Route path="/settings" element={<RoleGuard allowedRoles={[1, 'admin']}><Settings /></RoleGuard>} />
-              <Route path="/admin/activity-logs" element={<RoleGuard allowedRoles={[1, 'admin']}><ActivityLogsList /></RoleGuard>} />
-              <Route path="/admin/activity-logs/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><ActivityLogDetail /></RoleGuard>} />
-              <Route path="/admin/menus" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuList /></RoleGuard>} />
-              <Route path="/admin/menus/create" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuForm /></RoleGuard>} />
-              <Route path="/admin/menus/:id" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuDetail /></RoleGuard>} />
-              <Route path="/admin/menus/:id/edit" element={<RoleGuard allowedRoles={[1, 'admin']}><MenuForm /></RoleGuard>} />
+              <Route path="/admin/users" element={<UsersList />} />
+              <Route path="/admin/users/create" element={<UsersForm />} />
+              <Route path="/admin/users/:id" element={<UsersDetail />} />
+              <Route path="/admin/users/:id/edit" element={<UsersForm />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/data-grid" element={<DataGrid />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/admin/activity-logs" element={<ActivityLogsList />} />
+              <Route path="/admin/activity-logs/:id" element={<ActivityLogDetail />} />
+              <Route path="/admin/menus" element={<MenuList />} />
+              <Route path="/admin/menus/create" element={<MenuForm />} />
+              <Route path="/admin/menus/:id" element={<MenuDetail />} />
+              <Route path="/admin/menus/:id/edit" element={<MenuForm />} />
             </Route>
 
             {/* Catch all */}
