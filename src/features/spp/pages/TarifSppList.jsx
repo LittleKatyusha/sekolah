@@ -148,6 +148,8 @@ const TarifSppList = () => {
       minWidth: 70
     },
     {
+      field: 'kelas',
+      backendField: 'kelas.nama_kelas',
       headerName: 'Kelas',
       sortable: true,
       filter: true,
@@ -156,6 +158,8 @@ const TarifSppList = () => {
       valueGetter: (params) => params.data?.kelas?.nama_kelas || '-'
     },
     {
+      field: 'tingkat',
+      backendField: 'kelas.tingkat',
       headerName: 'Tingkat',
       sortable: true,
       filter: true,
@@ -174,6 +178,7 @@ const TarifSppList = () => {
     },
     {
       field: 'tahun_ajaran',
+      backendField: 'tahunAjaran.nama',
       headerName: 'Tahun Ajaran',
       sortable: true,
       filter: true,
@@ -247,6 +252,7 @@ const TarifSppList = () => {
           key={`tarif-spp-grid-${searchText}`}
           ref={gridRef}
           endpoint="/keuangan/tarif-spp/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

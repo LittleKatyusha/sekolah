@@ -138,6 +138,8 @@ const PenilaianList = () => {
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
     {
+      field: 'siswa',
+      backendField: 'siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -150,6 +152,8 @@ const PenilaianList = () => {
       }
     },
     {
+      field: 'kriteria',
+      backendField: 'kriteria.nama_kriteria',
       headerName: 'Kriteria',
       sortable: true,
       filter: true,
@@ -172,9 +176,10 @@ const PenilaianList = () => {
     },
     {
       field: 'tahun_ajaran',
+      backendField: 'tahun_ajaran_id',
       headerName: 'Tahun Ajaran',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 150,
       minWidth: 130,
       cellRenderer: (params) => params.value || '-'
@@ -236,6 +241,7 @@ const PenilaianList = () => {
           key={`penilaian-grid-${searchText}`}
           ref={gridRef}
           endpoint="/spk/penilaian/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

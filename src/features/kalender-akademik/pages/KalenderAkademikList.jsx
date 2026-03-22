@@ -182,6 +182,8 @@ const KalenderAkademikList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
+      field: 'tipe',
+      backendField: 'tipe.nama',
       headerName: 'Tipe',
       sortable: true,
       filter: true,
@@ -221,6 +223,8 @@ const KalenderAkademikList = () => {
       cellRenderer: (params) => formatDate(params.value)
     },
     {
+      field: 'tahun_ajaran',
+      backendField: 'tahunAjaran.nama',
       headerName: 'Tahun Ajaran',
       sortable: true,
       filter: true,
@@ -322,6 +326,7 @@ const KalenderAkademikList = () => {
           key={`kalender-akademik-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/kalender-akademik/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

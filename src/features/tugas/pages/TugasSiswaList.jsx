@@ -10,11 +10,12 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 
 // Submission status mapping
 const STATUS_MAP = {
-  sudah: { label: 'Sudah Dikumpulkan', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  belum: { label: 'Belum Dikumpulkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  'tepat waktu': { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  1: { label: 'Sudah Dikumpulkan', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Belum Dikumpulkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -179,6 +180,7 @@ const TugasSiswaList = () => {
     },
     {
       headerName: 'Tugas',
+      backendField: 'tugas.judul',
       sortable: true,
       filter: true,
       flex: 1.5,
@@ -189,6 +191,7 @@ const TugasSiswaList = () => {
     },
     {
       headerName: 'Siswa',
+      backendField: 'siswa.nama',
       sortable: true,
       filter: true,
       flex: 1.5,
@@ -198,8 +201,9 @@ const TugasSiswaList = () => {
       }
     },
     {
-    field: 'waktu_kumpl',
-    headerName: 'Tanggal Kumpul',
+      field: 'waktu_kumpl',
+      backendField: 'waktu_kumpul',
+      headerName: 'Tanggal Kumpul',
       sortable: true,
       filter: true,
       width: 180,
@@ -207,17 +211,18 @@ const TugasSiswaList = () => {
       cellRenderer: (params) => formatDateTime(params.value)
     },
     {
-      field: 'status_kumpl',
+      field: 'status_kumpl_label',
+      backendField: 'status_kumpul',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 160,
       minWidth: 140,
       cellRenderer: (params) => {
-        const status = params.value
-        if (status === null || status === undefined) return '-'
-        const statusKey = String(status).toLowerCase()
-        const statusInfo = STATUS_MAP[status] || STATUS_MAP[statusKey] || { label: String(status), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+        const label = params.value
+        if (!label) return '-'
+        const statusKey = String(label).toLowerCase()
+        const statusInfo = STATUS_MAP[statusKey] || { label: String(label), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
             {statusInfo.label}
@@ -227,6 +232,7 @@ const TugasSiswaList = () => {
     },
     {
       field: 'nilai',
+      backendField: 'nilai',
       headerName: 'Nilai',
       sortable: true,
       filter: true,
@@ -299,6 +305,7 @@ const TugasSiswaList = () => {
           key={`tugas-siswa-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/tugas-siswa/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

@@ -98,6 +98,7 @@ const ActivityLogsList = () => {
     { field: 'id', headerName: 'ID', width: 80, minWidth: 60, sortable: true },
     {
       field: 'user',
+      backendField: 'user_display',
       headerName: 'User',
       flex: 1,
       minWidth: 150,
@@ -150,6 +151,7 @@ const ActivityLogsList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/admin/activity-logs/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

@@ -149,6 +149,7 @@ const HasilList = () => {
     },
     {
       headerName: 'Siswa',
+      backendField: 'siswa_display',
       sortable: true,
       filter: true,
       flex: 1.5,
@@ -161,6 +162,7 @@ const HasilList = () => {
     },
     {
       headerName: 'Kelas',
+      backendField: 'siswa.kelas.nama_kelas',
       sortable: true,
       filter: true,
       width: 130,
@@ -237,6 +239,7 @@ const HasilList = () => {
           key={`hasil-grid-${searchText}`}
           ref={gridRef}
           endpoint="/spk/hasil/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

@@ -221,6 +221,8 @@ const PeminjamanList = () => {
       minWidth: 60
     },
     {
+      field: 'siswa',
+      backendField: 'siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -242,6 +244,8 @@ const PeminjamanList = () => {
       }
     },
     {
+      field: 'buku',
+      backendField: 'buku.judul',
       headerName: 'Buku',
       sortable: true,
       filter: true,
@@ -291,9 +295,10 @@ const PeminjamanList = () => {
     },
     {
       field: 'status',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => getStatusBadge(params.value)
@@ -380,6 +385,7 @@ const PeminjamanList = () => {
           key={`peminjaman-grid-${searchText}`}
           ref={gridRef}
           endpoint="/perpustakaan/peminjaman/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

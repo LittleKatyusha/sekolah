@@ -11,9 +11,9 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 // Status mapping for display
 const STATUS_MAP = {
   1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  0: { label: 'Draft/Selesai', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  nonaktif: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  'draft/selesai': { label: 'Draft/Selesai', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -187,8 +187,8 @@ const TugasList = () => {
     },
     {
       headerName: 'Guru / Mapel',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       flex: 1.5,
       minWidth: 180,
       valueGetter: (params) => {
@@ -201,6 +201,7 @@ const TugasList = () => {
     },
     {
       headerName: 'Kelas',
+      backendField: 'kelas.nama_kelas',
       sortable: true,
       filter: true,
       width: 120,
@@ -222,9 +223,10 @@ const TugasList = () => {
     },
     {
       field: 'status',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
@@ -298,6 +300,7 @@ const TugasList = () => {
           key={`tugas-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/tugas/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

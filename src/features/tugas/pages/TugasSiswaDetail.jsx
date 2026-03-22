@@ -9,11 +9,12 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 
 // Submission status mapping
 const STATUS_MAP = {
-  sudah: { label: 'Sudah Dikumpulkan', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  belum: { label: 'Belum Dikumpulkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  'tepat waktu': { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  1: { label: 'Sudah Dikumpulkan', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Belum Dikumpulkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
 }
 
 const TugasSiswaDetail = () => {
@@ -40,7 +41,7 @@ const TugasSiswaDetail = () => {
       setTugasSiswa(ts)
       setGradeData({
         nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
-        catatan: ts.catatan || ''
+        catatan_guru: ts.catatan_guru || ts.catatan || ''
       })
     } else {
       showError('Gagal mengambil data tugas siswa')
@@ -81,7 +82,7 @@ const TugasSiswaDetail = () => {
     setGradeLoading(true)
     const submitData = {
       nilai: parseFloat(gradeData.nilai),
-      catatan: gradeData.catatan || null
+      catatan_guru: gradeData.catatan_guru || null
     }
 
     const { error } = await tugasSiswaService.nilai(id, submitData)
@@ -182,7 +183,7 @@ const TugasSiswaDetail = () => {
                 {tugasSiswa.siswa?.nis ? `NIS: ${tugasSiswa.siswa.nis}` : ''}
               </p>
               <div className="flex justify-center gap-2 mb-2">
-                {getStatusBadge(tugasSiswa.status_kumpl)}
+                {getStatusBadge(tugasSiswa.status_kumpul_label || tugasSiswa.status_kumpl_label || tugasSiswa.status_kumpul || tugasSiswa.status_kumpl)}
               </div>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
@@ -249,7 +250,7 @@ const TugasSiswaDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Tanggal Kumpul</p>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {formatDateTime(tugasSiswa.waktu_kumpl)}
+                      {formatDateTime(tugasSiswa.waktu_kumpul || tugasSiswa.waktu_kumpl)}
                     </p>
                   </div>
                 </div>
@@ -260,7 +261,7 @@ const TugasSiswaDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Status Kumpul</p>
-                    <div className="mt-1">{getStatusBadge(tugasSiswa.status_kumpl)}</div>
+                    <div className="mt-1">{getStatusBadge(tugasSiswa.status_kumpul_label || tugasSiswa.status_kumpl_label || tugasSiswa.status_kumpul || tugasSiswa.status_kumpl)}</div>
                   </div>
                 </div>
 
@@ -282,30 +283,30 @@ const TugasSiswaDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">File Path</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{tugasSiswa.file_path || '-'}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{tugasSiswa.file_siswa || tugasSiswa.file_path || '-'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Jawaban Section */}
-              {tugasSiswa.jawaban && (
+              {(tugasSiswa.jawaban_teks || tugasSiswa.jawaban) && (
                 <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Jawaban</h4>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{tugasSiswa.jawaban}</p>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{tugasSiswa.jawaban_teks || tugasSiswa.jawaban}</p>
                   </div>
                 </div>
               )}
 
               {/* Catatan Section */}
-              {tugasSiswa.catatan && (
+              {(tugasSiswa.catatan_guru || tugasSiswa.catatan) && (
                 <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare size={16} className="text-gray-500" />
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Catatan Guru</h4>
                   </div>
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{tugasSiswa.catatan}</p>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{tugasSiswa.catatan_guru || tugasSiswa.catatan}</p>
                   </div>
                 </div>
               )}
@@ -361,9 +362,9 @@ const TugasSiswaDetail = () => {
                     Catatan
                   </label>
                   <textarea
-                    name="catatan"
-                    value={gradeData.catatan}
-                    onChange={(e) => setGradeData(prev => ({ ...prev, catatan: e.target.value }))}
+                    name="catatan_guru"
+                    value={gradeData.catatan_guru}
+                    onChange={(e) => setGradeData(prev => ({ ...prev, catatan_guru: e.target.value }))}
                     placeholder="Catatan untuk siswa (opsional)"
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"

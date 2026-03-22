@@ -174,6 +174,8 @@ const SemesterList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
+      field: 'tahun_ajaran',
+      backendField: 'tahunAjaran.nama',
       headerName: 'Tahun Ajaran',
       sortable: true,
       filter: true,
@@ -281,6 +283,7 @@ const SemesterList = () => {
           key={`semester-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/semester/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

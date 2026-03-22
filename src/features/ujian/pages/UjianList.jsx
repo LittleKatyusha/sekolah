@@ -227,6 +227,7 @@ const UjianList = () => {
     },
     {
       field: 'mapel',
+      backendField: 'mapel.nama_mapel',
       headerName: 'Mapel',
       sortable: true,
       filter: true,
@@ -238,6 +239,7 @@ const UjianList = () => {
     },
     {
       field: 'kelas',
+      backendField: 'kelas.nama_kelas',
       headerName: 'Kelas',
       sortable: true,
       filter: true,
@@ -249,9 +251,10 @@ const UjianList = () => {
     },
     {
       field: 'jenis',
+      backendField: 'jenis',
       headerName: 'Jenis',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
@@ -284,9 +287,10 @@ const UjianList = () => {
     },
     {
       field: 'semester',
+      backendField: 'semester',
       headerName: 'Semester',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 110,
       minWidth: 100,
       cellRenderer: (params) => formatSemester(params.value)
@@ -374,6 +378,7 @@ const UjianList = () => {
           key={`ujian-grid-${searchText}-${selectedKelas}`}
           ref={gridRef}
           endpoint="/akademik/ujian/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

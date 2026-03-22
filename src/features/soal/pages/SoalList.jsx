@@ -183,9 +183,10 @@ const SoalList = () => {
     },
     {
       field: 'tipe',
+      backendField: 'tipe',
       headerName: 'Tipe',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 160,
       minWidth: 140,
       cellRenderer: (params) => {
@@ -200,9 +201,10 @@ const SoalList = () => {
     },
     {
       field: 'tingkat_kesulitan',
+      backendField: 'tingkat_kesulitan',
       headerName: 'Tingkat Kesulitan',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 160,
       minWidth: 140,
       cellRenderer: (params) => {
@@ -224,6 +226,8 @@ const SoalList = () => {
       }
     },
     {
+    field: 'mapel',
+    backendField: 'mapel.nama_mapel',
     headerName: 'Mata Pelajaran',
     valueGetter: (params) => params.data?.mapel?.nama || params.data?.mapel?.nama_mapel || '-',
       sortable: true,
@@ -296,6 +300,7 @@ const SoalList = () => {
           key={`soal-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/soals"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

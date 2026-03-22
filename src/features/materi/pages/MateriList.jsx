@@ -19,9 +19,9 @@ const TIPE_MAP = {
 // Status mapping for display
 const STATUS_MAP = {
   1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  0: { label: 'Draft', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  nonaktif: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  draft: { label: 'Draft', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -183,8 +183,8 @@ const MateriList = () => {
     },
     {
       headerName: 'Guru / Mapel',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       flex: 1.5,
       minWidth: 180,
       valueGetter: (params) => {
@@ -198,8 +198,8 @@ const MateriList = () => {
     {
       field: 'tipe',
       headerName: 'Tipe',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
@@ -215,9 +215,10 @@ const MateriList = () => {
     },
     {
       field: 'status',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
@@ -235,8 +236,8 @@ const MateriList = () => {
     {
       field: 'urutan',
       headerName: 'Urutan',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       width: 100,
       minWidth: 80,
       cellRenderer: (params) => params.value ?? '-'
@@ -300,6 +301,7 @@ const MateriList = () => {
           key={`materi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/materi/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

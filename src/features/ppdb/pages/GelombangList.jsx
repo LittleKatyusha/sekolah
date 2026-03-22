@@ -137,12 +137,14 @@ const GelombangList = () => {
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
     { field: 'nama_gelombang', headerName: 'Nama Gelombang', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
     {
+      field: 'tahunAjaran',
+      backendField: 'tahunAjaran.tahun_ajaran',
       headerName: 'Tahun Ajaran',
       sortable: true,
       filter: true,
       flex: 1,
       minWidth: 140,
-      valueGetter: (params) => params.data?.tahun_ajaran?.nama || params.data?.tahun_ajaran_id || '-'
+      valueGetter: (params) => params.data?.tahunAjaran?.tahun_ajaran || params.data?.tahun_ajaran?.nama || params.data?.tahun_ajaran_id || '-'
     },
     {
       field: 'tgl_mulai',
@@ -242,6 +244,7 @@ const GelombangList = () => {
           key={`gelombang-grid-${searchText}`}
           ref={gridRef}
           endpoint="/ppdb/gelombang/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

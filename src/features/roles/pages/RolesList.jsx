@@ -189,6 +189,7 @@ const RolesList = () => {
           key={`roles-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/roles/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

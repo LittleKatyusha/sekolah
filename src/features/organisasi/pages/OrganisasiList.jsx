@@ -160,6 +160,8 @@ const OrganisasiList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
+      field: 'pembina',
+      backendField: 'pembina.nama',
       headerName: 'Pembina',
       sortable: true,
       filter: true,
@@ -255,6 +257,7 @@ const OrganisasiList = () => {
           key={`organisasi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/organisasi/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

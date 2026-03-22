@@ -161,6 +161,8 @@ const PembayaranSppList = () => {
       minWidth: 70
     },
     {
+      field: 'siswa',
+      backendField: 'siswa.nama',
       headerName: 'Siswa',
       sortable: true,
       filter: true,
@@ -173,9 +175,11 @@ const PembayaranSppList = () => {
       }
     },
     {
+      field: 'bulan_tahun',
+      backendField: 'bulan',
       headerName: 'Bulan/Tahun',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 150,
       minWidth: 130,
       valueGetter: (params) => {
@@ -208,9 +212,10 @@ const PembayaranSppList = () => {
     },
     {
       field: 'status',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 130,
       minWidth: 110,
       cellRenderer: (params) => {
@@ -226,9 +231,10 @@ const PembayaranSppList = () => {
     },
     {
       field: 'metode_pembayaran',
+      backendField: 'metode_pembayaran',
       headerName: 'Metode',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 130,
       minWidth: 110,
       cellRenderer: (params) => params.value || '-'
@@ -290,6 +296,7 @@ const PembayaranSppList = () => {
           key={`pembayaran-spp-grid-${searchText}`}
           ref={gridRef}
           endpoint="/keuangan/pembayaran-spp/"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

@@ -10,9 +10,9 @@ import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const STATUS_KUMPUL_OPTIONS = [
-  { value: 'sudah', label: 'Sudah Dikumpulkan' },
-  { value: 'belum', label: 'Belum Dikumpulkan' },
-  { value: 'terlambat', label: 'Terlambat' },
+  { value: '0', label: 'Belum' },
+  { value: '1', label: 'Tepat Waktu' },
+  { value: '2', label: 'Terlambat' },
 ]
 
 const TugasSiswaForm = () => {
@@ -26,12 +26,12 @@ const TugasSiswaForm = () => {
   const [formData, setFormData] = useState({
     mst_tugas_id: '',
     mst_siswa_id: '',
-    jawaban: '',
-    file_path: '',
-    waktu_kumpl: '',
-    status_kumpl: '',
+    jawaban_teks: '',
+    file_siswa: '',
+    waktu_kumpul: '',
+    status_kumpul: '',
     nilai: '',
-    catatan: ''
+    catatan_guru: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -75,19 +75,19 @@ const TugasSiswaForm = () => {
       const ts = data.data
       // Format datetime for datetime-local input
       let waktuKumpl = ''
-      if (ts.waktu_kumpl) {
-        const dt = new Date(ts.waktu_kumpl)
+      if (ts.waktu_kumpul || ts.waktu_kumpl) {
+        const dt = new Date(ts.waktu_kumpul || ts.waktu_kumpl)
         waktuKumpl = dt.toISOString().slice(0, 16)
       }
       setFormData({
         mst_tugas_id: ts.tugas?.id ? String(ts.tugas.id) : (ts.mst_tugas_id ? String(ts.mst_tugas_id) : ''),
         mst_siswa_id: ts.siswa?.id ? String(ts.siswa.id) : (ts.mst_siswa_id ? String(ts.mst_siswa_id) : ''),
-        jawaban: ts.jawaban || '',
-        file_path: ts.file_path || '',
-        waktu_kumpl: waktuKumpl,
-        status_kumpl: ts.status_kumpl !== null && ts.status_kumpl !== undefined ? String(ts.status_kumpl) : '',
+        jawaban_teks: ts.jawaban_teks || ts.jawaban || '',
+        file_siswa: ts.file_siswa || ts.file_path || '',
+        waktu_kumpul: waktuKumpl,
+        status_kumpul: ts.status_kumpul !== null && ts.status_kumpul !== undefined ? String(ts.status_kumpul) : (ts.status_kumpl !== null && ts.status_kumpl !== undefined ? String(ts.status_kumpl) : ''),
         nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
-        catatan: ts.catatan || ''
+        catatan_guru: ts.catatan_guru || ts.catatan || ''
       })
     } else {
       showError('Gagal mengambil data tugas siswa')
@@ -123,12 +123,12 @@ const TugasSiswaForm = () => {
     const submitData = {
       mst_tugas_id: parseInt(formData.mst_tugas_id),
       mst_siswa_id: parseInt(formData.mst_siswa_id),
-      jawaban: formData.jawaban || null,
-      file_path: formData.file_path || null,
-      waktu_kumpl: formData.waktu_kumpl || null,
-      status_kumpl: formData.status_kumpl || null,
+      jawaban_teks: formData.jawaban_teks || null,
+      file_siswa: formData.file_siswa || null,
+      waktu_kumpul: formData.waktu_kumpul || null,
+      status_kumpul: formData.status_kumpul !== '' ? parseInt(formData.status_kumpul) : null,
       nilai: formData.nilai !== '' ? parseFloat(formData.nilai) : null,
-      catatan: formData.catatan || null
+      catatan_guru: formData.catatan_guru || null
     }
 
     let result
@@ -212,14 +212,15 @@ const TugasSiswaForm = () => {
                 </label>
                 <textarea
                   name="jawaban"
-                  value={formData.jawaban}
+                  name="jawaban_teks"
+                  value={formData.jawaban_teks}
                   onChange={handleChange}
                   placeholder="Masukkan jawaban siswa"
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"
                 />
-                {errors.jawaban && (
-                  <p className="mt-1 text-sm text-red-500">{errors.jawaban}</p>
+                {errors.jawaban_teks && (
+                  <p className="mt-1 text-sm text-red-500">{errors.jawaban_teks}</p>
                 )}
               </div>
 
@@ -230,11 +231,11 @@ const TugasSiswaForm = () => {
                 </label>
                 <Input
                   type="text"
-                  name="file_path"
-                  value={formData.file_path}
+                  name="file_siswa"
+                  value={formData.file_siswa}
                   onChange={handleChange}
                   placeholder="Path file (opsional)"
-                  error={errors.file_path}
+                  error={errors.file_siswa}
                 />
               </div>
 
@@ -245,13 +246,13 @@ const TugasSiswaForm = () => {
                 </label>
                 <input
                   type="datetime-local"
-                  name="waktu_kumpl"
-                  value={formData.waktu_kumpl}
+                  name="waktu_kumpul"
+                  value={formData.waktu_kumpul}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 />
-                {errors.waktu_kumpl && (
-                  <p className="mt-1 text-sm text-red-500">{errors.waktu_kumpl}</p>
+                {errors.waktu_kumpul && (
+                  <p className="mt-1 text-sm text-red-500">{errors.waktu_kumpul}</p>
                 )}
               </div>
 
@@ -261,12 +262,12 @@ const TugasSiswaForm = () => {
                   Status Kumpul
                 </label>
                 <SearchableSelect
-                  name="status_kumpl"
-                  value={formData.status_kumpl}
+                  name="status_kumpul"
+                  value={formData.status_kumpul}
                   onChange={handleChange}
                   options={STATUS_KUMPUL_OPTIONS}
                   placeholder="Pilih status"
-                  error={errors.status_kumpl}
+                  error={errors.status_kumpul}
                 />
               </div>
 
@@ -295,15 +296,15 @@ const TugasSiswaForm = () => {
                   Catatan Guru
                 </label>
                 <textarea
-                  name="catatan"
-                  value={formData.catatan}
+                  name="catatan_guru"
+                  value={formData.catatan_guru}
                   onChange={handleChange}
                   placeholder="Catatan dari guru (opsional)"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"
                 />
-                {errors.catatan && (
-                  <p className="mt-1 text-sm text-red-500">{errors.catatan}</p>
+                {errors.catatan_guru && (
+                  <p className="mt-1 text-sm text-red-500">{errors.catatan_guru}</p>
                 )}
               </div>
             </div>

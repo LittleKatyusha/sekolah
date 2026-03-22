@@ -169,6 +169,7 @@ const PresensiList = () => {
     },
     {
       headerName: 'Siswa',
+      backendField: 'siswa.nama',
       sortable: true,
       filter: true,
       flex: 1.5,
@@ -181,6 +182,7 @@ const PresensiList = () => {
     },
     {
       headerName: 'NIS',
+      backendField: 'siswa.nis',
       sortable: true,
       filter: true,
       width: 120,
@@ -189,8 +191,8 @@ const PresensiList = () => {
     },
     {
       headerName: 'Guru / Mapel',
-      sortable: true,
-      filter: true,
+      sortable: false,
+      filter: false,
       flex: 1.5,
       minWidth: 180,
       valueGetter: (params) => {
@@ -221,9 +223,10 @@ const PresensiList = () => {
     },
     {
       field: 'status_label',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
-      filter: true,
+      filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
@@ -302,6 +305,7 @@ const PresensiList = () => {
           key={`presensi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/presensi"
+          requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
