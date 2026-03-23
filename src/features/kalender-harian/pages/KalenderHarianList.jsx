@@ -364,14 +364,7 @@ const KalenderHarianList = () => {
     try {
       const res = await kalenderHarianService.getByMonth(currentYear, currentMonth + 1)
       if (res.data) {
-        const allItems = res.data.data || []
-        // Client-side filter to current month
-        const filtered = allItems.filter((item) => {
-          if (!item.tanggal) return false
-          const d = new Date(item.tanggal)
-          return d.getFullYear() === currentYear && d.getMonth() === currentMonth
-        })
-        setData(filtered)
+        setData(res.data.data || [])
       }
     } catch {
       showError('Gagal mengambil data kalender harian')
@@ -493,14 +486,16 @@ const KalenderHarianList = () => {
   }, [])
 
   // ── Check if a day is today ────────────────────────────────────────────
-  const today = new Date()
   const isToday = useCallback(
-    (dayNum) =>
-      dayNum &&
-      currentYear === today.getFullYear() &&
-      currentMonth === today.getMonth() &&
-      dayNum === today.getDate(),
-    [currentYear, currentMonth, today]
+    (dayNum) => {
+      const today = new Date()
+
+      return dayNum &&
+        currentYear === today.getFullYear() &&
+        currentMonth === today.getMonth() &&
+        dayNum === today.getDate()
+    },
+    [currentYear, currentMonth]
   )
 
   // ── Summary stats ──────────────────────────────────────────────────────
