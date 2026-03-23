@@ -295,7 +295,6 @@ const JadwalPelajaranList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`jadwal-pelajaran-grid-${searchText}`}
           ref={gridRef}
           endpoint="/jadwal-pelajaran/"
           staticParams={staticParams}

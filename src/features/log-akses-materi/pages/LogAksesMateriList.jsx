@@ -109,7 +109,6 @@ const LogAksesMateriList = () => {
       </div>
       <Card>
         <InfiniteGrid
-          key={`log-akses-materi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/log-akses-materi"
           staticParams={staticParams}

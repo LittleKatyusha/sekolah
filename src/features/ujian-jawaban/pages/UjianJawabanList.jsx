@@ -137,7 +137,6 @@ const UjianJawabanList = () => {
       </div>
       <Card>
         <InfiniteGrid
-          key={`ujian-jawaban-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/ujian-jawaban"
           staticParams={staticParams}

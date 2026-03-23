@@ -297,7 +297,6 @@ const GuruList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`guru-grid-${searchText}`}
           ref={gridRef}
           endpoint="/guru/"
           staticParams={staticParams}

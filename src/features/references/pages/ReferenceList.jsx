@@ -149,7 +149,6 @@ const ReferenceList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`reference-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/references/"
           staticParams={staticParams}

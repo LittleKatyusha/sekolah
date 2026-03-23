@@ -270,7 +270,6 @@ const NilaiList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`nilai-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/nilai"
           staticParams={staticParams}

@@ -186,7 +186,6 @@ const RolesList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`roles-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/roles/"
           requestMode="ag-grid"

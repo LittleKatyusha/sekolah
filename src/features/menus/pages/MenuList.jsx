@@ -236,7 +236,6 @@ const MenuList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`menu-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/menus/"
           staticParams={staticParams}

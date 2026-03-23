@@ -474,7 +474,6 @@ const UjianUserList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`ujian-user-grid-${searchText}-${selectedUjian}-${selectedSiswa}`}
           ref={gridRef}
           endpoint="/akademik/ujian-user/"
           requestMode="ag-grid"

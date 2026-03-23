@@ -236,7 +236,6 @@ const HasilList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`hasil-grid-${searchText}`}
           ref={gridRef}
           endpoint="/spk/hasil/"
           requestMode="ag-grid"

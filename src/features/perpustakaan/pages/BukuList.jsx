@@ -282,7 +282,6 @@ const BukuList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`buku-grid-${searchText}`}
           ref={gridRef}
           endpoint="/perpustakaan/buku/"
           staticParams={staticParams}

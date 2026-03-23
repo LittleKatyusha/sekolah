@@ -312,7 +312,6 @@ const KelasList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`kelas-grid-${searchText}`}
           ref={gridRef}
           endpoint="/kelas/"
           requestMode="ag-grid"

@@ -276,7 +276,6 @@ const WaliList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`wali-grid-${searchText}`}
           ref={gridRef}
           endpoint="/wali/"
           staticParams={staticParams}

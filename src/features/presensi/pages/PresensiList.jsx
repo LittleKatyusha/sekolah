@@ -302,7 +302,6 @@ const PresensiList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`presensi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/presensi"
           requestMode="ag-grid"

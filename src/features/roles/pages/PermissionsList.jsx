@@ -170,7 +170,6 @@ const PermissionsList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`permissions-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/permissions/"
           staticParams={staticParams}

@@ -348,7 +348,6 @@ const UsersList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`users-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/users/"
           requestMode="ag-grid"

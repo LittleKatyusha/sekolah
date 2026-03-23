@@ -382,7 +382,6 @@ const PeminjamanList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`peminjaman-grid-${searchText}`}
           ref={gridRef}
           endpoint="/perpustakaan/peminjaman/"
           requestMode="ag-grid"

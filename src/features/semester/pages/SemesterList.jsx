@@ -280,7 +280,6 @@ const SemesterList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`semester-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/semester/"
           requestMode="ag-grid"

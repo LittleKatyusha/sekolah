@@ -238,7 +238,6 @@ const PenilaianList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`penilaian-grid-${searchText}`}
           ref={gridRef}
           endpoint="/spk/penilaian/"
           requestMode="ag-grid"

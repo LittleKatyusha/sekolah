@@ -203,7 +203,6 @@ const PendaftarList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`pendaftar-grid-${searchText}`}
           ref={gridRef}
           endpoint="/ppdb/pendaftaran/"
           staticParams={staticParams}

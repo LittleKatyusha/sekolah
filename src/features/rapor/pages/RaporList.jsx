@@ -275,7 +275,6 @@ const RaporList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`rapor-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/rapor/"
           requestMode="ag-grid"

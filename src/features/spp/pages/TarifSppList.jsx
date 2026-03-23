@@ -249,7 +249,6 @@ const TarifSppList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`tarif-spp-grid-${searchText}`}
           ref={gridRef}
           endpoint="/keuangan/tarif-spp/"
           requestMode="ag-grid"

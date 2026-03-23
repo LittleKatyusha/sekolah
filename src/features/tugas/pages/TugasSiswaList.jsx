@@ -302,7 +302,6 @@ const TugasSiswaList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`tugas-siswa-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/tugas-siswa/"
           requestMode="ag-grid"

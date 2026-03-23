@@ -161,7 +161,6 @@ const EksSiswaList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`eks-siswa-grid-${searchText}`}
           ref={gridRef}
           endpoint="/ekstrakurikuler/pendaftaran/"
           requestMode="ag-grid"

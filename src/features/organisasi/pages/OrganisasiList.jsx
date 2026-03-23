@@ -254,7 +254,6 @@ const OrganisasiList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`organisasi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/organisasi/"
           requestMode="ag-grid"

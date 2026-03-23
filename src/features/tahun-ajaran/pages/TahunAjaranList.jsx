@@ -266,7 +266,6 @@ const TahunAjaranList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`tahun-ajaran-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/tahun-ajaran/"
           staticParams={staticParams}

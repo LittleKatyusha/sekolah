@@ -293,7 +293,6 @@ const PembayaranSppList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`pembayaran-spp-grid-${searchText}`}
           ref={gridRef}
           endpoint="/keuangan/pembayaran-spp/"
           requestMode="ag-grid"

@@ -297,7 +297,6 @@ const SoalList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`soal-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/soals"
           requestMode="ag-grid"

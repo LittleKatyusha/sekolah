@@ -295,7 +295,6 @@ const RankingList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`ranking-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/ranking/"
           requestMode="ag-grid"

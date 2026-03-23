@@ -493,7 +493,6 @@ const AbsensiSiswaList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`absensi-siswa-grid-${endpoint}`}
           ref={gridRef}
           endpoint={endpoint}
           requestMode="ag-grid"

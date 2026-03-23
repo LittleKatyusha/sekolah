@@ -323,7 +323,6 @@ const KalenderAkademikList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`kalender-akademik-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/kalender-akademik/"
           requestMode="ag-grid"

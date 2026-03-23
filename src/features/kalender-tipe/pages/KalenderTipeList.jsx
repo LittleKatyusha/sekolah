@@ -142,7 +142,6 @@ const KalenderTipeList = () => {
       </div>
       <Card>
         <InfiniteGrid
-          key={`kalender-tipe-grid-${searchText}`}
           ref={gridRef}
           endpoint="/admin/kalender-tipe/"
           staticParams={staticParams}

@@ -241,7 +241,6 @@ const GelombangList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`gelombang-grid-${searchText}`}
           ref={gridRef}
           endpoint="/ppdb/gelombang/"
           requestMode="ag-grid"

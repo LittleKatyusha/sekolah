@@ -298,7 +298,6 @@ const MateriList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`materi-grid-${searchText}`}
           ref={gridRef}
           endpoint="/akademik/materi/"
           requestMode="ag-grid"

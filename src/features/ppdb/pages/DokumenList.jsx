@@ -160,7 +160,6 @@ const DokumenList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`dokumen-grid-${search}`}
           ref={gridRef}
           endpoint="/ppdb/dokumen/"
           staticParams={staticParams}

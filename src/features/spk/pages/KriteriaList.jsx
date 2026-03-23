@@ -223,7 +223,6 @@ const KriteriaList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`kriteria-grid-${searchText}`}
           ref={gridRef}
           endpoint="/spk/kriteria/"
           staticParams={staticParams}

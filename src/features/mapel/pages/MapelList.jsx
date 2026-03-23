@@ -221,7 +221,6 @@ const MapelList = () => {
 
       <Card>
         <InfiniteGrid
-          key={`mapel-grid-${searchText}`}
           ref={gridRef}
           endpoint="/mapel/"
           requestMode="ag-grid"
