@@ -1,4 +1,4 @@
-import apiService from '../../../utils/api'
+import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/admin/menus'
 
@@ -8,5 +8,5 @@ export const menuService = {
   create: (data) => apiService.post(BASE_URL, data),
   update: (id, data) => apiService.put(`${BASE_URL}/${id}`, data),
   deleteById: (id) => apiService.delete(`${BASE_URL}/${id}`),
-  getTree: () => apiService.get(`menus/tree`),
+  getTree: () => apiService.get('menus/tree'),
 }

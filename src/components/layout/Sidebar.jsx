@@ -17,12 +17,47 @@ import {
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
-import { apiService } from '../../utils/api'
+import { menuService } from '../../features/menus/services/menuService'
 
 const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
 const sidebarMenuRequestCache = new Map()
 
 const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${userId}`
+
+const getIconComponent = (iconName) => ICON_MAP[iconName] || HelpCircle
+
+const serializeMenuItem = (item) => ({
+  id: item.id,
+  name: item.name,
+  to: item.to,
+  iconName: item.iconName,
+  children: Array.isArray(item.children) ? item.children.map(serializeMenuItem) : []
+})
+
+const hydrateCachedMenuItem = (item) => {
+  if (!item || typeof item !== 'object') return null
+
+  const iconName = typeof item.iconName === 'string'
+    ? item.iconName
+    : typeof item.icon === 'string'
+      ? item.icon
+      : null
+
+  if (!iconName) {
+    return null
+  }
+
+  return {
+    id: item.id,
+    name: item.name,
+    to: item.to,
+    iconName,
+    icon: getIconComponent(iconName),
+    children: Array.isArray(item.children)
+      ? item.children.map(hydrateCachedMenuItem).filter(Boolean)
+      : []
+  }
+}
 
 const readSidebarMenuCache = (userId) => {
   if (!userId || typeof window === 'undefined') return null
@@ -32,7 +67,11 @@ const readSidebarMenuCache = (userId) => {
     if (!cached) return null
 
     const parsed = JSON.parse(cached)
-    return Array.isArray(parsed) ? parsed : null
+    if (!Array.isArray(parsed)) return null
+
+    const hydratedMenus = parsed.map(hydrateCachedMenuItem).filter(Boolean)
+
+    return hydratedMenus.length === parsed.length ? hydratedMenus : null
   } catch {
     return null
   }
@@ -42,7 +81,8 @@ const writeSidebarMenuCache = (userId, menus) => {
   if (!userId || typeof window === 'undefined') return
 
   try {
-    window.sessionStorage.setItem(getSidebarMenuCacheKey(userId), JSON.stringify(menus))
+    const serializedMenus = Array.isArray(menus) ? menus.map(serializeMenuItem) : []
+    window.sessionStorage.setItem(getSidebarMenuCacheKey(userId), JSON.stringify(serializedMenus))
   } catch {
     // Ignore sessionStorage write failures and fall back to in-memory state only.
   }
@@ -187,35 +227,13 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       const cachedMenus = readSidebarMenuCache(user.id)
       if (cachedMenus) {
-        const invalidCachedIcon = cachedMenus.find((menu) => {
-          const stack = [menu]
-          while (stack.length > 0) {
-            const current = stack.pop()
-            if (!current) continue
-
-            if (current.icon && typeof current.icon === 'object' && !('$$typeof' in current.icon)) {
-              return true
-            }
-
-            if (Array.isArray(current.children) && current.children.length > 0) {
-              stack.push(...current.children)
-            }
-          }
-          return false
-        })
-
-        if (invalidCachedIcon) {
-          console.warn('[Sidebar] Cached menu contains non-renderable icon object. Clearing cache and refetching.', {
-            userId: user.id
-          })
-          clearSidebarMenuCache(user.id)
-        } else {
-          setNavigation(cachedMenus)
-          setError(null)
-          setLoading(false)
-          return
-        }
+        setNavigation(cachedMenus)
+        setError(null)
+        setLoading(false)
+        return
       }
+
+      clearSidebarMenuCache(user.id)
 
       try {
         setLoading(true)
@@ -224,7 +242,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         let request = sidebarMenuRequestCache.get(user.id)
 
         if (!request) {
-          request = apiService.get('/menus/tree/')
+          request = menuService.getTree()
           sidebarMenuRequestCache.set(user.id, request)
         }
 
@@ -257,10 +275,13 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         // Helper function to map menu items recursively
         const mapMenuItem = (item) => {
+          const iconName = typeof item.icon === 'string' ? item.icon : null
+
           const menuItem = {
             name: item.nama_menu,
             to: toFrontendRoute(item.url),
-            icon: ICON_MAP[item.icon] || HelpCircle,
+            iconName,
+            icon: getIconComponent(iconName),
             id: item.id,
             children: []
           }
