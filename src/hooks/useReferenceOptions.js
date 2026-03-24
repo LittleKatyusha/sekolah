@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { referenceService } from '../services/referenceService'
 
-const REFERENCE_OPTIONS_CACHE_PREFIX = 'reference-options-cache:'
+const REFERENCE_OPTIONS_CACHE_PREFIX = 'reference-options-cache:v2:'
 const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
 const referenceOptionsRequestCache = new Map()
 
@@ -42,10 +42,26 @@ const writeReferenceOptionsCache = (category, options) => {
 }
 
 const mapReferenceOptions = (responseData) =>
-  (responseData || []).map((item) => ({
+  (Array.isArray(responseData) ? responseData : []).map((item) => ({
     value: item?.kode !== undefined && item?.kode !== null ? String(item.kode) : '',
     label: item?.nama ?? '',
   }))
+
+const extractReferenceItems = (response) => {
+  if (response?.error) {
+    throw response.error
+  }
+
+  if (Array.isArray(response?.data?.data)) {
+    return response.data.data
+  }
+
+  if (Array.isArray(response?.data)) {
+    return response.data
+  }
+
+  return []
+}
 
 const serializeFallbackOptions = (fallbackOptions) => {
   try {
@@ -79,7 +95,7 @@ const getReferenceOptionsByCategory = async (category) => {
 
   try {
     const response = await request
-    const mappedOptions = mapReferenceOptions(response.data)
+    const mappedOptions = mapReferenceOptions(extractReferenceItems(response))
     writeReferenceOptionsCache(category, mappedOptions)
     return mappedOptions
   } finally {

@@ -9,6 +9,7 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { ujianService } from '../services/ujianService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatJenisLabel, formatSemesterLabel, getJenisColorClass, getMapelLabel, getUjianName } from '../utils/ujianFormatters'
 
 // Actions Menu Component
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
@@ -126,29 +127,6 @@ const UjianList = () => {
     ...(selectedKelas ? { mst_kelas_id: selectedKelas } : {}),
   }), [searchText, selectedKelas])
 
-  const getJenisLabel = (value) => {
-    if (!value) return '-'
-    const jenisMap = {
-      1: 'PTS',
-      2: 'PAS',
-      3: 'US',
-      4: 'Tryout',
-      5: 'Lainnya',
-    }
-    return jenisMap[value] || `Jenis ${value}`
-  }
-
-  const getJenisColorClass = (value) => {
-    const colorMap = {
-      1: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-      2: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-      3: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-      4: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-      5: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    }
-    return colorMap[value] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-  }
-
   const formatDate = (dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
@@ -157,11 +135,6 @@ const UjianList = () => {
       month: 'long',
       year: 'numeric'
     })
-  }
-
-  const formatSemester = (value) => {
-    if (!value) return '-'
-    return value.charAt(0).toUpperCase() + value.slice(1)
   }
 
   useEffect(() => {
@@ -189,7 +162,7 @@ const UjianList = () => {
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
-    const result = await showDeleteConfirm(data.nama || `Ujian #${data.id}`)
+    const result = await showDeleteConfirm(getUjianName(data))
     if (result.isConfirmed) {
       const { error } = await ujianService.delete(data.id)
       if (!error) {
@@ -233,9 +206,7 @@ const UjianList = () => {
       filter: true,
       flex: 1,
       minWidth: 150,
-      valueGetter: (params) => {
-        return params.data?.mapel?.nama || params.data?.mapel?.kode || '-'
-      }
+      valueGetter: (params) => getMapelLabel(params.data?.mapel)
     },
     {
       field: 'kelas',
@@ -258,7 +229,7 @@ const UjianList = () => {
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
-        const label = getJenisLabel(params.value)
+        const label = formatJenisLabel(params.value, { short: true })
         const colorClass = getJenisColorClass(params.value)
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
@@ -274,7 +245,7 @@ const UjianList = () => {
       filter: true,
       flex: 1,
       minWidth: 150,
-      cellRenderer: (params) => params.value || '-'
+      cellRenderer: (params) => getUjianName(params.data)
     },
     {
       field: 'tanggal',
@@ -293,7 +264,7 @@ const UjianList = () => {
       filter: false,
       width: 110,
       minWidth: 100,
-      cellRenderer: (params) => formatSemester(params.value)
+      cellRenderer: (params) => formatSemesterLabel(params.value)
     },
     {
       field: 'tahun_ajaran',

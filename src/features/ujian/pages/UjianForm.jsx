@@ -8,23 +8,19 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { ujianService } from '../services/ujianService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
+import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
+import { getMapelCode, getMapelLabel } from '../utils/ujianFormatters'
 
 const UjianForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const { options: jenisUjianOptions } = useReferenceOptions('jenis_ujian', [
-    { value: '1', label: 'Harian' },
-    { value: '2', label: 'Penilaian Tengah Semester' },
-  ])
-  const { options: semesterOptions } = useReferenceOptions('kategori_semester', [
-    { value: '1', label: 'Ganjil' },
-    { value: '2', label: 'Genap' },
-  ])
+  const { options: jenisUjianOptions } = useReferenceOptions('jenis_ujian')
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -43,16 +39,27 @@ const UjianForm = () => {
   const [errors, setErrors] = useState({})
   const [selectedMapelOption, setSelectedMapelOption] = useState(null)
   const [selectedKelasOption, setSelectedKelasOption] = useState(null)
+  const [selectedTahunAjaranOption, setSelectedTahunAjaranOption] = useState(null)
+  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
 
   const buildMapelOption = useCallback((mapel) => ({
     value: String(mapel.id),
-    label: `${mapel.kode ? `${mapel.kode} - ` : ''}${mapel.nama || `Mapel #${mapel.id}`}`
+    label: `${getMapelCode(mapel) ? `${getMapelCode(mapel)} - ` : ''}${getMapelLabel(mapel)}`
   }), [])
 
   const buildKelasOption = useCallback((kelas) => ({
     value: String(kelas.id),
     label: kelas.nama_kelas || `Kelas #${kelas.id}`
   }), [])
+
+  const buildTahunAjaranOption = useCallback((tahunAjaran) => {
+    const label = tahunAjaran?.nama || tahunAjaran?.tahun_ajaran || tahunAjaran?.label || `Tahun Ajaran #${tahunAjaran?.id}`
+
+    return {
+      value: label,
+      label,
+    }
+  }, [])
 
   const searchMapelOptions = useCallback(async (keyword = '') => {
     const { data, error } = await mapelService.getMapel({
@@ -82,25 +89,47 @@ const UjianForm = () => {
     return []
   }, [buildKelasOption])
 
+  useEffect(() => {
+    const fetchTahunAjaranOptions = async () => {
+      const { data, error } = await tahunAjaranService.getAll({ per_page: 100 })
+
+      if (data?.data) {
+        setTahunAjaranOptions(data.data.map(buildTahunAjaranOption))
+        return
+      }
+
+      console.error('Failed to fetch tahun ajaran:', error)
+    }
+
+    fetchTahunAjaranOptions()
+  }, [buildTahunAjaranOption])
+
   const fetchUjian = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await ujianService.getById(id)
     if (data) {
       const ujian = data.data
-      const mapelId = ujian.mst_mapel_id ? String(ujian.mst_mapel_id) : ''
-      const kelasId = ujian.mst_kelas_id ? String(ujian.mst_kelas_id) : ''
+      const mapelId = ujian.mst_mapel_id ? String(ujian.mst_mapel_id) : (ujian.mapel?.id ? String(ujian.mapel.id) : '')
+      const kelasId = ujian.mst_kelas_id ? String(ujian.mst_kelas_id) : (ujian.kelas?.id ? String(ujian.kelas.id) : '')
 
       setFormData({
         mst_mapel_id: mapelId,
         mst_kelas_id: kelasId,
-        // API kadang mengembalikan label ("Harian") bukan kode ("1").
-        jenis: normalizeReferenceCode(ujian.jenis, jenisUjianOptions),
+        jenis: normalizeReferenceCode(ujian.jenis_kode ?? ujian.jenis, jenisUjianOptions),
         nama: ujian.nama || '',
         tanggal: ujian.tanggal || '',
-        semester: normalizeReferenceCode(ujian.semester, semesterOptions),
+        semester: normalizeReferenceCode(ujian.semester_kode ?? ujian.semester, semesterOptions),
         tahun_ajaran: ujian.tahun_ajaran || '',
         keterangan: ujian.keterangan || ''
       })
+
+      if (ujian.tahun_ajaran) {
+        setSelectedTahunAjaranOption(buildTahunAjaranOption({
+          nama: ujian.tahun_ajaran,
+        }))
+      } else {
+        setSelectedTahunAjaranOption(null)
+      }
 
       if (ujian.mapel?.id) {
         setSelectedMapelOption(buildMapelOption(ujian.mapel))
@@ -128,7 +157,7 @@ const UjianForm = () => {
       navigate('/akademik/ujian')
     }
     setFetchingData(false)
-  }, [buildKelasOption, buildMapelOption, id, navigate])
+  }, [buildKelasOption, buildMapelOption, buildTahunAjaranOption, id, jenisUjianOptions, navigate, semesterOptions])
 
   useEffect(() => {
     if (isEditMode) {
@@ -339,12 +368,13 @@ const UjianForm = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tahun Ajaran <span className="text-red-500">*</span>
                 </label>
-                <Input
+                <SearchableSelect
                   name="tahun_ajaran"
                   value={formData.tahun_ajaran}
                   onChange={handleChange}
-                  placeholder="Contoh: 2025/2026"
-                  maxLength={20}
+                  options={selectedTahunAjaranOption ? [selectedTahunAjaranOption, ...tahunAjaranOptions] : tahunAjaranOptions}
+                  placeholder="Pilih tahun ajaran"
+                  noOptionsText="Tidak ada tahun ajaran yang cocok"
                   error={errors.tahun_ajaran}
                 />
               </div>

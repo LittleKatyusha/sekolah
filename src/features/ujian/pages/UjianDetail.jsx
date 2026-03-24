@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianService } from '../services/ujianService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { formatJenisLabel, formatSemesterLabel, getMapelCode, getMapelLabel, getUjianName } from '../utils/ujianFormatters'
 
 const UjianDetail = () => {
   const { id } = useParams()
@@ -30,7 +31,7 @@ const UjianDetail = () => {
   }
 
   const handleDelete = async () => {
-    const result = await showDeleteConfirm(ujian.nama || 'Ujian')
+    const result = await showDeleteConfirm(getUjianName(ujian))
     if (result.isConfirmed) {
       const { error } = await ujianService.delete(ujian.id)
       if (!error) {
@@ -40,37 +41,6 @@ const UjianDetail = () => {
         showError('Gagal menghapus ujian')
       }
     }
-  }
-
-  const getJenisLabel = (value) => {
-    if (!value) return '-'
-    const jenisMap = {
-      1: 'PTS (Penilaian Tengah Semester)',
-      2: 'PAS (Penilaian Akhir Semester)',
-      3: 'PH (Penilaian Harian)',
-      4: 'Try Out',
-      5: 'Ujian Sekolah',
-    }
-    return jenisMap[value] || `Jenis ${value}`
-  }
-
-  const getJenisShortLabel = (value) => {
-    if (!value) return '-'
-    const jenisMap = {
-      1: 'PTS',
-      2: 'PAS',
-      3: 'PH',
-      4: 'Try Out',
-      5: 'Ujian Sekolah',
-    }
-    return jenisMap[value] || `Jenis ${value}`
-  }
-
-  const getSemesterLabel = (value) => {
-    if (!value) return '-'
-    if (value === 'ganjil' || value === 1 || value === '1') return 'Ganjil'
-    if (value === 'genap' || value === 2 || value === '2') return 'Genap'
-    return value
   }
 
   const formatDate = (dateString) => {
@@ -139,21 +109,21 @@ const UjianDetail = () => {
                 <FileText size={48} className="text-primary-600" />
               </div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {ujian.nama || 'Ujian'}
+                {getUjianName(ujian)}
               </h2>
               <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 mb-4">
-                {getJenisShortLabel(ujian.jenis)}
+                {formatJenisLabel(ujian.jenis, { short: true })}
               </div>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-4">
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mata Pelajaran</p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {ujian.mapel?.nama || '-'}
+                    {getMapelLabel(ujian.mapel)}
                   </p>
-                  {ujian.mapel?.kode && (
+                  {getMapelCode(ujian.mapel) && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Kode: {ujian.mapel.kode}
+                      Kode: {getMapelCode(ujian.mapel)}
                     </p>
                   )}
                 </div>
@@ -191,7 +161,7 @@ const UjianDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Nama Ujian</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{ujian.nama || '-'}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{getUjianName(ujian)}</p>
                   </div>
                 </div>
 
@@ -201,7 +171,7 @@ const UjianDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Jenis Ujian</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{getJenisLabel(ujian.jenis)}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatJenisLabel(ujian.jenis)}</p>
                   </div>
                 </div>
 
@@ -221,7 +191,7 @@ const UjianDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Semester</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{getSemesterLabel(ujian.semester)}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatSemesterLabel(ujian.semester)}</p>
                   </div>
                 </div>
 

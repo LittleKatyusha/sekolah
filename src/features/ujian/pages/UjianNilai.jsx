@@ -5,7 +5,9 @@ import { ArrowLeft, Save, RefreshCw, FileText, Users, BookOpen, GraduationCap, A
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianService } from '../services/ujianService'
+import { nilaiService } from '../../nilai/services/nilaiService'
 import { showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
+import { formatJenisLabel } from '../utils/ujianFormatters'
 
 // Editable cell component for nilai
 const NilaiCellEditor = (props) => {
@@ -102,6 +104,17 @@ const UjianNilai = () => {
   const [nilaiData, setNilaiData] = useState([])
   const [hasChanges, setHasChanges] = useState(false)
 
+  const hasPendingChanges = useCallback((rows) => {
+    return rows.some((item) => {
+      const currentNilai = item.nilai === null || item.nilai === undefined ? '' : String(item.nilai)
+      const originalNilai = item.originalNilai === null || item.originalNilai === undefined ? '' : String(item.originalNilai)
+      const currentKeterangan = item.keterangan ?? ''
+      const originalKeterangan = item.originalKeterangan ?? ''
+
+      return currentNilai !== originalNilai || currentKeterangan !== originalKeterangan
+    })
+  }, [])
+
   useEffect(() => {
     fetchNilaiData()
   }, [id])
@@ -111,10 +124,11 @@ const UjianNilai = () => {
     const { data, error } = await ujianService.getNilaiByUjian(id)
     if (data) {
       setUjianData(data.data.ujian)
-      // Add row index for "No" column
       const nilaiWithIndex = data.data.nilai.map((item, index) => ({
         ...item,
-        rowIndex: index + 1
+        rowIndex: index + 1,
+        originalNilai: item.nilai,
+        originalKeterangan: item.keterangan ?? ''
       }))
       setNilaiData(nilaiWithIndex)
       setHasChanges(false)
@@ -123,30 +137,6 @@ const UjianNilai = () => {
       navigate('/akademik/ujian')
     }
     setLoading(false)
-  }
-
-  const getJenisLabel = (value) => {
-    if (!value) return '-'
-    const jenisMap = {
-      1: 'PTS (Penilaian Tengah Semester)',
-      2: 'PAS (Penilaian Akhir Semester)',
-      3: 'PH (Penilaian Harian)',
-      4: 'Try Out',
-      5: 'Ujian Sekolah',
-    }
-    return jenisMap[value] || `Jenis ${value}`
-  }
-
-  const getJenisShortLabel = (value) => {
-    if (!value) return '-'
-    const jenisMap = {
-      1: 'PTS',
-      2: 'PAS',
-      3: 'PH',
-      4: 'Try Out',
-      5: 'Ujian Sekolah',
-    }
-    return jenisMap[value] || `Jenis ${value}`
   }
 
   // Calculate statistics
@@ -178,8 +168,6 @@ const UjianNilai = () => {
 
   // Handle cell value changes
   const onCellValueChanged = useCallback((params) => {
-    setHasChanges(true)
-    // Update the local data
     const updatedData = nilaiData.map(item => {
       if (item.id === params.data.id) {
         return { ...item, [params.colDef.field]: params.newValue }
@@ -187,7 +175,8 @@ const UjianNilai = () => {
       return item
     })
     setNilaiData(updatedData)
-  }, [nilaiData])
+    setHasChanges(hasPendingChanges(updatedData))
+  }, [hasPendingChanges, nilaiData])
 
   // Handle save all changes
   const handleSave = async () => {
@@ -203,26 +192,32 @@ const UjianNilai = () => {
 
     if (result.isConfirmed) {
       setSaving(true)
-      
-      // Prepare data for bulk update
-      const updateData = nilaiData.map(item => ({
-        id: item.id,
-        nilai: item.nilai,
-        keterangan: item.keterangan
-      }))
 
-      // Note: The API endpoint for bulk update might need to be added to ujianService
-      // For now, we'll simulate the success and show the data that would be sent
-      console.log('Data to save:', updateData)
-      
-      // TODO: Implement actual bulk save API call when available
-      // const { error } = await ujianService.saveNilaiBulk(id, updateData)
-      
-      setTimeout(() => {
+      const changedRows = nilaiData.filter((item) => {
+        const currentNilai = item.nilai === null || item.nilai === undefined ? '' : String(item.nilai)
+        const originalNilai = item.originalNilai === null || item.originalNilai === undefined ? '' : String(item.originalNilai)
+        const currentKeterangan = item.keterangan ?? ''
+        const originalKeterangan = item.originalKeterangan ?? ''
+
+        return currentNilai !== originalNilai || currentKeterangan !== originalKeterangan
+      })
+
+      const results = await Promise.all(changedRows.map((item) => nilaiService.update(item.id, {
+        nilai: item.nilai === '' ? null : item.nilai,
+        keterangan: item.keterangan || null,
+      })))
+
+      const failedUpdates = results.filter((result) => result.error)
+
+      if (failedUpdates.length > 0) {
         setSaving(false)
-        setHasChanges(false)
-        showSuccess('Nilai berhasil disimpan!')
-      }, 500)
+        showError(`Gagal menyimpan ${failedUpdates.length} perubahan nilai`)
+        return
+      }
+
+      await fetchNilaiData()
+      setSaving(false)
+      showSuccess('Nilai berhasil disimpan!')
     }
   }
 
@@ -367,7 +362,7 @@ const UjianNilai = () => {
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Jenis Ujian</p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {getJenisShortLabel(ujianData.jenis)}
+                  {formatJenisLabel(ujianData.jenis, { short: true })}
                 </p>
               </div>
             </div>
