@@ -7,12 +7,12 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { absensiSiswaService } from '../services/absensiSiswaService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import useAuthStore from '../../../store/useAuthStore'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
-// Module-level status mapper — avoids per-render allocation
 const STATUS_MAP = {
-  'hadir': '1', 'sakit': '2', 'izin': '3', 'alpha': '4', 'alpa': '4',
-  '1': '1', '2': '2', '3': '3', '4': '4'
+  hadir: '1', sakit: '2', izin: '3', alpha: '4', alpa: '4',
+  '1': '1', '2': '2', '3': '3', '4': '4',
 }
 
 const mapStatus = (raw) => {
@@ -26,7 +26,9 @@ const mapStatus = (raw) => {
 const AbsensiSiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const isEditMode = !!id
+  const isSiswa = user?.role === 'siswa'
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -38,25 +40,32 @@ const AbsensiSiswaForm = () => {
     { value: '3', label: 'Izin' },
     { value: '4', label: 'Alpha' },
   ])
-  
+
   const [formData, setFormData] = useState({
     mst_siswa_id: '',
     tanggal: '',
     status: '',
-    keterangan: ''
+    keterangan: '',
   })
 
   const [errors, setErrors] = useState({})
 
+  useEffect(() => {
+    if (!isSiswa) return
+
+    showError('Halaman ini tidak tersedia untuk akun siswa')
+    navigate('/absensi-siswa', { replace: true })
+  }, [isSiswa, navigate])
+
   const buildSiswaOption = useCallback((siswa) => ({
     value: String(siswa.id),
-    label: `${siswa.nama || `Siswa #${siswa.id}`} (${siswa.nis || '-'})`
+    label: `${siswa.nama || `Siswa #${siswa.id}`} (${siswa.nis || '-'})`,
   }), [])
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {
     const { data, error } = await siswaService.getAll({
       search: keyword || undefined,
-      per_page: 20
+      per_page: 20,
     })
 
     if (data?.data) {
@@ -69,7 +78,7 @@ const AbsensiSiswaForm = () => {
 
   const fetchAbsensiSiswa = useCallback(async () => {
     setFetchingData(true)
-    const { data, error } = await absensiSiswaService.getAbsensiSiswaById(id)
+    const { data } = await absensiSiswaService.getAbsensiSiswaById(id)
     if (data) {
       const absensi = data.data
       const rawStatus = absensi.status_absensi || absensi.status || ''
@@ -78,7 +87,7 @@ const AbsensiSiswaForm = () => {
         mst_siswa_id: siswaId,
         tanggal: absensi.tanggal || '',
         status: mapStatus(rawStatus),
-        keterangan: absensi.keterangan || ''
+        keterangan: absensi.keterangan || '',
       })
 
       if (absensi.siswa?.id) {
@@ -92,16 +101,16 @@ const AbsensiSiswaForm = () => {
   }, [id, navigate, buildSiswaOption])
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && !isSiswa) {
       fetchAbsensiSiswa()
     }
-  }, [isEditMode, fetchAbsensiSiswa])
+  }, [isEditMode, fetchAbsensiSiswa, isSiswa])
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }))
+      setErrors((prev) => ({ ...prev, [name]: null }))
     }
   }
 
@@ -117,20 +126,20 @@ const AbsensiSiswaForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validate()) return
 
     setLoading(true)
-    
+
     const submitData = {
       mst_siswa_id: parseInt(formData.mst_siswa_id),
       tanggal: formData.tanggal,
       status: parseInt(formData.status),
-      keterangan: formData.keterangan ? String(formData.keterangan) : null
+      keterangan: formData.keterangan ? String(formData.keterangan) : null,
     }
 
     let result
-    
+
     if (isEditMode) {
       result = await absensiSiswaService.updateAbsensiSiswa(id, submitData)
     } else {
@@ -153,6 +162,10 @@ const AbsensiSiswaForm = () => {
     setLoading(false)
   }
 
+  if (isSiswa) {
+    return null
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -167,15 +180,14 @@ const AbsensiSiswaForm = () => {
 
       <Card>
         {fetchingData || fetchingStatus ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Siswa */}
+          <form onSubmit={handleSubmit} className="space-y-6 p-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Siswa <span className="text-red-500">*</span>
                 </label>
                 <SearchableSelect
@@ -192,9 +204,8 @@ const AbsensiSiswaForm = () => {
                 />
               </div>
 
-              {/* Tanggal */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Tanggal <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -212,9 +223,8 @@ const AbsensiSiswaForm = () => {
                 )}
               </div>
 
-              {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Status <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -224,7 +234,7 @@ const AbsensiSiswaForm = () => {
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Pilih Status</option>
-                  {statusOptions.map(option => (
+                  {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -237,10 +247,8 @@ const AbsensiSiswaForm = () => {
                 )}
               </div>
 
-
-              {/* Keterangan */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Keterangan
                 </label>
                 <textarea
@@ -259,7 +267,7 @@ const AbsensiSiswaForm = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
               <Button type="button" variant="secondary" onClick={() => navigate('/absensi-siswa')}>
                 Batal
               </Button>
