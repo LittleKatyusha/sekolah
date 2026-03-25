@@ -6,7 +6,6 @@ import Card from '../../../components/ui/Card'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { normalizeIn, normalizeOut, tesMinatBakatResources } from '../config.jsx'
-import { siswaService } from '../../siswa/services/siswaService'
 import tesMinatBakatService from '../services/tesMinatBakatService'
 import { showError, showSuccess } from '../../../utils/sweetalert'
 
@@ -14,15 +13,6 @@ const createEmptyFormData = (fields) => fields.reduce((accumulator, field) => {
   accumulator[field.name] = field.type === 'checkbox' ? false : ''
   return accumulator
 }, {})
-
-const getResponseItems = (response) => {
-  if (Array.isArray(response?.data?.data)) return response.data.data
-  if (Array.isArray(response?.data?.data?.data)) return response.data.data.data
-  if (Array.isArray(response?.data)) return response.data
-  return []
-}
-
-const mapOptions = (items, mapItem) => items.map(mapItem)
 
 const createEmptyOpsi = (fallbackAspekId = '') => ({
   label: '',
@@ -76,36 +66,6 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
 
   useEffect(() => {
     const loadDependentOptions = async () => {
-      if (resourceKey === 'peserta') {
-        if (!formData.trx_tes_minat_bakat_id) {
-          setOptions((previous) => ({ ...previous, siswa: [] }))
-          return
-        }
-
-        const { data: tesResponse, error: tesError } = await tesMinatBakatService.tes.getById(formData.trx_tes_minat_bakat_id)
-        const kelasId = tesResponse?.data?.mst_kelas_id
-
-        if (tesError || !kelasId) {
-          setOptions((previous) => ({ ...previous, siswa: [] }))
-          return
-        }
-
-        const { data: siswaResponse, error: siswaError } = await siswaService.getByKelas(kelasId)
-        if (siswaError) {
-          setOptions((previous) => ({ ...previous, siswa: [] }))
-          return
-        }
-
-        setOptions((previous) => ({
-          ...previous,
-          siswa: mapOptions(getResponseItems(siswaResponse), (item) => ({
-            value: item.id,
-            label: item.nama || item.nis || `Siswa #${item.id}`,
-          })),
-        }))
-        return
-      }
-
       if (resourceKey === 'jawaban') {
         if (!formData.trx_tes_minat_bakat_peserta_id) {
           setOptions((previous) => ({ ...previous, pertanyaan: [], opsi: [] }))
@@ -123,7 +83,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
         const { data: pertanyaanResponse, error: pertanyaanError } = await tesMinatBakatService.pertanyaan.getByTes(tesId)
         const pertanyaanOptions = pertanyaanError
           ? []
-          : mapOptions(getResponseItems(pertanyaanResponse), (item) => ({
+          : (Array.isArray(pertanyaanResponse?.data?.data) ? pertanyaanResponse.data.data : Array.isArray(pertanyaanResponse?.data) ? pertanyaanResponse.data : []).map((item) => ({
               value: item.id,
               label: `${item.urutan || '-'} - ${String(item.pertanyaan || '').slice(0, 80)}`,
             }))
@@ -133,7 +93,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
           const { data: detailResponse, error: detailError } = await tesMinatBakatService.pertanyaan.getById(formData.mst_tes_minat_bakat_pertanyaan_id)
           opsiOptions = detailError
             ? []
-            : mapOptions(detailResponse?.data?.opsi || [], (item) => ({
+            : (detailResponse?.data?.opsi || []).map((item) => ({
                 value: item.id,
                 label: [item.label, item.teks_opsi].filter(Boolean).join(' - ') || `Opsi #${item.id}`,
               }))
@@ -148,7 +108,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
     }
 
     loadDependentOptions()
-  }, [formData.mst_tes_minat_bakat_pertanyaan_id, formData.trx_tes_minat_bakat_id, formData.trx_tes_minat_bakat_peserta_id, resourceKey])
+  }, [formData.mst_tes_minat_bakat_pertanyaan_id, formData.trx_tes_minat_bakat_peserta_id, resourceKey])
 
   useEffect(() => {
     if (!isEditMode) return
@@ -251,7 +211,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
       }
     })
 
-    if (resourceKey === 'pertanyaan' && !isEditMode && Array.isArray(formData.opsi)) {
+    if (resourceKey === 'pertanyaan' && Array.isArray(formData.opsi)) {
       formData.opsi.forEach((opsi, index) => {
         const hasAnyValue = [opsi.label, opsi.teks_opsi, opsi.skor, opsi.urutan].some((value) => value !== '' && value !== null && typeof value !== 'undefined')
 
@@ -276,9 +236,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
     const payload = normalizeOut(resourceKey, formData)
 
     if (resourceKey === 'pertanyaan') {
-      if (isEditMode) {
-        delete payload.opsi
-      } else if (Array.isArray(payload.opsi) && payload.opsi.length === 0) {
+      if (!isEditMode && Array.isArray(payload.opsi) && payload.opsi.length === 0) {
         delete payload.opsi
       }
     }
@@ -304,9 +262,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
   const renderField = (field) => {
     if (field.type === 'select') {
       const selectOptions = field.options || options[field.optionsKey] || []
-      const isDisabled = field.optionsKey === 'siswa' && resourceKey === 'peserta' && !formData.trx_tes_minat_bakat_id
-        ? true
-        : field.optionsKey === 'pertanyaan' && resourceKey === 'jawaban' && !formData.trx_tes_minat_bakat_peserta_id
+      const isDisabled = field.optionsKey === 'pertanyaan' && resourceKey === 'jawaban' && !formData.trx_tes_minat_bakat_peserta_id
           ? true
           : field.optionsKey === 'opsi' && resourceKey === 'jawaban' && !formData.mst_tes_minat_bakat_pertanyaan_id
             ? true
@@ -416,107 +372,89 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Opsi Jawaban</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Backend menerima opsi saat pembuatan pertanyaan. Setiap opsi dapat diarahkan ke aspek tertentu atau mengikuti aspek pertanyaan.
+                    Setiap opsi dapat diarahkan ke aspek tertentu atau mengikuti aspek pertanyaan.
                   </p>
                 </div>
-                {!isEditMode ? (
-                  <Button type="button" variant="outline" onClick={handleAddOpsi}>
-                    Tambah Opsi
-                  </Button>
-                ) : null}
+                <Button type="button" variant="outline" onClick={handleAddOpsi}>
+                  Tambah Opsi
+                </Button>
               </div>
 
-              {isEditMode ? (
-                <div className="space-y-3">
-                  {(formData.opsi || []).length > 0 ? (formData.opsi || []).map((opsi, index) => (
-                    <div key={opsi.id || index} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{opsi.label || `Opsi ${index + 1}`}</div>
-                      <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">{opsi.teks_opsi || '-'}</div>
-                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Skor: {opsi.skor ?? '-'} | Urutan: {opsi.urutan || '-'}</div>
+              <div className="space-y-4">
+                {(formData.opsi || []).length > 0 ? (formData.opsi || []).map((opsi, index) => (
+                  <div key={opsi.id || index} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opsi {index + 1}</h3>
+                      <Button type="button" variant="danger" size="sm" onClick={() => handleRemoveOpsi(index)}>
+                        Hapus
+                      </Button>
                     </div>
-                  )) : (
-                    <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-4 text-sm text-gray-500 dark:text-gray-400">
-                      Belum ada opsi jawaban pada pertanyaan ini.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {(formData.opsi || []).length > 0 ? (formData.opsi || []).map((opsi, index) => (
-                    <div key={index} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Opsi {index + 1}</h3>
-                        <Button type="button" variant="danger" size="sm" onClick={() => handleRemoveOpsi(index)}>
-                          Hapus
-                        </Button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label</label>
+                        <Input
+                          type="text"
+                          value={opsi.label}
+                          onChange={(event) => handleOpsiChange(index, 'label', event.target.value)}
+                          placeholder="A"
+                          error={getFieldError(errors, `opsi.${index}.label`)}
+                        />
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label</label>
-                          <Input
-                            type="text"
-                            value={opsi.label}
-                            onChange={(event) => handleOpsiChange(index, 'label', event.target.value)}
-                            placeholder="A"
-                            error={getFieldError(errors, `opsi.${index}.label`)}
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Skor</label>
+                        <Input
+                          type="number"
+                          value={opsi.skor}
+                          onChange={(event) => handleOpsiChange(index, 'skor', event.target.value)}
+                          placeholder="0"
+                          error={getFieldError(errors, `opsi.${index}.skor`)}
+                        />
+                      </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Skor</label>
-                          <Input
-                            type="number"
-                            value={opsi.skor}
-                            onChange={(event) => handleOpsiChange(index, 'skor', event.target.value)}
-                            placeholder="0"
-                            error={getFieldError(errors, `opsi.${index}.skor`)}
-                          />
-                        </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teks Opsi</label>
+                        <textarea
+                          value={opsi.teks_opsi}
+                          onChange={(event) => handleOpsiChange(index, 'teks_opsi', event.target.value)}
+                          rows={3}
+                          placeholder="Tulis teks opsi jawaban"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        />
+                        {getFieldError(errors, `opsi.${index}.teks_opsi`) ? (
+                          <p className="mt-1 text-sm text-red-500">{getFieldError(errors, `opsi.${index}.teks_opsi`)}</p>
+                        ) : null}
+                      </div>
 
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teks Opsi</label>
-                          <textarea
-                            value={opsi.teks_opsi}
-                            onChange={(event) => handleOpsiChange(index, 'teks_opsi', event.target.value)}
-                            rows={3}
-                            placeholder="Tulis teks opsi jawaban"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                          />
-                          {getFieldError(errors, `opsi.${index}.teks_opsi`) ? (
-                            <p className="mt-1 text-sm text-red-500">{getFieldError(errors, `opsi.${index}.teks_opsi`)}</p>
-                          ) : null}
-                        </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Urutan</label>
+                        <Input
+                          type="number"
+                          value={opsi.urutan}
+                          onChange={(event) => handleOpsiChange(index, 'urutan', event.target.value)}
+                          placeholder="1"
+                        />
+                      </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Urutan</label>
-                          <Input
-                            type="number"
-                            value={opsi.urutan}
-                            onChange={(event) => handleOpsiChange(index, 'urutan', event.target.value)}
-                            placeholder="1"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aspek Opsi</label>
-                          <SearchableSelect
-                            name={`opsi.${index}.mst_tes_minat_bakat_aspek_id`}
-                            value={opsi.mst_tes_minat_bakat_aspek_id}
-                            onChange={(event) => handleOpsiChange(index, 'mst_tes_minat_bakat_aspek_id', event.target.value)}
-                            options={options.aspek || []}
-                            placeholder="Gunakan aspek pertanyaan atau pilih aspek"
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aspek Opsi</label>
+                        <SearchableSelect
+                          name={`opsi.${index}.mst_tes_minat_bakat_aspek_id`}
+                          value={opsi.mst_tes_minat_bakat_aspek_id}
+                          onChange={(event) => handleOpsiChange(index, 'mst_tes_minat_bakat_aspek_id', event.target.value)}
+                          options={options.aspek || []}
+                          placeholder="Gunakan aspek pertanyaan atau pilih aspek"
+                        />
                       </div>
                     </div>
-                  )) : (
-                    <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-4 text-sm text-gray-500 dark:text-gray-400">
-                      Belum ada opsi jawaban. Tambahkan opsi jika pertanyaan membutuhkan pilihan atau skala penilaian.
-                    </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )) : (
+                  <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-4 text-sm text-gray-500 dark:text-gray-400">
+                    Belum ada opsi jawaban. Tambahkan opsi jika pertanyaan membutuhkan pilihan atau skala penilaian.
+                  </div>
+                )}
+              </div>
             </div>
           ) : null}
 

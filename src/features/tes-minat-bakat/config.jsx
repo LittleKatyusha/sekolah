@@ -7,8 +7,6 @@ import {
   Users,
 } from 'lucide-react'
 import { formatDateShort, formatDateTime } from '../../utils/formatters'
-import { guruService } from '../guru/services/guruService'
-import { kelasService } from '../kelas/services/kelasService'
 import { siswaService } from '../siswa/services/siswaService'
 import { tahunAjaranService } from '../tahun-ajaran/services/tahunAjaranService'
 import tesMinatBakatService from './services/tesMinatBakatService'
@@ -199,8 +197,6 @@ export const tesMinatBakatResources = {
       { name: 'kode_tes', label: 'Kode Tes', type: 'text', placeholder: 'Contoh: TMB-2026-001' },
       { name: 'nama', label: 'Nama Tes', type: 'text', placeholder: 'Masukkan nama tes', required: true },
       { name: 'tahun_ajaran_id', label: 'Tahun Ajaran', type: 'select', optionsKey: 'tahunAjaran', valueType: 'integer', placeholder: 'Pilih tahun ajaran' },
-      { name: 'mst_kelas_id', label: 'Kelas', type: 'select', optionsKey: 'kelas', valueType: 'integer', placeholder: 'Pilih kelas' },
-      { name: 'guru_id', label: 'Guru', type: 'select', optionsKey: 'guru', valueType: 'integer', placeholder: 'Pilih guru' },
       { name: 'jenis_tes', label: 'Jenis Tes', type: 'select', options: JENIS_TES_OPTIONS, valueType: 'integer', required: true, placeholder: 'Pilih jenis tes' },
       { name: 'tanggal_mulai', label: 'Tanggal Mulai', type: 'datetime-local' },
       { name: 'tanggal_selesai', label: 'Tanggal Selesai', type: 'datetime-local' },
@@ -214,18 +210,16 @@ export const tesMinatBakatResources = {
         tahunAjaranService.getAll,
         (item) => ({ value: item.id, label: item.nama_tahun_ajaran || item.tahun_ajaran || item.nama || `Tahun Ajaran #${item.id}` })
       ),
-      kelas: async () => await loadOptions(
-        kelasService.getAll,
-        (item) => ({ value: item.id, label: item.nama_kelas || `Kelas #${item.id}` })
-      ),
-      guru: async () => await loadOptions(
-        guruService.getAll,
-        (item) => ({ value: item.id, label: item.nama || item.nip || `Guru #${item.id}` })
-      ),
     },
     buildColumns: ({ handleDetail, handleEdit, handleDelete, ActionsMenu }) => [
       { field: 'kode_tes', headerName: 'Kode', minWidth: 130, flex: 1 },
       { field: 'nama', headerName: 'Nama Tes', minWidth: 220, flex: 2 },
+      {
+        headerName: 'Tahun Ajaran',
+        minWidth: 180,
+        flex: 1,
+        cellRenderer: (params) => params.data?.tahun_ajaran?.nama_tahun_ajaran || params.data?.tahun_ajaran?.tahun_ajaran || '-',
+      },
       {
         field: 'jenis_tes',
         headerName: 'Jenis',
@@ -233,16 +227,9 @@ export const tesMinatBakatResources = {
         cellRenderer: (params) => renderOptionBadge(params.value, JENIS_TES_MAP),
       },
       {
-        headerName: 'Kelas',
-        minWidth: 160,
-        flex: 1,
-        cellRenderer: (params) => params.data?.kelas?.nama_kelas || '-',
-      },
-      {
-        headerName: 'Guru',
-        minWidth: 180,
-        flex: 1,
-        cellRenderer: (params) => params.data?.guru?.nama || '-',
+        headerName: 'Peserta',
+        minWidth: 120,
+        cellRenderer: (params) => params.data?.peserta?.length ?? 0,
       },
       {
         field: 'tanggal_mulai',
@@ -284,8 +271,8 @@ export const tesMinatBakatResources = {
           { label: 'Jenis Tes', value: (record) => renderOptionBadge(record.jenis_tes, JENIS_TES_MAP) },
           { label: 'Status', value: (record) => renderOptionBadge(record.status, STATUS_TES_MAP) },
           { label: 'Tahun Ajaran', value: (record) => getName(record.tahun_ajaran?.nama_tahun_ajaran || record.tahun_ajaran?.tahun_ajaran) },
-          { label: 'Kelas', value: (record) => getName(record.kelas?.nama_kelas) },
-          { label: 'Guru', value: (record) => getName(record.guru?.nama) },
+          { label: 'Jumlah Peserta', value: (record) => record.peserta?.length ?? 0 },
+          { label: 'Jumlah Pertanyaan', value: (record) => record.pertanyaan?.length ?? 0 },
           { label: 'Tanggal Mulai', value: (record) => formatDateTime(record.tanggal_mulai) },
           { label: 'Tanggal Selesai', value: (record) => formatDateTime(record.tanggal_selesai) },
           { label: 'Durasi', value: (record) => record.durasi_menit ? `${record.durasi_menit} menit` : '-' },
