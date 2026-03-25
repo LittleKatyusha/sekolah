@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, BookOpen, GraduationCap, DollarSign, ClipboardList, Calendar, BarChart3, FileText } from 'lucide-react'
+import { Users, BookOpen, GraduationCap, DollarSign, ClipboardList, ClipboardCheck, Calendar, BarChart3, FileText } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 
 const quickActionsByRole = {
@@ -15,12 +15,13 @@ const quickActionsByRole = {
   guru: [
     { label: 'Jadwal Pelajaran', icon: Calendar, path: '/jadwal-pelajaran', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     { label: 'Nilai Siswa', icon: FileText, path: '/nilai', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
-    { label: 'Absensi', icon: ClipboardList, path: '/absensi', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+    { label: 'Absen Harian', icon: ClipboardCheck, path: '/absensi-guru', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
     { label: 'Tugas', icon: BookOpen, path: '/tugas', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
   ],
   siswa: [
     { label: 'Jadwal Pelajaran', icon: Calendar, path: '/jadwal-pelajaran', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     { label: 'Nilai Saya', icon: FileText, path: '/nilai', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
+    { label: 'Absen Harian', icon: ClipboardCheck, path: '/absensi-siswa', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
     { label: 'Tugas', icon: BookOpen, path: '/tugas', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
     { label: 'Pembayaran SPP', icon: DollarSign, path: '/pembayaran-spp', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
   ],

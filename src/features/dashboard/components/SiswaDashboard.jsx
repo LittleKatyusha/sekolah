@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, DollarSign } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import Card from '../../../components/ui/Card'
 import QuickActions from './QuickActions'
+import DashboardAttendanceCard from './DashboardAttendanceCard'
 
 const STATUS_COLORS = {
   Hadir: '#10B981',
@@ -11,10 +12,65 @@ const STATUS_COLORS = {
   Alpha: '#EF4444',
 }
 
+const STATUS_LABELS = {
+  '1': 'Hadir',
+  '2': 'Sakit',
+  '3': 'Izin',
+  '4': 'Alpha',
+  hadir: 'Hadir',
+  sakit: 'Sakit',
+  izin: 'Izin',
+  alpha: 'Alpha',
+  alpa: 'Alpha',
+}
+
+const normalizeStatusKey = (value) => {
+  if (value === null || value === undefined || value === '') return ''
+  return String(value).toLowerCase()
+}
+
+const incrementAttendanceSummary = (summary, attendanceRecord) => {
+  const statusKey = normalizeStatusKey(attendanceRecord?.status_absensi ?? attendanceRecord?.status)
+  if (!statusKey) return summary
+
+  const nextSummary = Array.isArray(summary) ? [...summary] : []
+  const existingIndex = nextSummary.findIndex((item) => {
+    const itemKey = normalizeStatusKey(item?.status_label ?? item?.status)
+    return itemKey === statusKey || item?.status === attendanceRecord?.status
+  })
+
+  if (existingIndex >= 0) {
+    const currentItem = nextSummary[existingIndex]
+    nextSummary[existingIndex] = {
+      ...currentItem,
+      total: Number(currentItem?.total || 0) + 1,
+    }
+    return nextSummary
+  }
+
+  return [
+    ...nextSummary,
+    {
+      status: attendanceRecord?.status ?? attendanceRecord?.status_absensi ?? statusKey,
+      status_label: STATUS_LABELS[statusKey] || `Status ${attendanceRecord?.status ?? attendanceRecord?.status_absensi ?? '-'}`,
+      total: 1,
+    },
+  ]
+}
+
 const SiswaDashboard = ({ data }) => {
   const { profile, attendance_summary, unpaid_spp, recent_grades, upcoming_tasks } = data
+  const [attendanceSummaryState, setAttendanceSummaryState] = useState(attendance_summary || [])
 
-  const attendanceChartData = (attendance_summary || []).map((item) => ({
+  useEffect(() => {
+    setAttendanceSummaryState(attendance_summary || [])
+  }, [attendance_summary])
+
+  const handleAttendanceRecorded = useMemo(() => (record) => {
+    setAttendanceSummaryState((current) => incrementAttendanceSummary(current, record))
+  }, [])
+
+  const attendanceChartData = (attendanceSummaryState || []).map((item) => ({
     name: item.status_label || `Status ${item.status}`,
     value: item.total,
   }))
@@ -34,7 +90,7 @@ const SiswaDashboard = ({ data }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Attendance Summary */}
         <Card title="Ringkasan Kehadiran">
           {attendanceChartData.length === 0 ? (
@@ -88,6 +144,8 @@ const SiswaDashboard = ({ data }) => {
             )}
           </div>
         </Card>
+
+        <DashboardAttendanceCard role="siswa" profile={profile} onAttendanceRecorded={handleAttendanceRecorded} />
 
         {/* Quick Actions */}
         <QuickActions role="siswa" />
