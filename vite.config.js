@@ -1,6 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const getPackageName = (id) => {
+  const normalizedId = id.split('node_modules/')[1]
+  if (!normalizedId) return null
+
+  if (normalizedId.startsWith('@')) {
+    const [scope, name] = normalizedId.split('/')
+    return `${scope}/${name}`
+  }
+
+  return normalizedId.split('/')[0]
+}
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -52,42 +64,83 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // React ecosystem
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-            return 'react-vendor'
+          if (!id.includes('node_modules')) {
+            return undefined
           }
-          // Charts
-          if (id.includes('recharts')) {
+
+          const packageName = getPackageName(id)
+
+          if (!packageName) {
+            return undefined
+          }
+
+          if (packageName === 'react' || packageName === 'react-dom' || packageName === 'scheduler') {
+            return 'react-core-vendor'
+          }
+
+          if (packageName === 'react-router' || packageName === 'react-router-dom' || packageName === '@remix-run/router') {
+            return 'router-vendor'
+          }
+
+          if (
+            packageName === 'recharts'
+            || packageName.startsWith('d3-')
+            || packageName === 'victory-vendor'
+            || packageName === 'react-smooth'
+            || packageName === 'recharts-scale'
+            || packageName === 'eventemitter3'
+            || packageName === 'tiny-invariant'
+            || packageName === 'lodash'
+            || packageName === 'lodash-es'
+          ) {
             return 'chart-vendor'
           }
-          // Rich text editor
-          if (id.includes('lexical') || id.includes('@lexical/')) {
+
+          if (packageName === 'lexical' || packageName.startsWith('@lexical/')) {
             return 'lexical-vendor'
           }
-          // Realtime
-          if (id.includes('pusher-js') || id.includes('laravel-echo')) {
+
+          if (packageName === 'pusher-js' || packageName === 'laravel-echo') {
             return 'realtime-vendor'
           }
-          // AG Grid
-          if (id.includes('ag-grid')) {
-            return 'grid-vendor'
+
+          if (packageName === '@ag-grid-community/core') {
+            return 'ag-grid-core-vendor'
           }
-          // Form handling
-          if (id.includes('@hookform') || id.includes('react-hook-form') || id.includes('zod')) {
+
+          if (packageName === '@ag-grid-community/react') {
+            return 'ag-grid-react-vendor'
+          }
+
+          if (packageName === '@ag-grid-community/client-side-row-model') {
+            return 'ag-grid-client-row-model-vendor'
+          }
+
+          if (packageName === '@ag-grid-community/infinite-row-model') {
+            return 'ag-grid-infinite-row-model-vendor'
+          }
+
+          if (packageName.startsWith('@hookform/') || packageName === 'react-hook-form' || packageName === 'zod') {
             return 'form-vendor'
           }
-          // Icons
-          if (id.includes('lucide-react')) {
+
+          if (packageName.startsWith('@fullcalendar/')) {
+            return 'fullcalendar-vendor'
+          }
+
+          if (packageName === 'lucide-react') {
             return 'icons-vendor'
           }
-          // State management
-          if (id.includes('zustand')) {
+
+          if (packageName === 'zustand') {
             return 'state-vendor'
           }
-          // Utilities
-          if (id.includes('clsx') || id.includes('axios') || id.includes('sweetalert2')) {
+
+          if (packageName === 'axios' || packageName === 'clsx' || packageName === 'sweetalert2') {
             return 'utils-vendor'
           }
+
+          return 'vendor'
         }
       }
     }
