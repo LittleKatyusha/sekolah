@@ -90,7 +90,7 @@ const updateGuruAttendanceSummary = (summary, attendanceRecord) => {
   return summary
 }
 
-const GuruDashboard = ({ data }) => {
+const GuruDashboard = ({ data, authUser }) => {
   const { profile, summary, recent_bk_cases } = data
   const [summaryState, setSummaryState] = useState(summary || {})
   const [todayAttendanceRecord, setTodayAttendanceRecord] = useState(null)
@@ -192,6 +192,7 @@ const GuruDashboard = ({ data }) => {
           <DashboardAttendanceCard
             role="guru"
             profile={profile}
+            authUser={authUser}
             onAttendanceRecorded={handleAttendanceRecorded}
             onAttendanceStateChange={handleAttendanceStateChange}
           />

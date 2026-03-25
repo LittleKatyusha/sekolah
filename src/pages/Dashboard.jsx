@@ -159,7 +159,7 @@ const Dashboard = () => {
   if (role === 'guru') {
     return (
       <Suspense fallback={<LoadingSkeleton />}>
-        <GuruDashboard data={dashboardData} />
+        <GuruDashboard data={dashboardData} authUser={user} />
       </Suspense>
     )
   }
@@ -167,7 +167,7 @@ const Dashboard = () => {
   if (role === 'siswa') {
     return (
       <Suspense fallback={<LoadingSkeleton />}>
-        <SiswaDashboard data={dashboardData} />
+        <SiswaDashboard data={dashboardData} authUser={user} />
       </Suspense>
     )
   }

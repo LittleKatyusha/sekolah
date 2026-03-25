@@ -218,10 +218,12 @@ class EchoService {
 
     const env = import.meta.env
     const appKey = env.VITE_REVERB_APP_KEY || env.VITE_PUSHER_APP_KEY
+    const scheme = env.VITE_REVERB_SCHEME || (import.meta.env.DEV ? 'ws' : 'wss')
     const wsHost = env.VITE_REVERB_HOST || window.location.hostname
+    const defaultPort = scheme === 'wss' ? 443 : 8080
     const rawPort = Number(env.VITE_REVERB_PORT)
-    const wsPort = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 443
-    const forceTLS = (env.VITE_REVERB_SCHEME || 'wss') === 'wss'
+    const wsPort = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : defaultPort
+    const forceTLS = scheme === 'wss'
 
     if (!appKey || !wsHost) {
       console.warn('[Echo] missing Reverb/Pusher configuration. Set VITE_REVERB_APP_KEY (or VITE_PUSHER_APP_KEY) and VITE_REVERB_HOST.')

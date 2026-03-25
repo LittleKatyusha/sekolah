@@ -5,6 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiGuruService } from '../../absensi-guru/services/absensiGuruService'
 import { absensiSiswaService } from '../../absensi-siswa/services/absensiSiswaService'
+import { guruService } from '../../guru/services/guruService'
+import { siswaService } from '../../siswa/services/siswaService'
 import { showConfirm, showError, showSuccess } from '../../../utils/sweetalert'
 
 const STATUS_META = {
@@ -49,33 +51,145 @@ const extractRows = (responseData) => {
   return []
 }
 
-const resolveEntityId = (role, profile) => {
-  if (!profile) return null
+const resolveEntityId = (role, profile, authUser) => {
+  const authProfile = authUser?.profile || null
+  const authRoleData = role === 'guru'
+    ? (authUser?.guru || authProfile)
+    : role === 'siswa'
+      ? (authUser?.siswa || authProfile)
+      : authProfile
 
   if (role === 'guru') {
-    return profile.id || profile.mst_guru_id || null
+    return profile?.mst_guru_id
+      || authProfile?.mst_guru_id
+      || profile?.guru_id
+      || authProfile?.guru_id
+      || authRoleData?.id
+      || profile?.id
+      || null
   }
 
   if (role === 'siswa') {
-    return profile.id || profile.mst_siswa_id || null
+    return profile?.mst_siswa_id
+      || authProfile?.mst_siswa_id
+      || profile?.siswa_id
+      || authProfile?.siswa_id
+      || authRoleData?.id
+      || profile?.id
+      || null
   }
 
   return null
 }
 
-const DashboardAttendanceCard = ({ role, profile, onAttendanceRecorded, onAttendanceStateChange }) => {
+const buildRuntimePayloadSnapshot = (role, profile, authUser, entityId) => ({
+  role,
+  resolved_entity_id: entityId,
+  dashboard_profile: {
+    id: profile?.id ?? null,
+    mst_guru_id: profile?.mst_guru_id ?? null,
+    guru_id: profile?.guru_id ?? null,
+    mst_siswa_id: profile?.mst_siswa_id ?? null,
+    siswa_id: profile?.siswa_id ?? null,
+    nama: profile?.nama ?? null,
+    nip: profile?.nip ?? null,
+    nis: profile?.nis ?? null,
+  },
+  auth_user: {
+    id: authUser?.id ?? null,
+    role: authUser?.role ?? null,
+    profile: {
+      id: authUser?.profile?.id ?? null,
+      mst_guru_id: authUser?.profile?.mst_guru_id ?? null,
+      guru_id: authUser?.profile?.guru_id ?? null,
+      mst_siswa_id: authUser?.profile?.mst_siswa_id ?? null,
+      siswa_id: authUser?.profile?.siswa_id ?? null,
+      nama: authUser?.profile?.nama ?? null,
+      nip: authUser?.profile?.nip ?? null,
+      nis: authUser?.profile?.nis ?? null,
+    },
+  },
+})
+
+const extractCollectionRows = (responseData) => {
+  const payload = responseData?.data
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  return []
+}
+
+const DashboardAttendanceCard = ({ role, profile, authUser, onAttendanceRecorded, onAttendanceStateChange }) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [todayRecord, setTodayRecord] = useState(null)
   const [loadError, setLoadError] = useState('')
+  const [fallbackEntityId, setFallbackEntityId] = useState(null)
 
   const today = useMemo(() => getTodayString(), [])
-  const entityId = useMemo(() => resolveEntityId(role, profile), [role, profile])
+  const directEntityId = useMemo(() => resolveEntityId(role, profile, authUser), [authUser, role, profile])
+  const entityId = directEntityId || fallbackEntityId
+  const runtimeSnapshot = useMemo(
+    () => buildRuntimePayloadSnapshot(role, profile, authUser, entityId),
+    [authUser, entityId, profile, role]
+  )
 
   const historyPath = role === 'guru' ? '/absensi-guru' : '/absensi-siswa'
   const title = role === 'guru' ? 'Absen Guru Hari Ini' : 'Absen Siswa Hari Ini'
   const nameLabel = role === 'guru' ? 'guru' : 'siswa'
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+
+    console.groupCollapsed(`[DashboardAttendanceCard] ${role} runtime payload`)
+    console.log(runtimeSnapshot)
+    console.groupEnd()
+  }, [role, runtimeSnapshot])
+
+  useEffect(() => {
+    if (directEntityId) {
+      setFallbackEntityId(null)
+      return
+    }
+
+    const identifier = role === 'guru'
+      ? (profile?.nip || authUser?.profile?.nip || '')
+      : (profile?.nis || authUser?.profile?.nis || '')
+
+    if (!identifier) {
+      setFallbackEntityId(null)
+      return
+    }
+
+    let cancelled = false
+
+    const resolveFromMasterData = async () => {
+      const response = role === 'guru'
+        ? await guruService.getAll({ search: identifier, per_page: 10 })
+        : await siswaService.getAll({ search: identifier, per_page: 10 })
+
+      if (cancelled || response.error) return
+
+      const rows = extractCollectionRows(response.data)
+      const matchedRecord = rows.find((item) => {
+        if (role === 'guru') {
+          return String(item?.nip || '') === String(identifier)
+        }
+
+        return String(item?.nis || '') === String(identifier)
+      })
+
+      if (matchedRecord?.id) {
+        setFallbackEntityId(matchedRecord.id)
+      }
+    }
+
+    resolveFromMasterData()
+
+    return () => {
+      cancelled = true
+    }
+  }, [authUser?.profile?.nip, authUser?.profile?.nis, directEntityId, profile?.nip, profile?.nis, role])
 
   const fetchTodayAttendance = useCallback(async () => {
     if (!entityId) {
@@ -193,8 +307,13 @@ const DashboardAttendanceCard = ({ role, profile, onAttendanceRecorded, onAttend
             Memuat status absensi hari ini...
           </div>
         ) : loadError ? (
-          <div className="rounded-xl bg-red-50 px-3 py-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-            {loadError}
+          <div className="space-y-3 rounded-xl bg-red-50 px-3 py-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            <p>{loadError}</p>
+            {import.meta.env.DEV && (
+              <pre className="overflow-x-auto rounded-lg bg-black/5 p-3 text-[11px] leading-5 text-red-700 dark:bg-white/5 dark:text-red-300">
+                {JSON.stringify(runtimeSnapshot, null, 2)}
+              </pre>
+            )}
           </div>
         ) : hasCheckedIn ? (
           <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900/40 dark:bg-green-900/10">

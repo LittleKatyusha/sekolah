@@ -58,7 +58,7 @@ const incrementAttendanceSummary = (summary, attendanceRecord) => {
   ]
 }
 
-const SiswaDashboard = ({ data }) => {
+const SiswaDashboard = ({ data, authUser }) => {
   const { profile, attendance_summary, unpaid_spp, recent_grades, upcoming_tasks } = data
   const [attendanceSummaryState, setAttendanceSummaryState] = useState(attendance_summary || [])
 
@@ -145,7 +145,7 @@ const SiswaDashboard = ({ data }) => {
           </div>
         </Card>
 
-        <DashboardAttendanceCard role="siswa" profile={profile} onAttendanceRecorded={handleAttendanceRecorded} />
+        <DashboardAttendanceCard role="siswa" profile={profile} authUser={authUser} onAttendanceRecorded={handleAttendanceRecorded} />
 
         {/* Quick Actions */}
         <QuickActions role="siswa" />
