@@ -13,7 +13,10 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronRight,
-  Clock
+  Clock,
+  QrCode,
+  Send,
+  MessageCircle
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
@@ -145,6 +148,9 @@ const ICON_MAP = {
   'bi-key': Settings,
   'bi-list': Table2,
   'bi-clock-history': Clock,
+  'bi-whatsapp': MessageCircle,
+  'bi-qr-code': QrCode,
+  'bi-send': Send,
   // Fallback for direct Lucide names
   LayoutDashboard,
   Users,
@@ -155,8 +161,11 @@ const ICON_MAP = {
   ClipboardCheck,
   Award,
   MessageSquare,
+  MessageCircle,
   HelpCircle,
-  Clock
+  Clock,
+  QrCode,
+  Send
 }
 
 const MenuItem = memo(({ item, onClose }) => {

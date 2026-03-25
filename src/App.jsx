@@ -119,6 +119,7 @@ const ReferenceDetail = lazy(() => import('./features/references/pages/Reference
 const KalenderTipeList = lazy(() => import('./features/kalender-tipe/pages/KalenderTipeList'))
 const KalenderTipeForm = lazy(() => import('./features/kalender-tipe/pages/KalenderTipeForm'))
 const Files = lazy(() => import('./features/files/pages/FileUploadPage'))
+const Waha = lazy(() => import('./pages/Waha'))
 
 const PAGE_TITLES = {
   '/': 'Dashboard',
@@ -160,6 +161,8 @@ const PAGE_TITLES = {
   '/ews': 'Early Warning System',
   '/jadwal-pelajaran': 'Jadwal Pelajaran',
   '/files': 'Files Management',
+  '/waha/session': 'WAHA Session',
+  '/waha/send': 'WAHA Messaging',
   '/bk': 'Bimbingan Konseling',
   '/unauthorized': 'Unauthorized',
   '/admin/activity-logs': 'Activity Logs',
@@ -184,6 +187,7 @@ const TitleUpdater = () => {
       else if (path.startsWith('/akademik/soals')) title = 'Bank Soal'
       else if (path.startsWith('/statistik/')) title = 'Statistik'
       else if (path.startsWith('/ews')) title = 'Early Warning System'
+      else if (path.startsWith('/waha')) title = 'WhatsApp WAHA'
       else if (path.startsWith('/bk/')) title = 'Bimbingan Konseling'
       else title = 'Admin Dashboard'
     }
@@ -389,6 +393,9 @@ function App() {
 
               {/* Files */}
               <Route path="/files" element={<Files />} />
+
+              {/* WAHA */}
+              <Route path="/waha/*" element={<Waha />} />
 
               {/* BK Module */}
               <Route path="/bk" element={<BK />} />
