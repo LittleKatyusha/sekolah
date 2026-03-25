@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useRef, useEffect } from 'react'
-import { AgGridReact } from 'ag-grid-react'
+import { AgGridReact } from '@ag-grid-community/react'
+import '../../utils/agGridModules'
 import { apiService } from '../../utils/api'
 import {
   buildAgGridRequestParams,

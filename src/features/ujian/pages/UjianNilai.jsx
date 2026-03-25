@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { AgGridReact } from 'ag-grid-react'
+import { AgGridReact } from '@ag-grid-community/react'
+import '../../../utils/agGridModules'
 import { ArrowLeft, Save, RefreshCw, FileText, Users, BookOpen, GraduationCap, Award, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'

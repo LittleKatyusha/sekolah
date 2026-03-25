@@ -211,7 +211,6 @@ const TugasSiswaForm = () => {
                   Jawaban
                 </label>
                 <textarea
-                  name="jawaban"
                   name="jawaban_teks"
                   value={formData.jawaban_teks}
                   onChange={handleChange}
