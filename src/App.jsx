@@ -87,6 +87,7 @@ const Ranking = lazy(() => import('./pages/Ranking'))
 const Forum = lazy(() => import('./pages/Forum'))
 const Materi = lazy(() => import('./pages/Materi'))
 const TugasSiswa = lazy(() => import('./pages/TugasSiswa'))
+const TesMinatBakat = lazy(() => import('./pages/TesMinatBakat'))
 const TahunAjaran = lazy(() => import('./pages/TahunAjaran'))
 const Semester = lazy(() => import('./pages/Semester'))
 const KalenderAkademik = lazy(() => import('./pages/KalenderAkademik'))
@@ -145,6 +146,7 @@ const PAGE_TITLES = {
   '/akademik/materi': 'Materi',
   '/akademik/presensi': 'Presensi',
   '/akademik/ujian-jawaban': 'Jawaban Ujian',
+  '/akademik/tes-minat-bakat': 'Tes Minat dan Bakat',
   '/akademik/log-akses-materi': 'Log Akses Materi',
   '/admin/tahun-ajaran': 'Tahun Ajaran',
   '/admin/semester': 'Semester',
@@ -184,6 +186,7 @@ const TitleUpdater = () => {
       if (path.startsWith('/perpustakaan')) title = 'Perpustakaan'
       else if (path.startsWith('/akademik/ujian-user')) title = 'Ujian User'
       else if (path.startsWith('/akademik/ujian')) title = 'Ujian'
+      else if (path.startsWith('/akademik/tes-minat-bakat')) title = 'Tes Minat dan Bakat'
       else if (path.startsWith('/akademik/soals')) title = 'Bank Soal'
       else if (path.startsWith('/statistik/')) title = 'Statistik'
       else if (path.startsWith('/ews')) title = 'Early Warning System'
@@ -327,6 +330,7 @@ function App() {
               <Route path="/akademik/ujian-jawaban" element={<UjianJawabanList />} />
               <Route path="/akademik/ujian-jawaban/:id" element={<UjianJawabanDetail />} />
               <Route path="/akademik/ujian-jawaban/:id/edit" element={<UjianJawabanForm />} />
+              <Route path="/akademik/tes-minat-bakat/*" element={<TesMinatBakat />} />
               <Route path="/akademik/log-akses-materi" element={<LogAksesMateriList />} />
               <Route path="/akademik/log-akses-materi/:id" element={<LogAksesMateriDetail />} />
 
