@@ -23,6 +23,7 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
 
   const pesertaIdFilter = searchParams.get('pesertaId')
   const pesertaNameFilter = searchParams.get('pesertaName')
+  const gridKey = `${resourceKey}:${pesertaIdFilter || 'all'}`
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -69,6 +70,10 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
 
   const handleRefresh = useCallback(() => {
     gridRef.current?.refreshGrid?.()
+  }, [])
+
+  const handleGridReady = useCallback((params) => {
+    params.api.refreshInfiniteCache()
   }, [])
 
   const handleClearPesertaFilter = useCallback(() => {
@@ -143,8 +148,11 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
 
       <Card>
         <InfiniteGrid
+          key={gridKey}
           ref={gridRef}
           endpoint={resource.endpoint}
+          requestMode="ag-grid"
+          onGridReady={handleGridReady}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

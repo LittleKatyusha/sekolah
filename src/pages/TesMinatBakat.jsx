@@ -7,7 +7,8 @@ import TesMinatBakatListPage from '../features/tes-minat-bakat/components/TesMin
 const TesMinatBakat = () => {
   return (
     <Routes>
-      <Route path="/" element={<TesMinatBakatDashboard />} />
+      <Route index element={<Navigate to="tes" replace />} />
+      <Route path="dashboard" element={<TesMinatBakatDashboard />} />
 
       <Route path="tes" element={<TesMinatBakatListPage resourceKey="tes" />} />
       <Route path="tes/create" element={<TesMinatBakatFormPage resourceKey="tes" />} />
@@ -37,7 +38,7 @@ const TesMinatBakat = () => {
       <Route path="hasil" element={<TesMinatBakatListPage resourceKey="hasil" />} />
       <Route path="hasil/:id" element={<TesMinatBakatDetailPage resourceKey="hasil" />} />
 
-      <Route path="*" element={<Navigate to="/akademik/tes-minat-bakat" replace />} />
+      <Route path="*" element={<Navigate to="tes" replace />} />
     </Routes>
   )
 }
