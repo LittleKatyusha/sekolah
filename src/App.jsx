@@ -11,6 +11,8 @@ import useAuthStore from './store/useAuthStore'
 import echoService from './services/echoService'
 import useNotificationStore from './store/useNotificationStore'
 import { setAuthExpiredHandler } from './utils/api'
+import NavigationProgress from './components/ui/NavigationProgress'
+import useNavigationProgressStore from './store/useNavigationProgressStore'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -177,6 +179,17 @@ const LoadingFallback = () => (
   </div>
 )
 
+const NavigationProgressObserver = () => {
+  const location = useLocation()
+  const markRouteReady = useNavigationProgressStore((state) => state.markRouteReady)
+
+  useEffect(() => {
+    markRouteReady()
+  }, [location.pathname, location.search, markRouteReady])
+
+  return null
+}
+
 const TitleUpdater = () => {
   const location = useLocation()
   useEffect(() => {
@@ -270,7 +283,9 @@ function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <NavigationProgress />
         <TitleUpdater />
+        <NavigationProgressObserver />
         <AuthExpiryNavigator />
         <WebSocketManager />
         <Suspense fallback={<LoadingFallback />}>

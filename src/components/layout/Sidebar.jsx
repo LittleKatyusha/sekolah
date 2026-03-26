@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +21,7 @@ import {
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
+import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 
 const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
 const sidebarMenuRequestCache = new Map()
@@ -168,7 +169,12 @@ const ICON_MAP = {
   Send
 }
 
-const MenuItem = memo(({ item, onClose }) => {
+const normalizePath = (path) => {
+  if (!path || path === '/') return '/'
+  return path.replace(/\/+$/, '') || '/'
+}
+
+const MenuItem = memo(({ item, currentPath, onClose, onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false)
   const hasChildren = item.children && item.children.length > 0
 
@@ -195,7 +201,13 @@ const MenuItem = memo(({ item, onClose }) => {
         {isOpen && (
           <ul className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
             {item.children.map((child) => (
-              <MenuItem key={child.id} item={child} onClose={onClose} />
+              <MenuItem
+                key={child.id}
+                item={child}
+                currentPath={currentPath}
+                onClose={onClose}
+                onNavigate={onNavigate}
+              />
             ))}
           </ul>
         )}
@@ -210,7 +222,12 @@ const MenuItem = memo(({ item, onClose }) => {
         className={({ isActive }) =>
           isActive ? 'sidebar-link active' : 'sidebar-link'
         }
-        onClick={onClose}
+        onClick={() => {
+          if (normalizePath(item.to) !== currentPath) {
+            onNavigate?.(item.to)
+          }
+          onClose?.()
+        }}
       >
         <item.icon size={20} />
         <span>{item.name}</span>
@@ -220,10 +237,17 @@ const MenuItem = memo(({ item, onClose }) => {
 })
 
 const Sidebar = ({ isOpen, onClose }) => {
+  const location = useLocation()
   const { logout, user } = useAuthStore()
+  const startNavigation = useNavigationProgressStore((state) => state.startNavigation)
   const [navigation, setNavigation] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const currentPath = normalizePath(location.pathname)
+
+  const handleMenuNavigate = () => {
+    startNavigation()
+  }
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -400,7 +424,13 @@ const Sidebar = ({ isOpen, onClose }) => {
             ) : (
               <ul className="space-y-2">
                 {navigation.map((item) => (
-                  <MenuItem key={item.id} item={item} onClose={onClose} />
+                  <MenuItem
+                    key={item.id}
+                    item={item}
+                    currentPath={currentPath}
+                    onClose={onClose}
+                    onNavigate={handleMenuNavigate}
+                  />
                 ))}
               </ul>
             )}

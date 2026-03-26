@@ -1,5 +1,6 @@
 import axios from 'axios'
 import useAuthStore from '../store/useAuthStore'
+import useNavigationProgressStore from '../store/useNavigationProgressStore'
 
 // Create axios instance with default config
 const baseURL = import.meta.env.DEV
@@ -20,6 +21,14 @@ const api = axios.create({
 let isRefreshing = false
 let failedQueue = []
 let authExpiredHandler = null
+
+const beginTrackedRequest = () => {
+  useNavigationProgressStore.getState().beginRequest()
+}
+
+const endTrackedRequest = () => {
+  useNavigationProgressStore.getState().endRequest()
+}
 
 // Process queue of failed requests after token refresh
 const processQueue = (error, token = null) => {
@@ -64,6 +73,13 @@ export const refreshToken = async () => {
 // Request interceptor - Add auth token and CSRF token
 api.interceptors.request.use(
   (config) => {
+    const { isVisible, pendingNavigation } = useNavigationProgressStore.getState()
+    config.__navigationProgressTracked = isVisible || pendingNavigation
+
+    if (config.__navigationProgressTracked) {
+      beginTrackedRequest()
+    }
+
     const { token } = useAuthStore.getState()
     
     if (token) {
@@ -86,9 +102,16 @@ api.interceptors.request.use(
 // Response interceptor - Handle errors globally with token refresh
 api.interceptors.response.use(
   (response) => {
+    if (response.config?.__navigationProgressTracked) {
+      endTrackedRequest()
+    }
     return response
   },
   async (error) => {
+    if (error.config?.__navigationProgressTracked) {
+      endTrackedRequest()
+    }
+
     const originalRequest = error.config
 
     // Handle 401 - Unauthorized (try to refresh token)
