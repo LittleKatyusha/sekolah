@@ -40,7 +40,7 @@ const TesMinatBakatDetailPage = ({ resourceKey }) => {
   ), [record, resource])
 
   const handleDelete = async () => {
-    if (!record) return
+    if (!record || resource.allowDelete === false || typeof resource.service.delete !== 'function') return
 
     const result = await showDeleteConfirm(resource.getDeleteLabel(record))
     if (!result.isConfirmed) return
@@ -56,10 +56,15 @@ const TesMinatBakatDetailPage = ({ resourceKey }) => {
   }
 
   const extraActions = record && typeof resource.extraActions === 'function'
-    ? resource.extraActions(record)
+    ? resource.extraActions(record, { navigate })
     : []
 
   const runExtraAction = async (action) => {
+    if (action.navigateTo) {
+      navigate(action.navigateTo)
+      return
+    }
+
     setActionLoading(true)
     const result = await action.action()
 
@@ -104,14 +109,18 @@ const TesMinatBakatDetailPage = ({ resourceKey }) => {
               {action.label}
             </Button>
           ))}
-          <Button variant="secondary" onClick={() => navigate(`${resource.basePath}/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {resource.allowEdit !== false ? (
+            <Button variant="secondary" onClick={() => navigate(`${resource.basePath}/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          ) : null}
+          {resource.allowDelete !== false ? (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          ) : null}
         </div>
       </div>
 

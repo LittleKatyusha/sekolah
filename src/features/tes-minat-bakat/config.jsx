@@ -211,7 +211,7 @@ export const tesMinatBakatResources = {
         (item) => ({ value: item.id, label: item.nama_tahun_ajaran || item.tahun_ajaran || item.nama || `Tahun Ajaran #${item.id}` })
       ),
     },
-    buildColumns: ({ handleDetail, handleEdit, handleDelete, ActionsMenu }) => [
+    buildColumns: ({ handleDetail, handleEdit, handleDelete, getRowActions, ActionsMenu }) => [
       { field: 'kode_tes', headerName: 'Kode', minWidth: 130, flex: 1 },
       { field: 'nama', headerName: 'Nama Tes', minWidth: 220, flex: 2 },
       {
@@ -257,6 +257,7 @@ export const tesMinatBakatResources = {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
+              extraActions={getRowActions ? getRowActions(params.data) : []}
             />
           </div>
         ),
@@ -572,8 +573,14 @@ export const tesMinatBakatResources = {
       subtitle: record.tes?.nama || record.nomor_peserta || 'Tanpa identitas peserta',
       badge: renderOptionBadge(record.status, STATUS_PESERTA_MAP),
     }),
-    extraActions: (record) => {
+    extraActions: (record, { navigate }) => {
       const actions = []
+
+      actions.push({
+        label: 'Lihat Hasil',
+        variant: 'outline',
+        navigateTo: `/akademik/tes-minat-bakat/hasil?pesertaId=${record.id}&pesertaName=${encodeURIComponent(record.siswa?.nama || `Peserta #${record.id}`)}`,
+      })
 
       if (record.status === 1) {
         actions.push({
@@ -595,6 +602,12 @@ export const tesMinatBakatResources = {
 
       return actions
     },
+    rowActions: (record, { navigate }) => ([
+      {
+        label: 'Lihat Hasil',
+        onClick: () => navigate(`/akademik/tes-minat-bakat/hasil?pesertaId=${record.id}&pesertaName=${encodeURIComponent(record.siswa?.nama || `Peserta #${record.id}`)}`),
+      },
+    ]),
     getDeleteLabel: (record) => `peserta "${record.siswa?.nama || record.nomor_peserta || record.id}"`,
   },
   jawaban: {
@@ -700,6 +713,9 @@ export const tesMinatBakatResources = {
     endpoint: '/akademik/tes-minat-bakat-hasil/',
     basePath: '/akademik/tes-minat-bakat/hasil',
     service: tesMinatBakatService.hasil,
+    allowCreate: false,
+    allowEdit: false,
+    allowDelete: false,
     fields: [
       { name: 'trx_tes_minat_bakat_peserta_id', label: 'Peserta', type: 'select', optionsKey: 'peserta', valueType: 'integer', required: true, placeholder: 'Pilih peserta' },
       { name: 'mst_tes_minat_bakat_aspek_id', label: 'Aspek', type: 'select', optionsKey: 'aspek', valueType: 'integer', required: true, placeholder: 'Pilih aspek' },

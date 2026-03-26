@@ -35,9 +35,7 @@ const TesMinatBakat = () => {
       <Route path="jawaban/:id/edit" element={<TesMinatBakatFormPage resourceKey="jawaban" />} />
 
       <Route path="hasil" element={<TesMinatBakatListPage resourceKey="hasil" />} />
-      <Route path="hasil/create" element={<TesMinatBakatFormPage resourceKey="hasil" />} />
       <Route path="hasil/:id" element={<TesMinatBakatDetailPage resourceKey="hasil" />} />
-      <Route path="hasil/:id/edit" element={<TesMinatBakatFormPage resourceKey="hasil" />} />
 
       <Route path="*" element={<Navigate to="/akademik/tes-minat-bakat" replace />} />
     </Routes>

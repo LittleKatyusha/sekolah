@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Search, Plus, RefreshCw } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
@@ -10,6 +10,7 @@ import { showDeleteConfirm, showError, showSuccess } from '../../../utils/sweeta
 
 const TesMinatBakatListPage = ({ resourceKey }) => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const gridRef = useRef(null)
   const resource = tesMinatBakatResources[resourceKey]
   const [searchText, setSearchText] = useState('')
@@ -20,12 +21,16 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
     return () => clearTimeout(timer)
   }, [searchText])
 
+  const pesertaIdFilter = searchParams.get('pesertaId')
+  const pesertaNameFilter = searchParams.get('pesertaName')
+
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
     search: debouncedSearch || '',
     filter: '{}',
-  }), [debouncedSearch])
+    ...(resourceKey === 'hasil' && pesertaIdFilter ? { trx_tes_minat_bakat_peserta_id: pesertaIdFilter } : {}),
+  }), [debouncedSearch, pesertaIdFilter, resourceKey])
 
   const handleDetail = useCallback((record) => {
     navigate(`${resource.basePath}/${record.id}`)
@@ -35,7 +40,19 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
     navigate(`${resource.basePath}/${record.id}/edit`)
   }, [navigate, resource.basePath])
 
+  const getRowActions = useCallback((record) => {
+    if (typeof resource.rowActions !== 'function') {
+      return []
+    }
+
+    return resource.rowActions(record, { navigate })
+  }, [navigate, resource])
+
   const handleDelete = useCallback(async (record) => {
+    if (!resource.allowDelete || typeof resource.service.delete !== 'function') {
+      return
+    }
+
     const result = await showDeleteConfirm(resource.getDeleteLabel(record))
     if (!result.isConfirmed) return
 
@@ -54,9 +71,22 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
     gridRef.current?.refreshGrid?.()
   }, [])
 
+  const handleClearPesertaFilter = useCallback(() => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('pesertaId')
+    nextParams.delete('pesertaName')
+    setSearchParams(nextParams)
+  }, [searchParams, setSearchParams])
+
   const columnDefs = useMemo(
-    () => resource.buildColumns({ handleDetail, handleEdit, handleDelete, ActionsMenu }),
-    [handleDelete, handleDetail, handleEdit, resource]
+    () => resource.buildColumns({
+      handleDetail,
+      handleEdit: resource.allowEdit !== false ? handleEdit : undefined,
+      handleDelete: resource.allowDelete !== false ? handleDelete : undefined,
+      getRowActions,
+      ActionsMenu,
+    }),
+    [getRowActions, handleDelete, handleDetail, handleEdit, resource]
   )
 
   const defaultColDef = useMemo(() => ({
@@ -86,12 +116,30 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
             <RefreshCw size={18} />
           </Button>
 
-          <Button onClick={() => navigate(`${resource.basePath}/create`)}>
-            <Plus size={18} className="mr-2" />
-            Tambah
-          </Button>
+          {resource.allowCreate !== false ? (
+            <Button onClick={() => navigate(`${resource.basePath}/create`)}>
+              <Plus size={18} className="mr-2" />
+              Tambah
+            </Button>
+          ) : null}
         </div>
       </div>
+
+      {resourceKey === 'hasil' && pesertaIdFilter ? (
+        <Card>
+          <div className="px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-white">Filter hasil peserta aktif</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Menampilkan hasil otomatis untuk {pesertaNameFilter || `peserta #${pesertaIdFilter}`}.
+              </div>
+            </div>
+            <Button variant="secondary" onClick={handleClearPesertaFilter}>
+              Tampilkan Semua Hasil
+            </Button>
+          </div>
+        </Card>
+      ) : null}
 
       <Card>
         <InfiniteGrid

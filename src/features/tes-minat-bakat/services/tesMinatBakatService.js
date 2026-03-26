@@ -19,6 +19,16 @@ const createCrudService = (basePath, extras = {}) => ({
   ...extras,
 })
 
+const createReadOnlyService = (basePath, extras = {}) => ({
+  getAll: async (params = {}) => {
+    return await apiService.get(`${basePath}/`, { params })
+  },
+  getById: async (id) => {
+    return await apiService.get(`${basePath}/${id}`)
+  },
+  ...extras,
+})
+
 export const tesMinatBakatService = {
   tes: createCrudService('/akademik/tes-minat-bakat', {
     getByKelas: async (kelasId) => {
@@ -46,7 +56,7 @@ export const tesMinatBakatService = {
     },
   }),
   jawaban: createCrudService('/akademik/tes-minat-bakat-jawaban'),
-  hasil: createCrudService('/akademik/tes-minat-bakat-hasil', {
+  hasil: createReadOnlyService('/akademik/tes-minat-bakat-hasil', {
     getByPeserta: async (pesertaId) => {
       return await apiService.get(`/akademik/tes-minat-bakat-hasil/peserta/${pesertaId}`)
     },
