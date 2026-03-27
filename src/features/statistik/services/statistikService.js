@@ -1,4 +1,4 @@
-import apiService from '../../../utils/api'
+import { apiService } from '../../../utils/api'
 
 /**
  * Service for statistik/analytics endpoints

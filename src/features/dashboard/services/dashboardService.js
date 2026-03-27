@@ -104,4 +104,22 @@ export const dashboardService = {
       throw error;
     }
   },
+
+  getPpdbInsights: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.tahun_ajaran) params.append('tahun_ajaran', filters.tahun_ajaran);
+      if (filters.mst_kelas_id) params.append('mst_kelas_id', filters.mst_kelas_id);
+      const queryString = params.toString();
+      const url = `/dashboard/ppdb-insights${queryString ? `?${queryString}` : ''}`;
+
+      const { data, error } = await apiService.get(url);
+      if (error) throw new Error(error.message || 'Failed to fetch PPDB insights');
+      if (data?.success) return data.data;
+      throw new Error(data?.message || 'Failed to fetch PPDB insights');
+    } catch (error) {
+      console.error('Failed to fetch PPDB insights:', error);
+      throw error;
+    }
+  },
 };

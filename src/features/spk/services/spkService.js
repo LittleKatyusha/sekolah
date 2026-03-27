@@ -82,6 +82,10 @@ export const hasilService = {
     return await apiService.post('/spk/hasil/calculate', data)
   },
 
+  autoCalculate: async (data) => {
+    return await apiService.post('/spk/hasil/auto-calculate', data)
+  },
+
   getByPeriode: async (periode) => {
     return await apiService.get(`/spk/hasil/periode/${periode}`)
   },

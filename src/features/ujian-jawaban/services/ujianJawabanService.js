@@ -47,4 +47,13 @@ export const ujianJawabanService = {
       return { data: null, error: error.response?.data || error.message }
     }
   },
+
+  koreksi: async (id, data) => {
+    try {
+      const response = await api.patch(`${BASE_URL}/${id}/koreksi`, data)
+      return { data: response.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || error.message }
+    }
+  },
 }
