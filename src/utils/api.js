@@ -1,6 +1,7 @@
 import axios from 'axios'
 import useAuthStore from '../store/useAuthStore'
 import useNavigationProgressStore from '../store/useNavigationProgressStore'
+import { showToast } from './sweetalert'
 
 // Create axios instance with default config
 const baseURL = import.meta.env.DEV
@@ -151,24 +152,23 @@ api.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
 
-      if (import.meta.env.DEV) {
-        switch (status) {
-          case 403:
-            console.error('Access forbidden:', data.message || data)
-            break
-          case 404:
-            console.error('Resource not found:', data.message || data)
-            break
-          case 422:
-            // Validation error - return the errors for form handling
-            console.error('Validation error:', data.errors || data.message)
-            break
-          case 500:
-            console.error('Server error:', data.message || data)
-            break
-          default:
-            console.error('API Error:', data.message || data)
-        }
+      switch (status) {
+        case 403:
+          showToast(data.message || 'Anda tidak memiliki izin untuk melakukan aksi ini.', 'error')
+          if (import.meta.env.DEV) console.error('Access forbidden:', data.message || data)
+          break
+        case 404:
+          if (import.meta.env.DEV) console.error('Resource not found:', data.message || data)
+          break
+        case 422:
+          // Validation error - return the errors for form handling
+          if (import.meta.env.DEV) console.error('Validation error:', data.errors || data.message)
+          break
+        case 500:
+          if (import.meta.env.DEV) console.error('Server error:', data.message || data)
+          break
+        default:
+          if (import.meta.env.DEV) console.error('API Error:', data.message || data)
       }
     } else if (error.request) {
       // Network error
@@ -181,7 +181,9 @@ api.interceptors.response.use(
   }
 )
 
-// Sanitize input to prevent XSS
+// Sanitize input to prevent XSS when rendering user-supplied data back into the DOM.
+// Note: This is a defense-in-depth measure for display contexts.
+// Server-side validation and output encoding remain the primary XSS defenses.
 export const sanitizeInput = (input) => {
   if (typeof input === 'string') {
     return input
