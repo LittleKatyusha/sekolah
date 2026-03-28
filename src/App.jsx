@@ -13,6 +13,7 @@ import useNotificationStore from './store/useNotificationStore'
 import { setAuthExpiredHandler } from './utils/api'
 import NavigationProgress from './components/ui/NavigationProgress'
 import useNavigationProgressStore from './store/useNavigationProgressStore'
+import { usePageTitle } from './hooks/usePageTitle'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -125,60 +126,6 @@ const KalenderTipeForm = lazy(() => import('./features/kalender-tipe/pages/Kalen
 const Files = lazy(() => import('./features/files/pages/FileUploadPage'))
 const Waha = lazy(() => import('./pages/Waha'))
 
-const PAGE_TITLES = {
-  '/': 'Dashboard',
-  '/dashboard': 'Dashboard',
-  '/admin/users': 'Users Management',
-  '/analytics': 'Analytics',
-  '/data-grid': 'Data Grid',
-  '/settings': 'Settings',
-  '/login': 'Login',
-  '/siswa': 'Data Siswa',
-  '/kelas': 'Data Kelas',
-  '/guru': 'Data Guru',
-  '/mapel': 'Mata Pelajaran',
-  '/wali': 'Wali Murid',
-  '/absensi-siswa': 'Absensi Siswa',
-  '/absensi-guru': 'Absensi Guru',
-  '/akademik/nilai': 'Nilai',
-  '/akademik/tugas': 'Tugas',
-  '/akademik/tugas-siswa': 'Pengumpulan Tugas',
-  '/akademik/ranking': 'Ranking',
-  '/akademik/rapor': 'Rapor',
-  '/akademik/forum': 'Forum',
-  '/akademik/materi': 'Materi',
-  '/akademik/presensi': 'Presensi',
-  '/akademik/ujian-jawaban': 'Jawaban Ujian',
-  '/akademik/tes-minat-bakat': 'Tes Minat dan Bakat',
-  '/akademik/log-akses-materi': 'Log Akses Materi',
-  '/admin/tahun-ajaran': 'Tahun Ajaran',
-  '/admin/semester': 'Semester',
-  '/admin/kalender-akademik': 'Kalender Akademik',
-  '/admin/roles': 'Roles',
-  '/admin/role-permissions': 'Role Permissions',
-  '/admin/hari-operasional': 'Hari Operasional',
-  '/admin/kalender-harian': 'Kalender Harian',
-  '/admin/references': 'System References',
-  '/admin/kalender-tipe': 'Kalender Tipe',
-  '/keuangan/tarif-spp': 'Tarif SPP',
-  '/keuangan/pembayaran-spp': 'Pembayaran SPP',
-  '/ppdb': 'PPDB',
-  '/ppdb/gelombang': 'PPDB — Gelombang',
-  '/ppdb/pendaftaran': 'PPDB — Pendaftar',
-  '/ppdb/dokumen': 'PPDB — Dokumen',
-  '/ppdb/portal': 'Portal PPDB',
-  '/statistik': 'Statistik',
-  '/ews': 'Early Warning System',
-  '/jadwal-pelajaran': 'Jadwal Pelajaran',
-  '/files': 'Files Management',
-  '/waha/session': 'WAHA Session',
-  '/waha/send': 'WAHA Messaging',
-  '/bk': 'Bimbingan Konseling',
-  '/unauthorized': 'Unauthorized',
-  '/admin/activity-logs': 'Activity Logs',
-  '/admin/menus': 'Manajemen Menu',
-}
-
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -197,24 +144,7 @@ const NavigationProgressObserver = () => {
 }
 
 const TitleUpdater = () => {
-  const location = useLocation()
-  useEffect(() => {
-    const path = location.pathname
-    let title = PAGE_TITLES[path]
-    if (!title) {
-      if (path.startsWith('/perpustakaan')) title = 'Perpustakaan'
-      else if (path.startsWith('/akademik/ujian-user')) title = 'Ujian User'
-      else if (path.startsWith('/akademik/ujian')) title = 'Ujian'
-      else if (path.startsWith('/akademik/tes-minat-bakat')) title = 'Tes Minat dan Bakat'
-      else if (path.startsWith('/akademik/soals')) title = 'Bank Soal'
-      else if (path.startsWith('/statistik/')) title = 'Statistik'
-      else if (path.startsWith('/ews')) title = 'Early Warning System'
-      else if (path.startsWith('/waha')) title = 'WhatsApp WAHA'
-      else if (path.startsWith('/bk/')) title = 'Bimbingan Konseling'
-      else title = 'Admin Dashboard'
-    }
-    document.title = `${title} | Admin Dashboard`
-  }, [location.pathname])
+  usePageTitle()
   return null
 }
 
