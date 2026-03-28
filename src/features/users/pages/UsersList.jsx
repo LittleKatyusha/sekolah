@@ -8,6 +8,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { usersService } from '../services/usersService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 // Role options based on API response
 const ROLE_OPTIONS = [
@@ -38,7 +39,10 @@ const getRoleBadgeColor = (roleValue, roles = []) => {
 }
 
 // Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -125,7 +129,9 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus }) => {
                 </>
               )}
             </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            {canEdit && canDelete && (
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            )}
             <button
               onClick={() => { setIsOpen(false); onDelete(); }}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
@@ -142,6 +148,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onToggleStatus }) => {
 }
 
 const UsersList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -308,6 +315,8 @@ const UsersList = () => {
               onEdit={() => handleEdit(row)}
               onDelete={() => handleDelete(row)}
               onToggleStatus={() => handleToggleStatus(row)}
+              canEdit={can('users.update')}
+              canDelete={can('users.delete')}
             />
           </div>
         )
@@ -339,10 +348,12 @@ const UsersList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/users/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah User
-          </Button>
+          {can('users.create') && (
+            <Button onClick={() => navigate('/admin/users/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah User
+            </Button>
+          )}
         </div>
       </div>
 

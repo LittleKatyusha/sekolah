@@ -6,8 +6,10 @@ import Button from '../../../components/ui/Button'
 import { bukuService } from '../services/perpustakaanService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import usePermission from '../../../hooks/usePermission'
 
 const BukuDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -79,14 +81,18 @@ const BukuDetail = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/perpustakaan/buku/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('buku.update') && (
+            <Button variant="warning" onClick={() => navigate(`/perpustakaan/buku/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('buku.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

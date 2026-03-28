@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { pendaftarService, dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const STATUS_MAP = {
   draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
@@ -18,6 +19,7 @@ const STATUS_MAP = {
 const GENDER_MAP = { L: 'Laki-laki', P: 'Perempuan' }
 
 const PendaftarDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -131,14 +133,18 @@ const PendaftarDetail = () => {
             <XCircle size={18} className="mr-2" />
             Tolak
           </Button>
-          <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftar/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('ppdb.pendaftaran.update') && (
+            <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftar/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('ppdb.pendaftaran.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

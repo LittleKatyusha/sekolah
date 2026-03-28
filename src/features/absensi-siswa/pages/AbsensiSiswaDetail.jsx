@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiSiswaService } from '../services/absensiSiswaService'
 import { showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 // Module-level date formatters — no per-render allocation
 const formatDate = (dateString) => {
@@ -63,6 +64,7 @@ const StatusBadge = ({ status }) => {
 }
 
 const AbsensiSiswaDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 

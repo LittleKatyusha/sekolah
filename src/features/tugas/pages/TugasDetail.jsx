@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 // Status mapping for display
 const STATUS_MAP = {
@@ -23,6 +24,7 @@ const SUBMISSION_STATUS_MAP = {
 }
 
 const TugasDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -134,14 +136,18 @@ const TugasDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tugas</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/akademik/tugas/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('tugas.update') && (
+            <Button variant="warning" onClick={() => navigate(`/akademik/tugas/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('tugas.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { usersService } from '../services/usersService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 // Role options based on API response
 const ROLE_OPTIONS = [
@@ -35,6 +36,7 @@ const getRoleBadgeColor = (roleValue, roles = []) => {
 }
 
 const UsersDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -103,14 +105,18 @@ const UsersDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail User</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/admin/users/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('users.update') && (
+            <Button variant="warning" onClick={() => navigate(`/admin/users/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('users.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

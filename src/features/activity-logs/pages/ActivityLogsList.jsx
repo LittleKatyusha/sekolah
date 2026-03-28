@@ -6,6 +6,7 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import ActionBadge from '../components/ActionBadge'
+import usePermission from '../../../hooks/usePermission'
 
 // Module-level pure function — no re-creation per render
 const formatDateTime = (val) => {
@@ -13,7 +14,10 @@ const formatDateTime = (val) => {
   return new Date(val).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-const ActionsMenu = memo(({ onDetail }) => {
+const ActionsMenu = memo(({ onDetail,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -64,6 +68,7 @@ const ActionsMenu = memo(({ onDetail }) => {
 ActionsMenu.displayName = 'ActionsMenu'
 
 const ActivityLogsList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')

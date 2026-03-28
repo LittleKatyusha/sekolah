@@ -7,8 +7,10 @@ import { bkKasusService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDate, formatDateTime } from '../../../utils/formatters'
 import { getStatusBadge } from '../../../utils/bkBadges.jsx'
+import usePermission from '../../../hooks/usePermission'
 
 const BkKasusDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -69,14 +71,18 @@ const BkKasusDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Kasus BK</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/bk/kasus/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('bk-kasus.update') && (
+            <Button variant="warning" onClick={() => navigate(`/bk/kasus/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('bk-kasus.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

@@ -7,8 +7,12 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
-const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onView, onEdit, onDelete,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0 })
   const btnRef = useRef(null)
@@ -53,6 +57,7 @@ const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
 }
 
 const DokumenList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [search, setSearch] = useState('')
@@ -123,6 +128,8 @@ const DokumenList = () => {
             onView={(d) => navigate(`/ppdb/dokumen/${d.id}`)}
             onEdit={(d) => navigate(`/ppdb/dokumen/${d.id}/edit`)}
             onDelete={handleDelete}
+            canEdit={can('ppdb.dokumen.update')}
+            canDelete={can('ppdb.dokumen.delete')}
           />
         )
       },
@@ -151,10 +158,12 @@ const DokumenList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/ppdb/dokumen/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Dokumen
-          </Button>
+          {can('ppdb.dokumen.create') && (
+            <Button onClick={() => navigate('/ppdb/dokumen/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Dokumen
+            </Button>
+          )}
         </div>
       </div>
 

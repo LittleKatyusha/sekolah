@@ -5,8 +5,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { nilaiService } from '../services/nilaiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const NilaiDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -90,14 +92,18 @@ const NilaiDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Nilai</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/akademik/nilai/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('nilai.update') && (
+            <Button variant="warning" onClick={() => navigate(`/akademik/nilai/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('nilai.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

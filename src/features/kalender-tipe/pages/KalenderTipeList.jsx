@@ -7,8 +7,12 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { kalenderTipeService } from '../services/kalenderTipeService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
-const ActionsMenu = ({ data, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onEdit, onDelete,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -39,13 +43,19 @@ const ActionsMenu = ({ data, onEdit, onDelete }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+            {canEdit && (
+              <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
               <Edit size={16} className="text-yellow-600" /> Edit
             </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+            )}
+            {canEdit && canDelete && (
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            )}
+            {canDelete && (
+              <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
               <Trash2 size={16} /> Hapus
             </button>
+            )}
           </div>
         </div>, document.body
       )}
@@ -54,6 +64,7 @@ const ActionsMenu = ({ data, onEdit, onDelete }) => {
 }
 
 const KalenderTipeList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -116,6 +127,8 @@ const KalenderTipeList = () => {
       cellRenderer: (params) => (
         <div className="h-full flex items-center justify-center">
           <ActionsMenu data={params.data}
+            canEdit={can('kalender-tipe.update')}
+            canDelete={can('kalender-tipe.delete')}
             onEdit={() => navigate(`/admin/kalender-tipe/${params.data.id}/edit`)}
             onDelete={() => handleDelete(params.data)}
           />
@@ -137,7 +150,9 @@ const KalenderTipeList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64" />
           </div>
           <Button onClick={handleRefresh} variant="secondary"><RefreshCw size={18} /></Button>
-          <Button onClick={() => navigate('/admin/kalender-tipe/create')}><Plus size={18} className="mr-2" /> Tambah Tipe</Button>
+          {can('kalender-tipe.create') && (
+            <Button onClick={() => navigate('/admin/kalender-tipe/create')}><Plus size={18} className="mr-2" /> Tambah Tipe</Button>
+          )}
         </div>
       </div>
       <Card>

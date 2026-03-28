@@ -7,8 +7,10 @@ import { bkSesiService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDate, formatDateTime } from '../../../utils/formatters'
 import { getMetodeBadge } from '../../../utils/bkBadges.jsx'
+import usePermission from '../../../hooks/usePermission'
 
 const BkSesiDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -65,14 +67,18 @@ const BkSesiDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Sesi Konseling</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/bk/sesi/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('bk-sesi.update') && (
+            <Button variant="warning" onClick={() => navigate(`/bk/sesi/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('bk-sesi.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

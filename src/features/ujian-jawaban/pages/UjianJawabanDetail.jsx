@@ -5,8 +5,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianJawabanService } from '../services/ujianJawabanService'
 import { showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const UjianJawabanDetail = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const { id } = useParams()
   const [data, setData] = useState(null)

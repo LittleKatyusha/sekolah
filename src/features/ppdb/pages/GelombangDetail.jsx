@@ -5,8 +5,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { gelombangService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const GelombangDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -88,14 +90,18 @@ const GelombangDetail = () => {
             <ToggleLeft size={18} className="mr-2" />
             {gelombang.is_active ? 'Nonaktifkan' : 'Aktifkan'}
           </Button>
-          <Button variant="warning" onClick={() => navigate(`/ppdb/gelombang/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('ppdb.gelombang.update') && (
+            <Button variant="warning" onClick={() => navigate(`/ppdb/gelombang/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('ppdb.gelombang.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

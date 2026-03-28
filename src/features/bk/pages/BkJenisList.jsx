@@ -7,8 +7,10 @@ import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { bkJenisService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const BkJenisList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -99,6 +101,8 @@ const BkJenisList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
+              canEdit={can('bk-jenis.update')}
+              canDelete={can('bk-jenis.delete')}
             />
           </div>
         )
@@ -140,10 +144,12 @@ const BkJenisList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/bk/jenis/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Jenis
-          </Button>
+          {can('bk-jenis.create') && (
+            <Button onClick={() => navigate('/bk/jenis/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Jenis
+            </Button>
+          )}
         </div>
       </div>
 

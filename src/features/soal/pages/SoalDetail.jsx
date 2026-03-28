@@ -5,8 +5,10 @@ import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { showSoal } from '../services/soalService';
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert';
+import usePermission from '../../../hooks/usePermission'
 
 const SoalDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams();
   const navigate = useNavigate();
   
@@ -112,14 +114,18 @@ const SoalDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Soal</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/akademik/soals/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit Soal
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus Soal
-          </Button>
+          {can('soals.update') && (
+            <Button variant="warning" onClick={() => navigate(`/akademik/soals/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit Soal
+            </Button>
+          )}
+          {can('soals.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus Soal
+            </Button>
+          )}
         </div>
       </div>
 

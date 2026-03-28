@@ -8,6 +8,7 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { siswaService } from '../../siswa/services/siswaService'
 import { ewsService } from '../services/ewsService'
 import { showConfirm, showError, showSuccess } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const CATEGORY_OPTIONS = [
   { value: '', label: 'Semua kategori' },
@@ -117,6 +118,7 @@ const EmptyState = ({ hasFilters }) => (
 )
 
 const EwsList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)

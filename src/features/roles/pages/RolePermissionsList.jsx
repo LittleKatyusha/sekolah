@@ -5,6 +5,7 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Button from '../../../components/ui/Button'
 import { rolePermissionService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const ActionsCellRenderer = ({ data, onEdit, onDetail, onDelete }) => {
   return (
@@ -35,6 +36,7 @@ const ActionsCellRenderer = ({ data, onEdit, onDetail, onDelete }) => {
 }
 
 const RolePermissionsList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')

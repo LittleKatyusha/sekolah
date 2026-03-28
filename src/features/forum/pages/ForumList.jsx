@@ -4,6 +4,7 @@ import { MessageSquare, Clock, User, Search, BookOpen, RefreshCw, Loader2 } from
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { forumService } from '../services/forumService'
+import usePermission from '../../../hooks/usePermission'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -52,6 +53,7 @@ function getAvatarColor(name) {
 }
 
 const ForumList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const loaderRef = useRef(null)
   const isFetchingRef = useRef(false)

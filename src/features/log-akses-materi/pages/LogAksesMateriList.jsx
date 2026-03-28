@@ -5,8 +5,12 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import usePermission from '../../../hooks/usePermission'
 
-const ActionsMenu = ({ onDetail }) => {
+const ActionsMenu = ({ onDetail,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -48,6 +52,7 @@ const ActionsMenu = ({ onDetail }) => {
 }
 
 const LogAksesMateriList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')

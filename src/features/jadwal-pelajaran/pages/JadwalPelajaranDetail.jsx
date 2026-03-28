@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { jadwalPelajaranService } from '../services/jadwalPelajaranService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 // Day mapping for display
 const HARI_MAP = {
@@ -18,6 +19,7 @@ const HARI_MAP = {
 }
 
 const JadwalPelajaranDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -83,14 +85,18 @@ const JadwalPelajaranDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Jadwal Pelajaran</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/jadwal-pelajaran/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('jadwal-pelajaran.update') && (
+            <Button variant="warning" onClick={() => navigate(`/jadwal-pelajaran/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('jadwal-pelajaran.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

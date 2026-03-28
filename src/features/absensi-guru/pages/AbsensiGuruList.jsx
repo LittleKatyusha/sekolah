@@ -7,6 +7,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const DEBOUNCE_DELAY = 400
 
@@ -15,7 +16,10 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const ActionsMenu = memo(({ onEdit, onDelete, onDetail }) => {
+const ActionsMenu = memo(({ onEdit, onDelete, onDetail,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -62,13 +66,19 @@ const ActionsMenu = memo(({ onEdit, onDelete, onDetail }) => {
             <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
               <Eye size={16} className="text-blue-600" /> Detail
             </button>
-            <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+            {canEdit && (
+              <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
               <Edit size={16} className="text-yellow-600" /> Edit
             </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+            )}
+            {canEdit && canDelete && (
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            )}
+            {canDelete && (
+              <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
               <Trash2 size={16} /> Hapus
             </button>
+            )}
           </div>
         </div>,
         document.body
@@ -93,6 +103,7 @@ const StatusBadge = memo(({ status }) => {
 StatusBadge.displayName = 'StatusBadge'
 
 const AbsensiGuruList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -219,6 +230,8 @@ const AbsensiGuruList = () => {
               onDetail={() => handleDetail(row)}
               onEdit={() => handleEdit(row)}
               onDelete={() => handleDelete(row)}
+              canEdit={can('absensi-guru.update')}
+              canDelete={can('absensi-guru.delete')}
             />
           </div>
         )
@@ -246,10 +259,12 @@ const AbsensiGuruList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/absensi-guru/tambah')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Absensi
-          </Button>
+          {can('absensi-guru.create') && (
+            <Button onClick={() => navigate('/absensi-guru/tambah')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Absensi
+            </Button>
+          )}
         </div>
       </div>
 

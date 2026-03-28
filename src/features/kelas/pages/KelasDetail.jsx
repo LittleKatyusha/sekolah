@@ -1,3 +1,4 @@
+import usePermission from '../../../hooks/usePermission'
  import { useState, useEffect } from 'react'
  import { useParams, useNavigate } from 'react-router-dom'
  import { ArrowLeft, Edit, Trash2, Users, BookOpen, Calendar } from 'lucide-react'
@@ -9,6 +10,7 @@
  import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
  
  const KelasDetail = () => {
+  const { can } = usePermission()
    const { id } = useParams()
    const navigate = useNavigate()
  
@@ -148,14 +150,18 @@
            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Kelas</h1>
          </div>
          <div className="flex gap-3">
-           <Button variant="warning" onClick={() => navigate(`/kelas/${id}/edit`)}>
-             <Edit size={18} className="mr-2" />
-             Edit
-           </Button>
-           <Button variant="danger" onClick={handleDelete}>
-             <Trash2 size={18} className="mr-2" />
-             Hapus
-           </Button>
+           {can('kelas.update') && (
+             <Button variant="warning" onClick={() => navigate(`/kelas/${id}/edit`)}>
+               <Edit size={18} className="mr-2" />
+               Edit
+             </Button>
+           )}
+           {can('kelas.delete') && (
+             <Button variant="danger" onClick={handleDelete}>
+               <Trash2 size={18} className="mr-2" />
+               Hapus
+             </Button>
+           )}
          </div>
        </div>
  

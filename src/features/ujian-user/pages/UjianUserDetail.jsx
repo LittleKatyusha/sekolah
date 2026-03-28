@@ -5,8 +5,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianUserService } from '../services/ujianUserService'
 import { showDeleteConfirm, showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const UjianUserDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -137,14 +139,18 @@ const UjianUserDetail = () => {
               Mulai Ujian
             </Button>
           )}
-          <Button variant="warning" onClick={() => navigate(`/akademik/ujian-user/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('ujian-user.update') && (
+            <Button variant="warning" onClick={() => navigate(`/akademik/ujian-user/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('ujian-user.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

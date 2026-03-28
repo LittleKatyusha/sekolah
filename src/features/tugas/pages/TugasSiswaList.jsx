@@ -7,6 +7,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 // Submission status mapping
 const STATUS_MAP = {
@@ -19,7 +20,10 @@ const STATUS_MAP = {
 }
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
+const ActionsMenu = ({ data, onDetail, onGrade, onDelete,
+  canEdit = true,
+  canDelete = true
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -95,14 +99,18 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
               <Star size={16} className="text-yellow-600" />
               Nilai
             </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button
+            {canEdit && canDelete && (
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            )}
+            {canDelete && (
+              <button
               onClick={() => handleAction(onDelete)}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
               <Trash2 size={16} />
               Hapus
             </button>
+            )}
           </div>
         </div>,
         document.body
@@ -112,6 +120,7 @@ const ActionsMenu = ({ data, onDetail, onGrade, onDelete }) => {
 }
 
 const TugasSiswaList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -262,6 +271,8 @@ const TugasSiswaList = () => {
               onDetail={() => handleDetail(params.data)}
               onGrade={() => handleGrade(params.data)}
               onDelete={() => handleDelete(params.data)}
+              canEdit={can('tugas-siswa.update')}
+              canDelete={can('tugas-siswa.delete')}
             />
           </div>
         )
@@ -293,10 +304,12 @@ const TugasSiswaList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/akademik/tugas-siswa/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Pengumpulan
-          </Button>
+          {can('tugas-siswa.create') && (
+            <Button onClick={() => navigate('/akademik/tugas-siswa/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Pengumpulan
+            </Button>
+          )}
         </div>
       </div>
 

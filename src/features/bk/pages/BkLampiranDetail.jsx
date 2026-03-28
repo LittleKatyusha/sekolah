@@ -6,8 +6,10 @@ import Button from '../../../components/ui/Button'
 import { bkLampiranService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDateTime } from '../../../utils/formatters'
+import usePermission from '../../../hooks/usePermission'
 
 const BkLampiranDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -64,10 +66,12 @@ const BkLampiranDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Lampiran BK</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('bk-lampiran.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

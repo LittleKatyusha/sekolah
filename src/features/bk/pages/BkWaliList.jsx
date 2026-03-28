@@ -8,8 +8,10 @@ import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { bkWaliService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { getPeranBadge } from '../../../utils/bkBadges.jsx'
+import usePermission from '../../../hooks/usePermission'
 
 const BkWaliList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -116,6 +118,8 @@ const BkWaliList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
+              canEdit={can('bk-wali.update')}
+              canDelete={can('bk-wali.delete')}
             />
           </div>
         )
@@ -157,10 +161,12 @@ const BkWaliList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/bk/wali/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Wali
-          </Button>
+          {can('bk-wali.create') && (
+            <Button onClick={() => navigate('/bk/wali/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Wali
+            </Button>
+          )}
         </div>
       </div>
 

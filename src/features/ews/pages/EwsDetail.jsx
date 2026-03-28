@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { siswaService } from '../../siswa/services/siswaService'
 import { ewsService } from '../services/ewsService'
 import { showConfirm, showError, showSuccess } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const CATEGORY_META = {
   absensi: {
@@ -82,6 +83,7 @@ const InfoRow = ({ label, value }) => (
 )
 
 const EwsDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   const [alert, setAlert] = useState(null)

@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { eksSiswaService } from '../services/ekstrakurikulerService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const STATUS_MAP = {
   aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -32,6 +33,7 @@ const getStatusBadge = (status) => {
 }
 
 const EksSiswaDetail = () => {
+  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -88,14 +90,18 @@ const EksSiswaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Pendaftaran Ekskul</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/siswa/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          {can('ekstrakurikuler.pendaftaran.update') && (
+            <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/siswa/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          )}
+          {can('ekstrakurikuler.pendaftaran.delete') && (
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          )}
         </div>
       </div>
 

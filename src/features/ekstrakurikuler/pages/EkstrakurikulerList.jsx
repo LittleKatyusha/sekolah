@@ -7,6 +7,7 @@ import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { ekstrakurikulerService } from '../services/ekstrakurikulerService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import usePermission from '../../../hooks/usePermission'
 
 const STATUS_MAP = {
   aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -16,6 +17,7 @@ const STATUS_MAP = {
 const DEBOUNCE_MS = 400
 
 const EkstrakurikulerList = () => {
+  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -119,7 +121,9 @@ const EkstrakurikulerList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
-          />
+              canEdit={can('ekstrakurikuler.update')}
+              canDelete={can('ekstrakurikuler.delete')}
+            />
         </div>
       )
     }
@@ -149,10 +153,12 @@ const EkstrakurikulerList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/ekstrakurikuler/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Ekskul
-          </Button>
+          {can('ekstrakurikuler.create') && (
+            <Button onClick={() => navigate('/ekstrakurikuler/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Ekskul
+            </Button>
+          )}
         </div>
       </div>
 
