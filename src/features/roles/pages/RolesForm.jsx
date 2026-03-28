@@ -16,7 +16,8 @@ const RolesForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
 
   const [formData, setFormData] = useState({
-  name: '',
+    name: '',
+    code: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -43,7 +44,8 @@ const RolesForm = () => {
     if (data) {
       const role = data.data
       setFormData({
-      name: role.name || '',
+        name: role.name || '',
+        code: role.code || '',
       })
       if (role.permissions && Array.isArray(role.permissions)) {
         setSelectedPermissions(role.permissions.map(p => p.id || p))
@@ -82,6 +84,7 @@ const RolesForm = () => {
   const validate = () => {
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Nama role wajib diisi'
+    if (!isEditMode && !formData.code.trim()) newErrors.code = 'Code role wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -93,7 +96,8 @@ const RolesForm = () => {
     setLoading(true)
 
     const submitData = {
-    name: formData.name,
+      name: formData.name,
+      ...(formData.code.trim() && { code: formData.code.trim() }),
     }
 
     let result
@@ -124,10 +128,9 @@ const RolesForm = () => {
     setLoading(false)
   }
 
-  // Group permissions by prefix (e.g., "users.create" -> "users")
+  // Group permissions by module field
   const groupedPermissions = allPermissions.reduce((groups, perm) => {
-    const parts = (perm.name || '').split('.')
-    const group = parts.length > 1 ? parts[0] : 'other'
+    const group = perm.module || (perm.code ? perm.code.split('.')[0] : null) || 'other'
     if (!groups[group]) groups[group] = []
     groups[group].push(perm)
     return groups
@@ -167,6 +170,26 @@ const RolesForm = () => {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Code Role {!isEditMode && <span className="text-red-500">*</span>}
+                </label>
+                <Input
+                  type="text"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleChange}
+                  placeholder={isEditMode ? 'Kosongkan untuk tidak mengubah' : 'contoh: kepala-sekolah'}
+                  error={errors.code}
+                  disabled={isEditMode}
+                />
+                {!isEditMode && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Identifier unik role, hanya huruf kecil dan tanda hubung (akan otomatis diisi dari nama jika dikosongkan)
+                  </p>
+                )}
+              </div>
+
             </div>
 
             {/* Permissions Section */}
@@ -194,7 +217,10 @@ const RolesForm = () => {
                               onChange={() => handlePermissionToggle(perm.id)}
                               className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                             />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">{perm.name}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {perm.name}
+                              {perm.code && <span className="block text-xs text-gray-400 dark:text-gray-500">{perm.code}</span>}
+                            </span>
                           </label>
                         ))}
                       </div>

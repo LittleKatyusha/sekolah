@@ -123,7 +123,8 @@ const RolesList = () => {
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
-    { field: 'name', headerName: 'Nama Role', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
+    { field: 'name', headerName: 'Nama Role', sortable: true, filter: true, flex: 2, minWidth: 180, cellRenderer: (params) => params.value || '-' },
+    { field: 'code', headerName: 'Code', sortable: true, filter: true, flex: 1, minWidth: 130, cellRenderer: (params) => params.value ? <span className="font-mono text-xs">{params.value}</span> : '-' },
     {
       headerName: 'Permissions',
       sortable: false,

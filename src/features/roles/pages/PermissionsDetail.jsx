@@ -96,6 +96,14 @@ const PermissionsDetail = () => {
                   <span className="text-gray-500 dark:text-gray-400">ID</span>
                   <span className="font-medium text-gray-900 dark:text-white">{permission.id}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Code</span>
+                  <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">{permission.code || '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Modul</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{permission.module || '-'}</span>
+                </div>
               </div>
             </div>
           </Card>
@@ -115,6 +123,26 @@ const PermissionsDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Nama Permission</p>
                     <p className="font-medium text-gray-900 dark:text-white">{permission.name || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield size={20} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Code</p>
+                    <p className="font-mono font-medium text-gray-900 dark:text-white">{permission.code || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Key size={20} className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Modul</p>
+                    <p className="font-medium text-gray-900 dark:text-white capitalize">{permission.module || '-'}</p>
                   </div>
                 </div>
 

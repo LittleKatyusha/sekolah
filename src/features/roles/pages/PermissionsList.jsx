@@ -123,7 +123,9 @@ const PermissionsList = () => {
 
   const columnDefs = useMemo(() => [
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
+    { field: 'code', headerName: 'Code', sortable: true, filter: true, flex: 1, minWidth: 150, cellRenderer: (params) => params.value ? <span className="font-mono text-xs">{params.value}</span> : '-' },
     { field: 'name', headerName: 'Nama Permission', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
+    { field: 'module', headerName: 'Modul', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value ? <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 capitalize">{params.value}</span> : '-' },
     {
       headerName: 'Aksi',
       width: 80, minWidth: 80, maxWidth: 80,

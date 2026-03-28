@@ -16,7 +16,9 @@ const PermissionsForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
 
   const [formData, setFormData] = useState({
-  name: '',
+    name: '',
+    code: '',
+    module: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -33,7 +35,9 @@ const PermissionsForm = () => {
     if (data) {
       const permission = data.data
       setFormData({
-      name: permission.name || '',
+        name: permission.name || '',
+        code: permission.code || '',
+        module: permission.module || '',
       })
     } else {
       showError('Gagal mengambil data permission')
@@ -44,7 +48,18 @@ const PermissionsForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value }
+      // Auto-populate code from name in create mode (user can override)
+      if (name === 'name' && !isEditMode && !prev._codeTouched) {
+        const autoCode = value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        updated.code = autoCode
+      }
+      if (name === 'code') {
+        updated._codeTouched = true
+      }
+      return updated
+    })
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
     }
@@ -53,6 +68,7 @@ const PermissionsForm = () => {
   const validate = () => {
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Nama permission wajib diisi'
+    if (!isEditMode && !formData.code.trim()) newErrors.code = 'Code permission wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -64,7 +80,9 @@ const PermissionsForm = () => {
     setLoading(true)
 
     const submitData = {
-    name: formData.name,
+      name: formData.name,
+      ...(formData.code.trim() && { code: formData.code.trim() }),
+      ...(formData.module.trim() && { module: formData.module.trim() }),
     }
 
     let result
@@ -119,9 +137,46 @@ const PermissionsForm = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Masukkan nama permission (e.g. users.create)"
+                  placeholder="contoh: Lihat Data Siswa"
                   error={errors.name}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Code Permission {!isEditMode && <span className="text-red-500">*</span>}
+                </label>
+                <Input
+                  type="text"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleChange}
+                  placeholder="contoh: siswa.view"
+                  error={errors.code}
+                  disabled={isEditMode}
+                />
+                {!isEditMode && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Format: {'{modul}.{aksi}'}, contoh: <code>siswa.view</code>, <code>ujian.create</code>
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Modul
+                </label>
+                <Input
+                  type="text"
+                  name="module"
+                  value={formData.module}
+                  onChange={handleChange}
+                  placeholder="contoh: siswa"
+                  error={errors.module}
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Nama modul untuk pengelompokan, contoh: <code>siswa</code>, <code>ujian</code>
+                </p>
               </div>
 
             </div>

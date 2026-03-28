@@ -49,13 +49,11 @@ const RolesDetail = () => {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
-  // Group permissions by prefix
+  // Group permissions by module field
   const groupedPermissions = (role?.permissions || []).reduce((groups, perm) => {
-    const name = perm.name || perm
-    const parts = String(name).split('.')
-    const group = parts.length > 1 ? parts[0] : 'other'
+    const group = perm.module || (perm.code ? perm.code.split('.')[0] : null) || 'other'
     if (!groups[group]) groups[group] = []
-    groups[group].push(name)
+    groups[group].push(perm)
     return groups
   }, {})
 
@@ -107,6 +105,10 @@ const RolesDetail = () => {
                   <span className="font-medium text-gray-900 dark:text-white">{role.id}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Code</span>
+                  <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">{role.code || '-'}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400">Permissions</span>
                   <span className="font-medium text-gray-900 dark:text-white">
                     {role.permissions?.length || 0}
@@ -134,6 +136,16 @@ const RolesDetail = () => {
                   </div>
                 </div>
 
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Key size={20} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Code</p>
+                    <p className="font-mono font-medium text-gray-900 dark:text-white">{role.code || '-'}</p>
+                  </div>
+                </div>
+
               </div>
 
               {/* Permissions Section */}
@@ -147,9 +159,10 @@ const RolesDetail = () => {
                       <div key={group} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 capitalize">{group}</h5>
                         <div className="flex flex-wrap gap-2">
-                          {perms.map((name, idx) => (
-                            <span key={idx} className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                              {name}
+                          {perms.map((perm, idx) => (
+                            <span key={idx} className="inline-flex flex-col px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                              <span>{perm.name || perm.code || perm}</span>
+                              {perm.code && <span className="font-mono text-green-600 dark:text-green-500 opacity-75">{perm.code}</span>}
                             </span>
                           ))}
                         </div>
