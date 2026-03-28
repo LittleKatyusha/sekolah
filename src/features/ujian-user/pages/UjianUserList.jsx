@@ -53,8 +53,8 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
     }
   }, [isOpen])
 
-  // Determine if mulai button should be shown (status 0 = belum mulai)
-  const canStart = data?.status === 0 || data?.status === null
+  // Determine if mulai button should be shown (status 1 = belum mulai)
+  const canStart = data?.status === 1
 
   return (
     <div className="relative">
@@ -137,13 +137,13 @@ const UjianUserList = () => {
   }), [searchText, selectedUjian, selectedSiswa])
 
   // Helper function to get status label
+  // 1 = Belum Mulai, 2 = Sedang Mengerjakan, 3 = Selesai
   const getStatusLabel = (value) => {
-    if (value === null || value === undefined) return 'Belum Mulai'
+    if (value === null || value === undefined) return '-'
     const statusMap = {
-      0: 'Belum Mulai',
-      1: 'Sedang Mengerjakan',
-      2: 'Selesai',
-      3: 'Dinilai',
+      1: 'Belum Mulai',
+      2: 'Sedang Mengerjakan',
+      3: 'Selesai',
     }
     return statusMap[value] || `Status ${value}`
   }
@@ -151,9 +151,8 @@ const UjianUserList = () => {
   // Helper function to get status badge color
   const getStatusColorClass = (value) => {
     const colorMap = {
-      0: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-      1: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      2: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      1: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+      2: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
       3: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     }
     return colorMap[value] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
