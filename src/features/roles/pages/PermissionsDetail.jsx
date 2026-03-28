@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, Key, Shield } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Key } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { permissionService } from '../services/rolesService'
@@ -79,92 +79,50 @@ const PermissionsDetail = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Summary Card */}
-        <div className="md:col-span-1">
-          <Card>
-            <div className="p-6 text-center">
-              <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <Key size={48} className="text-gray-400" />
-              </div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                {permission.name || '-'}
-              </h2>
-
-              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">ID</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{permission.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Code</span>
-                  <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">{permission.code || '-'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Modul</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{permission.module || '-'}</span>
-                </div>
-              </div>
+      <Card>
+        <div className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Key size={24} className="text-purple-600" />
             </div>
-          </Card>
-        </div>
-
-        {/* Detail Info */}
-        <div className="md:col-span-2">
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Informasi Lengkap</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Key size={20} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Nama Permission</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{permission.name || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Shield size={20} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Code</p>
-                    <p className="font-mono font-medium text-gray-900 dark:text-white">{permission.code || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Key size={20} className="text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Modul</p>
-                    <p className="font-medium text-gray-900 dark:text-white capitalize">{permission.module || '-'}</p>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Timestamps */}
-              <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Dibuat pada</p>
-                    <p className="text-gray-700 dark:text-gray-300">{formatDate(permission.created_at)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Terakhir diperbarui</p>
-                    <p className="text-gray-700 dark:text-gray-300">{formatDate(permission.updated_at)}</p>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{permission.name || '-'}</h2>
+              <p className="text-sm font-mono text-gray-500 dark:text-gray-400">{permission.code || '-'}</p>
             </div>
-          </Card>
+          </div>
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">ID</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{permission.id}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Nama Permission</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{permission.name || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Code</p>
+              <p className="text-sm font-mono text-gray-900 dark:text-white">{permission.code || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Modul</p>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 capitalize">
+                {permission.module || '-'}
+              </span>
+            </div>
+          </div>
+
+          {/* Timestamps */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-500 dark:text-gray-400">
+              <span>Dibuat: <span className="text-gray-700 dark:text-gray-300">{formatDate(permission.created_at)}</span></span>
+              <span>Diperbarui: <span className="text-gray-700 dark:text-gray-300">{formatDate(permission.updated_at)}</span></span>
+            </div>
+          </div>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

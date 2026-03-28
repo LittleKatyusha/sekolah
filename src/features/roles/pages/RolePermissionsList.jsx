@@ -1,38 +1,12 @@
 import { useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, Edit, Eye, Trash2 } from 'lucide-react'
+import { Search, Plus, RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
+import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { rolePermissionService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-const ActionsCellRenderer = ({ data, onEdit, onDetail, onDelete }) => {
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => onDetail(data)}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-        title="View Details"
-      >
-        <Eye size={16} />
-      </button>
-      <button
-        onClick={() => onEdit(data)}
-        className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded transition-colors"
-        title="Edit"
-      >
-        <Edit size={16} />
-      </button>
-      <button
-        onClick={() => onDelete(data)}
-        className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-        title="Delete"
-      >
-        <Trash2 size={16} />
-      </button>
-    </div>
-  )
-}
 
 const RolePermissionsList = () => {
   const navigate = useNavigate()
@@ -64,6 +38,12 @@ const RolePermissionsList = () => {
     }
   }, [])
 
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+  }, [])
+
   const handleSearch = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
@@ -78,18 +58,21 @@ const RolePermissionsList = () => {
     { field: 'permission.code', backendField: 'permission.code', headerName: 'Kode Permission', sortable: true, filter: true, flex: 1, minWidth: 150, cellRenderer: (params) => params.value || '-' },
     { field: 'permission.module', backendField: 'permission.module', headerName: 'Modul', sortable: true, filter: true, flex: 1, minWidth: 120, cellRenderer: (params) => params.value || '-' },
     {
-      headerName: 'Actions',
+      headerName: 'Aksi',
       sortable: false,
       filter: false,
-      width: 120,
-      minWidth: 120,
+      width: 80,
+      minWidth: 80,
+      maxWidth: 80,
+      suppressSizeToFit: true,
       cellRenderer: (params) => (
-        <ActionsCellRenderer
-          data={params.data}
-          onEdit={handleEdit}
-          onDetail={handleDetail}
-          onDelete={handleDelete}
-        />
+        <div className="h-full flex items-center justify-center">
+          <ActionsMenu
+            onDetail={() => handleDetail(params.data)}
+            onEdit={() => handleEdit(params.data)}
+            onDelete={() => handleDelete(params.data)}
+          />
+        </div>
       ),
     },
   ], [handleEdit, handleDetail, handleDelete])
@@ -110,6 +93,9 @@ const RolePermissionsList = () => {
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           </div>
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
+            <RefreshCw size={18} />
+          </Button>
           <Button onClick={() => navigate('/admin/role-permissions/create')}>
             <Plus size={18} className="mr-2" />
             Assign Permissions
@@ -117,7 +103,7 @@ const RolePermissionsList = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <Card>
         <InfiniteGrid
           ref={gridRef}
           endpoint="/admin/role-permissions/"
@@ -129,8 +115,12 @@ const RolePermissionsList = () => {
             filter: true,
             resizable: true,
           }}
+          cacheBlockSize={20}
+          paginationPageSize={20}
+          paginationPageSizeSelector={[10, 20, 50, 100]}
+          height={600}
         />
-      </div>
+      </Card>
     </div>
   )
 }

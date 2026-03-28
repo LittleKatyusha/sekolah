@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Link } from 'lucide-react'
 import Button from '../../../components/ui/Button'
+import Card from '../../../components/ui/Card'
 import { rolePermissionService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -82,72 +83,61 @@ const RolePermissionsDetail = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info Card */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="space-y-6">
+      <Card>
+        <div className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Link size={24} className="text-indigo-600" />
+            </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                Role Permission #{rolePermission.id}
-              </h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">ID</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{rolePermission.id}</span>
-                </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Role Permission #{rolePermission.id}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {rolePermission.role?.name || '-'} &rarr; {rolePermission.permission?.name || '-'}
+              </p>
+            </div>
+          </div>
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</p>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">ID</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{rolePermission.role_id || '-'}</p>
               </div>
+              {rolePermission.role && (
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Nama Role</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{rolePermission.role.name || '-'}</p>
+                </div>
+              )}
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Detail Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Role Info */}
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Role ID</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{rolePermission.role_id || '-'}</p>
-                  </div>
-                  {rolePermission.role && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Role Name</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{rolePermission.role.name || '-'}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Permission Info */}
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Permission ID</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{rolePermission.permission_id || '-'}</p>
-                  </div>
-                  {rolePermission.permission && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Permission Name</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{rolePermission.permission.name || '-'}</p>
-                    </div>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Permission</p>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">ID</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{rolePermission.permission_id || '-'}</p>
               </div>
+              {rolePermission.permission && (
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Nama Permission</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{rolePermission.permission.name || '-'}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Timestamps */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-500 dark:text-gray-400">
+              <span>Dibuat: <span className="text-gray-700 dark:text-gray-300">{formatDate(rolePermission.created_at)}</span></span>
+              <span>Diperbarui: <span className="text-gray-700 dark:text-gray-300">{formatDate(rolePermission.updated_at)}</span></span>
             </div>
           </div>
         </div>
-
-        {/* Metadata Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Metadata</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Dibuat pada</p>
-              <p className="text-gray-700 dark:text-gray-300">{formatDate(rolePermission.created_at)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Terakhir diperbarui</p>
-              <p className="text-gray-700 dark:text-gray-300">{formatDate(rolePermission.updated_at)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </Card>
     </div>
   )
 }

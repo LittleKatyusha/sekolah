@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight, Search } from 'lucide-react'
 import Button from '../../../components/ui/Button'
+import Card from '../../../components/ui/Card'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { rolePermissionService, roleService, permissionService } from '../services/rolesService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -432,7 +433,7 @@ const RolePermissionsForm = () => {
         </h1>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <Card>
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {fetchingData ? (
             <div className="flex justify-center py-8">
@@ -586,7 +587,7 @@ const RolePermissionsForm = () => {
             </>
           )}
         </form>
-      </div>
+      </Card>
     </div>
   )
 }
