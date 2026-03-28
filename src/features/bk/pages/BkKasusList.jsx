@@ -9,10 +9,8 @@ import { bkKasusService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDateShort } from '../../../utils/formatters'
 import { getStatusBadge } from '../../../utils/bkBadges.jsx'
-import usePermission from '../../../hooks/usePermission'
 
 const BkKasusList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -126,8 +124,6 @@ const BkKasusList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              canEdit={can('bk-kasus.update')}
-              canDelete={can('bk-kasus.delete')}
             />
           </div>
         )
@@ -169,12 +165,10 @@ const BkKasusList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          {can('bk-kasus.create') && (
-            <Button onClick={() => navigate('/bk/kasus/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah Kasus
-            </Button>
-          )}
+          <Button onClick={() => navigate('/bk/kasus/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah Kasus
+          </Button>
         </div>
       </div>
 

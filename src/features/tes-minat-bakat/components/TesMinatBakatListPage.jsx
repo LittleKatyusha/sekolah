@@ -7,11 +7,9 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { tesMinatBakatResources } from '../config.jsx'
 import { showDeleteConfirm, showError, showSuccess } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const TesMinatBakatListPage = ({ resourceKey }) => {
   const navigate = useNavigate()
-  const { can } = usePermission()
   const [searchParams, setSearchParams] = useSearchParams()
   const gridRef = useRef(null)
   const resource = tesMinatBakatResources[resourceKey]
@@ -88,8 +86,8 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
   const columnDefs = useMemo(
     () => resource.buildColumns({
       handleDetail,
-      handleEdit: (resource.allowEdit !== false && can('tes-minat-bakat.update')) ? handleEdit : undefined,
-      handleDelete: (resource.allowDelete !== false && can('tes-minat-bakat.delete')) ? handleDelete : undefined,
+      handleEdit: resource.allowEdit !== false ? handleEdit : undefined,
+      handleDelete: resource.allowDelete !== false ? handleDelete : undefined,
       getRowActions,
       ActionsMenu,
     }),
@@ -123,7 +121,7 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
             <RefreshCw size={18} />
           </Button>
 
-          {resource.allowCreate !== false && can('tes-minat-bakat.create') ? (
+          {resource.allowCreate !== false ? (
             <Button onClick={() => navigate(`${resource.basePath}/create`)}>
               <Plus size={18} className="mr-2" />
               Tambah

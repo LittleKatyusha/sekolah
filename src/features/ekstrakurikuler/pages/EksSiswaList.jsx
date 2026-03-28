@@ -7,7 +7,6 @@ import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { eksSiswaService } from '../services/ekstrakurikulerService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const STATUS_MAP = {
 aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -15,7 +14,6 @@ keluar: { label: 'Keluar', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900
 }
 
 const EksSiswaList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -124,9 +122,7 @@ const EksSiswaList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
-              canEdit={can('ekstrakurikuler.pendaftaran.update')}
-              canDelete={can('ekstrakurikuler.pendaftaran.delete')}
-            />
+          />
         </div>
       )
     }
@@ -156,12 +152,10 @@ const EksSiswaList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          {can('ekstrakurikuler.pendaftaran.create') && (
-            <Button onClick={() => navigate('/ekstrakurikuler/siswa/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah Pendaftaran
-            </Button>
-          )}
+          <Button onClick={() => navigate('/ekstrakurikuler/siswa/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah Pendaftaran
+          </Button>
         </div>
       </div>
 

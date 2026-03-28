@@ -5,10 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { roleService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const RolesDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -80,18 +78,14 @@ const RolesDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Role</h1>
         </div>
         <div className="flex gap-3">
-          {can('roles.update') && (
-            <Button variant="warning" onClick={() => navigate(`/admin/roles/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('roles.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/admin/roles/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

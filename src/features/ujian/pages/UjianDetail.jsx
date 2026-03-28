@@ -6,10 +6,8 @@ import Button from '../../../components/ui/Button'
 import { ujianService } from '../services/ujianService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatJenisLabel, formatSemesterLabel, getMapelCode, getMapelLabel, getUjianName } from '../utils/ujianFormatters'
-import usePermission from '../../../hooks/usePermission'
 
 const UjianDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -91,18 +89,14 @@ const UjianDetail = () => {
             <Award size={18} className="mr-2" />
             Lihat Nilai
           </Button>
-          {can('ujian.update') && (
-            <Button variant="warning" onClick={() => navigate(`/akademik/ujian/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('ujian.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/akademik/ujian/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

@@ -9,10 +9,8 @@ import { bkSesiService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDateShort } from '../../../utils/formatters'
 import { getMetodeBadge } from '../../../utils/bkBadges.jsx'
-import usePermission from '../../../hooks/usePermission'
 
 const BkSesiList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -119,8 +117,6 @@ const BkSesiList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              canEdit={can('bk-sesi.update')}
-              canDelete={can('bk-sesi.delete')}
             />
           </div>
         )
@@ -162,12 +158,10 @@ const BkSesiList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          {can('bk-sesi.create') && (
-            <Button onClick={() => navigate('/bk/sesi/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah Sesi
-            </Button>
-          )}
+          <Button onClick={() => navigate('/bk/sesi/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah Sesi
+          </Button>
         </div>
       </div>
 

@@ -5,10 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { rankingService } from '../services/rankingService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const RankingDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -74,18 +72,14 @@ const RankingDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Ranking</h1>
         </div>
         <div className="flex gap-3">
-          {can('ranking.update') && (
-            <Button variant="warning" onClick={() => navigate(`/akademik/ranking/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('ranking.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/akademik/ranking/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

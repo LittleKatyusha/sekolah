@@ -6,7 +6,6 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 // Submission status mapping
 const STATUS_MAP = {
@@ -19,7 +18,6 @@ const STATUS_MAP = {
 }
 
 const TugasSiswaDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -159,18 +157,14 @@ const TugasSiswaDetail = () => {
             <Star size={18} className="mr-2" />
             {showGradeForm ? 'Tutup Penilaian' : 'Beri Nilai'}
           </Button>
-          {can('tugas-siswa.update') && (
-            <Button variant="warning" onClick={() => navigate(`/akademik/tugas-siswa/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('tugas-siswa.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/akademik/tugas-siswa/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

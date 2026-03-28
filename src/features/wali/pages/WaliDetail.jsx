@@ -6,10 +6,8 @@ import Button from '../../../components/ui/Button'
 import { waliService } from '../services/waliService'
 import { showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
-import usePermission from '../../../hooks/usePermission'
 
 const WaliDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   usePageTitle('Detail Wali')

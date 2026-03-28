@@ -5,13 +5,9 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
-import usePermission from '../../../hooks/usePermission'
 
 // Actions Menu Component
-const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete,
-  canEdit = true,
-  canDelete = true
-}) => {
+const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -85,8 +81,7 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete,
               </svg>
               Detail
             </button>
-            {canEdit && (
-              <button
+            <button
               onClick={() => handleAction(onEdit)}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
@@ -95,12 +90,8 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete,
               </svg>
               Edit
             </button>
-            )}
-            {canEdit && canDelete && (
-              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            )}
-            {canDelete && (
-              <button
+            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            <button
               onClick={() => handleAction(onDelete)}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
@@ -109,7 +100,6 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete,
               </svg>
               Hapus
             </button>
-            )}
           </div>
         </div>
       )}
@@ -118,7 +108,6 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete,
 })
 
 const SiswaList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   
@@ -226,8 +215,6 @@ const SiswaList = () => {
               onDetail={() => navigate(`/siswa/${params.data.id}`)}
               onEdit={() => navigate(`/siswa/${params.data.id}/edit`)}
               onDelete={() => handleDelete(params.data)}
-              canEdit={can('siswa.update')}
-              canDelete={can('siswa.delete')}
             />
           </div>
         )
@@ -281,14 +268,12 @@ const SiswaList = () => {
             </svg>
             Refresh
           </Button>
-          {can('siswa.create') && (
-            <Button onClick={() => navigate('/siswa/create')}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Tambah Siswa
-            </Button>
-          )}
+          <Button onClick={() => navigate('/siswa/create')}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Tambah Siswa
+          </Button>
         </div>
       </div>
 

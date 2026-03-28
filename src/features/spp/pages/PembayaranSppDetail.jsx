@@ -5,7 +5,6 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const STATUS_MAP = {
   1: { label: 'Belum Bayar', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
@@ -15,7 +14,6 @@ const STATUS_MAP = {
 }
 
 const PembayaranSppDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -92,18 +90,14 @@ const PembayaranSppDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Pembayaran SPP</h1>
         </div>
         <div className="flex gap-3">
-          {can('pembayaran-spp.update') && (
-            <Button variant="warning" onClick={() => navigate(`/keuangan/pembayaran-spp/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('pembayaran-spp.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/keuangan/pembayaran-spp/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

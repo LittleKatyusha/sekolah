@@ -5,10 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { referenceAdminService } from '../services/referenceAdminService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const ReferenceDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -64,16 +62,12 @@ const ReferenceDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Referensi</h1>
         </div>
         <div className="flex gap-3">
-          {can('sys-reference.update') && (
-            <Button variant="warning" onClick={() => navigate(`/admin/references/${id}/edit`)}>
-              <Edit size={18} className="mr-2" /> Edit
-            </Button>
-          )}
-          {can('sys-reference.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" /> Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/admin/references/${id}/edit`)}>
+            <Edit size={18} className="mr-2" /> Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" /> Hapus
+          </Button>
         </div>
       </div>
 

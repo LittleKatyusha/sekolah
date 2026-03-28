@@ -5,10 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { hariOperasionalService } from '../services/hariOperasionalService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const HariOperasionalList = () => {
-  const { can } = usePermission()
   const gridRef = useRef(null)
 
   const staticParams = useMemo(() => ({

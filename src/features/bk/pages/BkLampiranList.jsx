@@ -7,10 +7,8 @@ import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { bkLampiranService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const BkLampiranList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -100,8 +98,6 @@ const BkLampiranList = () => {
               data={params.data}
               onDetail={() => handleDetail(params.data)}
               onDelete={() => handleDelete(params.data)}
-              canEdit={can('bk-lampiran.update')}
-              canDelete={can('bk-lampiran.delete')}
             />
           </div>
         )
@@ -143,12 +139,10 @@ const BkLampiranList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          {can('bk-lampiran.create') && (
-            <Button onClick={() => navigate('/bk/lampiran/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah Lampiran
-            </Button>
-          )}
+          <Button onClick={() => navigate('/bk/lampiran/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah Lampiran
+          </Button>
         </div>
       </div>
 

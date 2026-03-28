@@ -5,7 +5,6 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { tahunAjaranService } from '../services/tahunAjaranService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const STATUS_MAP = {
   1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -15,7 +14,6 @@ const STATUS_MAP = {
 }
 
 const TahunAjaranDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -92,18 +90,14 @@ const TahunAjaranDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tahun Ajaran</h1>
         </div>
         <div className="flex gap-3">
-          {can('tahun-ajaran.update') && (
-            <Button variant="warning" onClick={() => navigate(`/admin/tahun-ajaran/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('tahun-ajaran.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/admin/tahun-ajaran/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

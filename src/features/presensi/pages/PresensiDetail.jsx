@@ -6,7 +6,6 @@ import Button from '../../../components/ui/Button'
 import { presensiService } from '../services/presensiService'
 import { showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
-import usePermission from '../../../hooks/usePermission'
 
 // Status Badge Component
 const StatusBadge = ({ statusLabel }) => {
@@ -38,7 +37,6 @@ const StatusBadge = ({ statusLabel }) => {
 
 const PresensiDetail = () => {
   usePageTitle()
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -101,12 +99,10 @@ const PresensiDetail = () => {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Presensi</h1>
         </div>
-        {can('presensi.update') && (
-          <Button onClick={() => navigate(`/akademik/presensi/edit/${id}`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-        )}
+        <Button onClick={() => navigate(`/akademik/presensi/edit/${id}`)}>
+          <Edit size={18} className="mr-2" />
+          Edit
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

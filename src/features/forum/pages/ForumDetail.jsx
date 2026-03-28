@@ -8,7 +8,6 @@ import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import useWebSocket from '../../../hooks/useWebSocket'
 import useNotificationStore from '../../../store/useNotificationStore'
-import usePermission from '../../../hooks/usePermission'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -42,7 +41,6 @@ function getAvatarColor(name) {
 }
 
 const ForumDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuthStore()

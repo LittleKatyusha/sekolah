@@ -6,10 +6,8 @@ import Button from '../../../components/ui/Button'
 import { peminjamanService } from '../services/perpustakaanService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
-import usePermission from '../../../hooks/usePermission'
 
 const PeminjamanDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -139,18 +137,14 @@ const PeminjamanDetail = () => {
               Kembalikan
             </Button>
           )}
-          {can('peminjaman.update') && (
-            <Button variant="warning" onClick={() => navigate(`/perpustakaan/peminjaman/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('peminjaman.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/perpustakaan/peminjaman/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

@@ -10,13 +10,9 @@ import { ujianUserService } from '../services/ujianUserService'
 import { ujianService } from '../../ujian/services/ujianService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showDeleteConfirm, showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 // Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai,
-  canEdit = true,
-  canDelete = true
-}) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -88,15 +84,13 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai,
               <Eye size={16} className="text-blue-600" />
               Detail
             </button>
-            {canEdit && (
-              <button
+            <button
               onClick={() => handleAction(onEdit)}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Edit size={16} className="text-yellow-600" />
               Edit
             </button>
-            )}
             {canStart && (
               <button
                 onClick={() => handleAction(onMulai)}
@@ -106,18 +100,14 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai,
                 Mulai Ujian
               </button>
             )}
-            {canEdit && canDelete && (
-              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            )}
-            {canDelete && (
-              <button
+            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+            <button
               onClick={() => handleAction(onDelete)}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
               <Trash2 size={16} />
               Hapus
             </button>
-            )}
           </div>
         </div>,
         document.body
@@ -127,7 +117,6 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onMulai,
 }
 
 const UjianUserList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -406,8 +395,6 @@ const UjianUserList = () => {
               onEdit={() => handleEdit(row)}
               onDelete={() => handleDelete(row)}
               onMulai={() => handleMulai(row)}
-              canEdit={can('ujian-user.update')}
-              canDelete={can('ujian-user.delete')}
             />
           </div>
         )
@@ -478,12 +465,10 @@ const UjianUserList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          {can('ujian-user.create') && (
-            <Button onClick={() => navigate('/akademik/ujian-user/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah
-            </Button>
-          )}
+          <Button onClick={() => navigate('/akademik/ujian-user/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah
+          </Button>
         </div>
       </div>
 

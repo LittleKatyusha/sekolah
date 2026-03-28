@@ -7,10 +7,8 @@ import { bkWaliService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDateTime } from '../../../utils/formatters'
 import { getPeranBadge } from '../../../utils/bkBadges.jsx'
-import usePermission from '../../../hooks/usePermission'
 
 const BkWaliDetail = () => {
-  const { can } = usePermission()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -67,18 +65,14 @@ const BkWaliDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Wali BK</h1>
         </div>
         <div className="flex gap-3">
-          {can('bk-wali.update') && (
-            <Button variant="warning" onClick={() => navigate(`/bk/wali/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
-          )}
-          {can('bk-wali.delete') && (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
-          )}
+          <Button variant="warning" onClick={() => navigate(`/bk/wali/${id}/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            <Trash2 size={18} className="mr-2" />
+            Hapus
+          </Button>
         </div>
       </div>
 

@@ -7,7 +7,6 @@ import { kalenderHarianService } from '../services/kalenderHarianService'
 import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 // ── Indonesian locale constants ──────────────────────────────────────────────
 const MONTH_NAMES = [
@@ -350,7 +349,6 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
 // ── Main Calendar Component ──────────────────────────────────────────────────
 const KalenderHarianList = () => {
-  const { can } = usePermission()
   const now = new Date()
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(now.getMonth()) // 0-indexed

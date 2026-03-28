@@ -5,12 +5,10 @@ import Button from '../../../components/ui/Button'
 import Card from '../../../components/ui/Card'
 import { tesMinatBakatResources } from '../config.jsx'
 import { showDeleteConfirm, showError, showSuccess } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const TesMinatBakatDetailPage = ({ resourceKey }) => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { can } = usePermission()
   const resource = tesMinatBakatResources[resourceKey]
   const Icon = resource.icon
 
@@ -111,13 +109,13 @@ const TesMinatBakatDetailPage = ({ resourceKey }) => {
               {action.label}
             </Button>
           ))}
-          {resource.allowEdit !== false && can('tes-minat-bakat.update') ? (
+          {resource.allowEdit !== false ? (
             <Button variant="secondary" onClick={() => navigate(`${resource.basePath}/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           ) : null}
-          {resource.allowDelete !== false && can('tes-minat-bakat.delete') ? (
+          {resource.allowDelete !== false ? (
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

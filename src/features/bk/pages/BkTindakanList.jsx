@@ -7,10 +7,8 @@ import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { bkTindakanService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import usePermission from '../../../hooks/usePermission'
 
 const BkTindakanList = () => {
-  const { can } = usePermission()
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -101,8 +99,6 @@ const BkTindakanList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              canEdit={can('bk-tindakan.update')}
-              canDelete={can('bk-tindakan.delete')}
             />
           </div>
         )
@@ -144,12 +140,10 @@ const BkTindakanList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          {can('bk-tindakan.create') && (
-            <Button onClick={() => navigate('/bk/tindakan/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah Tindakan
-            </Button>
-          )}
+          <Button onClick={() => navigate('/bk/tindakan/create')}>
+            <Plus size={18} className="mr-2" />
+            Tambah Tindakan
+          </Button>
         </div>
       </div>
 
