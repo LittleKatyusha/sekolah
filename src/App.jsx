@@ -101,6 +101,7 @@ const PembayaranSpp = lazy(() => import('./pages/PembayaranSpp'))
 const Ekstrakurikuler = lazy(() => import('./pages/Ekstrakurikuler'))
 const Organisasi = lazy(() => import('./pages/Organisasi'))
 const Ppdb = lazy(() => import('./pages/Ppdb'))
+const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
@@ -161,6 +162,11 @@ const PAGE_TITLES = {
   '/admin/kalender-tipe': 'Kalender Tipe',
   '/keuangan/tarif-spp': 'Tarif SPP',
   '/keuangan/pembayaran-spp': 'Pembayaran SPP',
+  '/ppdb': 'PPDB',
+  '/ppdb/gelombang': 'PPDB — Gelombang',
+  '/ppdb/pendaftaran': 'PPDB — Pendaftar',
+  '/ppdb/dokumen': 'PPDB — Dokumen',
+  '/ppdb/portal': 'Portal PPDB',
   '/statistik': 'Statistik',
   '/ews': 'Early Warning System',
   '/jadwal-pelajaran': 'Jadwal Pelajaran',
@@ -292,6 +298,9 @@ function App() {
           <Routes>
             <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+
+            {/* Public PPDB portal — no authentication required */}
+            <Route path="/ppdb/portal" element={<PortalPpdb />} />
 
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />

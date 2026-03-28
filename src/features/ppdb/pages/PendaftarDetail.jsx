@@ -40,7 +40,7 @@ const PendaftarDetail = () => {
       }
     } else {
       showError('Gagal mengambil data pendaftar')
-      navigate('/ppdb/pendaftar')
+      navigate('/ppdb/pendaftaran')
     }
     setLoading(false)
   }
@@ -52,7 +52,7 @@ const PendaftarDetail = () => {
       const { error } = await pendaftarService.delete(pendaftar.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        navigate('/ppdb/pendaftar')
+        navigate('/ppdb/pendaftaran')
       } else {
         showError('Gagal menghapus pendaftar')
       }
@@ -112,7 +112,7 @@ const PendaftarDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="secondary" onClick={() => navigate('/ppdb/pendaftar')}>
+          <Button variant="secondary" onClick={() => navigate('/ppdb/pendaftaran')}>
             <ArrowLeft size={18} className="mr-2" />
             Kembali
           </Button>
@@ -131,7 +131,7 @@ const PendaftarDetail = () => {
             <XCircle size={18} className="mr-2" />
             Tolak
           </Button>
-          <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftar/${id}/edit`)}>
+          <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftaran/${id}/edit`)}>
             <Edit size={18} className="mr-2" />
             Edit
           </Button>

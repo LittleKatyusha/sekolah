@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, CheckSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -83,10 +83,22 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
   )
 }
 
+const BATCH_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'terverifikasi', label: 'Terverifikasi' },
+  { value: 'seleksi', label: 'Seleksi' },
+  { value: 'diterima', label: 'Diterima' },
+  { value: 'cadangan', label: 'Cadangan' },
+  { value: 'ditolak', label: 'Ditolak' },
+]
+
 const PendaftarList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const [selectedIds, setSelectedIds] = useState([])
+  const [batchStatus, setBatchStatus] = useState('')
+  const [batchLoading, setBatchLoading] = useState(false)
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -95,8 +107,8 @@ const PendaftarList = () => {
     filter: '{}',
   }), [searchText])
 
-  const handleEdit = useCallback((data) => navigate(`/ppdb/pendaftar/${data.id}/edit`), [navigate])
-  const handleDetail = useCallback((data) => navigate(`/ppdb/pendaftar/${data.id}`), [navigate])
+  const handleEdit = useCallback((data) => navigate(`/ppdb/pendaftaran/${data.id}/edit`), [navigate])
+  const handleDetail = useCallback((data) => navigate(`/ppdb/pendaftaran/${data.id}`), [navigate])
 
   const handleDelete = useCallback(async (data) => {
     const label = `Pendaftar "${data.nama_lengkap || ''}"`
@@ -124,7 +136,31 @@ const PendaftarList = () => {
     setSearchText(e.target.value)
   }, [])
 
+  const handleSelectionChanged = useCallback((event) => {
+    const rows = event.api.getSelectedRows()
+    setSelectedIds(rows.map((r) => r.id))
+  }, [])
+
+  const handleBatchSeleksi = useCallback(async () => {
+    if (!selectedIds.length || !batchStatus) {
+      showError('Pilih pendaftar dan status terlebih dahulu')
+      return
+    }
+    setBatchLoading(true)
+    const { data, error } = await pendaftarService.batchSeleksi(selectedIds, batchStatus)
+    if (data) {
+      showSuccess(`${data.data?.updated ?? selectedIds.length} pendaftar berhasil diperbarui`)
+      setSelectedIds([])
+      setBatchStatus('')
+      if (gridRef.current?.refreshGrid) gridRef.current.refreshGrid()
+    } else {
+      showError(error?.message || 'Gagal melakukan batch seleksi')
+    }
+    setBatchLoading(false)
+  }, [selectedIds, batchStatus])
+
   const columnDefs = useMemo(() => [
+    { checkboxSelection: true, headerCheckboxSelection: true, width: 48, minWidth: 48, maxWidth: 48, suppressSizeToFit: true, sortable: false, filter: false, resizable: false },
     { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80, minWidth: 70 },
     { field: 'no_pendaftaran', headerName: 'No. Pendaftaran', sortable: true, filter: true, width: 160, minWidth: 140, cellRenderer: (params) => params.value || '-' },
     { field: 'nama_lengkap', headerName: 'Nama Lengkap', sortable: true, filter: true, flex: 2, minWidth: 200, cellRenderer: (params) => params.value || '-' },
@@ -194,12 +230,39 @@ const PendaftarList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/ppdb/pendaftar/create')}>
+          <Button onClick={() => navigate('/ppdb/pendaftaran/create')}>
             <Plus size={18} className="mr-2" />
             Tambah Pendaftar
           </Button>
         </div>
       </div>
+
+      {selectedIds.length > 0 && (
+        <Card>
+          <div className="p-4 flex flex-wrap items-center gap-3">
+            <CheckSquare size={18} className="text-primary-600" />
+            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+              {selectedIds.length} pendaftar dipilih
+            </span>
+            <select
+              value={batchStatus}
+              onChange={(e) => setBatchStatus(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">-- Pilih Status --</option>
+              {BATCH_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <Button onClick={handleBatchSeleksi} disabled={batchLoading || !batchStatus}>
+              {batchLoading ? 'Memproses...' : 'Terapkan'}
+            </Button>
+            <Button variant="secondary" onClick={() => { setSelectedIds([]); if (gridRef.current?.api) gridRef.current.api.deselectAll() }}>
+              Batal Pilih
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <InfiniteGrid
@@ -208,6 +271,10 @@ const PendaftarList = () => {
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          requestMode="ag-grid"
+          rowSelection="multiple"
+          suppressRowClickSelection
+          onSelectionChanged={handleSelectionChanged}
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}

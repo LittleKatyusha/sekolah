@@ -8,6 +8,7 @@ import PendaftarDetail from '../features/ppdb/pages/PendaftarDetail'
 import DokumenList from '../features/ppdb/pages/DokumenList'
 import DokumenForm from '../features/ppdb/pages/DokumenForm'
 import DokumenDetail from '../features/ppdb/pages/DokumenDetail'
+import PortalPpdb from '../features/ppdb/pages/PortalPpdb'
 
 const Ppdb = () => {
   return (
@@ -27,6 +28,7 @@ const Ppdb = () => {
       <Route path="pendaftar/create" element={<PendaftarForm />} />
       <Route path="pendaftar/:id" element={<PendaftarDetail />} />
       <Route path="pendaftar/:id/edit" element={<PendaftarForm />} />
+      <Route path="portal" element={<PortalPpdb />} />
       <Route path="dokumen" element={<DokumenList />} />
       <Route path="dokumen/create" element={<DokumenForm />} />
       <Route path="dokumen/:id" element={<DokumenDetail />} />

@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { apiService } from '../../../utils/api'
 
 const GELOMBANG_BASE = '/ppdb/gelombang'
@@ -88,6 +89,10 @@ export const pendaftarService = {
     return await apiService.post(`${PENDAFTAR_BASE}/${id}/reject`)
   },
 
+  batchSeleksi: async (ids, status) => {
+    return await apiService.post(`${PENDAFTAR_BASE}/batch-seleksi`, { ids, status })
+  },
+
   getStatistics: async (sekolahId, params = {}) => {
     return await apiService.get(`${PENDAFTAR_BASE}/sekolah/${sekolahId}/statistics`, { params })
   },
@@ -134,4 +139,41 @@ export default {
   gelombangService,
   pendaftarService,
   dokumenService,
+}
+
+/**
+ * Public PPDB service — no authentication required.
+ * Uses raw axios (not apiService) to avoid attaching Bearer token.
+ */
+const PUBLIC_BASE = '/api/v1/ppdb/public'
+
+export const ppdbPublicService = {
+  getActiveGelombang: async (sekolahId) => {
+    try {
+      const response = await axios.get(`${PUBLIC_BASE}/gelombang/${sekolahId}/active`)
+      return { data: response.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || error.message }
+    }
+  },
+
+  daftar: async (formData) => {
+    try {
+      const response = await axios.post(`${PUBLIC_BASE}/daftar`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return { data: response.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || error.message }
+    }
+  },
+
+  cekStatus: async (noPendaftaran) => {
+    try {
+      const response = await axios.get(`${PUBLIC_BASE}/status/${encodeURIComponent(noPendaftaran)}`)
+      return { data: response.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || error.message }
+    }
+  },
 }

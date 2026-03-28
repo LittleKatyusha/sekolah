@@ -20,7 +20,7 @@ const DokumenForm = () => {
     mime_type: '',
     file_size: '',
     file_path: '',
-    verifikasi_status: '',
+    verifikasi_status: null,
     catatan_admin: '',
   })
   const [errors, setErrors] = useState({})
@@ -41,7 +41,7 @@ const DokumenForm = () => {
         mime_type: d.mime_type || '',
         file_size: d.file_size || '',
         file_path: d.file_path || '',
-        verifikasi_status: d.verifikasi_status || '',
+        verifikasi_status: d.verifikasi_status === null || d.verifikasi_status === undefined ? '' : (d.verifikasi_status ? '1' : '0'),
         catatan_admin: d.catatan_admin || '',
       })
     } else {
@@ -73,6 +73,11 @@ const DokumenForm = () => {
     setSaving(true)
     const payload = { ...formData }
     if (payload.file_size) payload.file_size = Number(payload.file_size)
+    if (payload.verifikasi_status !== null && payload.verifikasi_status !== '') {
+      payload.verifikasi_status = payload.verifikasi_status === '1' || payload.verifikasi_status === true
+    } else {
+      delete payload.verifikasi_status
+    }
 
     const { data, error } = isEdit
       ? await dokumenService.update(id, payload)
@@ -173,9 +178,8 @@ const DokumenForm = () => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">-- Pilih Status --</option>
-                <option value="pending">Pending</option>
-                <option value="verified">Terverifikasi</option>
-                <option value="rejected">Ditolak</option>
+                <option value="1">Terverifikasi</option>
+                <option value="0">Belum Diverifikasi</option>
               </select>
             </div>
           </div>
