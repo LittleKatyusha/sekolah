@@ -4,8 +4,6 @@ import { Clock, AlertCircle, ChevronLeft, ChevronRight, Flag, Send, BookOpen, Us
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianUserService } from '../services/ujianUserService'
-import { ujianJawabanService } from '../../ujian-jawaban/services/ujianJawabanService'
-import { listSoals } from '../../soal/services/soalService'
 import { showSuccess, showError, showConfirm, showWarning } from '../../../utils/sweetalert'
 
 const UjianUserMulai = () => {
@@ -32,45 +30,47 @@ const UjianUserMulai = () => {
     if (data) {
       const ujianUserData = data.data
       setUjianUser(ujianUserData)
-
+      
       // Set sisa waktu from API or default to 3600 seconds (1 hour)
       const initialSisaWaktu = ujianUserData.sisa_waktu || 3600
       setSisaWaktu(initialSisaWaktu > 0 ? initialSisaWaktu : 3600)
-      // Only run timer when status === 2 (STATUS_MENGERJAKAN)
-      setIsTimerRunning(ujianUserData.status === 2)
-
-      // Initialize jawaban from existing jawaban records
+      setIsTimerRunning(true)
+      
+      // Initialize jawaban from existing data
       if (ujianUserData.jawaban && ujianUserData.jawaban.length > 0) {
         const initialJawaban = {}
         ujianUserData.jawaban.forEach(j => {
-          if (j.mst_soal_opsi_id) {
-            initialJawaban[j.mst_soal_id] = j.mst_soal_opsi_id
-          } else if (j.jawaban_teks) {
-            initialJawaban[j.mst_soal_id] = j.jawaban_teks
-          }
+          initialJawaban[j.soal_id] = j.jawaban
         })
         setJawaban(initialJawaban)
       }
-
-      // Fetch soal by mapel_id from the ujian
-      const mapelId = ujianUserData.ujian?.mst_mapel_id
-      if (mapelId) {
-        const { data: soalData } = await listSoals({ mapel_id: mapelId, per_page: 100 })
-        if (soalData?.data && soalData.data.length > 0) {
-          setSoalList(soalData.data)
-        } else {
-          showError('Tidak ada soal untuk ujian ini')
-          navigate('/akademik/ujian-user')
-        }
-      } else {
-        showError('Tidak dapat memuat soal: ujian tidak memiliki mata pelajaran')
-        navigate('/akademik/ujian-user')
-      }
+      
+      // Mock soal data - in real implementation, this should come from API
+      // For now, we'll create placeholder soal based on ujian data
+      const mockSoal = generateMockSoal(ujianUserData)
+      setSoalList(mockSoal)
     } else {
       showError('Gagal mengambil data ujian')
       navigate('/akademik/ujian-user')
     }
     setLoading(false)
+  }
+
+  // Generate mock soal for demo purposes
+  // In real implementation, soal should come from API endpoint
+  const generateMockSoal = (ujianUserData) => {
+    // This is a placeholder - replace with actual API call to get soal
+    return Array.from({ length: 10 }, (_, i) => ({
+      id: i + 1,
+      soal: `Soal nomor ${i + 1} untuk ujian ${ujianUserData.ujian?.nama || 'ini'}. Berikut adalah pertanyaan contoh yang akan ditampilkan kepada siswa.`,
+      pilihan: [
+        { id: 'A', teks: `Pilihan jawaban A untuk soal ${i + 1}` },
+        { id: 'B', teks: `Pilihan jawaban B untuk soal ${i + 1}` },
+        { id: 'C', teks: `Pilihan jawaban C untuk soal ${i + 1}` },
+        { id: 'D', teks: `Pilihan jawaban D untuk soal ${i + 1}` },
+      ],
+      tipe: 'pilihan_ganda'
+    }))
   }
 
   // Timer countdown
@@ -109,23 +109,11 @@ const UjianUserMulai = () => {
     return 'text-green-600'
   }
 
-  const handleJawabanChange = async (soalId, value) => {
+  const handleJawabanChange = (soalId, pilihanId) => {
     setJawaban(prev => ({
       ...prev,
-      [soalId]: value
+      [soalId]: pilihanId
     }))
-
-    // Save answer to backend (upsert — backend handles duplicate soal_id per ujian_user)
-    const isEssay = typeof value === 'string' && isNaN(Number(value))
-    const payload = {
-      trx_ujian_user_id: parseInt(id),
-      mst_soal_id: soalId,
-      ...(isEssay ? { jawaban_teks: value } : { mst_soal_opsi_id: value }),
-    }
-    const { error } = await ujianJawabanService.create(payload)
-    if (error) {
-      console.error('Failed to save jawaban:', error)
-    }
   }
 
   const handleNext = () => {
@@ -162,14 +150,23 @@ const UjianUserMulai = () => {
     setSubmitting(true)
     setIsTimerRunning(false)
 
-    // Selesaikan ujian — backend calculates score from saved jawaban records
-    const { data, error } = await ujianUserService.selesaikanUjian(id)
+    // Prepare jawaban data
+    const jawabanArray = Object.entries(jawaban).map(([soalId, jawabanValue]) => ({
+      soal_id: parseInt(soalId),
+      jawaban: jawabanValue
+    }))
+
+    const submitData = {
+      jawaban: jawabanArray
+    }
+
+    const { data, error } = await ujianUserService.selesaikanUjian(id, submitData)
     
     if (!error) {
       showSuccess('Ujian berhasil diselesaikan!', 'Selesai')
       navigate(`/akademik/ujian-user/${id}`)
     } else {
-      showError('Gagal menyelesaikan ujian. Silakan coba lagi.')
+      showError('Gagal mengirim jawaban. Silakan coba lagi.')
       setSubmitting(false)
       setIsTimerRunning(true)
     }
@@ -317,54 +314,41 @@ const UjianUserMulai = () => {
                 {/* Soal Text */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    {currentSoal.pertanyaan}
+                    {currentSoal.soal}
                   </h3>
-                  {currentSoal.media_path && (
-                    <img src={currentSoal.media_path} alt="Media soal" className="max-w-full rounded-lg mb-4" />
-                  )}
                 </div>
 
                 {/* Pilihan Jawaban */}
                 <div className="space-y-3">
-                  {currentSoal.tipe?.toLowerCase().includes('essay') ? (
-                    <textarea
-                      rows={5}
-                      value={typeof jawaban[currentSoal.id] === 'string' ? jawaban[currentSoal.id] : ''}
-                      onChange={(e) => handleJawabanChange(currentSoal.id, e.target.value)}
-                      placeholder="Tulis jawaban Anda di sini..."
-                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-primary-500 focus:outline-none resize-vertical"
-                    />
-                  ) : (
-                    currentSoal.opsi && currentSoal.opsi.map((opsi) => (
-                      <label
-                        key={opsi.id}
-                        className={`
-                          flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
-                          ${jawaban[currentSoal.id] === opsi.id
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                          }
-                        `}
-                      >
-                        <input
-                          type="radio"
-                          name={`soal-${currentSoal.id}`}
-                          value={opsi.id}
-                          checked={jawaban[currentSoal.id] === opsi.id}
-                          onChange={() => handleJawabanChange(currentSoal.id, opsi.id)}
-                          className="mt-1 w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
-                        />
-                        <div className="flex-1">
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {opsi.urutan}.
-                          </span>
-                          <span className="ml-2 text-gray-700 dark:text-gray-300">
-                            {opsi.opsi_teks}
-                          </span>
-                        </div>
-                      </label>
-                    ))
-                  )}
+                  {currentSoal.pilihan.map((pilihan) => (
+                    <label
+                      key={pilihan.id}
+                      className={`
+                        flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                        ${jawaban[currentSoal.id] === pilihan.id
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        }
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name={`soal-${currentSoal.id}`}
+                        value={pilihan.id}
+                        checked={jawaban[currentSoal.id] === pilihan.id}
+                        onChange={() => handleJawabanChange(currentSoal.id, pilihan.id)}
+                        className="mt-1 w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                      />
+                      <div className="flex-1">
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {pilihan.id}.
+                        </span>
+                        <span className="ml-2 text-gray-700 dark:text-gray-300">
+                          {pilihan.teks}
+                        </span>
+                      </div>
+                    </label>
+                  ))}
                 </div>
 
                 {/* Navigation Buttons */}

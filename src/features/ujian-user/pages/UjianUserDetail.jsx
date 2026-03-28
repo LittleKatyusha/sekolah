@@ -65,19 +65,21 @@ const UjianUserDetail = () => {
   }
 
   const getStatusLabel = (value) => {
-    if (value === null || value === undefined) return '-'
+    if (value === null || value === undefined) return 'Belum Mulai'
     const statusMap = {
-      1: 'Belum Mulai',
-      2: 'Sedang Mengerjakan',
-      3: 'Selesai',
+      0: 'Belum Mulai',
+      1: 'Sedang Mengerjakan',
+      2: 'Selesai',
+      3: 'Dinilai',
     }
     return statusMap[value] || `Status ${value}`
   }
 
   const getStatusColorClass = (value) => {
     const colorMap = {
-      1: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-      2: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      0: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+      1: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      2: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
       3: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     }
     return colorMap[value] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
@@ -119,8 +121,8 @@ const UjianUserDetail = () => {
     )
   }
 
-  const canStart = ujianUser.status === 1
-  const isCompleted = ujianUser.status === 3
+  const canStart = ujianUser.status === 0 || ujianUser.status === null
+  const isCompleted = ujianUser.status === 2 || ujianUser.status === 3
 
   return (
     <div className="space-y-6">
