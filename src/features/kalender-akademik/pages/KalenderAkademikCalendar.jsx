@@ -8,6 +8,7 @@ import { Plus, RefreshCw, Calendar, List, Filter, ChevronDown, Loader2 } from 'l
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { kalenderAkademikService } from '../services/kalenderAkademikService'
+import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { showError } from '../../../utils/sweetalert'
 
 // Status mapping for display
@@ -80,16 +81,14 @@ const KalenderAkademikCalendar = () => {
   }, [])
 
   /**
-   * Extract unique tahun ajaran from events for filter
+   * Fetch tahun ajaran list from API for filter
    */
-  const extractTahunAjaran = useCallback((eventsList) => {
-    const map = new Map()
-    eventsList.forEach(evt => {
-      if (evt.tahun_ajaran?.id && evt.tahun_ajaran?.nama) {
-        map.set(evt.tahun_ajaran.id, evt.tahun_ajaran)
-      }
-    })
-    setTahunAjaranList(Array.from(map.values()))
+  const fetchTahunAjaran = useCallback(async () => {
+    const { data, error } = await tahunAjaranService.getAll({ per_page: 100 })
+    if (!error && data?.data) {
+      const list = Array.isArray(data.data) ? data.data : data.data.data || []
+      setTahunAjaranList(list)
+    }
   }, [])
 
   /**
@@ -114,7 +113,6 @@ const KalenderAkademikCalendar = () => {
       const rawEvents = data?.data?.data || data?.data || []
       const eventsList = Array.isArray(rawEvents) ? rawEvents : []
       
-      extractTahunAjaran(eventsList)
       setEvents(transformToCalendarEvents(eventsList))
     } catch (err) {
       showError('Terjadi kesalahan saat memuat data')
@@ -122,12 +120,13 @@ const KalenderAkademikCalendar = () => {
     } finally {
       setLoading(false)
     }
-  }, [filterTahunAjaran, filterTipe, filterStatus, extractTahunAjaran])
+  }, [filterTahunAjaran, filterTipe, filterStatus])
 
   // Initial data fetch
   useEffect(() => {
     fetchEventTypes()
-  }, [fetchEventTypes])
+    fetchTahunAjaran()
+  }, [fetchEventTypes, fetchTahunAjaran])
 
   useEffect(() => {
     fetchEvents()
@@ -155,7 +154,8 @@ const KalenderAkademikCalendar = () => {
   const handleRefresh = useCallback(() => {
     fetchEvents()
     fetchEventTypes()
-  }, [fetchEvents, fetchEventTypes])
+    fetchTahunAjaran()
+  }, [fetchEvents, fetchEventTypes, fetchTahunAjaran])
 
   /**
    * Clear all filters

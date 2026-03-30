@@ -8,6 +8,8 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { kalenderAkademikService } from '../services/kalenderAkademikService'
 import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { semesterService } from '../../semester/services/semesterService'
+import { roleService } from '../../roles/services/rolesService'
+import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const VISIBILITY_OPTIONS = [
@@ -47,12 +49,16 @@ const KalenderAkademikForm = () => {
     lokasi: '',
     visibility: 'GLOBAL',
     status: 'DRAFT',
+    roles: [],
+    kelas: [],
   })
 
   const [errors, setErrors] = useState({})
   const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
   const [semesterOptions, setSemesterOptions] = useState([])
   const [tipeOptions, setTipeOptions] = useState([])
+  const [roleOptions, setRoleOptions] = useState([])
+  const [kelasOptions, setKelasOptions] = useState([])
 
   useEffect(() => {
     fetchDropdownOptions()
@@ -62,10 +68,12 @@ const KalenderAkademikForm = () => {
   }, [id])
 
   const fetchDropdownOptions = async () => {
-    const [tahunResult, semesterResult, tipeResult] = await Promise.all([
+    const [tahunResult, semesterResult, tipeResult, rolesResult, kelasResult] = await Promise.all([
       tahunAjaranService.getAll({ per_page: 100 }),
       semesterService.getAll({ per_page: 100 }),
-      kalenderAkademikService.getAllTipe({ per_page: 100 })
+      kalenderAkademikService.getAllTipe({ per_page: 100 }),
+      roleService.getAll({ per_page: 200 }),
+      kelasService.getAll({ per_page: 200 }),
     ])
 
     if (tahunResult.data) {
@@ -90,6 +98,16 @@ const KalenderAkademikForm = () => {
         value: String(item.id),
         label: item.nama || item.kode || `Tipe #${item.id}`
       })))
+    }
+
+    if (rolesResult.data) {
+      const list = rolesResult.data?.data || rolesResult.data?.data?.data || []
+      setRoleOptions(Array.isArray(list) ? list : [])
+    }
+
+    if (kelasResult.data) {
+      const list = kelasResult.data?.data || kelasResult.data?.data?.data || []
+      setKelasOptions(Array.isArray(list) ? list : [])
     }
   }
 
@@ -118,6 +136,8 @@ const KalenderAkademikForm = () => {
         lokasi: kalender.lokasi || '',
         visibility: kalender.visibility || 'GLOBAL',
         status: kalender.status || 'DRAFT',
+        roles: Array.isArray(kalender.roles) ? kalender.roles.map(r => r.role_id ?? r.id) : [],
+        kelas: Array.isArray(kalender.kelas) ? kalender.kelas.map(k => k.kelas_id ?? k.id) : [],
       })
     } else {
       showError('Gagal mengambil data kalender akademik')
@@ -135,6 +155,19 @@ const KalenderAkademikForm = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
     }
+  }
+
+  const handleAudienceToggle = (field, id) => {
+    setFormData(prev => {
+      const current = prev[field] || []
+      const numId = Number(id)
+      return {
+        ...prev,
+        [field]: current.includes(numId)
+          ? current.filter(i => i !== numId)
+          : [...current, numId],
+      }
+    })
   }
 
   const validate = () => {
@@ -172,6 +205,14 @@ const KalenderAkademikForm = () => {
       recurring_rule: formData.recurring_rule || null,
       lokasi: formData.lokasi || null,
       visibility: formData.visibility,
+    }
+
+    // Audience fields
+    if (['ROLE', 'CUSTOM'].includes(formData.visibility)) {
+      submitData.roles = formData.roles
+    }
+    if (['KELAS', 'CUSTOM'].includes(formData.visibility)) {
+      submitData.kelas = formData.kelas
     }
 
     // Include status only on update
@@ -297,6 +338,78 @@ const KalenderAkademikForm = () => {
                   error={errors.visibility}
                 />
               </div>
+
+              {/* Audience: Role (visible when visibility=ROLE or CUSTOM) */}
+              {['ROLE', 'CUSTOM'].includes(formData.visibility) && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Target Role <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                    {roleOptions.map(role => {
+                      const id = role.id
+                      const checked = formData.roles.includes(Number(id))
+                      return (
+                        <label key={id} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => handleAudienceToggle('roles', id)}
+                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                            {role.name || role.nama || `Role #${id}`}
+                          </span>
+                        </label>
+                      )
+                    })}
+                    {roleOptions.length === 0 && (
+                      <span className="text-sm text-gray-400 col-span-full">Tidak ada data role</span>
+                    )}
+                  </div>
+                  {formData.roles.length > 0 && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {formData.roles.length} role dipilih
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Audience: Kelas (visible when visibility=KELAS or CUSTOM) */}
+              {['KELAS', 'CUSTOM'].includes(formData.visibility) && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Target Kelas <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                    {kelasOptions.map(kelas => {
+                      const id = kelas.id
+                      const checked = formData.kelas.includes(Number(id))
+                      return (
+                        <label key={id} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => handleAudienceToggle('kelas', id)}
+                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                            {kelas.nama_kelas || kelas.nama || `Kelas #${id}`}
+                          </span>
+                        </label>
+                      )
+                    })}
+                    {kelasOptions.length === 0 && (
+                      <span className="text-sm text-gray-400 col-span-full">Tidak ada data kelas</span>
+                    )}
+                  </div>
+                  {formData.kelas.length > 0 && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {formData.kelas.length} kelas dipilih
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Tanggal Mulai */}
               <div>
