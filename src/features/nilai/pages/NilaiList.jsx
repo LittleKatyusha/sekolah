@@ -177,6 +177,16 @@ const NilaiList = () => {
       minWidth: 180,
       cellRenderer: (params) => params.value || '-'
     },
+    {
+      field: 'ujian.mapel.nama',
+      backendField: 'ujian.mapel.nama',
+      headerName: 'Mata Pelajaran',
+      sortable: false,
+      filter: false,
+      flex: 1,
+      minWidth: 150,
+      cellRenderer: (params) => params.data?.ujian?.mapel?.nama || '-'
+    },
     { 
       field: 'nilai', 
       backendField: 'nilai',

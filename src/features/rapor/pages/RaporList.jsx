@@ -208,6 +208,26 @@ const RaporList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
+      field: 'rata_rata',
+      backendField: 'rata_rata',
+      headerName: 'Rata-rata',
+      sortable: true,
+      filter: false,
+      width: 120,
+      minWidth: 100,
+      cellRenderer: (params) => {
+        const val = params.value
+        if (val === null || val === undefined) return '-'
+        const num = parseFloat(val)
+        let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+        if (num >= 80) colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+        else if (num >= 60) colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+        else if (num >= 40) colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+        else colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+        return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>{num.toFixed(2)}</span>
+      }
+    },
+    {
       headerName: 'Kehadiran',
       sortable: false,
       filter: false,

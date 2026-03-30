@@ -104,6 +104,19 @@ const RaporDetail = () => {
                 </span>
               </div>
 
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total Nilai</p>
+                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{rapor.total_nilai ?? '-'}</p>
+                </div>
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Rata-rata</p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {rapor.rata_rata != null ? parseFloat(rapor.rata_rata).toFixed(2) : '-'}
+                  </p>
+                </div>
+              </div>
+
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400">ID</span>

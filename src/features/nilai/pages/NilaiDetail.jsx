@@ -191,13 +191,34 @@ const NilaiDetail = () => {
                     {nilai.ujian.mapel && (
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Mata Pelajaran</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{nilai.ujian.mapel.nama || '-'}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {nilai.ujian.mapel.nama || '-'}
+                          {nilai.ujian.mapel.kode && (
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({nilai.ujian.mapel.kode})</span>
+                          )}
+                        </p>
                       </div>
                     )}
                     {nilai.ujian.kelas && (
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Kelas</p>
                         <p className="font-medium text-gray-900 dark:text-white">{nilai.ujian.kelas.nama_kelas || '-'}</p>
+                      </div>
+                    )}
+                    {nilai.ujian.jenis && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Jenis Ujian</p>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                          {nilai.ujian.jenis}
+                        </span>
+                      </div>
+                    )}
+                    {nilai.ujian.semester && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Semester</p>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                          {nilai.ujian.semester}
+                        </span>
                       </div>
                     )}
                     {nilai.ujian.tanggal && (
