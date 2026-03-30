@@ -124,7 +124,7 @@ const RaporForm = () => {
 
       setFormData({
         mst_siswa_id: siswaId,
-        semester: rapor.semester ? String(rapor.semester) : '',
+        semester: rapor.semester_kode ? String(rapor.semester_kode) : '',
         tahun_ajaran_id: rapor.tahun_ajaran_id ? String(rapor.tahun_ajaran_id) : '',
         catatan_wali: rapor.catatan_wali || '',
         sakit: rapor.kehadiran?.sakit !== null && rapor.kehadiran?.sakit !== undefined ? String(rapor.kehadiran.sakit) : '',
