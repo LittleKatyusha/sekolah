@@ -62,12 +62,24 @@ export const pembayaranSppService = {
     return await apiService.post(`${PEMBAYARAN_BASE}/bayar`, data)
   },
 
+  bayarMultiple: async (data) => {
+    return await apiService.post(`${PEMBAYARAN_BASE}/bayar-multiple`, data)
+  },
+
+  hitungDenda: async (params = {}) => {
+    return await apiService.get(`${PEMBAYARAN_BASE}/hitung-denda`, { params })
+  },
+
   getBySiswa: async (siswaId) => {
     return await apiService.get(`${PEMBAYARAN_BASE}/siswa/${siswaId}`)
   },
 
   getStatusSiswa: async (siswaId, params = {}) => {
     return await apiService.get(`${PEMBAYARAN_BASE}/siswa/${siswaId}/status`, { params })
+  },
+
+  getTunggakan: async (siswaId, params = {}) => {
+    return await apiService.get(`${PEMBAYARAN_BASE}/siswa/${siswaId}/tunggakan`, { params })
   },
 }
 
