@@ -1,55 +1,10 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MessageSquare, Clock, User, Search, BookOpen, RefreshCw, Loader2 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { forumService } from '../services/forumService'
-
-function timeAgo(dateString) {
-  const now = new Date()
-  const date = new Date(dateString)
-  const seconds = Math.floor((now - date) / 1000)
-  if (seconds < 60) return 'Baru saja'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes} menit lalu`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} jam lalu`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days} hari lalu`
-  return date.toLocaleDateString('id-ID')
-}
-
-function stripHtml(html) {
-  if (!html) return ''
-
-  return html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&/gi, '&')
-    .replace(/</gi, '<')
-    .replace(/>/gi, '>')
-    .replace(/"/gi, '"')
-    .replace(/'|&#x27;/gi, '\'')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function getInitials(name) {
-  if (!name) return '?'
-  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
-
-const COLORS = [
-  'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500',
-  'bg-pink-500', 'bg-teal-500', 'bg-indigo-500', 'bg-red-500'
-]
-
-function getAvatarColor(name) {
-  if (!name) return COLORS[0]
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return COLORS[Math.abs(hash) % COLORS.length]
-}
+import { timeAgo, getInitials, getAvatarColor, stripHtml, truncateText } from '../utils/forumHelpers'
 
 const ForumList = () => {
   const navigate = useNavigate()
@@ -168,11 +123,12 @@ const ForumList = () => {
     navigate(`/akademik/forum/${topicId}`)
   }, [navigate])
 
+  // Topic card component - memoized for performance
   const TopicCard = useCallback(({ topic }) => {
     const authorName = topic.user?.name || 'Unknown'
     const mapelName = topic.guru_mapel?.mapel?.nama
     const replyCount = topic.replies?.length || topic.replies_count || 0
-    const preview = stripHtml(topic.pesan)
+    const preview = truncateText(stripHtml(topic.pesan), 180)
 
     return (
       <article
@@ -203,7 +159,7 @@ const ForumList = () => {
             {/* Preview */}
             {preview && (
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-                {preview.length > 180 ? `${preview.substring(0, 180)}...` : preview}
+                {preview}
               </p>
             )}
 
