@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -283,6 +283,10 @@ const PembayaranSppList = () => {
           </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/keuangan/pembayaran-spp/tunggakan')}>
+            <AlertTriangle size={18} className="mr-2 text-orange-500" />
+            Rekap Tunggakan
           </Button>
           <Button onClick={() => navigate('/keuangan/pembayaran-spp/create')}>
             <Plus size={18} className="mr-2" />
