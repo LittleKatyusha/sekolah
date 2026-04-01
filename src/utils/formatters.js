@@ -40,3 +40,18 @@ export const formatDateTime = (dateString) => {
     minute: '2-digit'
   })
 }
+
+/**
+ * Format number to Indonesian Rupiah currency
+ * @param {number} value - The value to format
+ * @returns {string} Formatted currency string (e.g., "Rp 1.500.000")
+ */
+export const formatRupiah = (value) => {
+  if (value === null || value === undefined) return '-'
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}

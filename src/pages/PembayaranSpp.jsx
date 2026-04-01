@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
-import PembayaranSppList from '../features/spp/pages/PembayaranSppList'
-import PembayaranSppForm from '../features/spp/pages/PembayaranSppForm'
-import PembayaranSppDetail from '../features/spp/pages/PembayaranSppDetail'
+import PembayaranSppList from '../features/pembayaran-spp/pages/PembayaranSppList'
+import PembayaranSppDetail from '../features/pembayaran-spp/pages/PembayaranSppDetail'
+import PembayaranSppForm from '../features/pembayaran-spp/pages/PembayaranSppForm'
 
 const PembayaranSpp = () => {
   return (
