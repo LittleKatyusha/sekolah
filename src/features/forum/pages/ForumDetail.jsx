@@ -1,44 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, Clock, Send, Edit2, Trash2, Paperclip, BookOpen, User, ArrowDown, Wifi, WifiOff } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, Wifi, WifiOff, Edit2, Trash2, MessageSquare, Paperclip, BookOpen, User, Clock, ArrowDown } from 'lucide-react'
+import DOMPurify from 'dompurify'
+import useNotificationStore from '../../../store/useNotificationStore'
 import useAuthStore from '../../../store/useAuthStore'
 import { forumService } from '../services/forumService'
-import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { timeAgo, getInitials, getAvatarColor, stripHtml } from '../utils/forumHelpers'
+import ReplyCard from '../components/ReplyCard'
+import TopicHeader from '../components/TopicHeader'
+import useForumWebSocket from '../hooks/useForumWebSocket'
+import { showConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
-import useWebSocket from '../../../hooks/useWebSocket'
-import useNotificationStore from '../../../store/useNotificationStore'
-
-function timeAgo(dateString) {
-  const now = new Date()
-  const date = new Date(dateString)
-  const seconds = Math.floor((now - date) / 1000)
-  if (seconds < 60) return 'Baru saja'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes} menit lalu`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} jam lalu`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days} hari lalu`
-  return date.toLocaleDateString('id-ID')
-}
-
-function getInitials(name) {
-  if (!name) return '?'
-  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
-
-const COLORS = [
-  'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500',
-  'bg-pink-500', 'bg-teal-500', 'bg-indigo-500', 'bg-red-500'
-]
-
-function getAvatarColor(name) {
-  if (!name) return COLORS[0]
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return COLORS[Math.abs(hash) % COLORS.length]
-}
 
 const ForumDetail = () => {
   const { id } = useParams()
@@ -56,36 +29,53 @@ const ForumDetail = () => {
   const repliesEndRef = useRef(null)
   const isTypingRef = useRef(false)
   const repliesContainerRef = useRef(null)
+  const abortControllerRef = useRef(null)
 
-  const fetchTopic = useCallback(async () => {
+  // Fetch topic with AbortController
+  const fetchTopic = useCallback(async (signal) => {
     setLoading(true)
-    const { data, error } = await forumService.getById(id)
+    const { data, error } = await forumService.getById(id, { signal })
+    if (error === 'cancelled') {
+      return
+    }
     if (data) {
-      setTopic(data.data)
-    } else {
+      setTopic(data)
+    } else if (error) {
       showError('Gagal mengambil data topik')
       navigate('/akademik/forum')
     }
     setLoading(false)
   }, [id, navigate])
 
-  const fetchReplies = useCallback(async () => {
+  // Fetch replies with AbortController
+  const fetchReplies = useCallback(async (signal) => {
     setRepliesLoading(true)
-    const { data } = await forumService.getReplies(id)
+    const { data, error } = await forumService.getReplies(id, { signal })
+    if (error === 'cancelled') {
+      return
+    }
     if (data) {
-      setReplies(data.data || [])
+      setReplies(data || [])
     }
     setRepliesLoading(false)
   }, [id])
 
+  // Initial fetch with AbortController
   useEffect(() => {
-    fetchTopic()
-    fetchReplies()
+    abortControllerRef.current = new AbortController()
+    const signal = abortControllerRef.current.signal
+
+    fetchTopic(signal)
+    fetchReplies(signal)
+
+    return () => {
+      abortControllerRef.current?.abort()
+    }
   }, [fetchTopic, fetchReplies])
 
-  // ── WebSocket: subscribe to forum.<id> for live replies ───────────────────
+  // WebSocket integration
   const wsStatus = useNotificationStore(s => s.wsStatus)
-  const isLive   = wsStatus === 'connected'
+  const isLive = wsStatus === 'connected'
 
   const isScrolledToBottom = useCallback(() => {
     if (!repliesContainerRef.current) return true
@@ -94,7 +84,6 @@ const ForumDetail = () => {
   }, [])
 
   const handleNewReply = useCallback((data) => {
-    // data is the new reply object pushed by the server
     setReplies(prev => {
       const exists = prev.some(r => r.id === data.id)
       if (exists) return prev
@@ -109,12 +98,21 @@ const ForumDetail = () => {
     })
   }, [isScrolledToBottom])
 
-  useWebSocket(
-    topic ? `forum.${topic.id}` : null,
-    { 'new-reply': handleNewReply, 'reply-deleted': () => fetchReplies() }
-  )
+  const handleReplyDeleted = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    abortControllerRef.current = new AbortController()
+    fetchReplies(abortControllerRef.current.signal)
+  }, [fetchReplies])
 
-  // ── Fallback polling (60 s) when WebSocket is not available ───────────────
+  // Use the WebSocket hook
+  useForumWebSocket(topic?.id, {
+    onNewReply: handleNewReply,
+    onReplyDeleted: handleReplyDeleted
+  })
+
+  // Fallback polling (15 s) when WebSocket is not available
   useEffect(() => {
     if (!topic || isLive) return
 
@@ -122,7 +120,7 @@ const ForumDetail = () => {
       if (isTypingRef.current) return
       try {
         const { data } = await forumService.getReplies(topic.id)
-        const freshReplies = data?.data || data || []
+        const freshReplies = data || []
         setReplies(prev => {
           if (freshReplies.length > prev.length) {
             const newCount = freshReplies.length - prev.length
@@ -135,26 +133,29 @@ const ForumDetail = () => {
           }
           return freshReplies
         })
-      } catch { /* silent */ }
+      } catch {
+        // silent
+      }
     }
 
-    const interval = setInterval(fallbackPoll, 60_000)
+    const interval = setInterval(fallbackPoll, 15_000)
     return () => clearInterval(interval)
   }, [topic, isLive, isScrolledToBottom])
 
   // Track typing state
-  const handleReplyChange = (html) => {
+  const handleReplyChange = useCallback((html) => {
     setReplyText(html)
     isTypingRef.current = true
-    // Reset typing flag after 2 seconds of inactivity
     clearTimeout(handleReplyChange._timeout)
     handleReplyChange._timeout = setTimeout(() => {
       isTypingRef.current = false
     }, 2000)
-  }
+  }, [])
 
-  const handleSubmitReply = async () => {
-    if (!replyText.trim() || !replyText.replace(/<[^>]*>/g, '').trim()) {
+  // Submit reply with validation
+  const handleSubmitReply = useCallback(async () => {
+    const cleanText = stripHtml(replyText).trim()
+    if (!cleanText) {
       showError('Pesan balasan tidak boleh kosong')
       return
     }
@@ -172,8 +173,11 @@ const ForumDetail = () => {
       setReplyText('')
       isTypingRef.current = false
       setNewReplyCount(0)
-      await fetchReplies()
-      // Auto-scroll to bottom after own reply
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      abortControllerRef.current = new AbortController()
+      await fetchReplies(abortControllerRef.current.signal)
       setTimeout(() => {
         repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -181,22 +185,37 @@ const ForumDetail = () => {
       showError('Gagal mengirim balasan')
     }
     setSubmitting(false)
-  }
+  }, [replyText, id, user?.id, topic, fetchReplies])
 
-  const handleDeleteReply = async (reply) => {
+  // Delete reply handler
+  const handleDeleteReply = useCallback(async (reply) => {
     const label = `Balasan dari "${reply.user?.name || 'Unknown'}"`
-    const result = await showDeleteConfirm(label)
-    if (result.isConfirmed) {
-      const { error } = await forumService.delete(reply.id)
-      if (!error) {
-        showSuccess('Balasan berhasil dihapus!')
-        fetchReplies()
-      } else {
-        showError('Gagal menghapus balasan')
-      }
-    }
-  }
+    const result = await showConfirm(
+      `Apakah Anda yakin ingin menghapus ${label}?`,
+      'Konfirmasi Hapus'
+    )
 
+    if (!result?.isConfirmed) return
+
+    const { error } = await forumService.delete(reply.id)
+    if (!error) {
+      showSuccess('Balasan berhasil dihapus!')
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      abortControllerRef.current = new AbortController()
+      fetchReplies(abortControllerRef.current.signal)
+    } else {
+      showError('Gagal menghapus balasan')
+    }
+  }, [fetchReplies])
+
+  // Edit reply handler
+  const handleEditReply = useCallback((reply) => {
+    navigate(`/akademik/forum/${reply.id}/edit`)
+  }, [navigate])
+
+  // Loading state
   if (loading || !topic) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -208,6 +227,10 @@ const ForumDetail = () => {
   const topicAuthor = topic.user?.name || 'Unknown'
   const mapelName = topic.guru_mapel?.mapel?.nama
   const guruName = topic.guru_mapel?.guru?.nama
+  const isTopicOwner = user?.id === (topic.user?.id || topic.sys_user_id)
+
+  // Sanitize HTML content with DOMPurify
+  const sanitizedTopicContent = DOMPurify.sanitize(topic.pesan || '')
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -248,10 +271,10 @@ const ForumDetail = () => {
               )}
             </div>
 
-            {/* Topic body */}
+            {/* Topic body - sanitized */}
             <div
               className="prose dark:prose-invert max-w-none mt-4 text-gray-700 dark:text-gray-300"
-              dangerouslySetInnerHTML={{ __html: topic.pesan }}
+              dangerouslySetInnerHTML={{ __html: sanitizedTopicContent }}
             />
 
             {topic.file_lampiran && (
@@ -285,7 +308,7 @@ const ForumDetail = () => {
           ) : (
             <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
               <WifiOff size={12} />
-              Polling (60 s)
+              Polling (15 s)
             </span>
           )}
         </div>
@@ -304,6 +327,7 @@ const ForumDetail = () => {
             {replies.map((reply) => {
               const replyAuthor = reply.user?.name || 'Unknown'
               const isOwner = user?.id === (reply.user?.id || reply.sys_user_id)
+              const sanitizedReplyContent = DOMPurify.sanitize(reply.pesan || '')
 
               return (
                 <div
@@ -328,7 +352,7 @@ const ForumDetail = () => {
                         {isOwner && (
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => navigate(`/akademik/forum/${reply.id}/edit`)}
+                              onClick={() => handleEditReply(reply)}
                               className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                               title="Edit"
                             >
@@ -347,7 +371,7 @@ const ForumDetail = () => {
 
                       <div
                         className="prose dark:prose-invert max-w-none mt-2 text-sm text-gray-700 dark:text-gray-300"
-                        dangerouslySetInnerHTML={{ __html: reply.pesan }}
+                        dangerouslySetInnerHTML={{ __html: sanitizedReplyContent }}
                       />
 
                       {reply.file_lampiran && (
@@ -399,8 +423,17 @@ const ForumDetail = () => {
             disabled={submitting}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
           >
-            <Send size={16} />
-            {submitting ? 'Mengirim...' : 'Kirim Balasan'}
+            {submitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Mengirim...
+              </>
+            ) : (
+              <>
+                <Send size={16} />
+                Kirim Balasan
+              </>
+            )}
           </button>
         </div>
       </div>
