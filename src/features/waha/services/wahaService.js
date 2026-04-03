@@ -1,6 +1,6 @@
 import { apiService } from '../../../utils/api'
 
-const BASE_URL = '/waha'
+const BASE_URL = '/whatsapp'
 
 const unwrapResponse = (response) => response?.data?.data ?? response?.data ?? null
 
