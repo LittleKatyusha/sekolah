@@ -148,6 +148,15 @@ export default {
 const PUBLIC_BASE = '/api/v1/ppdb/public'
 
 export const ppdbPublicService = {
+  getSekolahList: async () => {
+    try {
+      const response = await axios.get(`${PUBLIC_BASE}/sekolah`)
+      return { data: response.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || error.message }
+    }
+  },
+
   getActiveGelombang: async (sekolahId) => {
     try {
       const response = await axios.get(`${PUBLIC_BASE}/gelombang/${sekolahId}/active`)
