@@ -512,7 +512,7 @@ const PortalPpdb = () => {
         )}
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-600 pb-4">
-          &copy; {new Date().getFullYear()} Sekolah Pintar · Portal PPDB
+          &copy; {new Date().getFullYear()} <a href="https://akademihub.id/" className="text-primary-600 dark:text-primary-400">Akademihub</a> · Portal PPDB
         </p>
       </div>
     </div>
