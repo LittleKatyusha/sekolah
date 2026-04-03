@@ -116,6 +116,19 @@ export const siswaService = {
   lulus: async (id) => {
     return await apiService.post(`${BASE_URL}/${id}/lulus`)
   },
+
+  /**
+   * Import siswa data from an Excel file (.xlsx / .xls)
+   * @param {File} file - Excel file (max 5MB)
+   * @returns {Promise<{data: {imported: number, failed: number, errors: Array}, error: any}>}
+   */
+  importCsv: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post(`${BASE_URL}/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }
 
 export default siswaService
