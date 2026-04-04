@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
+import ImportSiswaModal from './ImportSiswaModal'
 
 // Actions Menu Component
 const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
@@ -110,6 +111,7 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
 const SiswaList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showImport, setShowImport] = useState(false)
   
   // Column definitions
   const columnDefs = useMemo(() => [
@@ -262,6 +264,12 @@ const SiswaList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Data Siswa</h1>
         <div className="flex flex-col sm:flex-row gap-3">
+          <Button onClick={() => setShowImport(true)} variant="secondary" title="Import CSV">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Import Excel
+          </Button>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
               <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -276,6 +284,16 @@ const SiswaList = () => {
           </Button>
         </div>
       </div>
+
+      {showImport && (
+        <ImportSiswaModal
+          onClose={() => setShowImport(false)}
+          onSuccess={() => {
+            setShowImport(false)
+            if (gridRef.current?.refreshGrid) gridRef.current.refreshGrid()
+          }}
+        />
+      )}
 
       <Card>
         <InfiniteGrid

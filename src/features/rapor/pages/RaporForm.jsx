@@ -228,7 +228,7 @@ const RaporForm = () => {
 
     const submitData = {
       mst_siswa_id: parseInt(formData.mst_siswa_id),
-      semester: formData.semester,
+      semester: parseInt(formData.semester),
       tahun_ajaran_id: parseInt(formData.tahun_ajaran_id),
       catatan_wali: formData.catatan_wali || null,
       sakit: formData.sakit !== '' ? parseInt(formData.sakit) : null,

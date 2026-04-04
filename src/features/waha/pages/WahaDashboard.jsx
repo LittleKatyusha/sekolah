@@ -285,9 +285,9 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
             WhatsApp Gateway via WAHA
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Modul WAHA</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Modul WhatsApp</h1>
             <p className="mt-1 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
-              Kelola status sesi WhatsApp, QR autentikasi, kirim pesan manual, dan notifikasi SPP, PPDB, serta EWS dari satu halaman.
+              Kelola status sesi WAHA, QR autentikasi, kirim pesan manual, dan notifikasi SPP, PPDB, serta EWS dari satu halaman.
             </p>
           </div>
         </div>
@@ -339,7 +339,7 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
             <div className="space-y-4">
               <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Endpoint backend: <span className="font-semibold text-gray-900 dark:text-white">GET /api/v1/waha/session</span> dan <span className="font-semibold text-gray-900 dark:text-white">POST /api/v1/waha/session/start</span>.
+                  Endpoint backend: <span className="font-semibold text-gray-900 dark:text-white">GET /api/v1/whatsapp/session</span> dan <span className="font-semibold text-gray-900 dark:text-white">POST /api/v1/whatsapp/session/start</span>.
                 </p>
               </div>
               <JsonPreview value={sessionPayload} />
@@ -401,7 +401,7 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
             <Card title="Response Terakhir">
               <div className="space-y-4">
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300">
-                  Semua aksi pada tab ini menggunakan endpoint backend WAHA yang diproteksi permission: <span className="font-semibold">send, notify.spp, notify.ppdb, notify.ews</span>.
+                  Semua aksi pada tab ini menggunakan endpoint backend WhatsApp yang diproteksi permission: <span className="font-semibold">waha.send, waha.notify.spp, waha.notify.ppdb, waha.notify.ews</span>.
                 </div>
                 <JsonPreview value={lastResponse} />
               </div>

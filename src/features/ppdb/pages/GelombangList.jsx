@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -231,6 +231,10 @@ const GelombangList = () => {
           </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
+          </Button>
+          <Button onClick={() => window.open('/ppdb/portal', '_blank')} variant="secondary">
+            <ExternalLink size={18} className="mr-2" />
+            Portal PPDB
           </Button>
           <Button onClick={() => navigate('/ppdb/gelombang/create')}>
             <Plus size={18} className="mr-2" />
