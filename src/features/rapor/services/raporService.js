@@ -29,7 +29,7 @@ export const raporService = {
    * Create new rapor
    * @param {Object} data - Rapor data
    * @param {number} data.mst_siswa_id - Siswa ID (required)
-   * @param {string} data.semester - Semester (required)
+   * @param {number} data.semester - Semester (1=Ganjil, 2=Genap) (required)
    * @param {number} data.tahun_ajaran_id - Tahun Ajaran ID (required)
    * @param {string} [data.catatan_wali] - Catatan wali kelas
    * @param {number} [data.sakit] - Jumlah hari sakit
