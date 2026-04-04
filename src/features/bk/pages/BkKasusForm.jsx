@@ -8,26 +8,14 @@ import { bkKasusService, bkJenisService } from '../services/bkService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { guruService } from '../../guru/services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const statusOptions = [
-  { value: '', label: 'Pilih Status' },
-  { value: 1, label: 'Dibuka' },
-  { value: 2, label: 'Proses' },
-  { value: 3, label: 'Selesai' },
-  { value: 4, label: 'Dirujuk' },
-]
-
-const statusStringToInt = {
-  'dibuka': 1,
-  'proses': 2, // ✅ bukan 'dalam_proses'
-  'selesai': 3,
-  'dirujuk': 4, // ✅ bukan 'ditutup'
-}
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const BkKasusForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: statusOptions } = useReferenceOptions('status_bk')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -335,6 +323,7 @@ const BkKasusForm = () => {
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
+                  <option value="">Pilih Status</option>
                   {statusOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}

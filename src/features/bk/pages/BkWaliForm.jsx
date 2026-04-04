@@ -7,11 +7,14 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { bkWaliService, bkKasusService } from '../services/bkService'
 import waliService from '../../wali/services/waliService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const BkWaliForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: peranOptions } = useReferenceOptions('peran_wali_bk')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -240,10 +243,9 @@ const BkWaliForm = () => {
                   }`}
                 >
                   <option value="">Pilih Peran</option>
-                  <option value={1}>Pelapor</option>
-                  <option value={2}>Pendamping</option>
-                  <option value={3}>Wali Siswa</option>
-                  <option value={4}>Saksi</option>
+                  {peranOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
                 {errors.peran && <p className="mt-1 text-sm text-red-500">{Array.isArray(errors.peran) ? errors.peran[0] : errors.peran}</p>}
               </div>
