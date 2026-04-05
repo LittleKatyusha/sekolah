@@ -39,7 +39,7 @@ const FileUploadPage = () => {
       const entry = { id: Date.now() + Math.random(), name: file.name, size: file.size, type: file.type, status: 'uploading', path: null, error: null }
       setUploadedFiles(prev => [...prev, entry])
       try {
-        const { data, error } = await fileUploadService.upload(file)
+        const { data, error } = await fileUploadService.uploadFile(file)
         if (data?.data) {
           setUploadedFiles(prev => prev.map(f => f.id === entry.id ? { ...f, status: 'success', path: data.data.path || data.data.file_path } : f))
         } else {
@@ -60,7 +60,7 @@ const FileUploadPage = () => {
     if (!file.path) { setUploadedFiles(prev => prev.filter(f => f.id !== file.id)); return }
     const result = await showDeleteConfirm(file.name)
     if (result.isConfirmed) {
-      const { error } = await fileUploadService.delete(file.path)
+      const { error } = await fileUploadService.deleteFile(file.path)
       if (!error) { showSuccess('File berhasil dihapus!'); setUploadedFiles(prev => prev.filter(f => f.id !== file.id)) }
       else showError('Gagal menghapus file')
     }
@@ -77,7 +77,7 @@ const FileUploadPage = () => {
     if (!deletePath.trim()) return
     const result = await showDeleteConfirm(deletePath)
     if (result.isConfirmed) {
-      const { error } = await fileUploadService.delete(deletePath.trim())
+      const { error } = await fileUploadService.deleteFile(deletePath.trim())
       if (!error) { showSuccess('File berhasil dihapus!'); setDeletePath('') }
       else showError('Gagal menghapus file')
     }

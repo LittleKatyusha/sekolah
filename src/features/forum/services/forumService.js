@@ -1,4 +1,4 @@
-import apiService from '../../../utils/api'
+import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/akademik/forum'
 const LIST_URL = '/akademik/forum/'
