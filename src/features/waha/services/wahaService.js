@@ -21,6 +21,14 @@ export const wahaService = {
     }
   },
 
+  stopSession: async () => {
+    const response = await apiService.post(`${BASE_URL}/session/stop`, {})
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
   getQrCode: async () => {
     const response = await apiService.get(`${BASE_URL}/qr`)
     return {

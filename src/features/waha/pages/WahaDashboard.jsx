@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { MessageCircle, QrCode, RefreshCw, Send, ShieldAlert, Smartphone } from 'lucide-react'
+import { MessageCircle, PowerOff, QrCode, RefreshCw, Send, ShieldAlert, Smartphone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -69,7 +69,10 @@ const extractSessionSummary = (payload) => {
 
   const sessionName = payload.name || payload.session || payload.sessionName || '-'
   const status = payload.status || payload.state || payload.sessionStatus || 'UNKNOWN'
-  const engine = payload.engine || payload.type || payload.mode || '-'
+  const engineRaw = payload.engine || payload.type || payload.mode
+  const engine = typeof engineRaw === 'object' && engineRaw !== null
+    ? (engineRaw.engine || engineRaw.WWebVersion || JSON.stringify(engineRaw))
+    : (engineRaw || '-')
   const me = payload.me?.id || payload.me?.pushName || payload.phone || payload.user || '-'
 
   return { sessionName, status, engine, me }
@@ -136,6 +139,8 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
     session: false,
     qr: false,
     start: false,
+    stop: false,
+    restart: false,
     send: false,
     spp: false,
     ppdb: false,
@@ -156,8 +161,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
     try {
       const response = await request()
 
-      if (response.error) {
-        throw new Error(response.error?.message || 'Permintaan gagal diproses')
+      if (response.error || response.payload?.success === false) {
+        throw new Error(
+          response.error?.message ||
+          response.payload?.message ||
+          'Permintaan gagal diproses'
+        )
       }
 
       setLastResponse(response.payload)
@@ -193,21 +202,58 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   }, [handleApiAction])
 
   useEffect(() => {
-    loadSessionStatus()
-    loadQrCode()
+    loadSessionStatus().then((sessionData) => {
+      // Only fetch QR when session is not already connected
+      const normalizedState = String(sessionData?.status || sessionData?.state || '').toUpperCase()
+      if (!sessionData || !['WORKING', 'CONNECTED'].includes(normalizedState)) {
+        loadQrCode()
+      }
+    })
   }, [loadQrCode, loadSessionStatus])
 
   const handleStartSession = async () => {
     const started = await handleApiAction({
       key: 'start',
       request: () => wahaService.startSession(),
-      successMessage: 'Sesi WAHA berhasil dimulai ulang.',
+      successMessage: 'Sesi WAHA berhasil dimulai.',
     })
 
     if (started) {
       await loadSessionStatus()
       await loadQrCode()
     }
+  }
+
+  const handleStopSession = async () => {
+    const stopped = await handleApiAction({
+      key: 'stop',
+      request: () => wahaService.stopSession(),
+      successMessage: 'Sesi WAHA berhasil dihentikan.',
+    })
+
+    if (stopped !== null) {
+      await loadSessionStatus()
+    }
+  }
+
+  const handleRestartSession = async () => {
+    setLoadingStates((prev) => ({ ...prev, restart: true }))
+    try {
+      await wahaService.stopSession()
+    } catch (_) {
+      // ignore stop errors — session may already be stopped
+    }
+    const started = await handleApiAction({
+      key: 'restart',
+      request: () => wahaService.startSession(),
+      successMessage: 'Sesi WAHA berhasil direstart.',
+    })
+
+    if (started) {
+      await loadSessionStatus()
+      await loadQrCode()
+    }
+    setLoadingStates((prev) => ({ ...prev, restart: false }))
   }
 
   const handleTabChange = (tab) => {
@@ -330,12 +376,18 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
                   <RefreshCw size={18} className="mr-2" />
                   Refresh Status
                 </Button>
-                <PermissionGuard permission="waha.send">
-                  <Button onClick={handleStartSession} loading={loadingStates.start}>
-                    <Smartphone size={18} className="mr-2" />
-                    Start Session
-                  </Button>
-                </PermissionGuard>
+                <Button variant="danger" onClick={handleStopSession} loading={loadingStates.stop}>
+                  <PowerOff size={18} className="mr-2" />
+                  Stop Session
+                </Button>
+                <Button onClick={handleStartSession} loading={loadingStates.start}>
+                  <Smartphone size={18} className="mr-2" />
+                  Start Session
+                </Button>
+                <Button variant="secondary" onClick={handleRestartSession} loading={loadingStates.restart}>
+                  <RefreshCw size={18} className="mr-2" />
+                  Restart Session
+                </Button>
               </div>
             )}
           >

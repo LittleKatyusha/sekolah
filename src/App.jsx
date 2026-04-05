@@ -353,7 +353,13 @@ function App() {
               <Route path="/files" element={<Files />} />
 
               {/* WAHA */}
+              <Route path="/waha" element={<Navigate to="/waha/session" replace />} />
               <Route path="/waha/*" element={<Waha />} />
+              {/* Redirect /whatsapp/* (backend API path) to frontend WAHA routes */}
+              <Route path="/whatsapp" element={<Navigate to="/waha/session" replace />} />
+              <Route path="/whatsapp/session" element={<Navigate to="/waha/session" replace />} />
+              <Route path="/whatsapp/send" element={<Navigate to="/waha/send" replace />} />
+              <Route path="/whatsapp/*" element={<Navigate to="/waha/session" replace />} />
 
               {/* BK Module */}
               <Route path="/bk" element={<BK />} />
