@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react'
+import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Button from '../components/ui/Button'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
+import logoVertical from '../assets/logo akademihub-01-04.png'
 
 const REMEMBER_ME_KEY = 'login_remember_me'
 
@@ -108,9 +109,11 @@ const Login = () => {
         <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
           {/* Logo/Brand Section */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4 transform hover:scale-110 transition-transform duration-300">
-              <Shield className="text-white" size={32} />
-            </div>
+            <img
+              src={logoVertical}
+              alt="AkademiHub"
+              className="h-24 w-auto mx-auto mb-4 object-contain"
+            />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
               Selamat Datang
             </h1>
