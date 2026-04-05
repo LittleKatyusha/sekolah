@@ -18,31 +18,14 @@ const GOLONGAN_DARAH_OPTIONS = [
   { value: 'O', label: 'O' }
 ]
 
-const STATUS_OPTIONS = [
-  { value: 'Aktif', label: 'Aktif' },
-  { value: 'Lulus', label: 'Lulus' },
-  { value: 'Keluar', label: 'Keluar' },
-  { value: 'Pindah', label: 'Pindah' }
-]
-
 const SiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin', [
-    { value: '1', label: 'Laki-Laki' },
-    { value: '2', label: 'Perempuan' },
-  ])
-  const { options: agamaOptions } = useReferenceOptions('agama', [
-    { value: '1', label: 'Islam' },
-    { value: '2', label: 'Kristen' },
-    { value: '3', label: 'Katholik' },
-    { value: '4', label: 'Hindu' },
-    { value: '5', label: 'Budha' },
-    { value: '6', label: 'Konghucu' },
-    { value: '7', label: 'Kepercayaan' },
-  ])
+  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
+  const { options: agamaOptions } = useReferenceOptions('agama')
+  const { options: statusSiswaOptions } = useReferenceOptions('status_siswa')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -557,7 +540,7 @@ const SiswaForm = () => {
                     onChange={handleChange}
                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   >
-                    {STATUS_OPTIONS.map(option => (
+                    {statusSiswaOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>

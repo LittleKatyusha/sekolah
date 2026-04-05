@@ -8,12 +8,19 @@ import Button from '../../../components/ui/Button'
 import { presensiService } from '../services/presensiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const STATUS_MAP = {
   Hadir: { label: 'Hadir', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   Izin: { label: 'Izin', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   Sakit: { label: 'Sakit', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
   Alpha: { label: 'Alpha', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+}
+
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -107,6 +114,7 @@ const ActionsMenu = ({ onDetail, onEdit, onDelete }) => {
 
 const PresensiList = () => {
   usePageTitle()
+  const { options: statusAbsensiOptions } = useReferenceOptions('status_absensi')
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -232,7 +240,7 @@ const PresensiList = () => {
       cellRenderer: (params) => {
         const label = params.value
         if (!label) return '-'
-        const statusInfo = STATUS_MAP[label] || { label, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+        const statusInfo = STATUS_MAP[label] || { label: getLabel(label, statusAbsensiOptions), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
             {statusInfo.label}

@@ -7,6 +7,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { guruService } from '../services/guruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 // Actions Menu Component
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
@@ -101,10 +102,19 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
   )
 }
 
+const getLabel = (value, options) => {
+  if (!value) return '-'
+  const opt = options.find(o => o.value === String(value))
+  return opt ? opt.label : value
+}
+
 const GuruList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+
+  const { options: jkOptions } = useReferenceOptions('jenis_kelamin')
+  const { options: pendidikanOptions } = useReferenceOptions('pendidikan_terakhir')
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -136,26 +146,9 @@ const GuruList = () => {
     }
   }, [])
 
-  const getJenisKelaminLabel = useCallback((value) => {
-    if (!value) return '-'
-    const jkMap = {
-      1: 'Laki-Laki',
-      2: 'Perempuan',
-    }
-    return jkMap[value] || value
-  }, [])
+  const getJenisKelaminLabel = useCallback((value) => getLabel(value, jkOptions), [jkOptions])
 
-  const getPendidikanLabel = useCallback((value) => {
-    if (!value) return '-'
-    const pendidikanMap = {
-      1: 'S1',
-      2: 'S2',
-      3: 'S3',
-      4: 'D3',
-      5: 'D4',
-    }
-    return pendidikanMap[value] || value
-  }, [])
+  const getPendidikanLabel = useCallback((value) => getLabel(value, pendidikanOptions), [pendidikanOptions])
 
   const columnDefs = useMemo(() => [
     {

@@ -9,6 +9,7 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { pembayaranSppService, tarifSppService } from '../services/sppService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const BULAN_OPTIONS = [
   { value: '1', label: 'Januari' },
@@ -23,22 +24,6 @@ const BULAN_OPTIONS = [
   { value: '10', label: 'Oktober' },
   { value: '11', label: 'November' },
   { value: '12', label: 'Desember' },
-]
-
-// Sesuaikan dengan sys_references (lihat FIELD_MISMATCH_REPORT.md)
-const STATUS_OPTIONS = [
-  { value: '1', label: 'Lunas' },
-  { value: '2', label: 'Belum Lunas' },
-  { value: '3', label: 'Pending' },
-  { value: '4', label: 'Batal' },
-]
-
-// Sesuaikan dengan sys_references (lihat FIELD_MISMATCH_REPORT.md)
-const METODE_OPTIONS = [
-  { value: '1', label: 'Tunai' },
-  { value: '2', label: 'Transfer' },
-  { value: '3', label: 'Virtual Account' },
-  { value: '4', label: 'QRIS' },
 ]
 
 const PembayaranSppForm = () => {
@@ -64,6 +49,8 @@ const PembayaranSppForm = () => {
   const [errors, setErrors] = useState({})
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [tarifOptions, setTarifOptions] = useState([])
+  const { options: statusBayarOptions } = useReferenceOptions('status_bayar')
+  const { options: metodePembayaranOptions } = useReferenceOptions('metode_pembayaran')
 
   const buildSiswaOption = useCallback((siswa) => ({
     value: String(siswa.id),
@@ -112,8 +99,8 @@ const PembayaranSppForm = () => {
         tanggal_bayar: p.tanggal_bayar || '',
         jumlah_bayar: p.jumlah_bayar !== null && p.jumlah_bayar !== undefined ? String(p.jumlah_bayar) : '',
         // API kadang mengembalikan label, select pakai kode
-        status: normalizeReferenceCode(p.status, STATUS_OPTIONS),
-        metode_pembayaran: normalizeReferenceCode(p.metode_pembayaran, METODE_OPTIONS),
+        status: normalizeReferenceCode(p.status, statusBayarOptions),
+        metode_pembayaran: normalizeReferenceCode(p.metode_pembayaran, metodePembayaranOptions),
         keterangan: p.keterangan || ''
       })
 
@@ -132,7 +119,7 @@ const PembayaranSppForm = () => {
       navigate('/keuangan/pembayaran-spp')
     }
     setFetchingData(false)
-  }, [buildSiswaOption, id, navigate])
+  }, [buildSiswaOption, id, navigate, statusBayarOptions, metodePembayaranOptions])
 
   useEffect(() => {
     fetchOptions()
@@ -339,7 +326,7 @@ const PembayaranSppForm = () => {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  options={STATUS_OPTIONS}
+                  options={statusBayarOptions}
                   placeholder="Pilih status"
                   error={errors.status}
                 />
@@ -353,7 +340,7 @@ const PembayaranSppForm = () => {
                   name="metode_pembayaran"
                   value={formData.metode_pembayaran}
                   onChange={handleChange}
-                  options={METODE_OPTIONS}
+                  options={metodePembayaranOptions}
                   placeholder="Pilih metode pembayaran"
                   error={errors.metode_pembayaran}
                 />

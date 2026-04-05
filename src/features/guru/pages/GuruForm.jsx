@@ -14,22 +14,9 @@ const GuruForm = () => {
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const { options: jenisKelaminOptions, loading: loadingJK } = useReferenceOptions('jenis_kelamin', [
-    { value: '1', label: 'Laki-Laki' },
-    { value: '2', label: 'Perempuan' },
-  ])
+  const { options: jenisKelaminOptions, loading: loadingJK } = useReferenceOptions('jenis_kelamin')
 
-  const { options: pendidikanOptions, loading: loadingPendidikan } = useReferenceOptions('pendidikan_terakhir', [
-    { value: '1', label: 'SD / Sederajat' },
-    { value: '2', label: 'SMP / Sederajat' },
-    { value: '3', label: 'SMA / Sederajat' },
-    { value: '4', label: 'Diploma 1 (D1)' },
-    { value: '5', label: 'Diploma 2 (D2)' },
-    { value: '6', label: 'Diploma 3 (D3)' },
-    { value: '7', label: 'Sarjana (S1) / Diploma 4 (D4)' },
-    { value: '8', label: 'Magister (S2)' },
-    { value: '9', label: 'Doktor (S3)' },
-  ])
+  const { options: pendidikanOptions, loading: loadingPendidikan } = useReferenceOptions('pendidikan_terakhir')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)

@@ -7,6 +7,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { pendaftarService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const STATUS_MAP = {
   draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
@@ -17,9 +18,10 @@ const STATUS_MAP = {
   ditolak: { label: 'Ditolak', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
-const GENDER_MAP = {
-  L: 'Laki-laki',
-  P: 'Perempuan',
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
 }
 
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
@@ -93,6 +95,7 @@ const BATCH_STATUS_OPTIONS = [
 ]
 
 const PendaftarList = () => {
+  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
@@ -172,7 +175,7 @@ const PendaftarList = () => {
       filter: true,
       width: 100,
       minWidth: 80,
-      cellRenderer: (params) => GENDER_MAP[params.value] || params.value || '-'
+      cellRenderer: (params) => getLabel(params.value, jenisKelaminOptions)
     },
     {
       field: 'status_pendaftaran',

@@ -17,10 +17,7 @@ const RaporForm = () => {
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const { options: semesterOptions } = useReferenceOptions('kategori_semester', [
-    { value: '1', label: 'Ganjil' },
-    { value: '2', label: 'Genap' },
-  ])
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
