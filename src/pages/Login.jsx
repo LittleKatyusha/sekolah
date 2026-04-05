@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { LogIn, Mail, Lock, Eye, EyeOff, GraduationCap, BookOpen, Users, Award, Star, CheckCircle2 } from 'lucide-react'
 import Button from '../components/ui/Button'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
@@ -96,132 +96,193 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 p-4 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
+
+      {/* ── LEFT PANEL – School Branding ─────────────────────────────── */}
+      <div className="relative hidden lg:flex lg:w-[55%] flex-col justify-between overflow-hidden bg-[#0f2d5a]">
+
+        {/* Decorative circles */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/5"></div>
+        <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-[#1a4a8a]/60"></div>
+        <div className="absolute -bottom-20 left-1/4 w-72 h-72 rounded-full bg-white/5"></div>
+
+        {/* Top: logo + name */}
+        <div className="relative z-10 px-12 pt-12">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400 shadow-lg">
+              <GraduationCap className="text-[#0f2d5a]" size={28} />
+            </div>
+            <div>
+              <h1 className="text-white text-2xl font-bold tracking-wide leading-tight">Akademihub</h1>
+              <p className="text-amber-300 text-xs font-medium tracking-widest uppercase">Sistem Informasi Akademik</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Center: tagline + feature list */}
+        <div className="relative z-10 px-12 py-10">
+          <h2 className="text-white text-4xl font-extrabold leading-tight mb-3">
+            Platform Pendidikan<br />
+            <span className="text-amber-400">Terpadu &amp; Modern</span>
+          </h2>
+          <p className="text-blue-200 text-base leading-relaxed mb-10 max-w-sm">
+            Kelola seluruh aktivitas akademik — dari absensi, nilai, hingga komunikasi orang tua — dalam satu sistem yang terintegrasi.
+          </p>
+
+          <ul className="space-y-4">
+            {[
+              { icon: BookOpen,  text: 'Manajemen kurikulum & materi pembelajaran' },
+              { icon: Users,     text: 'Data siswa, guru, dan staf terpusat' },
+              { icon: Award,     text: 'Pelaporan nilai & rapor otomatis' },
+              { icon: Star,      text: 'Analitik performa sekolah real-time' },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-400/20 shrink-0">
+                  <Icon className="text-amber-400" size={16} />
+                </span>
+                <span className="text-blue-100 text-sm">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom: stats bar */}
+        <div className="relative z-10 px-12 pb-10">
+          <div className="flex gap-8 border-t border-white/10 pt-6">
+            {[
+              { label: 'Siswa Aktif', value: '2.400+' },
+              { label: 'Tenaga Pengajar', value: '120+' },
+              { label: 'Mata Pelajaran', value: '48' },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-amber-400 text-xl font-bold">{value}</p>
+                <p className="text-blue-300 text-xs mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Login Container */}
-      <div className="relative w-full max-w-md animate-fade-in">
-        {/* Glassmorphism Card */}
-        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
-          {/* Logo/Brand Section */}
-          <div className="text-center mb-8">
-            <img
-              src={logoVertical}
-              alt="AkademiHub"
-              className="h-24 w-auto mx-auto mb-4 object-contain"
-            />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Selamat Datang
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Masuk ke akun Anda
-            </p>
+      {/* ── RIGHT PANEL – Login Form ──────────────────────────────────── */}
+      <div className="flex flex-1 flex-col justify-center items-center px-6 py-12 bg-white">
+
+        {/* Mobile-only logo */}
+        <div className="flex lg:hidden items-center gap-3 mb-10">
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#0f2d5a]">
+            <GraduationCap className="text-amber-400" size={24} />
+          </div>
+          <div>
+            <p className="text-[#0f2d5a] font-bold text-lg leading-tight">Akademihub</p>
+            <p className="text-gray-500 text-xs tracking-widest uppercase">Sistem Informasi Akademik</p>
+          </div>
+        </div>
+
+        <div className="w-full max-w-sm">
+          {/* Heading */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Masuk ke Akun Anda</h2>
+            <p className="mt-1 text-sm text-gray-500">Selamat datang kembali. Silakan masukkan kredensial Anda.</p>
           </div>
 
-          {/* Login Form */}
+          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Error Message */}
+
+            {/* Error message */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm">
+              <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-red-400" />
                 {error}
               </div>
             )}
 
-            {/* Email Input */}
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Alamat Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="email"
                   placeholder="nama@sekolah.id"
                   {...register('email')}
-                  className={`w-full pl-10 pr-4 py-3 border ${
-                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                  className={`w-full pl-10 pr-4 py-2.5 border ${
+                    errors.email ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-[#0f2d5a]'
+                  } rounded-lg bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
               )}
             </div>
 
-            {/* Password Input */}
+            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Kata Sandi
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Masukkan kata sandi"
                   {...register('password')}
-                  className={`w-full pl-10 pr-12 py-3 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                  className={`w-full pl-10 pr-11 py-2.5 border ${
+                    errors.password ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-[#0f2d5a]'
+                  } rounded-lg bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer group">
+            {/* Remember me */}
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 cursor-pointer select-none group">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                  className="w-4 h-4 accent-[#0f2d5a] cursor-pointer rounded"
                 />
-                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
+                <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                   Ingat saya
                 </span>
               </label>
             </div>
 
-            {/* Submit Button */}
-            <Button 
-              type="submit" 
-              loading={loading} 
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
+            {/* Submit */}
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full bg-[#0f2d5a] hover:bg-[#1a4a8a] text-white py-2.5 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             >
               {loading ? (
                 <span>Memproses...</span>
               ) : (
                 <>
-                  <LogIn size={20} className="mr-2" />
+                  <LogIn size={17} className="mr-2" />
                   Masuk
                 </>
               )}
             </Button>
           </form>
 
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-white/90 text-sm backdrop-blur-sm bg-white/10 rounded-full px-4 py-2 inline-block">
-            &copy; 2026 Sekolah Pintar. Hak cipta dilindungi.
+          {/* Footer */}
+          <p className="mt-10 text-center text-xs text-gray-400">
+            &copy; 2026 Akademihub. Hak cipta dilindungi.
           </p>
         </div>
       </div>

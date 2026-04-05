@@ -78,6 +78,26 @@ export const raporService = {
   getDetail: async (id) => {
     return await apiService.get(`${BASE_URL}/${id}/detail`)
   },
+
+  /**
+   * Generate rapor dari nilai for a single siswa
+   * POST /akademik/rapor/generate-dari-nilai
+   * @param {Object} data - { mst_siswa_id, semester, tahun_ajaran_id }
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  generateDariNilai: async (data) => {
+    return await apiService.post(`${BASE_URL}/generate-dari-nilai`, data)
+  },
+
+  /**
+   * Generate rapor dari nilai for an entire kelas
+   * POST /akademik/rapor/generate-kelas
+   * @param {Object} data - { mst_kelas_id, semester, tahun_ajaran_id }
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  generateKelas: async (data) => {
+    return await apiService.post(`${BASE_URL}/generate-kelas`, data)
+  },
 }
 
 export default raporService
