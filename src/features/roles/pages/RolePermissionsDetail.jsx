@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Link } from 'lucide-react'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Card from '../../../components/ui/Card'
 import { rolePermissionService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -72,14 +73,18 @@ const RolePermissionsDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Role Permission</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/admin/role-permissions/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="role-permissions.edit">
+            <Button variant="warning" onClick={() => navigate(`/admin/role-permissions/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="role-permissions.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

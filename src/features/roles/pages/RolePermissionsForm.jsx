@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight, Search } from 'lucide-react'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Card from '../../../components/ui/Card'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { rolePermissionService, roleService, permissionService } from '../services/rolesService'
@@ -580,9 +581,11 @@ const RolePermissionsForm = () => {
                 <Button type="button" variant="secondary" onClick={() => navigate('/admin/role-permissions')}>
                   Batal
                 </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Menyimpan...' : isEditMode ? 'Update' : 'Simpan'}
-                </Button>
+                <PermissionGuard permission={isEditMode ? 'role-permissions.edit' : 'role-permissions.create'}>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? 'Menyimpan...' : isEditMode ? 'Update' : 'Simpan'}
+                  </Button>
+                </PermissionGuard>
               </div>
             </>
           )}

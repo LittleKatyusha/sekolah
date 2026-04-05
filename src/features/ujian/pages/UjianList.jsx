@@ -6,6 +6,7 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -74,35 +75,45 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
           }}
         >
           <div className="py-1">
-            <button
-              onClick={() => handleAction(onDetail)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
-            <button
-              onClick={() => handleAction(onEdit)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit size={16} className="text-yellow-600" />
-              Edit
-            </button>
-            <button
-              onClick={() => handleAction(onNilai)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <FileText size={16} className="text-green-600" />
-              Nilai
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button
-              onClick={() => handleAction(onDelete)}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-            >
-              <Trash2 size={16} />
-              Hapus
-            </button>
+            <PermissionGuard permission="ujian.view">
+              <button
+                onClick={() => handleAction(onDetail)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Eye size={16} className="text-blue-600" />
+                Detail
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="ujian.edit">
+              <button
+                onClick={() => handleAction(onEdit)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Edit size={16} className="text-yellow-600" />
+                Edit
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="ujian.view">
+              <button
+                onClick={() => handleAction(onNilai)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <FileText size={16} className="text-green-600" />
+                Nilai
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="ujian.delete">
+              <>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <button
+                  onClick={() => handleAction(onDelete)}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Hapus
+                </button>
+              </>
+            </PermissionGuard>
           </div>
         </div>,
         document.body
@@ -337,10 +348,12 @@ const UjianList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/akademik/ujian/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Ujian
-          </Button>
+          <PermissionGuard permission="ujian.create">
+            <Button onClick={() => navigate('/akademik/ujian/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Ujian
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

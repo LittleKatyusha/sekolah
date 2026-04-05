@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderTipeService } from '../services/kalenderTipeService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -39,13 +40,19 @@ const ActionsMenu = ({ data, onEdit, onDelete }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Edit size={16} className="text-yellow-600" /> Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-              <Trash2 size={16} /> Hapus
-            </button>
+            <PermissionGuard permission="kalender-tipe.edit">
+              <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Edit size={16} className="text-yellow-600" /> Edit
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="kalender-tipe.delete">
+              <>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                  <Trash2 size={16} /> Hapus
+                </button>
+              </>
+            </PermissionGuard>
           </div>
         </div>, document.body
       )}
@@ -137,7 +144,9 @@ const KalenderTipeList = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64" />
           </div>
           <Button onClick={handleRefresh} variant="secondary"><RefreshCw size={18} /></Button>
-          <Button onClick={() => navigate('/admin/kalender-tipe/create')}><Plus size={18} className="mr-2" /> Tambah Tipe</Button>
+          <PermissionGuard permission="kalender-tipe.create">
+            <Button onClick={() => navigate('/admin/kalender-tipe/create')}><Plus size={18} className="mr-2" /> Tambah Tipe</Button>
+          </PermissionGuard>
         </div>
       </div>
       <Card>

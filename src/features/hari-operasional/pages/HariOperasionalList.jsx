@@ -3,6 +3,7 @@ import { RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { hariOperasionalService } from '../services/hariOperasionalService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -73,22 +74,24 @@ const HariOperasionalList = () => {
 
         return (
           <div className="h-full flex items-center">
-            <button
-              onClick={() => !isDisabled && handleToggle(row)}
-              disabled={isDisabled}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                isActive ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-              role="switch"
-              aria-checked={isActive}
-              aria-label={`Toggle ${hariLabel}`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isActive ? 'translate-x-6' : 'translate-x-1'
+            <PermissionGuard permission="hari-operasional.edit">
+              <button
+                onClick={() => !isDisabled && handleToggle(row)}
+                disabled={isDisabled}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isActive ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
-              />
-            </button>
+                role="switch"
+                aria-checked={isActive}
+                aria-label={`Toggle ${hariLabel}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isActive ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </PermissionGuard>
           </div>
         )
       },

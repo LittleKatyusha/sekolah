@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import { forumService } from '../services/forumService'
@@ -165,10 +166,12 @@ const ForumForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission="forum.edit">
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

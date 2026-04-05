@@ -5,6 +5,7 @@ import '../../../utils/agGridModules'
 import { ArrowLeft, Save, RefreshCw, FileText, Users, BookOpen, GraduationCap, Award, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { nilaiService } from '../../nilai/services/nilaiService'
 import { showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
@@ -308,23 +309,25 @@ const UjianNilai = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Input Nilai Ujian</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={handleRefresh}
             disabled={saving}
           >
             <RefreshCw size={18} className="mr-2" />
             Refresh
           </Button>
-          <Button 
-            onClick={handleSave} 
-            variant={hasChanges ? 'primary' : 'secondary'}
-            loading={saving}
-            disabled={!hasChanges}
-          >
-            <Save size={18} className="mr-2" />
-            Simpan Perubahan
-          </Button>
+          <PermissionGuard permission="ujian.edit">
+            <Button
+              onClick={handleSave}
+              variant={hasChanges ? 'primary' : 'secondary'}
+              loading={saving}
+              disabled={!hasChanges}
+            >
+              <Save size={18} className="mr-2" />
+              Simpan Perubahan
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

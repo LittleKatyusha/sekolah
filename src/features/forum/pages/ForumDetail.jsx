@@ -4,6 +4,7 @@ import { ArrowLeft, Send, Loader2, Wifi, WifiOff, Edit2, Trash2, MessageSquare, 
 import DOMPurify from 'dompurify'
 import useNotificationStore from '../../../store/useNotificationStore'
 import useAuthStore from '../../../store/useAuthStore'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { forumService } from '../services/forumService'
 import { timeAgo, getInitials, getAvatarColor, stripHtml } from '../utils/forumHelpers'
 import ReplyCard from '../components/ReplyCard'
@@ -351,20 +352,24 @@ const ForumDetail = () => {
                         </div>
                         {isOwner && (
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleEditReply(reply)}
-                              className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                              title="Edit"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteReply(reply)}
-                              className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                              title="Hapus"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            <PermissionGuard permission="forum.edit">
+                              <button
+                                onClick={() => handleEditReply(reply)}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            </PermissionGuard>
+                            <PermissionGuard permission="forum.delete">
+                              <button
+                                onClick={() => handleDeleteReply(reply)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                title="Hapus"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </PermissionGuard>
                           </div>
                         )}
                       </div>
@@ -409,34 +414,36 @@ const ForumDetail = () => {
       </div>
 
       {/* Reply Composer */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Tulis Balasan</h3>
-        <LexicalEditor
-          value={replyText}
-          onChange={handleReplyChange}
-          placeholder="Tulis balasan Anda..."
-          minHeight="120px"
-        />
-        <div className="flex justify-end mt-3">
-          <button
-            onClick={handleSubmitReply}
-            disabled={submitting}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
-          >
-            {submitting ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Mengirim...
-              </>
-            ) : (
-              <>
-                <Send size={16} />
-                Kirim Balasan
-              </>
-            )}
-          </button>
+      <PermissionGuard permission="forum.create">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Tulis Balasan</h3>
+          <LexicalEditor
+            value={replyText}
+            onChange={handleReplyChange}
+            placeholder="Tulis balasan Anda..."
+            minHeight="120px"
+          />
+          <div className="flex justify-end mt-3">
+            <button
+              onClick={handleSubmitReply}
+              disabled={submitting}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  <Send size={16} />
+                  Kirim Balasan
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      </PermissionGuard>
     </div>
   )
 }

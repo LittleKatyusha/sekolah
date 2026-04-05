@@ -10,6 +10,7 @@ import { siswaService } from '../../siswa/services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const RankingForm = () => {
   const { id } = useParams()
@@ -262,10 +263,12 @@ const RankingForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/ranking')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'ranking.edit' : 'ranking.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { pendaftarService, dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const STATUS_MAP = {
   draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
@@ -125,26 +126,36 @@ const PendaftarDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Pendaftar</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={handleVerify}>
-            <ShieldCheck size={18} className="mr-2" />
-            Verifikasi
-          </Button>
-          <Button variant="primary" onClick={handleAccept}>
-            <CheckCircle size={18} className="mr-2" />
-            Terima
-          </Button>
-          <Button variant="danger" onClick={handleReject}>
-            <XCircle size={18} className="mr-2" />
-            Tolak
-          </Button>
-          <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftaran/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="ppdb.pendaftar.edit">
+            <Button variant="secondary" onClick={handleVerify}>
+              <ShieldCheck size={18} className="mr-2" />
+              Verifikasi
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.pendaftar.edit">
+            <Button variant="primary" onClick={handleAccept}>
+              <CheckCircle size={18} className="mr-2" />
+              Terima
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.pendaftar.edit">
+            <Button variant="danger" onClick={handleReject}>
+              <XCircle size={18} className="mr-2" />
+              Tolak
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.pendaftar.edit">
+            <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftaran/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.pendaftar.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

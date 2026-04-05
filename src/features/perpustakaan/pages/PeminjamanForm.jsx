@@ -8,6 +8,7 @@ import { siswaService } from '../../siswa/services/siswaService'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const PeminjamanForm = () => {
   const { id } = useParams()
@@ -339,10 +340,12 @@ const PeminjamanForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/perpustakaan/peminjaman')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'peminjaman.edit' : 'peminjaman.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

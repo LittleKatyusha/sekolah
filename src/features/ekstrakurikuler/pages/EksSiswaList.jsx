@@ -5,6 +5,7 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { eksSiswaService } from '../services/ekstrakurikulerService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -122,6 +123,9 @@ const EksSiswaList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
+            detailPermission="ekskul-siswa.view"
+            editPermission="ekskul-siswa.edit"
+            deletePermission="ekskul-siswa.delete"
           />
         </div>
       )
@@ -152,10 +156,12 @@ const EksSiswaList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/ekstrakurikuler/siswa/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Pendaftaran
-          </Button>
+          <PermissionGuard permission="ekskul-siswa.create">
+            <Button onClick={() => navigate('/ekstrakurikuler/siswa/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Pendaftaran
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

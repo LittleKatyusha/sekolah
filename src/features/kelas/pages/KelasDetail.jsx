@@ -5,6 +5,7 @@
  import '../../../utils/agGridModules'
  import Card from '../../../components/ui/Card'
  import Button from '../../../components/ui/Button'
+ import PermissionGuard from '../../../components/guards/PermissionGuard'
  import { kelasService } from '../services/kelasService'
  import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
  import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
@@ -143,16 +144,20 @@
            </Button>
            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Kelas</h1>
          </div>
-         <div className="flex gap-3">
-           <Button variant="warning" onClick={() => navigate(`/kelas/${id}/edit`)}>
-             <Edit size={18} className="mr-2" />
-             Edit
-           </Button>
-           <Button variant="danger" onClick={handleDelete}>
-             <Trash2 size={18} className="mr-2" />
-             Hapus
-           </Button>
-         </div>
+          <div className="flex gap-3">
+            <PermissionGuard permission="kelas.edit">
+              <Button variant="warning" onClick={() => navigate(`/kelas/${id}/edit`)}>
+                <Edit size={18} className="mr-2" />
+                Edit
+              </Button>
+            </PermissionGuard>
+            <PermissionGuard permission="kelas.delete">
+              <Button variant="danger" onClick={handleDelete}>
+                <Trash2 size={18} className="mr-2" />
+                Hapus
+              </Button>
+            </PermissionGuard>
+          </div>
        </div>
  
        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

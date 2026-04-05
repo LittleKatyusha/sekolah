@@ -4,6 +4,7 @@ import { ArrowLeft, Save, ChevronDown, X, Search } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kelasService } from '../services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import api from '../../../utils/api'
@@ -404,10 +405,12 @@ const KelasForm = () => {
             <Button type="button" variant="secondary" onClick={() => navigate('/kelas')}>
               Batal
             </Button>
-            <Button type="submit" disabled={loading}>
-              <Save size={18} className="mr-2" />
-              {loading ? 'Menyimpan...' : 'Simpan'}
-            </Button>
+            <PermissionGuard permission={isEditMode ? 'kelas.edit' : 'kelas.create'}>
+              <Button type="submit" disabled={loading}>
+                <Save size={18} className="mr-2" />
+                {loading ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </PermissionGuard>
           </div>
         </form>
         )}

@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { bkWaliService, bkKasusService } from '../services/bkService'
 import waliService from '../../wali/services/waliService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -13,6 +14,7 @@ const BkWaliForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
 
   const { options: peranOptions } = useReferenceOptions('peran_wali_bk')
 
@@ -255,10 +257,12 @@ const BkWaliForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/bk/wali')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={submitPermission}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

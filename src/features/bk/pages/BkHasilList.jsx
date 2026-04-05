@@ -5,6 +5,7 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { bkHasilService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -115,6 +116,9 @@ const BkHasilList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
+              detailPermission="bk.view"
+              editPermission="bk.edit"
+              deletePermission="bk.delete"
             />
           </div>
         )
@@ -156,10 +160,12 @@ const BkHasilList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/bk/hasil/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Hasil
-          </Button>
+          <PermissionGuard permission="bk.create">
+            <Button onClick={() => navigate('/bk/hasil/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Hasil
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

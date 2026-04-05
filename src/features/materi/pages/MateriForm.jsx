@@ -7,6 +7,7 @@ import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { materiService } from '../services/materiService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -365,10 +366,12 @@ const MateriForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/materi')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'materi.edit' : 'materi.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

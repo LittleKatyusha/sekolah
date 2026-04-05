@@ -5,6 +5,7 @@ import Button from '../../../components/ui/Button'
 import Card from '../../../components/ui/Card'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { normalizeIn, normalizeOut, tesMinatBakatResources } from '../config.jsx'
 import tesMinatBakatService from '../services/tesMinatBakatService'
 import { showError, showSuccess } from '../../../utils/sweetalert'
@@ -462,10 +463,12 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
             <Button type="button" variant="secondary" onClick={() => navigate(resource.basePath)}>
               Batal
             </Button>
-            <Button type="submit" loading={loading}>
-              <Save size={18} className="mr-2" />
-              Simpan
-            </Button>
+            <PermissionGuard permission={isEditMode ? 'tes-minat-bakat.edit' : 'tes-minat-bakat.create'}>
+              <Button type="submit" loading={loading}>
+                <Save size={18} className="mr-2" />
+                Simpan
+              </Button>
+            </PermissionGuard>
           </div>
         </form>
       </Card>

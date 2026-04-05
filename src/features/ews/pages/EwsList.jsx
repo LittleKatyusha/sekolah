@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../../siswa/services/siswaService'
 import { ewsService } from '../services/ewsService'
 import { showConfirm, showError, showSuccess } from '../../../utils/sweetalert'
@@ -312,10 +313,12 @@ const EwsList = () => {
             <RefreshCw size={18} className="mr-2" />
             Refresh
           </Button>
-          <Button onClick={handleTriggerSelected} disabled={!filters.mst_siswa_id || submitting} loading={submitting}>
-            <Zap size={18} className="mr-2" />
-            Trigger Siswa
-          </Button>
+          <PermissionGuard permission="ews.create">
+            <Button onClick={handleTriggerSelected} disabled={!filters.mst_siswa_id || submitting} loading={submitting}>
+              <Zap size={18} className="mr-2" />
+              Trigger Siswa
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -485,22 +488,26 @@ const EwsList = () => {
                         <Eye size={18} className="mr-2" />
                         Detail
                       </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleTrigger(alert.mst_siswa_id, getSiswaLabel(alert))}
-                        disabled={submitting || !alert.mst_siswa_id}
-                      >
-                        <Zap size={18} className="mr-2" />
-                        Trigger Ulang
-                      </Button>
-                      <Button
-                        variant={alert.is_resolved ? 'success' : 'primary'}
-                        onClick={() => handleResolve(alert)}
-                        disabled={submitting || alert.is_resolved}
-                      >
-                        <CheckCircle2 size={18} className="mr-2" />
-                        {alert.is_resolved ? 'Sudah Resolved' : 'Resolve'}
-                      </Button>
+                      <PermissionGuard permission="ews.edit">
+                        <Button
+                          variant="outline"
+                          onClick={() => handleTrigger(alert.mst_siswa_id, getSiswaLabel(alert))}
+                          disabled={submitting || !alert.mst_siswa_id}
+                        >
+                          <Zap size={18} className="mr-2" />
+                          Trigger Ulang
+                        </Button>
+                      </PermissionGuard>
+                      <PermissionGuard permission="ews.edit">
+                        <Button
+                          variant={alert.is_resolved ? 'success' : 'primary'}
+                          onClick={() => handleResolve(alert)}
+                          disabled={submitting || alert.is_resolved}
+                        >
+                          <CheckCircle2 size={18} className="mr-2" />
+                          {alert.is_resolved ? 'Sudah Resolved' : 'Resolve'}
+                        </Button>
+                      </PermissionGuard>
                     </div>
                   </div>
                 </div>

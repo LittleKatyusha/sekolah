@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Upload, Trash2, Download, File, Image, FileText, Film, Music, Archive, X, CheckCircle, AlertCircle } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { fileUploadService } from '../../../services/fileUploadService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -93,16 +94,18 @@ const FileUploadPage = () => {
       <Card>
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upload File</h2>
-          <div
-            onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${dragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-          >
-            <Upload size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Drag & drop file di sini</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">atau klik untuk memilih file</p>
-            <input ref={fileInputRef} type="file" multiple onChange={(e) => handleFiles(e.target.files)} className="hidden" />
-          </div>
+          <PermissionGuard permission="files.create">
+            <div
+              onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${dragActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            >
+              <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Drag & drop file di sini</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">atau klik untuk memilih file</p>
+              <input ref={fileInputRef} type="file" multiple onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+            </div>
+          </PermissionGuard>
 
           {/* Uploaded Files List */}
           {uploadedFiles.length > 0 && (
@@ -123,9 +126,17 @@ const FileUploadPage = () => {
                       {file.status === 'uploading' && <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>}
                       {file.status === 'success' && <CheckCircle size={20} className="text-green-500" />}
                       {file.status === 'error' && <AlertCircle size={20} className="text-red-500" />}
-                      <button onClick={() => file.status === 'success' ? handleDeleteFile(file) : removeFromList(file.id)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
-                        {file.status === 'success' ? <Trash2 size={16} className="text-red-500" /> : <X size={16} className="text-gray-400" />}
-                      </button>
+                      {file.status === 'success' ? (
+                        <PermissionGuard permission="files.delete">
+                          <button onClick={() => handleDeleteFile(file)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
+                            <Trash2 size={16} className="text-red-500" />
+                          </button>
+                        </PermissionGuard>
+                      ) : (
+                        <button onClick={() => removeFromList(file.id)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
+                          <X size={16} className="text-gray-400" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
@@ -165,7 +176,9 @@ const FileUploadPage = () => {
               <input type="text" value={deletePath} onChange={(e) => setDeletePath(e.target.value)}
                 placeholder="Path file yang akan dihapus"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none" />
-              <Button onClick={handleDeleteByPath} disabled={!deletePath.trim()} variant="danger"><Trash2 size={18} className="mr-2" /> Hapus File</Button>
+              <PermissionGuard permission="files.delete">
+                <Button onClick={handleDeleteByPath} disabled={!deletePath.trim()} variant="danger"><Trash2 size={18} className="mr-2" /> Hapus File</Button>
+              </PermissionGuard>
             </div>
           </div>
         </Card>

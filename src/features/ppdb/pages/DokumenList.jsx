@@ -7,6 +7,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
   const [open, setOpen] = useState(false)
@@ -36,15 +37,21 @@ const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
       {open && createPortal(
         <div style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999 }}
           className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 min-w-[160px]">
-          <button onClick={() => { onView(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Eye size={14} /> Lihat
-          </button>
-          <button onClick={() => { onEdit(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Edit size={14} /> Edit
-          </button>
-          <button onClick={() => { onDelete(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Trash2 size={14} /> Hapus
-          </button>
+          <PermissionGuard permission="ppdb.dokumen.view">
+            <button onClick={() => { onView(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Eye size={14} /> Lihat
+            </button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.dokumen.edit">
+            <button onClick={() => { onEdit(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Edit size={14} /> Edit
+            </button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.dokumen.delete">
+            <button onClick={() => { onDelete(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Trash2 size={14} /> Hapus
+            </button>
+          </PermissionGuard>
         </div>,
         document.body
       )}
@@ -151,10 +158,12 @@ const DokumenList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/ppdb/dokumen/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Dokumen
-          </Button>
+          <PermissionGuard permission="ppdb.dokumen.create">
+            <Button onClick={() => navigate('/ppdb/dokumen/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Dokumen
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

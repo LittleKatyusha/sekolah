@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, User, Calendar, Clock, BookOpen, FileText } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { presensiService } from '../services/presensiService'
 import { showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
@@ -108,10 +109,12 @@ const PresensiDetail = () => {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Presensi</h1>
         </div>
-        <Button onClick={() => navigate(`/akademik/presensi/edit/${id}`)}>
-          <Edit size={18} className="mr-2" />
-          Edit
-        </Button>
+        <PermissionGuard permission="presensi.edit">
+          <Button onClick={() => navigate(`/akademik/presensi/edit/${id}`)}>
+            <Edit size={18} className="mr-2" />
+            Edit
+          </Button>
+        </PermissionGuard>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
