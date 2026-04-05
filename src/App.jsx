@@ -353,6 +353,7 @@ function App() {
               <Route path="/files" element={<Files />} />
 
               {/* WAHA */}
+              <Route path="/waha" element={<Navigate to="/waha/session" replace />} />
               <Route path="/waha/*" element={<Waha />} />
 
               {/* BK Module */}
