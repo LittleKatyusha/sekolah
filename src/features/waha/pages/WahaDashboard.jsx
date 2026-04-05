@@ -192,8 +192,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   }, [handleApiAction])
 
   useEffect(() => {
-    loadSessionStatus()
-    loadQrCode()
+    loadSessionStatus().then((sessionData) => {
+      // Only fetch QR when session is not already connected
+      if (!sessionData || sessionData.status !== 'WORKING') {
+        loadQrCode()
+      }
+    })
   }, [loadQrCode, loadSessionStatus])
 
   const handleStartSession = async () => {
