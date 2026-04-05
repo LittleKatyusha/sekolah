@@ -5,6 +5,13 @@ import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { showSoal } from '../services/soalService';
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert';
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions';
+
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
+}
 
 const SoalDetail = () => {
   const { id } = useParams();
@@ -13,6 +20,8 @@ const SoalDetail = () => {
   const [loading, setLoading] = useState(true);
   const [soal, setSoal] = useState(null);
   const [error, setError] = useState(null);
+  const { options: tipeSoalOptions } = useReferenceOptions('tipe_soal');
+  const { options: tingkatKesulitanOptions } = useReferenceOptions('tingkat_kesulitan');
 
   useEffect(() => {
     fetchSoal();
@@ -49,23 +58,6 @@ const SoalDetail = () => {
     }
   };
 
-  const getTipeLabel = (tipe) => {
-    const tipeMap = {
-      1: 'Pilihan Ganda',
-      2: 'Essay',
-      3: 'Isian Singkat'
-    };
-    return tipeMap[tipe] || 'Tipe Tidak Diketahui';
-  };
-
-  const getKesulitanLabel = (tingkat) => {
-    const tingkatMap = {
-      1: 'Mudah',
-      2: 'Sedang',
-      3: 'Sulit'
-    };
-    return tingkatMap[tingkat] || tingkat;
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -147,7 +139,7 @@ const SoalDetail = () => {
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Tipe Soal</p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {getTipeLabel(soal.tipe)}
+                    {getLabel(soal.tipe, tipeSoalOptions)}
                   </p>
                 </div>
                 
@@ -170,7 +162,7 @@ const SoalDetail = () => {
                         : 'text-gray-300 dark:text-gray-600'
                     }`} />
                     <span className="font-medium text-gray-900 dark:text-white ml-1">
-                      ({getKesulitanLabel(soal.tingkat_kesulitan)})
+                      ({getLabel(soal.tingkat_kesulitan, tingkatKesulitanOptions)})
                     </span>
                   </div>
                 </div>

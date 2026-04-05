@@ -34,12 +34,7 @@ const AbsensiSiswaForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
 
-  const { options: statusOptions, loading: fetchingStatus } = useReferenceOptions('status_presensi', [
-    { value: '1', label: 'Hadir' },
-    { value: '2', label: 'Sakit' },
-    { value: '3', label: 'Izin' },
-    { value: '4', label: 'Alpha' },
-  ])
+  const { options: statusOptions, loading: fetchingStatus } = useReferenceOptions('status_absensi')
 
   const [formData, setFormData] = useState({
     mst_siswa_id: '',

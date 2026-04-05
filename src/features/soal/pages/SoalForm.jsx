@@ -10,19 +10,8 @@ import '../../../components/ui/LexicalEditor.css'
 import { showSoal, storeSoal, updateSoal } from '../services/soalService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { ujianService } from '../../ujian/services/ujianService'
-import { referenceService } from '../../../services/referenceService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const TIPE_SOAL_FALLBACK = [
-  { value: '1', label: 'Pilihan Ganda' },
-  { value: '2', label: 'Essay' }
-]
-
-const TINGKAT_KESULITAN_FALLBACK = [
-  { value: '1', label: 'Mudah' },
-  { value: '2', label: 'Sedang' },
-  { value: '3', label: 'Sulit' }
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const SoalForm = () => {
   const { id } = useParams()
@@ -33,8 +22,8 @@ const SoalForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
   const [selectedMapelOption, setSelectedMapelOption] = useState(null)
   const [selectedUjianOption, setSelectedUjianOption] = useState(null)
-  const [tipeSoalOptions, setTipeSoalOptions] = useState(TIPE_SOAL_FALLBACK)
-  const [tingkatKesulitanOptions, setTingkatKesulitanOptions] = useState(TINGKAT_KESULITAN_FALLBACK)
+  const { options: tipeSoalOptions } = useReferenceOptions('tipe_soal')
+  const { options: tingkatKesulitanOptions } = useReferenceOptions('tingkat_kesulitan')
   
   const [formData, setFormData] = useState({
     pertanyaan: '',
@@ -62,9 +51,6 @@ const SoalForm = () => {
   }), [])
 
   useEffect(() => {
-    fetchTipeSoalOptions()
-    fetchTingkatKesulitanOptions()
-
     if (isEditMode) {
       fetchSoal()
     }
@@ -108,44 +94,6 @@ const SoalForm = () => {
       return []
     }
   }, [buildUjianOption])
-
-  const fetchTipeSoalOptions = async () => {
-    try {
-      const { data, error } = await referenceService.getReferencesByCategory('tipe_soal')
-      if (data && data.data) {
-        const refs = Array.isArray(data.data) ? data.data : []
-        if (refs.length > 0) {
-          setTipeSoalOptions(refs.map(ref => ({
-            value: String(ref.value ?? ref.id),
-            label: ref.label ?? ref.nama ?? ref.name ?? String(ref.value ?? ref.id)
-          })))
-        }
-      } else {
-        console.error('Failed to fetch tipe_soal references:', error)
-      }
-    } catch (err) {
-      console.error('Error fetching tipe_soal options:', err)
-    }
-  }
-
-  const fetchTingkatKesulitanOptions = async () => {
-    try {
-      const { data, error } = await referenceService.getReferencesByCategory('tingkat_kesulitan')
-      if (data && data.data) {
-        const refs = Array.isArray(data.data) ? data.data : []
-        if (refs.length > 0) {
-          setTingkatKesulitanOptions(refs.map(ref => ({
-            value: String(ref.value ?? ref.id),
-            label: ref.label ?? ref.nama ?? ref.name ?? String(ref.value ?? ref.id)
-          })))
-        }
-      } else {
-        console.error('Failed to fetch tingkat_kesulitan references:', error)
-      }
-    } catch (err) {
-      console.error('Error fetching tingkat_kesulitan options:', err)
-    }
-  }
 
   const fetchSoal = async () => {
     setFetchingData(true)

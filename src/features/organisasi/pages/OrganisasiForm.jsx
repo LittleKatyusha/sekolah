@@ -5,16 +5,13 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { organisasiService } from '../services/organisasiService'
 import { guruService } from '../../guru/services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
-const STATUS_OPTIONS = [
-  { value: 'aktif', label: 'Aktif' },
-  { value: 'nonaktif', label: 'Nonaktif' },
-]
-
 const OrganisasiForm = () => {
+  const { options: statusOptions } = useReferenceOptions('status_organisasi')
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
@@ -216,7 +213,7 @@ const OrganisasiForm = () => {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  options={STATUS_OPTIONS}
+                  options={statusOptions}
                   placeholder="Pilih status"
                   error={errors.status}
                 />

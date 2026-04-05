@@ -8,13 +8,15 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { rankingService } from '../services/rankingService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
-import { referenceService } from '../../../services/referenceService'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const RankingForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -31,7 +33,6 @@ const RankingForm = () => {
   const [errors, setErrors] = useState({})
   const [siswaOptions, setSiswaOptions] = useState([])
   const [kelasOptions, setKelasOptions] = useState([])
-  const [semesterOptions, setSemesterOptions] = useState([])
 
   useEffect(() => {
     fetchOptions()
@@ -58,22 +59,6 @@ const RankingForm = () => {
         value: String(k.id),
         label: k.nama_kelas
       })))
-    }
-
-    // Try to fetch semester options from reference service
-    try {
-      const semesterResult = await referenceService.getReferencesByCategory('kategori_semester')
-      if (semesterResult.data?.data) {
-        setSemesterOptions(semesterResult.data.data.map(s => ({
-          value: String(s.kode),
-          label: s.nama
-        })))
-      }
-    } catch {
-      setSemesterOptions([
-        { value: '1', label: 'Semester 1' },
-        { value: '2', label: 'Semester 2' }
-      ])
     }
   }
 

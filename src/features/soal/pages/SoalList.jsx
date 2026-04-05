@@ -7,6 +7,19 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { deleteSoal } from '../services/soalService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
+}
+
+const getTingkatKesulitanColorClass = (value) => {
+  if (value === '3' || value === 3) return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+  if (value === '2' || value === 2) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+  return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+}
 
 // Actions Menu Component
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
@@ -105,6 +118,8 @@ const SoalList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const { options: tipeSoalOptions } = useReferenceOptions('tipe_soal')
+  const { options: tingkatKesulitanOptions } = useReferenceOptions('tingkat_kesulitan')
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -135,28 +150,6 @@ const SoalList = () => {
       }
     }
   }, [])
-
-  const getTipeLabel = (value) => {
-    if (!value) return '-'
-    const tipeMap = {
-      1: 'Pilihan Ganda',
-      2: 'Essay',
-      3: 'Isian Singkat',
-      4: 'Menjodohkan',
-      5: 'Benar/Salah'
-    }
-    return tipeMap[value] || value
-  }
-
-  const getTingkatKesulitanLabel = (value) => {
-    if (!value) return '-'
-    const tingkatMap = {
-      1: 'Mudah',
-      2: 'Sedang',
-      3: 'Sulit'
-    }
-    return tingkatMap[value] || value
-  }
 
   const columnDefs = useMemo(() => [
     {
@@ -190,8 +183,7 @@ const SoalList = () => {
       width: 160,
       minWidth: 140,
       cellRenderer: (params) => {
-        const tipe = params.value
-        const label = getTipeLabel(tipe)
+        const label = getLabel(params.value, tipeSoalOptions)
         return (
           <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
             {label}
@@ -208,16 +200,8 @@ const SoalList = () => {
       width: 160,
       minWidth: 140,
       cellRenderer: (params) => {
-        const tingkat = params.value
-        const label = getTingkatKesulitanLabel(tingkat)
-        let colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-
-        if (tingkat === 2) {
-          colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-        } else if (tingkat === 3) {
-          colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-        }
-
+        const label = getLabel(params.value, tingkatKesulitanOptions)
+        const colorClass = getTingkatKesulitanColorClass(params.value)
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
             {label}
@@ -256,7 +240,7 @@ const SoalList = () => {
         )
       }
     }
-  ], [handleDelete, handleDetail, handleEdit])
+  ], [handleDelete, handleDetail, handleEdit, tipeSoalOptions, tingkatKesulitanOptions])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

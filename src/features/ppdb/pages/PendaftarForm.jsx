@@ -19,10 +19,7 @@ const STATUS_OPTIONS = [
 ]
 
 const PendaftarForm = () => {
-  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin', [
-    { value: 'L', label: 'Laki-laki' },
-    { value: 'P', label: 'Perempuan' },
-  ])
+  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id

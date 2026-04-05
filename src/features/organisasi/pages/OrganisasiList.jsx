@@ -5,12 +5,20 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { organisasiService } from '../services/organisasiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-const STATUS_MAP = {
-  aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  nonaktif: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+const getLabel = (value, options) => {
+  if (!value) return '-'
+  const opt = options.find(o => o.value === String(value))
+  return opt ? opt.label : value
+}
+
+const getStatusColorClass = (value) => {
+  const lower = String(value ?? '').toLowerCase()
+  if (lower === 'aktif') return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+  return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
 
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
@@ -101,6 +109,7 @@ const OrganisasiList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const { options: statusOptions } = useReferenceOptions('status_organisasi')
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -192,10 +201,9 @@ const OrganisasiList = () => {
       cellRenderer: (params) => {
         const status = params.value
         if (!status) return '-'
-        const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-            {statusInfo.label}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClass(status)}`}>
+            {getLabel(status, statusOptions)}
           </span>
         )
       }

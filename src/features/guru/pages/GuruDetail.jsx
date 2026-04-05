@@ -5,11 +5,20 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { guruService } from '../services/guruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+
+const getLabel = (value, options) => {
+  if (!value) return '-'
+  const opt = options.find(o => o.value === String(value))
+  return opt ? opt.label : value
+}
 
 const GuruDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   
+  const { options: jkOptions } = useReferenceOptions('jenis_kelamin')
+  const { options: pendidikanOptions } = useReferenceOptions('pendidikan_terakhir')
   const [loading, setLoading] = useState(false)
   const [guru, setGuru] = useState(null)
 
@@ -42,26 +51,9 @@ const GuruDetail = () => {
     }
   }
 
-  const getJenisKelaminLabel = (value) => {
-    if (!value) return '-'
-    const jkMap = {
-      1: 'Laki-Laki',
-      2: 'Perempuan',
-    }
-    return jkMap[value] || value
-  }
+  const getJenisKelaminLabel = (value) => getLabel(value, jkOptions)
 
-  const getPendidikanLabel = (value) => {
-    if (!value) return '-'
-    const pendidikanMap = {
-      1: 'S1',
-      2: 'S2',
-      3: 'S3',
-      4: 'D3',
-      5: 'D4',
-    }
-    return pendidikanMap[value] || value
-  }
+  const getPendidikanLabel = (value) => getLabel(value, pendidikanOptions)
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'

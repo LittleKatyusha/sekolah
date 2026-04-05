@@ -7,16 +7,26 @@
  import Button from '../../../components/ui/Button'
  import { kelasService } from '../services/kelasService'
  import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+ import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+ 
+ const getLabel = (value, options) => {
+   if (!value) return '-'
+   const opt = options.find(o => o.value === String(value))
+   return opt ? opt.label : value
+ }
  
  const KelasDetail = () => {
-   const { id } = useParams()
-   const navigate = useNavigate()
+    const { id } = useParams()
+    const navigate = useNavigate()
  
-   const [loading, setLoading] = useState(false)
-   const [kelas, setKelas] = useState(null)
-   const [siswaList, setSiswaList] = useState([])
-   const [loadingSiswa, setLoadingSiswa] = useState(false)
-   const [siswaError, setSiswaError] = useState(null)
+    const { options: jkOptions } = useReferenceOptions('jenis_kelamin')
+    const { options: statusSiswaOptions } = useReferenceOptions('status_siswa')
+ 
+    const [loading, setLoading] = useState(false)
+    const [kelas, setKelas] = useState(null)
+    const [siswaList, setSiswaList] = useState([])
+    const [loadingSiswa, setLoadingSiswa] = useState(false)
+    const [siswaError, setSiswaError] = useState(null)
  
    useEffect(() => {
      fetchKelas()
@@ -82,12 +92,7 @@
        sortable: true,
        filter: true,
        width: 140,
-       cellRenderer: (params) => {
-         const jk = params.value
-         if (jk === 'L' || jk === 'laki-laki' || jk === 'Laki-laki') return 'Laki-laki'
-         if (jk === 'P' || jk === 'perempuan' || jk === 'Perempuan') return 'Perempuan'
-         return jk || '-'
-       }
+       cellRenderer: (params) => getLabel(params.value, jkOptions)
      },
      {
        field: 'status',
@@ -97,32 +102,23 @@
        width: 120,
        cellRenderer: (params) => {
          const rawStatus = params.value ?? params.data?.status_siswa
+         const label = getLabel(rawStatus, statusSiswaOptions)
+
          let colorClass = 'bg-gray-100 text-gray-800'
-         let displayStatus = 'Tidak diketahui'
- 
-         // Handle numeric status (1 = aktif, 0 = non-aktif/tidak aktif)
-         if (rawStatus === 1 || rawStatus === '1' || rawStatus === 'aktif') {
-           displayStatus = 'Aktif'
+         const lower = String(rawStatus ?? '').toLowerCase()
+         if (lower === 'aktif') {
            colorClass = 'bg-green-100 text-green-800'
-         } else if (rawStatus === 0 || rawStatus === '0' || rawStatus === 'non-aktif' || rawStatus === 'tidak aktif') {
-           displayStatus = 'Tidak Aktif'
-           colorClass = 'bg-red-100 text-red-800'
-         } else if (rawStatus === 'lulus') {
-           displayStatus = 'Lulus'
+         } else if (lower === 'lulus') {
            colorClass = 'bg-blue-100 text-blue-800'
-         } else if (rawStatus === 'keluar') {
-           displayStatus = 'Keluar'
-           colorClass = 'bg-red-100 text-red-800'
-         } else if (rawStatus === 'pindah') {
-           displayStatus = 'Pindah'
+         } else if (lower === 'pindah') {
            colorClass = 'bg-yellow-100 text-yellow-800'
-         } else if (rawStatus !== undefined && rawStatus !== null) {
-           displayStatus = String(rawStatus)
+         } else if (lower === 'keluar' || lower === 'tidak aktif' || lower === 'non-aktif') {
+           colorClass = 'bg-red-100 text-red-800'
          }
- 
+
          return (
            <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-             {displayStatus}
+             {label}
            </span>
          )
        }

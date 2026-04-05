@@ -33,9 +33,8 @@ const downloadTemplate = () => {
     const cellAddr = XLSX.utils.encode_cell({ r: 0, c: colIdx })
     if (!ws[cellAddr]) return
     ws[cellAddr].s = {
-      font: { bold: true },
-      fill: { fgColor: { rgb: '4472C4' } },
       font: { bold: true, color: { rgb: 'FFFFFF' } },
+      fill: { fgColor: { rgb: '4472C4' } },
     }
   })
 

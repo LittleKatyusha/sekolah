@@ -6,9 +6,16 @@ import Button from '../../../components/ui/Button'
 import { presensiService } from '../services/presensiService'
 import { showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
+}
 
 // Status Badge Component
-const StatusBadge = ({ statusLabel }) => {
+const StatusBadge = ({ statusValue, statusLabel, statusOptions }) => {
   const statusConfig = {
     'Hadir': {
       className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -24,19 +31,21 @@ const StatusBadge = ({ statusLabel }) => {
     }
   }
 
-  const config = statusConfig[statusLabel] || {
+  const label = statusLabel || getLabel(statusValue, statusOptions)
+  const config = statusConfig[label] || {
     className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
   }
 
   return (
     <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.className}`}>
-      {statusLabel || '-'}
+      {label || '-'}
     </span>
   )
 }
 
 const PresensiDetail = () => {
   usePageTitle()
+  const { options: statusAbsensiOptions } = useReferenceOptions('status_absensi')
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -119,7 +128,7 @@ const PresensiDetail = () => {
               <p className="text-gray-500 dark:text-gray-400 mb-2">NIS: {presensi.siswa?.nis || '-'}</p>
 
               <div className="mt-4">
-                <StatusBadge statusLabel={presensi.status_label} />
+                <StatusBadge statusLabel={presensi.status_label} statusOptions={statusAbsensiOptions} />
               </div>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
@@ -168,7 +177,7 @@ const PresensiDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Status Presensi</p>
                     <div className="mt-1">
-                      <StatusBadge statusLabel={presensi.status_label} />
+                      <StatusBadge statusLabel={presensi.status_label} statusOptions={statusAbsensiOptions} />
                     </div>
                   </div>
                 </div>

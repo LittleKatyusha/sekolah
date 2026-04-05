@@ -7,12 +7,21 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
-const STATUS_MAP = {
-  1: { label: 'Belum Bayar', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  2: { label: 'Lunas', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  3: { label: 'Cicilan', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  4: { label: 'Dispensasi', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
+}
+
+const getStatusColorClass = (value) => {
+  const v = String(value)
+  if (v === '2' || v === 'lunas') return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+  if (v === '1' || v === 'belum_lunas' || v === 'belum bayar') return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+  if (v === '3' || v === 'pending') return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+  if (v === '4' || v === 'batal') return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
 
 const BULAN_MAP = {
@@ -109,6 +118,8 @@ const PembayaranSppList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [searchText, setSearchText] = useState('')
+  const { options: statusBayarOptions } = useReferenceOptions('status_bayar')
+  const { options: metodePembayaranOptions } = useReferenceOptions('metode_pembayaran')
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -221,10 +232,11 @@ const PembayaranSppList = () => {
       cellRenderer: (params) => {
         const status = params.value
         if (status === null || status === undefined) return '-'
-        const statusInfo = STATUS_MAP[status] || { label: String(status), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+        const label = getLabel(status, statusBayarOptions)
+        const bg = getStatusColorClass(status)
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-            {statusInfo.label}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${bg}`}>
+            {label}
           </span>
         )
       }
@@ -237,7 +249,7 @@ const PembayaranSppList = () => {
       filter: false,
       width: 130,
       minWidth: 110,
-      cellRenderer: (params) => params.value || '-'
+      cellRenderer: (params) => getLabel(params.value, metodePembayaranOptions)
     },
     {
       headerName: 'Aksi',
@@ -258,7 +270,7 @@ const PembayaranSppList = () => {
         </div>
       )
     }
-  ], [handleDelete, handleDetail, handleEdit])
+  ], [handleDelete, handleDetail, handleEdit, statusBayarOptions, metodePembayaranOptions])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

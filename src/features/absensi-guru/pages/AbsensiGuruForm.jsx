@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
@@ -15,14 +15,7 @@ const AbsensiGuruForm = () => {
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const defaultStatusOptions = useMemo(() => [
-    { value: '1', label: 'Hadir' },
-    { value: '2', label: 'Sakit' },
-    { value: '3', label: 'Izin' },
-    { value: '4', label: 'Alpha' },
-  ], [])
-
-  const { options: statusOptions } = useReferenceOptions('status_presensi', defaultStatusOptions)
+  const { options: statusOptions } = useReferenceOptions('status_absensi')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)

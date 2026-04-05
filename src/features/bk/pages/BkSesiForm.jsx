@@ -6,19 +6,14 @@ import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { bkSesiService, bkKasusService } from '../services/bkService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const metodeOptions = [
-  { value: '', label: 'Pilih Metode' },
-  { value: 1, label: 'Konseling Individual' },
-  { value: 2, label: 'Konseling Kelompok' },
-  { value: 3, label: 'Mediasi' },
-  { value: 4, label: 'Kunjungan Rumah' },
-]
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const BkSesiForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+
+  const { options: metodeOptions } = useReferenceOptions('metode_bk')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)

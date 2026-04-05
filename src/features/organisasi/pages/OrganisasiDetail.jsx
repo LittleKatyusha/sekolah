@@ -3,18 +3,27 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Building2, User, Calendar, Hash, Users, Briefcase } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { organisasiService, anggotaService } from '../services/organisasiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-const STATUS_MAP = {
-  aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  nonaktif: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+const getLabel = (value, options) => {
+  if (!value) return '-'
+  const opt = options.find(o => o.value === String(value))
+  return opt ? opt.label : value
+}
+
+const getStatusColorClass = (value) => {
+  const lower = String(value ?? '').toLowerCase()
+  if (lower === 'aktif') return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+  return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
 }
 
 const OrganisasiDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
 
+  const { options: statusOptions } = useReferenceOptions('status_organisasi')
   const [loading, setLoading] = useState(false)
   const [organisasi, setOrganisasi] = useState(null)
   const [anggotaList, setAnggotaList] = useState([])
@@ -69,10 +78,9 @@ const OrganisasiDetail = () => {
 
   const getStatusBadge = (status) => {
     if (!status) return '-'
-    const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-        {statusInfo.label}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClass(status)}`}>
+        {getLabel(status, statusOptions)}
       </span>
     )
   }

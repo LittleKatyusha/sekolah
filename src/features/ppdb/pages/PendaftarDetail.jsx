@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { pendaftarService, dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const STATUS_MAP = {
   draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
@@ -15,9 +16,14 @@ const STATUS_MAP = {
   ditolak: { label: 'Ditolak', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
-const GENDER_MAP = { L: 'Laki-laki', P: 'Perempuan' }
+const getLabel = (value, options) => {
+  if (!value || !options?.length) return value ?? '-'
+  const opt = options.find(o => o.value === String(value) || o.value === value)
+  return opt ? opt.label : value
+}
 
 const PendaftarDetail = () => {
+  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -163,7 +169,7 @@ const PendaftarDetail = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400">JK</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{GENDER_MAP[pendaftar.jenis_kelamin] || '-'}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{getLabel(pendaftar.jenis_kelamin, jenisKelaminOptions)}</span>
                 </div>
               </div>
             </div>
