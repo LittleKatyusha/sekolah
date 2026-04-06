@@ -5,6 +5,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { pembayaranSppService, tarifSppService } from '../services/sppService'
 import { siswaService } from '../../siswa/services/siswaService'
@@ -368,10 +369,12 @@ const PembayaranSppForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/keuangan/pembayaran-spp')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'pembayaran-spp.edit' : 'pembayaran-spp.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

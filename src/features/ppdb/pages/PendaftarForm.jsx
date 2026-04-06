@@ -8,6 +8,7 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { pendaftarService, gelombangService } from '../services/ppdbService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
@@ -243,10 +244,12 @@ const PendaftarForm = () => {
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button type="button" variant="secondary" onClick={() => navigate('/ppdb/pendaftaran')}>Batal</Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'ppdb.pendaftar.edit' : 'ppdb.pendaftar.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

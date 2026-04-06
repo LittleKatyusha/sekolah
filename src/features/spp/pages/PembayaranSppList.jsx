@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
@@ -30,7 +31,7 @@ const BULAN_MAP = {
   9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
 }
 
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -84,28 +85,34 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
           style={{ top: `${position.top}px`, left: `${position.left}px` }}
         >
           <div className="py-1">
-            <button
-              onClick={() => handleAction(onDetail)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
-            <button
-              onClick={() => handleAction(onEdit)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit size={16} className="text-yellow-600" />
-              Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button
-              onClick={() => handleAction(onDelete)}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-            >
-              <Trash2 size={16} />
-              Hapus
-            </button>
+            <PermissionGuard permission={detailPermission}>
+              <button
+                onClick={() => handleAction(onDetail)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Eye size={16} className="text-blue-600" />
+                Detail
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission={editPermission}>
+              <button
+                onClick={() => handleAction(onEdit)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Edit size={16} className="text-yellow-600" />
+                Edit
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission={deletePermission}>
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+              <button
+                onClick={() => handleAction(onDelete)}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Hapus
+              </button>
+            </PermissionGuard>
           </div>
         </div>,
         document.body
@@ -266,6 +273,9 @@ const PembayaranSppList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
+            detailPermission="pembayaran-spp.view"
+            editPermission="pembayaran-spp.edit"
+            deletePermission="pembayaran-spp.delete"
           />
         </div>
       )
@@ -296,14 +306,18 @@ const PembayaranSppList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button variant="secondary" onClick={() => navigate('/keuangan/pembayaran-spp/tunggakan')}>
-            <AlertTriangle size={18} className="mr-2 text-orange-500" />
-            Rekap Tunggakan
-          </Button>
-          <Button onClick={() => navigate('/keuangan/pembayaran-spp/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Pembayaran
-          </Button>
+          <PermissionGuard permission="pembayaran-spp.view">
+            <Button variant="secondary" onClick={() => navigate('/keuangan/pembayaran-spp/tunggakan')}>
+              <AlertTriangle size={18} className="mr-2 text-orange-500" />
+              Rekap Tunggakan
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="pembayaran-spp.create">
+            <Button onClick={() => navigate('/keuangan/pembayaran-spp/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Pembayaran
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

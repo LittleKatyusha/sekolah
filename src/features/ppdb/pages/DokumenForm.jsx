@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import { dokumenService } from '../services/ppdbService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const DokumenForm = () => {
   const { id } = useParams()
@@ -200,10 +201,12 @@ const DokumenForm = () => {
             <Button variant="secondary" type="button" onClick={() => navigate('/ppdb/dokumen')}>
               Batal
             </Button>
-            <Button type="submit" disabled={saving}>
-              <Save size={18} className="mr-2" />
-              {saving ? 'Menyimpan...' : 'Simpan'}
-            </Button>
+            <PermissionGuard permission={isEdit ? 'ppdb.dokumen.edit' : 'ppdb.dokumen.create'}>
+              <Button type="submit" disabled={saving}>
+                <Save size={18} className="mr-2" />
+                {saving ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </PermissionGuard>
           </div>
         </form>
       </Card>

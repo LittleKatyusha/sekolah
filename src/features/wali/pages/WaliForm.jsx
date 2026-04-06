@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import PermissionGuard from '../../../components/guards/PermissionGuard';
 import { waliService } from '../services/waliService';
 import referenceService from '../../../services/referenceService';
 import { showSuccess, showError } from '../../../utils/sweetalert';
@@ -337,10 +338,12 @@ const WaliForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/wali')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'wali.edit' : 'wali.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

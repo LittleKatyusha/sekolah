@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
@@ -404,10 +405,12 @@ const UjianForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/ujian')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'ujian.edit' : 'ujian.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

@@ -4,6 +4,7 @@ import { ArrowLeft, Search, CreditCard, AlertCircle, CheckSquare, Square } from 
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { pembayaranSppService, tarifSppService } from '../services/sppService'
 import { siswaService } from '../../siswa/services/siswaService'
@@ -294,23 +295,25 @@ const PembayaranSppTunggakan = () => {
                 )}
               </h3>
               {tunggakan.length > 0 && selectedBulan.length > 0 && (
-                <Button
-                  onClick={handleBayarMultiple}
-                  disabled={loadingBayar}
-                  variant="primary"
-                >
-                  {loadingBayar ? (
-                    <span className="flex items-center gap-2">
-                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      Memproses...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <CreditCard size={16} />
-                      Bayar {selectedBulan.length} Bulan ({formatCurrency(totalTerpilih)})
-                    </span>
-                  )}
-                </Button>
+                <PermissionGuard permission="pembayaran-spp.create">
+                  <Button
+                    onClick={handleBayarMultiple}
+                    disabled={loadingBayar}
+                    variant="primary"
+                  >
+                    {loadingBayar ? (
+                      <span className="flex items-center gap-2">
+                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                        Memproses...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <CreditCard size={16} />
+                        Bayar {selectedBulan.length} Bulan ({formatCurrency(totalTerpilih)})
+                      </span>
+                    )}
+                  </Button>
+                </PermissionGuard>
               )}
             </div>
 

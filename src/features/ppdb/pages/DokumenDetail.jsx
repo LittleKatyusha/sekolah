@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const DokumenDetail = () => {
   const { id } = useParams()
@@ -104,22 +105,30 @@ const DokumenDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Dokumen</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="primary" onClick={handleVerify}>
-            <CheckCircle size={18} className="mr-2" />
-            Verifikasi
-          </Button>
-          <Button variant="danger" onClick={handleReject}>
-            <XCircle size={18} className="mr-2" />
-            Tolak
-          </Button>
-          <Button variant="warning" onClick={() => navigate(`/ppdb/dokumen/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="ppdb.dokumen.edit">
+            <Button variant="primary" onClick={handleVerify}>
+              <CheckCircle size={18} className="mr-2" />
+              Verifikasi
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.dokumen.edit">
+            <Button variant="danger" onClick={handleReject}>
+              <XCircle size={18} className="mr-2" />
+              Tolak
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.dokumen.edit">
+            <Button variant="warning" onClick={() => navigate(`/ppdb/dokumen/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.dokumen.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

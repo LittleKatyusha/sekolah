@@ -9,6 +9,7 @@ import { nilaiService } from '../services/nilaiService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { ujianService } from '../../ujian/services/ujianService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const NilaiForm = () => {
   const { id } = useParams()
@@ -309,10 +310,12 @@ const NilaiForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/nilai')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'nilai.edit' : 'nilai.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

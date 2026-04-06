@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, FileText, Hash, Calendar, BookOpen, GraduationCap, Tag, Clock, Award } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatJenisLabel, formatSemesterLabel, getMapelCode, getMapelLabel, getUjianName } from '../utils/ujianFormatters'
@@ -85,18 +86,24 @@ const UjianDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Ujian</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="info" onClick={() => navigate(`/akademik/ujian/${id}/nilai`)}>
-            <Award size={18} className="mr-2" />
-            Lihat Nilai
-          </Button>
-          <Button variant="warning" onClick={() => navigate(`/akademik/ujian/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="ujian.view">
+            <Button variant="info" onClick={() => navigate(`/akademik/ujian/${id}/nilai`)}>
+              <Award size={18} className="mr-2" />
+              Lihat Nilai
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ujian.edit">
+            <Button variant="warning" onClick={() => navigate(`/akademik/ujian/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ujian.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

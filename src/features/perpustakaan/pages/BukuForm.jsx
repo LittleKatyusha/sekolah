@@ -7,6 +7,7 @@ import Input from '../../../components/ui/Input'
 import { bukuService } from '../services/perpustakaanService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const BukuForm = () => {
   const { id } = useParams()
@@ -276,10 +277,12 @@ const BukuForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/perpustakaan/buku')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'buku.edit' : 'buku.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

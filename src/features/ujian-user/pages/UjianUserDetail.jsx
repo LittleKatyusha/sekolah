@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, User, BookOpen, Clock, CheckCircle, XCircle, Award, Calendar, Play } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianUserService } from '../services/ujianUserService'
 import { showDeleteConfirm, showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
 
@@ -134,19 +135,25 @@ const UjianUserDetail = () => {
         </div>
         <div className="flex gap-3">
           {canStart && (
-            <Button variant="success" onClick={handleMulai}>
-              <Play size={18} className="mr-2" />
-              Mulai Ujian
-            </Button>
+            <PermissionGuard permission="ujian-user.edit">
+              <Button variant="success" onClick={handleMulai}>
+                <Play size={18} className="mr-2" />
+                Mulai Ujian
+              </Button>
+            </PermissionGuard>
           )}
-          <Button variant="warning" onClick={() => navigate(`/akademik/ujian-user/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="ujian-user.edit">
+            <Button variant="warning" onClick={() => navigate(`/akademik/ujian-user/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ujian-user.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

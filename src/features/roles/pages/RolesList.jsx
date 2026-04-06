@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { roleService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -80,6 +81,9 @@ const RolesList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
+            detailPermission="roles.view"
+            editPermission="roles.edit"
+            deletePermission="roles.delete"
           />
         </div>
       )
@@ -106,10 +110,12 @@ const RolesList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/roles/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Role
-          </Button>
+          <PermissionGuard permission="roles.create">
+            <Button onClick={() => navigate('/admin/roles/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Role
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

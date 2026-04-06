@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { gelombangService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -69,16 +70,24 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
           style={{ top: `${position.top}px`, left: `${position.left}px` }}
         >
           <div className="py-1">
-            <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Eye size={16} className="text-blue-600" /> Detail
-            </button>
-            <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Edit size={16} className="text-yellow-600" /> Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-              <Trash2 size={16} /> Hapus
-            </button>
+            <PermissionGuard permission="ppdb.gelombang.view">
+              <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Eye size={16} className="text-blue-600" /> Detail
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="ppdb.gelombang.edit">
+              <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Edit size={16} className="text-yellow-600" /> Edit
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="ppdb.gelombang.delete">
+              <>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                  <Trash2 size={16} /> Hapus
+                </button>
+              </>
+            </PermissionGuard>
           </div>
         </div>,
         document.body
@@ -236,10 +245,12 @@ const GelombangList = () => {
             <ExternalLink size={18} className="mr-2" />
             Portal PPDB
           </Button>
-          <Button onClick={() => navigate('/ppdb/gelombang/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Gelombang
-          </Button>
+          <PermissionGuard permission="ppdb.gelombang.create">
+            <Button onClick={() => navigate('/ppdb/gelombang/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Gelombang
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

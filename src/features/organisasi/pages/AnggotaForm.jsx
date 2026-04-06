@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { anggotaService, organisasiService, jabatanService } from '../services/organisasiService'
 import { siswaService } from '../../siswa/services/siswaService'
@@ -317,10 +318,12 @@ const AnggotaForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/organisasi/anggota')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'anggota.edit' : 'anggota.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

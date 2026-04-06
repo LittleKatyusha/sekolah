@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import FileUpload from '../../../components/ui/FileUpload'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -582,10 +583,12 @@ const SiswaForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/siswa')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'siswa.edit' : 'siswa.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

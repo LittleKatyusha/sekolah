@@ -5,6 +5,7 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { bkLampiranService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -98,6 +99,8 @@ const BkLampiranList = () => {
               data={params.data}
               onDetail={() => handleDetail(params.data)}
               onDelete={() => handleDelete(params.data)}
+              detailPermission="bk.view"
+              deletePermission="bk.delete"
             />
           </div>
         )
@@ -139,10 +142,12 @@ const BkLampiranList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/bk/lampiran/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Lampiran
-          </Button>
+          <PermissionGuard permission="bk.create">
+            <Button onClick={() => navigate('/bk/lampiran/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Lampiran
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

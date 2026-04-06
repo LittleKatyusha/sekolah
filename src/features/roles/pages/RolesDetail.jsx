@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Shield } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { roleService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -76,14 +77,18 @@ const RolesDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Role</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/admin/roles/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="roles.edit">
+            <Button variant="warning" onClick={() => navigate(`/admin/roles/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="roles.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

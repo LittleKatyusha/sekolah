@@ -7,6 +7,7 @@ import { LogIn, Mail, Lock, Eye, EyeOff, GraduationCap, BookOpen, Users, Award, 
 import Button from '../components/ui/Button'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
+import logoVertical from '../assets/logo akademihub-01-04.png'
 
 const REMEMBER_ME_KEY = 'login_remember_me'
 

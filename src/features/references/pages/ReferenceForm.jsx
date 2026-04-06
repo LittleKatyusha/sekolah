@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Input from '../../../components/ui/Input'
 import { referenceAdminService } from '../services/referenceAdminService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -124,9 +125,11 @@ const ReferenceForm = () => {
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button type="button" variant="secondary" onClick={() => navigate('/admin/references')}>Batal</Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" /> {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'references.edit' : 'references.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" /> {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

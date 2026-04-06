@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { menuService } from '../services/menuService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -51,16 +52,24 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Eye size={16} className="text-blue-600" /> Detail
-            </button>
-            <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Edit size={16} className="text-yellow-600" /> Edit
-            </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-            <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-              <Trash2 size={16} /> Hapus
-            </button>
+            <PermissionGuard permission="menus.view">
+              <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Eye size={16} className="text-blue-600" /> Detail
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="menus.edit">
+              <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Edit size={16} className="text-yellow-600" /> Edit
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="menus.delete">
+              <>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                  <Trash2 size={16} /> Hapus
+                </button>
+              </>
+            </PermissionGuard>
           </div>
         </div>,
         document.body
@@ -227,10 +236,12 @@ const MenuList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/menus/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Menu
-          </Button>
+          <PermissionGuard permission="menus.create">
+            <Button onClick={() => navigate('/admin/menus/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Menu
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

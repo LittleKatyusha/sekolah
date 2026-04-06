@@ -21,6 +21,7 @@ import {
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
+import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 
 const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
@@ -378,10 +379,12 @@ const Sidebar = ({ isOpen, onClose }) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-              Admin
-            </h1>
+          <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 px-4">
+            <img
+              src={logoHorizontal}
+              alt="AkademiHub"
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           {/* User info */}

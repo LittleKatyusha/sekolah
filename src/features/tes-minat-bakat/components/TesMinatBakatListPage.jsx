@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tesMinatBakatResources } from '../config.jsx'
 import { showDeleteConfirm, showError, showSuccess } from '../../../utils/sweetalert'
 
@@ -90,6 +91,9 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
       handleDelete: resource.allowDelete !== false ? handleDelete : undefined,
       getRowActions,
       ActionsMenu,
+      detailPermission: 'tes-minat-bakat.view',
+      editPermission: 'tes-minat-bakat.edit',
+      deletePermission: 'tes-minat-bakat.delete',
     }),
     [getRowActions, handleDelete, handleDetail, handleEdit, resource]
   )
@@ -122,10 +126,12 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
           </Button>
 
           {resource.allowCreate !== false ? (
-            <Button onClick={() => navigate(`${resource.basePath}/create`)}>
-              <Plus size={18} className="mr-2" />
-              Tambah
-            </Button>
+            <PermissionGuard permission="tes-minat-bakat.create">
+              <Button onClick={() => navigate(`${resource.basePath}/create`)}>
+                <Plus size={18} className="mr-2" />
+                Tambah
+              </Button>
+            </PermissionGuard>
           ) : null}
         </div>
       </div>

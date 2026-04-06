@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { permissionService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -65,6 +66,9 @@ const PermissionsList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
+            detailPermission="permissions.view"
+            editPermission="permissions.edit"
+            deletePermission="permissions.delete"
           />
         </div>
       )
@@ -91,10 +95,12 @@ const PermissionsList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/permissions/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Permission
-          </Button>
+          <PermissionGuard permission="permissions.create">
+            <Button onClick={() => navigate('/admin/permissions/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Permission
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeft, BellRing, CheckCircle2, Clock3, RotateCw, Shi
 import { useNavigate, useParams } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../../siswa/services/siswaService'
 import { ewsService } from '../services/ewsService'
 import { showConfirm, showError, showSuccess } from '../../../utils/sweetalert'
@@ -203,18 +204,22 @@ const EwsDetail = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" onClick={handleTrigger} disabled={submitting || !alert.mst_siswa_id}>
-            <RotateCw size={18} className="mr-2" />
-            Trigger Ulang
-          </Button>
-          <Button
-            variant={alert.is_resolved ? 'success' : 'primary'}
-            onClick={handleResolve}
-            disabled={submitting || alert.is_resolved}
-          >
-            <CheckCircle2 size={18} className="mr-2" />
-            {alert.is_resolved ? 'Sudah Resolved' : 'Resolve'}
-          </Button>
+          <PermissionGuard permission="ews.edit">
+            <Button variant="outline" onClick={handleTrigger} disabled={submitting || !alert.mst_siswa_id}>
+              <RotateCw size={18} className="mr-2" />
+              Trigger Ulang
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ews.edit">
+            <Button
+              variant={alert.is_resolved ? 'success' : 'primary'}
+              onClick={handleResolve}
+              disabled={submitting || alert.is_resolved}
+            >
+              <CheckCircle2 size={18} className="mr-2" />
+              {alert.is_resolved ? 'Sudah Resolved' : 'Resolve'}
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

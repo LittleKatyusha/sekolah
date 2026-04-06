@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Save, ArrowLeft } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Input from '../../../components/ui/Input'
 import { kalenderTipeService } from '../services/kalenderTipeService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -135,7 +136,9 @@ const KalenderTipeForm = () => {
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="button" variant="secondary" onClick={() => navigate('/admin/kalender-tipe')}>Batal</Button>
-            <Button type="submit" disabled={saving}><Save size={18} className="mr-2" />{saving ? 'Menyimpan...' : 'Simpan'}</Button>
+            <PermissionGuard permission={isEdit ? 'kalender-tipe.edit' : 'kalender-tipe.create'}>
+              <Button type="submit" disabled={saving}><Save size={18} className="mr-2" />{saving ? 'Menyimpan...' : 'Simpan'}</Button>
+            </PermissionGuard>
           </div>
         </form>
       </Card>

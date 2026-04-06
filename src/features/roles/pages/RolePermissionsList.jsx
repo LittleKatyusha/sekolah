@@ -4,6 +4,7 @@ import { Search, Plus, RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import { rolePermissionService } from '../services/rolesService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -71,6 +72,9 @@ const RolePermissionsList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
+            detailPermission="role-permissions.view"
+            editPermission="role-permissions.edit"
+            deletePermission="role-permissions.delete"
           />
         </div>
       ),
@@ -96,10 +100,12 @@ const RolePermissionsList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/role-permissions/create')}>
-            <Plus size={18} className="mr-2" />
-            Assign Permissions
-          </Button>
+          <PermissionGuard permission="role-permissions.create">
+            <Button onClick={() => navigate('/admin/role-permissions/create')}>
+              <Plus size={18} className="mr-2" />
+              Assign Permissions
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

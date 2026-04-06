@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import Button from '../../../components/ui/Button'
 import Card from '../../../components/ui/Card'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tesMinatBakatResources } from '../config.jsx'
 import { showDeleteConfirm, showError, showSuccess } from '../../../utils/sweetalert'
 
@@ -110,16 +111,20 @@ const TesMinatBakatDetailPage = ({ resourceKey }) => {
             </Button>
           ))}
           {resource.allowEdit !== false ? (
-            <Button variant="secondary" onClick={() => navigate(`${resource.basePath}/${id}/edit`)}>
-              <Edit size={18} className="mr-2" />
-              Edit
-            </Button>
+            <PermissionGuard permission="tes-minat-bakat.edit">
+              <Button variant="secondary" onClick={() => navigate(`${resource.basePath}/${id}/edit`)}>
+                <Edit size={18} className="mr-2" />
+                Edit
+              </Button>
+            </PermissionGuard>
           ) : null}
           {resource.allowDelete !== false ? (
-            <Button variant="danger" onClick={handleDelete}>
-              <Trash2 size={18} className="mr-2" />
-              Hapus
-            </Button>
+            <PermissionGuard permission="tes-minat-bakat.delete">
+              <Button variant="danger" onClick={handleDelete}>
+                <Trash2 size={18} className="mr-2" />
+                Hapus
+              </Button>
+            </PermissionGuard>
           ) : null}
         </div>
       </div>

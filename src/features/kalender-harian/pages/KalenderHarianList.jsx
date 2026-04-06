@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { RefreshCw, Calendar, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderHarianService } from '../services/kalenderHarianService'
 import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { semesterService } from '../../semester/services/semesterService'
@@ -129,22 +130,24 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
               }`} />
               <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
             </div>
-            <button
-              onClick={() => onToggle(data, field)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                data[field]
-                  ? color === 'green' ? 'bg-green-500 focus:ring-green-500'
-                    : color === 'red' ? 'bg-red-500 focus:ring-red-500'
-                    : 'bg-blue-500 focus:ring-blue-500'
-                  : 'bg-gray-300 dark:bg-gray-600 focus:ring-gray-400'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                  data[field] ? 'translate-x-6' : 'translate-x-1'
+            <PermissionGuard permission="kalender-harian.edit">
+              <button
+                onClick={() => onToggle(data, field)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  data[field]
+                    ? color === 'green' ? 'bg-green-500 focus:ring-green-500'
+                      : color === 'red' ? 'bg-red-500 focus:ring-red-500'
+                      : 'bg-blue-500 focus:ring-blue-500'
+                    : 'bg-gray-300 dark:bg-gray-600 focus:ring-gray-400'
                 }`}
-              />
-            </button>
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    data[field] ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </PermissionGuard>
           </div>
         ))}
       </div>
@@ -326,19 +329,21 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
             <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
               Batal
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  Generating...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Calendar size={16} />
-                  Generate
-                </span>
-              )}
-            </Button>
+            <PermissionGuard permission="kalender-harian.create">
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Generating...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Calendar size={16} />
+                    Generate
+                  </span>
+                )}
+              </Button>
+            </PermissionGuard>
           </div>
         </form>
       </div>
@@ -525,10 +530,12 @@ const KalenderHarianList = () => {
           <Button onClick={fetchData} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </Button>
-          <Button onClick={() => setShowGenerateModal(true)}>
-            <Calendar size={18} className="mr-2" />
-            Generate Kalender
-          </Button>
+          <PermissionGuard permission="kalender-harian.create">
+            <Button onClick={() => setShowGenerateModal(true)}>
+              <Calendar size={18} className="mr-2" />
+              Generate Kalender
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

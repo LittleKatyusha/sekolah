@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Plus } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { sekolahService } from '../services/sekolahService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -93,10 +94,12 @@ const SekolahDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profil Sekolah</h1>
-        <Button variant="warning" onClick={() => navigate(`/sekolah/edit`)}>
-          <Edit size={18} className="mr-2" />
-          Edit Profil
-        </Button>
+        <PermissionGuard permission="sekolah.edit">
+          <Button variant="warning" onClick={() => navigate(`/sekolah/edit`)}>
+            <Edit size={18} className="mr-2" />
+            Edit Profil
+          </Button>
+        </PermissionGuard>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -254,12 +257,14 @@ const SekolahDetail = () => {
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{setting.key}</td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{setting.value || '-'}</td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => handleDeleteSetting(setting.id, setting.key)}
-                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <PermissionGuard permission="sekolah.delete">
+                          <button
+                            onClick={() => handleDeleteSetting(setting.id, setting.key)}
+                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </PermissionGuard>
                       </td>
                     </tr>
                   ))}

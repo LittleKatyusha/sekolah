@@ -3,6 +3,7 @@ import { MessageCircle, PowerOff, QrCode, RefreshCw, Send, ShieldAlert, Smartpho
 import { useNavigate } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Input from '../../../components/ui/Input'
 import { showError, showSuccess } from '../../../utils/sweetalert'
 import { wahaService } from '../services/wahaService'
@@ -444,10 +445,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
                   onChange={(event) => setMessageForm((prev) => ({ ...prev, text: event.target.value }))}
                 />
                 <div className="flex justify-end">
-                  <Button type="submit" loading={loadingStates.send}>
-                    <Send size={18} className="mr-2" />
-                    Kirim Pesan
-                  </Button>
+                  <PermissionGuard permission="waha.send">
+                    <Button type="submit" loading={loadingStates.send}>
+                      <Send size={18} className="mr-2" />
+                      Kirim Pesan
+                    </Button>
+                  </PermissionGuard>
                 </div>
               </form>
             </Card>
@@ -479,10 +482,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
                   ]}
                 />
                 <div className="flex justify-end">
-                  <Button type="submit" loading={loadingStates.spp}>
-                    <Send size={18} className="mr-2" />
-                    Kirim SPP
-                  </Button>
+                  <PermissionGuard permission="waha.notify.spp">
+                    <Button type="submit" loading={loadingStates.spp}>
+                      <Send size={18} className="mr-2" />
+                      Kirim SPP
+                    </Button>
+                  </PermissionGuard>
                 </div>
               </form>
             </Card>
@@ -504,10 +509,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
                 />
                 <TextareaField label="Catatan" placeholder="Opsional" value={ppdbForm.catatan} onChange={(event) => setPpdbForm((prev) => ({ ...prev, catatan: event.target.value }))} rows={5} />
                 <div className="flex justify-end">
-                  <Button type="submit" loading={loadingStates.ppdb}>
-                    <Send size={18} className="mr-2" />
-                    Kirim PPDB
-                  </Button>
+                  <PermissionGuard permission="waha.notify.ppdb">
+                    <Button type="submit" loading={loadingStates.ppdb}>
+                      <Send size={18} className="mr-2" />
+                      Kirim PPDB
+                    </Button>
+                  </PermissionGuard>
                 </div>
               </form>
             </Card>
@@ -538,10 +545,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
                 />
                 <TextareaField label="Deskripsi" placeholder="Jelaskan alert EWS yang ingin dikirim" value={ewsForm.deskripsi} onChange={(event) => setEwsForm((prev) => ({ ...prev, deskripsi: event.target.value }))} rows={5} />
                 <div className="flex justify-end">
-                  <Button type="submit" loading={loadingStates.ews}>
-                    <ShieldAlert size={18} className="mr-2" />
-                    Kirim EWS
-                  </Button>
+                  <PermissionGuard permission="waha.notify.ews">
+                    <Button type="submit" loading={loadingStates.ews}>
+                      <ShieldAlert size={18} className="mr-2" />
+                      Kirim EWS
+                    </Button>
+                  </PermissionGuard>
                 </div>
               </form>
             </Card>

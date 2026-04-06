@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianUserService } from '../services/ujianUserService'
 import { ujianService } from '../../ujian/services/ujianService'
 import { siswaService } from '../../siswa/services/siswaService'
@@ -289,10 +290,12 @@ const UjianUserForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/ujian-user')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'ujian-user.edit' : 'ujian-user.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

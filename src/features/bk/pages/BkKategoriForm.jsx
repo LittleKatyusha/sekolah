@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { bkKategoriService } from '../services/bkService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -11,6 +12,7 @@ const BkKategoriForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -146,10 +148,12 @@ const BkKategoriForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/bk/kategori')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={submitPermission}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

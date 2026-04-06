@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Award, User, MapPin, Clock, Calendar, Hash, Users } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ekstrakurikulerService } from '../services/ekstrakurikulerService'
 import { eksSiswaService } from '../services/ekstrakurikulerService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -95,14 +96,18 @@ const EkstrakurikulerDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Ekstrakurikuler</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="ekskul.edit">
+            <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ekskul.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

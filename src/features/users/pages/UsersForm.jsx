@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { usersService } from '../services/usersService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -227,10 +228,12 @@ const UsersForm = () => {
             <Button type="button" variant="secondary" onClick={() => navigate('/admin/users')}>
               Batal
             </Button>
-            <Button type="submit" disabled={loading}>
-              <Save size={18} className="mr-2" />
-              {loading ? 'Menyimpan...' : 'Simpan'}
-            </Button>
+            <PermissionGuard permission={isEditMode ? 'users.edit' : 'users.create'}>
+              <Button type="submit" disabled={loading}>
+                <Save size={18} className="mr-2" />
+                {loading ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </PermissionGuard>
           </div>
         </form>
       </Card>

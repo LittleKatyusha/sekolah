@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { eksSiswaService, ekstrakurikulerService } from '../services/ekstrakurikulerService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -260,10 +261,12 @@ const EksSiswaForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/ekstrakurikuler/siswa')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'ekskul-siswa.edit' : 'ekskul-siswa.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

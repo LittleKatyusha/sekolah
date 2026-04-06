@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { tarifSppService } from '../services/sppService'
 import { kelasService } from '../../kelas/services/kelasService'
@@ -208,10 +209,12 @@ const TarifSppForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/keuangan/tarif-spp')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'tarif-spp.edit' : 'tarif-spp.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

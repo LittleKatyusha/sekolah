@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { nilaiService } from '../services/nilaiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const NilaiDetail = () => {
   const { id } = useParams()
@@ -90,14 +91,18 @@ const NilaiDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Nilai</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="warning" onClick={() => navigate(`/akademik/nilai/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="nilai.edit">
+            <Button variant="warning" onClick={() => navigate(`/akademik/nilai/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="nilai.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

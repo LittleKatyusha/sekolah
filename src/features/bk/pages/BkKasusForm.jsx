@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { bkKasusService, bkJenisService } from '../services/bkService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { guruService } from '../../guru/services/guruService'
@@ -14,6 +15,7 @@ const BkKasusForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
 
   const { options: statusOptions } = useReferenceOptions('status_bk')
 
@@ -354,10 +356,12 @@ const BkKasusForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/bk/kasus')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={submitPermission}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

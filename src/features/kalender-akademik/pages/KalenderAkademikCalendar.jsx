@@ -7,6 +7,7 @@ import listPlugin from '@fullcalendar/list'
 import { Plus, RefreshCw, Calendar, List, Filter, ChevronDown, Loader2 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderAkademikService } from '../services/kalenderAkademikService'
 import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { showError } from '../../../utils/sweetalert'
@@ -243,15 +244,17 @@ const KalenderAkademikCalendar = () => {
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate('create')}
-            className="gap-1.5"
-          >
-            <Plus size={16} />
-            Tambah Event
-          </Button>
+          <PermissionGuard permission="kalender-akademik.create">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('create')}
+              className="gap-1.5"
+            >
+              <Plus size={16} />
+              Tambah Event
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

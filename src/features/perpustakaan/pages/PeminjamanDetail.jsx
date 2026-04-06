@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { peminjamanService } from '../services/perpustakaanService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const PeminjamanDetail = () => {
   const { id } = useParams()
@@ -131,20 +132,26 @@ const PeminjamanDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Peminjaman</h1>
         </div>
         <div className="flex gap-3">
-          {showKembalikanButton && (
-            <Button variant="success" onClick={handleKembalikan}>
-              <RotateCcw size={18} className="mr-2" />
-              Kembalikan
+          <PermissionGuard permission="peminjaman.edit">
+            {showKembalikanButton && (
+              <Button variant="success" onClick={handleKembalikan}>
+                <RotateCcw size={18} className="mr-2" />
+                Kembalikan
+              </Button>
+            )}
+          </PermissionGuard>
+          <PermissionGuard permission="peminjaman.edit">
+            <Button variant="warning" onClick={() => navigate(`/perpustakaan/peminjaman/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
             </Button>
-          )}
-          <Button variant="warning" onClick={() => navigate(`/perpustakaan/peminjaman/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="peminjaman.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 
