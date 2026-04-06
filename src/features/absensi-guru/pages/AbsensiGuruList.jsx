@@ -15,6 +15,11 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+const formatTime = (value) => {
+  if (!value) return '-'
+  return String(value).slice(0, 5)
+}
+
 const ActionsMenu = memo(({ onEdit, onDelete, onDetail }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -85,8 +90,14 @@ const StatusBadge = memo(({ status }) => {
     2: { label: 'Sakit', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
     3: { label: 'Izin', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
     4: { label: 'Alpha', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+    hadir: { label: 'Hadir', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+    sakit: { label: 'Sakit', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
+    izin: { label: 'Izin', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+    alpha: { label: 'Alpha', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+    alpa: { label: 'Alpha', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   }
-  const config = statusConfig[status] || { label: status || '-', className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400' }
+  const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : status
+  const config = statusConfig[normalizedStatus] || { label: status || '-', className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400' }
   return <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.className}`}>{config.label}</span>
 })
 
@@ -189,7 +200,28 @@ const AbsensiGuruList = () => {
       filter: true,
       width: 120,
       minWidth: 100,
+      valueGetter: (params) => params.data?.status_absensi || params.data?.status || '-',
       cellRenderer: (params) => <StatusBadge status={params.value} />
+    },
+    {
+      field: 'jam_masuk',
+      backendField: 'jam_masuk',
+      headerName: 'Jam Masuk',
+      sortable: true,
+      filter: true,
+      width: 120,
+      minWidth: 110,
+      cellRenderer: (params) => formatTime(params.value)
+    },
+    {
+      field: 'jam_keluar',
+      backendField: 'jam_keluar',
+      headerName: 'Jam Keluar',
+      sortable: true,
+      filter: true,
+      width: 120,
+      minWidth: 110,
+      cellRenderer: (params) => formatTime(params.value)
     },
     {
       field: 'keterangan',

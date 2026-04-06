@@ -10,6 +10,33 @@ import { guruService } from '../../guru/services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
+const normalizeStatusValue = (status, statusOptions = []) => {
+  if (status === null || status === undefined || status === '') return 1
+  if (typeof status === 'number') return status
+
+  const normalizedStatus = String(status).trim().toLowerCase()
+  const matchedOption = statusOptions.find((option) => String(option.label).trim().toLowerCase() === normalizedStatus)
+
+  if (matchedOption) {
+    return Number(matchedOption.value)
+  }
+
+  const fallbackMap = {
+    hadir: 1,
+    sakit: 2,
+    izin: 3,
+    alpha: 4,
+    alpa: 4,
+  }
+
+  return fallbackMap[normalizedStatus] || 1
+}
+
+const toTimeInputValue = (value) => {
+  if (!value) return ''
+  return String(value).slice(0, 5)
+}
+
 const AbsensiGuruForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -25,7 +52,9 @@ const AbsensiGuruForm = () => {
     mst_guru_id: '',
     tanggal: '',
     status: 1,
-    keterangan: ''
+    keterangan: '',
+    jam_masuk: '',
+    jam_keluar: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -64,13 +93,15 @@ const AbsensiGuruForm = () => {
     const { data, error } = await absensiGuruService.getById(id)
     if (data) {
       const absensi = data.data
-      const guruId = absensi.mst_guru_id ? String(absensi.mst_guru_id) : ''
+      const guruId = absensi.guru?.id ? String(absensi.guru.id) : (absensi.mst_guru_id ? String(absensi.mst_guru_id) : '')
 
       setFormData({
         mst_guru_id: guruId,
         tanggal: absensi.tanggal || '',
-        status: absensi.status ?? 1,
-        keterangan: absensi.keterangan || ''
+        status: normalizeStatusValue(absensi.status ?? absensi.status_absensi, statusOptions),
+        keterangan: absensi.keterangan || '',
+        jam_masuk: toTimeInputValue(absensi.jam_masuk),
+        jam_keluar: toTimeInputValue(absensi.jam_keluar),
       })
 
       if (absensi.guru?.id) {
@@ -81,7 +112,7 @@ const AbsensiGuruForm = () => {
       navigate('/absensi-guru')
     }
     setFetchingData(false)
-  }, [id, navigate, buildGuruOption])
+  }, [id, navigate, buildGuruOption, statusOptions])
 
   useEffect(() => {
     if (isEditMode) fetchAbsensi()
@@ -128,7 +159,9 @@ const AbsensiGuruForm = () => {
     const submitData = {
       ...formData,
       status: Number(formData.status),
-      keterangan: formData.keterangan || null
+      keterangan: formData.keterangan || null,
+      jam_masuk: formData.jam_masuk || null,
+      jam_keluar: formData.jam_keluar || null,
     }
 
     let result
@@ -225,6 +258,32 @@ const AbsensiGuruForm = () => {
                     {Array.isArray(errors.status) ? errors.status[0] : errors.status}
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Jam Masuk
+                </label>
+                <Input
+                  type="time"
+                  name="jam_masuk"
+                  value={formData.jam_masuk}
+                  onChange={handleChange}
+                  error={Array.isArray(errors.jam_masuk) ? errors.jam_masuk[0] : errors.jam_masuk}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Jam Keluar
+                </label>
+                <Input
+                  type="time"
+                  name="jam_keluar"
+                  value={formData.jam_keluar}
+                  onChange={handleChange}
+                  error={Array.isArray(errors.jam_keluar) ? errors.jam_keluar[0] : errors.jam_keluar}
+                />
               </div>
 
               <div className="md:col-span-2">

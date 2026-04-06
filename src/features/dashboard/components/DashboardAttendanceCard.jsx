@@ -37,6 +37,18 @@ const getTodayLabel = () => new Date().toLocaleDateString('id-ID', {
   year: 'numeric',
 })
 
+const getCurrentTimeString = () => {
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+const formatTimeLabel = (value) => {
+  if (!value) return '-'
+  return String(value).slice(0, 5)
+}
+
 const normalizeStatus = (record) => {
   if (!record) return null
   const value = record.status_absensi ?? record.status ?? null
@@ -255,7 +267,7 @@ const DashboardAttendanceCard = ({ role, profile, authUser, onAttendanceRecorded
     setSubmitting(true)
 
     const payload = role === 'guru'
-      ? { mst_guru_id: Number(entityId), tanggal: today, status: 1, keterangan: null }
+      ? { mst_guru_id: Number(entityId), tanggal: today, status: 1, keterangan: null, jam_masuk: getCurrentTimeString() }
       : { mst_siswa_id: Number(entityId), tanggal: today, status: 1, keterangan: null }
 
     const response = role === 'guru'
@@ -327,6 +339,18 @@ const DashboardAttendanceCard = ({ role, profile, authUser, onAttendanceRecorded
                 {statusMeta?.label || 'Tercatat'}
               </span>
             </div>
+            {role === 'guru' && (
+              <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 dark:text-gray-300 sm:grid-cols-2">
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Jam masuk:</span>{' '}
+                  <span className="font-medium text-gray-800 dark:text-gray-100">{formatTimeLabel(todayRecord?.jam_masuk)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Jam keluar:</span>{' '}
+                  <span className="font-medium text-gray-800 dark:text-gray-100">{formatTimeLabel(todayRecord?.jam_keluar)}</span>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">

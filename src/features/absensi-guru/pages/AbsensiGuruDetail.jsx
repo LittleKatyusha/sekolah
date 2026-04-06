@@ -1,24 +1,52 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, Calendar, ClipboardCheck, FileText } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, Calendar, ClipboardCheck, FileText, Clock3 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
+const normalizeStatusToken = (status) => {
+  if (status === null || status === undefined || status === '') return ''
+  return String(status).trim().toLowerCase()
+}
+
 const getStatusLabel = (status) => {
-  const map = { 1: 'Hadir', 2: 'Sakit', 3: 'Izin', 4: 'Alpha' }
-  return map[status] || status || '-'
+  const normalized = normalizeStatusToken(status)
+  const map = { '1': 'Hadir', '2': 'Sakit', '3': 'Izin', '4': 'Alpha', hadir: 'Hadir', sakit: 'Sakit', izin: 'Izin', alpha: 'Alpha', alpa: 'Alpha' }
+  return map[normalized] || status || '-'
 }
 
 const getStatusBadgeClass = (status) => {
+  const normalized = normalizeStatusToken(status)
   const map = {
-    1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    2: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    3: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    4: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    '1': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    '2': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    '3': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    '4': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    hadir: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    sakit: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    izin: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    alpha: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    alpa: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   }
-  return map[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+  return map[normalized] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+}
+
+const formatDateTime = (value) => {
+  if (!value) return '-'
+  return new Date(value).toLocaleString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatTime = (value) => {
+  if (!value) return '-'
+  return String(value).slice(0, 5)
 }
 
 const AbsensiGuruDetail = () => {
@@ -104,8 +132,8 @@ const AbsensiGuruDetail = () => {
                 NIP: {absensi.guru?.nip || '-'}
               </p>
 
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(absensi.status)}`}>
-                {getStatusLabel(absensi.status)}
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(absensi.status_absensi || absensi.status)}`}>
+                {getStatusLabel(absensi.status_absensi || absensi.status)}
               </span>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
@@ -161,10 +189,30 @@ const AbsensiGuruDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
                     <div className="mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(absensi.status)}`}>
-                        {getStatusLabel(absensi.status)}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(absensi.status_absensi || absensi.status)}`}>
+                        {getStatusLabel(absensi.status_absensi || absensi.status)}
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock3 size={20} className="text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Jam Masuk</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatTime(absensi.jam_masuk)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock3 size={20} className="text-cyan-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Jam Keluar</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatTime(absensi.jam_keluar)}</p>
                   </div>
                 </div>
 
@@ -183,11 +231,11 @@ const AbsensiGuruDetail = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Dibuat pada</p>
-                    <p className="text-gray-700 dark:text-gray-300">{formatDate(absensi.created_at)}</p>
+                    <p className="text-gray-700 dark:text-gray-300">{formatDateTime(absensi.created_at)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Terakhir diperbarui</p>
-                    <p className="text-gray-700 dark:text-gray-300">{formatDate(absensi.updated_at)}</p>
+                    <p className="text-gray-700 dark:text-gray-300">{formatDateTime(absensi.updated_at)}</p>
                   </div>
                 </div>
               </div>
