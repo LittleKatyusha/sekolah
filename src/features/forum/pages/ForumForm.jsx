@@ -38,7 +38,7 @@ const ForumForm = () => {
     setFetchingData(true)
     const { data, error } = await forumService.getById(id)
     if (data) {
-      const forum = data.data
+      const forum = data
       setIsTopik(!!forum.is_topik)
       setFormData({
         judul: forum.judul || '',

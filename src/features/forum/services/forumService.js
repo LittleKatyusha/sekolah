@@ -19,7 +19,7 @@ export const forumService = {
       const config = options.signal ? { params, signal: options.signal } : { params }
       const { data, error } = await apiService.get(LIST_URL, config)
       if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Failed to fetch topics')
-      return { data: data?.data || [], meta: data?.meta || {}, error: null }
+      return { data: { data: data?.data || [], meta: data?.meta || {} }, error: null }
     } catch (error) {
       if (error.name === 'AbortError') return { data: null, meta: null, error: 'cancelled' }
       return { data: null, meta: null, error: error.message || 'Failed to fetch topics' }
