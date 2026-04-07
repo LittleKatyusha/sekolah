@@ -19,6 +19,15 @@ const STATUS_OPTIONS = [
   { value: 'ditolak', label: 'Ditolak' },
 ]
 
+const PRESTASI_OPTIONS = [
+  { value: 'none', label: 'Tidak Ada' },
+  { value: 'sekolah', label: 'Tingkat Sekolah' },
+  { value: 'kabupaten', label: 'Tingkat Kabupaten/Kota' },
+  { value: 'provinsi', label: 'Tingkat Provinsi' },
+  { value: 'nasional', label: 'Tingkat Nasional' },
+  { value: 'internasional', label: 'Tingkat Internasional' },
+]
+
 const PendaftarForm = () => {
   const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
   const { id } = useParams()
@@ -28,8 +37,10 @@ const PendaftarForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   const [gelombangOptions, setGelombangOptions] = useState([])
+  const [activeSection, setActiveSection] = useState('identitas') // 'identitas' | 'akademik'
 
   const [formData, setFormData] = useState({
+    // Identitas
     mst_sekolah_id: '',
     ppdb_gelombang_id: '',
     nama_lengkap: '',
@@ -39,8 +50,20 @@ const PendaftarForm = () => {
     jenis_kelamin: '',
     telp_hp: '',
     asal_sekolah: '',
+    tanggal_lahir: '',
     pilihan_jurusan_id: '',
     status_pendaftaran: 'draft',
+    // Akademik
+    nilai_rata_rata_rapor: '',
+    nilai_mtk: '',
+    nilai_ipa: '',
+    nilai_bindo: '',
+    nilai_bing: '',
+    jumlah_prestasi: '0',
+    tingkat_prestasi_tertinggi: 'none',
+    poin_pelanggaran: '0',
+    is_hafidz: '0',
+    juz_hafalan: '0',
   })
 
   const [errors, setErrors] = useState({})
@@ -68,6 +91,7 @@ const PendaftarForm = () => {
     if (data) {
       const p = data.data
       setFormData({
+        // Identitas
         mst_sekolah_id: p.mst_sekolah_id ? String(p.mst_sekolah_id) : '',
         ppdb_gelombang_id: p.ppdb_gelombang_id ? String(p.ppdb_gelombang_id) : '',
         nama_lengkap: p.nama_lengkap || '',
@@ -77,8 +101,20 @@ const PendaftarForm = () => {
         jenis_kelamin: p.jenis_kelamin || '',
         telp_hp: p.telp_hp || '',
         asal_sekolah: p.asal_sekolah || '',
+        tanggal_lahir: p.tanggal_lahir || '',
         pilihan_jurusan_id: p.pilihan_jurusan_id ? String(p.pilihan_jurusan_id) : '',
         status_pendaftaran: p.status_pendaftaran || 'draft',
+        // Akademik
+        nilai_rata_rata_rapor: p.nilai_rata_rata_rapor != null ? String(p.nilai_rata_rata_rapor) : '',
+        nilai_mtk: p.nilai_mtk != null ? String(p.nilai_mtk) : '',
+        nilai_ipa: p.nilai_ipa != null ? String(p.nilai_ipa) : '',
+        nilai_bindo: p.nilai_bindo != null ? String(p.nilai_bindo) : '',
+        nilai_bing: p.nilai_bing != null ? String(p.nilai_bing) : '',
+        jumlah_prestasi: p.jumlah_prestasi != null ? String(p.jumlah_prestasi) : '0',
+        tingkat_prestasi_tertinggi: p.tingkat_prestasi_tertinggi || 'none',
+        poin_pelanggaran: p.poin_pelanggaran != null ? String(p.poin_pelanggaran) : '0',
+        is_hafidz: p.is_hafidz ? '1' : '0',
+        juz_hafalan: p.juz_hafalan != null ? String(p.juz_hafalan) : '0',
       })
     } else {
       showError('Gagal mengambil data pendaftar')
@@ -118,7 +154,19 @@ const PendaftarForm = () => {
       nisn: formData.nisn || null,
       telp_hp: formData.telp_hp || null,
       asal_sekolah: formData.asal_sekolah || null,
+      tanggal_lahir: formData.tanggal_lahir || null,
       pilihan_jurusan_id: formData.pilihan_jurusan_id ? parseInt(formData.pilihan_jurusan_id) : null,
+      // Akademik
+      nilai_rata_rata_rapor: formData.nilai_rata_rata_rapor !== '' ? parseFloat(formData.nilai_rata_rata_rapor) : null,
+      nilai_mtk: formData.nilai_mtk !== '' ? parseFloat(formData.nilai_mtk) : null,
+      nilai_ipa: formData.nilai_ipa !== '' ? parseFloat(formData.nilai_ipa) : null,
+      nilai_bindo: formData.nilai_bindo !== '' ? parseFloat(formData.nilai_bindo) : null,
+      nilai_bing: formData.nilai_bing !== '' ? parseFloat(formData.nilai_bing) : null,
+      jumlah_prestasi: parseInt(formData.jumlah_prestasi) || 0,
+      tingkat_prestasi_tertinggi: formData.tingkat_prestasi_tertinggi || 'none',
+      poin_pelanggaran: parseInt(formData.poin_pelanggaran) || 0,
+      is_hafidz: formData.is_hafidz === '1',
+      juz_hafalan: parseInt(formData.juz_hafalan) || 0,
     }
 
     if (!isEditMode) {
@@ -148,6 +196,12 @@ const PendaftarForm = () => {
     setLoading(false)
   }
 
+  const LabelField = ({ children, required }) => (
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      {children} {required && <span className="text-red-500">*</span>}
+    </label>
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -160,6 +214,29 @@ const PendaftarForm = () => {
         </h1>
       </div>
 
+      {/* Section tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="flex gap-6">
+          {[
+            { id: 'identitas', label: 'Data Identitas' },
+            { id: 'akademik', label: 'Data Akademik & Seleksi' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveSection(tab.id)}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeSection === tab.id
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
       <Card>
         {fetchingData ? (
           <div className="flex items-center justify-center h-64">
@@ -167,89 +244,216 @@ const PendaftarForm = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nama Lengkap <span className="text-red-500">*</span>
-                </label>
-                <Input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleChange} placeholder="Masukkan nama lengkap" error={errors.nama_lengkap} />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" error={errors.email} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Password {!isEditMode && <span className="text-gray-400">(opsional)</span>}
-                </label>
-                <Input type="password" name="password" value={formData.password} onChange={handleChange} placeholder={isEditMode ? 'Kosongkan jika tidak diubah' : 'Password'} error={errors.password} />
-              </div>
-
-              {!isEditMode && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Sekolah ID <span className="text-red-500">*</span>
-                    </label>
-                    <Input type="number" name="mst_sekolah_id" value={formData.mst_sekolah_id} onChange={handleChange} placeholder="ID Sekolah" error={errors.mst_sekolah_id} />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Gelombang PPDB <span className="text-red-500">*</span>
-                    </label>
-                    <SearchableSelect name="ppdb_gelombang_id" value={formData.ppdb_gelombang_id} onChange={handleChange} options={gelombangOptions} placeholder="Pilih gelombang" error={errors.ppdb_gelombang_id} />
-                  </div>
-                </>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Jenis Kelamin <span className="text-red-500">*</span>
-                </label>
-                <SearchableSelect name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} options={jenisKelaminOptions} placeholder="Pilih jenis kelamin" error={errors.jenis_kelamin} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">NISN</label>
-                <Input type="text" name="nisn" value={formData.nisn} onChange={handleChange} placeholder="NISN (opsional)" error={errors.nisn} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No. Telp/HP</label>
-                <Input type="text" name="telp_hp" value={formData.telp_hp} onChange={handleChange} placeholder="No. telepon (opsional)" error={errors.telp_hp} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Asal Sekolah</label>
-                <Input type="text" name="asal_sekolah" value={formData.asal_sekolah} onChange={handleChange} placeholder="Asal sekolah (opsional)" error={errors.asal_sekolah} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilihan Jurusan ID</label>
-                <Input type="number" name="pilihan_jurusan_id" value={formData.pilihan_jurusan_id} onChange={handleChange} placeholder="ID Jurusan (opsional)" error={errors.pilihan_jurusan_id} />
-              </div>
-
-              {isEditMode && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status Pendaftaran</label>
-                  <SearchableSelect name="status_pendaftaran" value={formData.status_pendaftaran} onChange={handleChange} options={STATUS_OPTIONS} placeholder="Pilih status" error={errors.status_pendaftaran} />
+            {/* ── Section: Identitas ── */}
+            {activeSection === 'identitas' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <LabelField required>Nama Lengkap</LabelField>
+                  <Input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleChange} placeholder="Masukkan nama lengkap" error={errors.nama_lengkap} />
                 </div>
-              )}
-            </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button type="button" variant="secondary" onClick={() => navigate('/ppdb/pendaftaran')}>Batal</Button>
-              <PermissionGuard permission={isEditMode ? 'ppdb.pendaftar.edit' : 'ppdb.pendaftar.create'}>
-                <Button type="submit" disabled={loading}>
-                  <Save size={18} className="mr-2" />
-                  {loading ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-              </PermissionGuard>
+                <div>
+                  <LabelField required>Email</LabelField>
+                  <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" error={errors.email} />
+                </div>
+
+                <div>
+                  <LabelField>Password {!isEditMode && <span className="text-gray-400 font-normal">(opsional)</span>}</LabelField>
+                  <Input type="password" name="password" value={formData.password} onChange={handleChange} placeholder={isEditMode ? 'Kosongkan jika tidak diubah' : 'Password'} error={errors.password} />
+                </div>
+
+                {!isEditMode && (
+                  <>
+                    <div>
+                      <LabelField required>Sekolah ID</LabelField>
+                      <Input type="number" name="mst_sekolah_id" value={formData.mst_sekolah_id} onChange={handleChange} placeholder="ID Sekolah" error={errors.mst_sekolah_id} />
+                    </div>
+                    <div>
+                      <LabelField required>Gelombang PPDB</LabelField>
+                      <SearchableSelect name="ppdb_gelombang_id" value={formData.ppdb_gelombang_id} onChange={handleChange} options={gelombangOptions} placeholder="Pilih gelombang" error={errors.ppdb_gelombang_id} />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <LabelField required>Jenis Kelamin</LabelField>
+                  <SearchableSelect name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} options={jenisKelaminOptions} placeholder="Pilih jenis kelamin" error={errors.jenis_kelamin} />
+                </div>
+
+                <div>
+                  <LabelField>Tanggal Lahir</LabelField>
+                  <Input type="date" name="tanggal_lahir" value={formData.tanggal_lahir} onChange={handleChange} error={errors.tanggal_lahir} />
+                </div>
+
+                <div>
+                  <LabelField>NISN</LabelField>
+                  <Input type="text" name="nisn" value={formData.nisn} onChange={handleChange} placeholder="NISN (opsional)" error={errors.nisn} />
+                </div>
+
+                <div>
+                  <LabelField>No. Telp/HP</LabelField>
+                  <Input type="text" name="telp_hp" value={formData.telp_hp} onChange={handleChange} placeholder="No. telepon (opsional)" error={errors.telp_hp} />
+                </div>
+
+                <div>
+                  <LabelField>Asal Sekolah</LabelField>
+                  <Input type="text" name="asal_sekolah" value={formData.asal_sekolah} onChange={handleChange} placeholder="Asal sekolah (opsional)" error={errors.asal_sekolah} />
+                </div>
+
+                <div>
+                  <LabelField>Pilihan Jurusan ID</LabelField>
+                  <Input type="number" name="pilihan_jurusan_id" value={formData.pilihan_jurusan_id} onChange={handleChange} placeholder="ID Jurusan (opsional)" error={errors.pilihan_jurusan_id} />
+                </div>
+
+                {isEditMode && (
+                  <div>
+                    <LabelField>Status Pendaftaran</LabelField>
+                    <SearchableSelect name="status_pendaftaran" value={formData.status_pendaftaran} onChange={handleChange} options={STATUS_OPTIONS} placeholder="Pilih status" error={errors.status_pendaftaran} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Section: Akademik ── */}
+            {activeSection === 'akademik' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                    Nilai Rapor
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { name: 'nilai_rata_rata_rapor', label: 'Rata-rata Rapor' },
+                      { name: 'nilai_mtk', label: 'Matematika' },
+                      { name: 'nilai_ipa', label: 'IPA / Sains' },
+                      { name: 'nilai_bindo', label: 'Bahasa Indonesia' },
+                      { name: 'nilai_bing', label: 'Bahasa Inggris' },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <LabelField>{f.label}</LabelField>
+                        <Input
+                          type="number"
+                          name={f.name}
+                          value={formData[f.name]}
+                          onChange={handleChange}
+                          placeholder="0–100"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          error={errors[f.name]}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                    Prestasi & Perilaku
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <LabelField>Jumlah Prestasi</LabelField>
+                      <Input
+                        type="number"
+                        name="jumlah_prestasi"
+                        value={formData.jumlah_prestasi}
+                        onChange={handleChange}
+                        placeholder="0"
+                        min="0"
+                        error={errors.jumlah_prestasi}
+                      />
+                    </div>
+
+                    <div>
+                      <LabelField>Tingkat Prestasi Tertinggi</LabelField>
+                      <SearchableSelect
+                        name="tingkat_prestasi_tertinggi"
+                        value={formData.tingkat_prestasi_tertinggi}
+                        onChange={handleChange}
+                        options={PRESTASI_OPTIONS}
+                        placeholder="Pilih tingkat"
+                        error={errors.tingkat_prestasi_tertinggi}
+                      />
+                    </div>
+
+                    <div>
+                      <LabelField>Poin Pelanggaran</LabelField>
+                      <Input
+                        type="number"
+                        name="poin_pelanggaran"
+                        value={formData.poin_pelanggaran}
+                        onChange={handleChange}
+                        placeholder="0–100"
+                        min="0"
+                        max="100"
+                        error={errors.poin_pelanggaran}
+                      />
+                      <p className="mt-1 text-xs text-gray-400">0 = sempurna, 100 = banyak pelanggaran</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                    Hafalan Qur'an
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <LabelField>Hafidz Qur'an</LabelField>
+                      <SearchableSelect
+                        name="is_hafidz"
+                        value={formData.is_hafidz}
+                        onChange={handleChange}
+                        options={[{ value: '1', label: 'Ya' }, { value: '0', label: 'Tidak' }]}
+                        placeholder="Pilih"
+                        error={errors.is_hafidz}
+                      />
+                    </div>
+
+                    {formData.is_hafidz === '1' && (
+                      <div>
+                        <LabelField>Jumlah Juz Hafalan</LabelField>
+                        <Input
+                          type="number"
+                          name="juz_hafalan"
+                          value={formData.juz_hafalan}
+                          onChange={handleChange}
+                          placeholder="0–30"
+                          min="0"
+                          max="30"
+                          error={errors.juz_hafalan}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex gap-2">
+                {activeSection === 'akademik' && (
+                  <Button type="button" variant="secondary" onClick={() => setActiveSection('identitas')}>
+                    ← Identitas
+                  </Button>
+                )}
+                {activeSection === 'identitas' && (
+                  <Button type="button" variant="secondary" onClick={() => setActiveSection('akademik')}>
+                    Akademik →
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button type="button" variant="secondary" onClick={() => navigate('/ppdb/pendaftaran')}>Batal</Button>
+                <PermissionGuard permission={isEditMode ? 'ppdb.pendaftar.edit' : 'ppdb.pendaftar.create'}>
+                  <Button type="submit" disabled={loading}>
+                    <Save size={18} className="mr-2" />
+                    {loading ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </PermissionGuard>
+              </div>
             </div>
           </form>
         )}

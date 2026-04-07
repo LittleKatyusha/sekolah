@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, Calendar, Hash, DollarSign, ToggleLeft } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Calendar, Hash, DollarSign, ToggleLeft, Sliders, Users, Play } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { gelombangService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+
+const METODE_LABELS = {
+  manual: 'Manual',
+  saw: 'SAW',
+  weighted_rank: 'Weighted Rank',
+}
 
 const GelombangDetail = () => {
   const { id } = useParams()
@@ -84,7 +90,29 @@ const GelombangDetail = () => {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Gelombang</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
+          {/* Smart Selection shortcuts */}
+          <PermissionGuard permission="ppdb.seleksi.view">
+            <Button variant="secondary" onClick={() => navigate(`/ppdb/gelombang/${id}/kriteria`)}>
+              <Sliders size={18} className="mr-2" />
+              Kriteria
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.seleksi.view">
+            <Button variant="secondary" onClick={() => navigate(`/ppdb/gelombang/${id}/kuota`)}>
+              <Users size={18} className="mr-2" />
+              Kuota
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="ppdb.seleksi.run">
+            <Button onClick={() => navigate(`/ppdb/gelombang/${id}/seleksi`)}>
+              <Play size={18} className="mr-2" />
+              Engine Seleksi
+            </Button>
+          </PermissionGuard>
+
+          <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+
           <PermissionGuard permission="ppdb.gelombang.edit">
             <Button variant="secondary" onClick={handleToggleActive}>
               <ToggleLeft size={18} className="mr-2" />
@@ -203,7 +231,43 @@ const GelombangDetail = () => {
                 </div>
               </div>
 
-              <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+              {/* Seleksi info */}
+              {(gelombang.metode_seleksi || gelombang.kuota_total > 0) && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                    Konfigurasi Seleksi
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-violet-50 dark:bg-violet-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Play size={18} className="text-violet-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Metode Seleksi</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {METODE_LABELS[gelombang.metode_seleksi] || gelombang.metode_seleksi || 'Manual'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Users size={18} className="text-teal-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Kuota Total</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {gelombang.kuota_total > 0 ? gelombang.kuota_total : 'Tidak dibatasi'}
+                          {gelombang.allow_cadangan && gelombang.persentase_cadangan > 0
+                            ? ` + ${gelombang.persentase_cadangan}% cadangan`
+                            : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Dibuat pada</p>

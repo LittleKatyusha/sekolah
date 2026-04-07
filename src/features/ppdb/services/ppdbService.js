@@ -135,10 +135,91 @@ export const dokumenService = {
   },
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Smart Selection — Kriteria Seleksi
+// ─────────────────────────────────────────────────────────────────────────────
+const KRITERIA_BASE = '/ppdb/kriteria-seleksi'
+
+export const kriteriaSeleksiService = {
+  getByGelombang: async (gelombangId) =>
+    apiService.get(`${KRITERIA_BASE}/gelombang/${gelombangId}`),
+
+  getById: async (id) =>
+    apiService.get(`${KRITERIA_BASE}/${id}`),
+
+  create: async (data) =>
+    apiService.post(KRITERIA_BASE, data),
+
+  update: async (id, data) =>
+    apiService.put(`${KRITERIA_BASE}/${id}`, data),
+
+  delete: async (id) =>
+    apiService.delete(`${KRITERIA_BASE}/${id}`),
+
+  seedDefault: async (gelombangId) =>
+    apiService.post(`${KRITERIA_BASE}/gelombang/${gelombangId}/seed-default`),
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Smart Selection — Kuota Jurusan
+// ─────────────────────────────────────────────────────────────────────────────
+const KUOTA_BASE = '/ppdb/kuota-jurusan'
+
+export const kuotaJurusanService = {
+  getByGelombang: async (gelombangId) =>
+    apiService.get(`${KUOTA_BASE}/gelombang/${gelombangId}`),
+
+  getSummary: async (gelombangId) =>
+    apiService.get(`${KUOTA_BASE}/gelombang/${gelombangId}/summary`),
+
+  getById: async (id) =>
+    apiService.get(`${KUOTA_BASE}/${id}`),
+
+  create: async (data) =>
+    apiService.post(KUOTA_BASE, data),
+
+  update: async (id, data) =>
+    apiService.put(`${KUOTA_BASE}/${id}`, data),
+
+  delete: async (id) =>
+    apiService.delete(`${KUOTA_BASE}/${id}`),
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Smart Selection — Engine Seleksi
+// ─────────────────────────────────────────────────────────────────────────────
+const SELEKSI_BASE = '/ppdb/seleksi'
+
+export const seleksiService = {
+  getHasilByGelombang: async (gelombangId, params = {}) =>
+    apiService.get(`${SELEKSI_BASE}/gelombang/${gelombangId}/hasil`, { params }),
+
+  getHasilById: async (id) =>
+    apiService.get(`${SELEKSI_BASE}/hasil/${id}`),
+
+  jalankan: async (gelombangId, options = {}) =>
+    apiService.post(`${SELEKSI_BASE}/gelombang/${gelombangId}/jalankan`, options),
+
+  simulasi: async (gelombangId, options = {}) =>
+    apiService.post(`${SELEKSI_BASE}/gelombang/${gelombangId}/simulasi`, options),
+
+  finalisasi: async (gelombangId) =>
+    apiService.post(`${SELEKSI_BASE}/gelombang/${gelombangId}/finalisasi`),
+
+  reset: async (gelombangId) =>
+    apiService.delete(`${SELEKSI_BASE}/gelombang/${gelombangId}/reset`),
+
+  fraudScan: async (gelombangId) =>
+    apiService.post(`${SELEKSI_BASE}/gelombang/${gelombangId}/fraud-scan`),
+}
+
 export default {
   gelombangService,
   pendaftarService,
   dokumenService,
+  kriteriaSeleksiService,
+  kuotaJurusanService,
+  seleksiService,
 }
 
 /**

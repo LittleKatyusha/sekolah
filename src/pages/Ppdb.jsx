@@ -9,15 +9,40 @@ import DokumenList from '../features/ppdb/pages/DokumenList'
 import DokumenForm from '../features/ppdb/pages/DokumenForm'
 import DokumenDetail from '../features/ppdb/pages/DokumenDetail'
 import PortalPpdb from '../features/ppdb/pages/PortalPpdb'
+// Smart Selection
+import KriteriaSeleksiList from '../features/ppdb/pages/KriteriaSeleksiList'
+import KriteriaSeleksiForm from '../features/ppdb/pages/KriteriaSeleksiForm'
+import KuotaJurusanList from '../features/ppdb/pages/KuotaJurusanList'
+import KuotaJurusanForm from '../features/ppdb/pages/KuotaJurusanForm'
+import SeleksiEngine from '../features/ppdb/pages/SeleksiEngine'
+import HasilSeleksiList from '../features/ppdb/pages/HasilSeleksiList'
 
 const Ppdb = () => {
   return (
     <Routes>
       <Route index element={<Navigate to="/ppdb/gelombang" replace />} />
+
+      {/* ── Gelombang ── */}
       <Route path="gelombang" element={<GelombangList />} />
       <Route path="gelombang/create" element={<GelombangForm />} />
       <Route path="gelombang/:id" element={<GelombangDetail />} />
       <Route path="gelombang/:id/edit" element={<GelombangForm />} />
+
+      {/* ── Smart Selection: Kriteria ── */}
+      <Route path="gelombang/:gelombangId/kriteria" element={<KriteriaSeleksiList />} />
+      <Route path="gelombang/:gelombangId/kriteria/create" element={<KriteriaSeleksiForm />} />
+      <Route path="gelombang/:gelombangId/kriteria/:kriteriaId/edit" element={<KriteriaSeleksiForm />} />
+
+      {/* ── Smart Selection: Kuota Jurusan ── */}
+      <Route path="gelombang/:gelombangId/kuota" element={<KuotaJurusanList />} />
+      <Route path="gelombang/:gelombangId/kuota/create" element={<KuotaJurusanForm />} />
+      <Route path="gelombang/:gelombangId/kuota/:kuotaId/edit" element={<KuotaJurusanForm />} />
+
+      {/* ── Smart Selection: Engine & Hasil ── */}
+      <Route path="gelombang/:gelombangId/seleksi" element={<SeleksiEngine />} />
+      <Route path="gelombang/:gelombangId/hasil-seleksi" element={<HasilSeleksiList />} />
+
+      {/* ── Pendaftaran ── */}
       <Route path="pendaftaran" element={<PendaftarList />} />
       <Route path="pendaftaran/create" element={<PendaftarForm />} />
       <Route path="pendaftaran/:id" element={<PendaftarDetail />} />
@@ -28,11 +53,16 @@ const Ppdb = () => {
       <Route path="pendaftar/create" element={<PendaftarForm />} />
       <Route path="pendaftar/:id" element={<PendaftarDetail />} />
       <Route path="pendaftar/:id/edit" element={<PendaftarForm />} />
+
+      {/* ── Portal publik ── */}
       <Route path="portal" element={<PortalPpdb />} />
+
+      {/* ── Dokumen ── */}
       <Route path="dokumen" element={<DokumenList />} />
       <Route path="dokumen/create" element={<DokumenForm />} />
       <Route path="dokumen/:id" element={<DokumenDetail />} />
       <Route path="dokumen/:id/edit" element={<DokumenForm />} />
+
       <Route path="*" element={<Navigate to="/ppdb/gelombang" replace />} />
     </Routes>
   )

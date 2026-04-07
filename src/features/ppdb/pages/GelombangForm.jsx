@@ -15,6 +15,17 @@ const STATUS_OPTIONS = [
   { value: '0', label: 'Nonaktif' },
 ]
 
+const METODE_OPTIONS = [
+  { value: 'manual', label: 'Manual — Admin menentukan sendiri' },
+  { value: 'saw', label: 'SAW — Simple Additive Weighting (normalisasi min-max)' },
+  { value: 'weighted_rank', label: 'Weighted Rank — Peringkat tertimbang (toleran outlier)' },
+]
+
+const BOOL_OPTIONS = [
+  { value: '1', label: 'Ya' },
+  { value: '0', label: 'Tidak' },
+]
+
 const GelombangForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -32,6 +43,12 @@ const GelombangForm = () => {
     tgl_selesai: '',
     biaya_pendaftaran: '',
     is_active: '1',
+    // Seleksi
+    kuota_total: '0',
+    is_seleksi_otomatis: '0',
+    metode_seleksi: 'manual',
+    allow_cadangan: '1',
+    persentase_cadangan: '20',
   })
 
   const [errors, setErrors] = useState({})
@@ -66,6 +83,12 @@ const GelombangForm = () => {
         tgl_selesai: g.tgl_selesai || '',
         biaya_pendaftaran: g.biaya_pendaftaran !== null && g.biaya_pendaftaran !== undefined ? String(g.biaya_pendaftaran) : '',
         is_active: g.is_active !== null && g.is_active !== undefined ? String(Number(g.is_active)) : '1',
+        // Seleksi
+        kuota_total: g.kuota_total != null ? String(g.kuota_total) : '0',
+        is_seleksi_otomatis: g.is_seleksi_otomatis ? '1' : '0',
+        metode_seleksi: g.metode_seleksi || 'manual',
+        allow_cadangan: g.allow_cadangan !== false ? '1' : '0',
+        persentase_cadangan: g.persentase_cadangan != null ? String(g.persentase_cadangan) : '20',
       })
     } else {
       showError('Gagal mengambil data gelombang')
@@ -106,6 +129,12 @@ const GelombangForm = () => {
       tgl_selesai: formData.tgl_selesai,
       biaya_pendaftaran: formData.biaya_pendaftaran ? parseFloat(formData.biaya_pendaftaran) : null,
       is_active: formData.is_active !== '' ? parseInt(formData.is_active) : null,
+      // Seleksi
+      kuota_total: parseInt(formData.kuota_total) || 0,
+      is_seleksi_otomatis: formData.is_seleksi_otomatis === '1',
+      metode_seleksi: formData.metode_seleksi,
+      allow_cadangan: formData.allow_cadangan === '1',
+      persentase_cadangan: parseInt(formData.persentase_cadangan) || 20,
     }
 
     let result
@@ -243,6 +272,77 @@ const GelombangForm = () => {
                   placeholder="Pilih status"
                   error={errors.is_active}
                 />
+              </div>
+            </div>
+
+            {/* ── Konfigurasi Seleksi ── */}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                Konfigurasi Seleksi Otomatis
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Metode Seleksi
+                  </label>
+                  <SearchableSelect
+                    name="metode_seleksi"
+                    value={formData.metode_seleksi}
+                    onChange={handleChange}
+                    options={METODE_OPTIONS}
+                    placeholder="Pilih metode"
+                    error={errors.metode_seleksi}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Kuota Total Penerimaan
+                  </label>
+                  <input
+                    type="number"
+                    name="kuota_total"
+                    value={formData.kuota_total}
+                    onChange={handleChange}
+                    min="0"
+                    placeholder="0 = tidak dibatasi"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">0 = kuota tidak dibatasi (gunakan kuota per jurusan)</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Izinkan Daftar Cadangan
+                  </label>
+                  <SearchableSelect
+                    name="allow_cadangan"
+                    value={formData.allow_cadangan}
+                    onChange={handleChange}
+                    options={BOOL_OPTIONS}
+                    placeholder="Pilih"
+                    error={errors.allow_cadangan}
+                  />
+                </div>
+
+                {formData.allow_cadangan === '1' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Persentase Cadangan (%)
+                    </label>
+                    <input
+                      type="number"
+                      name="persentase_cadangan"
+                      value={formData.persentase_cadangan}
+                      onChange={handleChange}
+                      min="0"
+                      max="100"
+                      placeholder="20"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-400">% dari kuota total yang dialokasikan untuk cadangan</p>
+                  </div>
+                )}
               </div>
             </div>
 
