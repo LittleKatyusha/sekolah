@@ -1,4 +1,5 @@
 import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -17,7 +18,10 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
 
   const handleAction = (action) => {
     setIsOpen(false)
-    action()
+
+    if (typeof action === 'function') {
+      action()
+    }
   }
 
   const handleButtonClick = (e) => {
@@ -64,7 +68,7 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
         </svg>
       </button>
       
-      {isOpen && (
+      {isOpen && createPortal(
         <div
           ref={menuRef}
           className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]"
@@ -111,7 +115,8 @@ const ActionsMenu = memo(({ data, onDetail, onEdit, onDelete }) => {
               </>
             </PermissionGuard>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

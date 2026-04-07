@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -96,6 +96,10 @@ const SiswaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Siswa</h1>
         </div>
         <div className="flex gap-3">
+          <Button variant="primary" onClick={() => navigate(`/siswa/${id}/insight`)}>
+            <Activity size={16} className="mr-2" />
+            Insight 360°
+          </Button>
           <PermissionGuard permission="siswa.edit">
             <Button variant="warning" onClick={() => navigate(`/siswa/${id}/edit`)}>
               <Edit size={18} className="mr-2" />

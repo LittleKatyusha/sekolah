@@ -106,6 +106,7 @@ const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
+const SiswaInsightPage = lazy(() => import('./features/siswa/pages/SiswaInsightPage'))
 const EWS = lazy(() => import('./pages/EWS'))
 const JadwalPelajaran = lazy(() => import('./pages/JadwalPelajaran'))
 const HariOperasional = lazy(() => import('./features/hari-operasional/pages/HariOperasionalList'))
@@ -236,7 +237,8 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
 
-              {/* Siswa */}
+              {/* Siswa — insight route must be before the wildcard */}
+              <Route path="/siswa/:id/insight" element={<SiswaInsightPage />} />
               <Route path="/siswa/*" element={<Siswa />} />
 
               {/* Kelas */}
