@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Search, Plus, RefreshCw } from 'lucide-react'
+import { useCallback, useMemo, useRef } from 'react'
+import { Plus, RefreshCw } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -14,13 +14,6 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const gridRef = useRef(null)
   const resource = tesMinatBakatResources[resourceKey]
-  const [searchText, setSearchText] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchText), 300)
-    return () => clearTimeout(timer)
-  }, [searchText])
 
   const pesertaIdFilter = searchParams.get('pesertaId')
   const pesertaNameFilter = searchParams.get('pesertaName')
@@ -29,10 +22,10 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: debouncedSearch || '',
+    search: '',
     filter: '{}',
     ...(resourceKey === 'hasil' && pesertaIdFilter ? { trx_tes_minat_bakat_peserta_id: pesertaIdFilter } : {}),
-  }), [debouncedSearch, pesertaIdFilter, resourceKey])
+  }), [pesertaIdFilter, resourceKey])
 
   const handleDetail = useCallback((record) => {
     navigate(`${resource.basePath}/${record.id}`)
@@ -70,7 +63,12 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
   }, [resource])
 
   const handleRefresh = useCallback(() => {
-    gridRef.current?.refreshGrid?.()
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
+    }
   }, [])
 
   const handleGridReady = useCallback((params) => {
@@ -110,17 +108,6 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{resource.listTitle}</h1>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder={resource.searchPlaceholder}
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-72"
-            />
-          </div>
-
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>

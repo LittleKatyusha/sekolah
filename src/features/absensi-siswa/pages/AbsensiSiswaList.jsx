@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search,
   Plus,
   RefreshCw,
   Calendar,
@@ -408,8 +407,6 @@ const StudentAbsensiView = () => {
 const AdminAbsensiSiswaList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [searchText, setSearchText] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filters, setFilters] = useState({
     tanggal_mulai: '',
     tanggal_akhir: '',
@@ -419,13 +416,6 @@ const AdminAbsensiSiswaList = () => {
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [selectedSiswaId, setSelectedSiswaId] = useState('')
   const [summaryData, setSummaryData] = useState(null)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchText)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [searchText])
 
   const buildSiswaOption = useCallback((siswa) => ({
     value: String(siswa.id),
@@ -473,7 +463,6 @@ const AdminAbsensiSiswaList = () => {
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: debouncedSearch || '',
     filter: JSON.stringify({
       tanggal_mulai: filters.tanggal_mulai || '',
       tanggal_akhir: filters.tanggal_akhir || '',
@@ -481,7 +470,7 @@ const AdminAbsensiSiswaList = () => {
     }),
     tanggal_mulai: filters.tanggal_mulai || undefined,
     tanggal_akhir: filters.tanggal_akhir || undefined,
-  }), [filters.tanggal_akhir, filters.tanggal_mulai, debouncedSearch, selectedSiswaId])
+  }), [filters.tanggal_akhir, filters.tanggal_mulai, selectedSiswaId])
 
   const handleSiswaChange = useCallback((e) => {
     const val = e.target.value
@@ -547,6 +536,10 @@ const AdminAbsensiSiswaList = () => {
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
+    }
+    // Also try to purge cache and reload if available
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
 
@@ -652,16 +645,6 @@ const AdminAbsensiSiswaList = () => {
               placeholder="Cari Siswa..."
               searchPlaceholder="Cari berdasarkan nama/NIS..."
               noOptionsText="Siswa tidak ditemukan"
-            />
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari absensi..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 sm:w-64"
             />
           </div>
           <Button

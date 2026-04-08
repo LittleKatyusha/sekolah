@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -12,11 +12,8 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 const RolePermissionsList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [searchText, setSearchText] = useState('')
 
-  const staticParams = useMemo(() => ({
-    search: searchText || undefined,
-  }), [searchText])
+  const staticParams = useMemo(() => ({}), [])
 
   const handleEdit = useCallback((data) => navigate(`/admin/role-permissions/${data.id}/edit`), [navigate])
   const handleDetail = useCallback((data) => navigate(`/admin/role-permissions/${data.id}`), [navigate])
@@ -43,11 +40,8 @@ const RolePermissionsList = () => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
     }
-  }, [])
-
-  const handleSearch = useCallback(() => {
-    if (gridRef.current?.refreshGrid) {
-      gridRef.current.refreshGrid()
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
 
@@ -86,17 +80,6 @@ const RolePermissionsList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Role Permissions</h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 sm:flex-initial sm:w-64">
-            <input
-              type="text"
-              placeholder="Cari permission..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>

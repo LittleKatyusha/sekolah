@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
-import { Search, Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -12,14 +12,12 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 const RolesList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [searchText, setSearchText] = useState('')
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
     filter: '{}',
-  }), [searchText])
+  }), [])
 
   const handleEdit = useCallback((data) => navigate(`/admin/roles/${data.id}/edit`), [navigate])
   const handleDetail = useCallback((data) => navigate(`/admin/roles/${data.id}`), [navigate])
@@ -44,10 +42,9 @@ const RolesList = () => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
     }
-  }, [])
-
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value)
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
+    }
   }, [])
 
   const columnDefs = useMemo(() => [
@@ -97,16 +94,6 @@ const RolesList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Roles</h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari role..."
-              value={searchText}
-              onChange={onFilterTextBoxChanged}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
-            />
-          </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>

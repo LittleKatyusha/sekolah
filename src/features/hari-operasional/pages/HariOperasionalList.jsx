@@ -13,13 +13,16 @@ const HariOperasionalList = () => {
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'asc',
-    search: '',
     filter: '{}',
   }), [])
 
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
+    }
+    // Also try to purge cache and reload if available
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
 

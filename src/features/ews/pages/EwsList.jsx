@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, BellRing, CheckCircle2, Eye, Filter, RefreshCw, Search, ShieldAlert, Zap } from 'lucide-react'
+import { AlertTriangle, BellRing, CheckCircle2, Eye, Filter, RefreshCw, ShieldAlert, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
-import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../../siswa/services/siswaService'
@@ -122,7 +121,6 @@ const EwsList = () => {
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [searchText, setSearchText] = useState('')
   const [siswaOptions, setSiswaOptions] = useState([])
   const [filters, setFilters] = useState({
     mst_siswa_id: '',
@@ -254,33 +252,13 @@ const EwsList = () => {
     handleTrigger(filters.mst_siswa_id, selectedOption?.label || 'siswa terpilih')
   }, [filters.mst_siswa_id, handleTrigger, siswaOptions])
 
-  const filteredAlerts = useMemo(() => {
-    const normalizedSearch = searchText.trim().toLowerCase()
-    const sortedAlerts = [...alerts].sort((left, right) => {
+  const sortedAlerts = useMemo(() => {
+    return [...alerts].sort((left, right) => {
       const leftDate = left.created_at ? new Date(left.created_at).getTime() : 0
       const rightDate = right.created_at ? new Date(right.created_at).getTime() : 0
       return rightDate - leftDate
     })
-
-    if (!normalizedSearch) return sortedAlerts
-
-    return sortedAlerts.filter((alert) => {
-      const candidate = [
-        alert.id,
-        alert.kategori,
-        alert.level,
-        alert.pesan,
-        alert.mst_siswa_id,
-        alert.siswa?.nama,
-        alert.siswa?.nis,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-
-      return candidate.includes(normalizedSearch)
-    })
-  }, [alerts, searchText])
+  }, [alerts])
 
   const stats = useMemo(() => {
     const unresolvedCount = alerts.filter((alert) => !alert.is_resolved).length
@@ -296,8 +274,8 @@ const EwsList = () => {
   }, [alerts])
 
   const hasFilters = useMemo(() => {
-    return Boolean(filters.mst_siswa_id || filters.kategori || filters.level || filters.is_resolved !== '' || searchText.trim())
-  }, [filters, searchText])
+    return Boolean(filters.mst_siswa_id || filters.kategori || filters.level || filters.is_resolved !== '')
+  }, [filters])
 
   return (
     <div className="space-y-6">
@@ -416,27 +394,17 @@ const EwsList = () => {
             />
           </div>
         </div>
-
-        <div className="mt-4 max-w-xl relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <Input
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Cari lokal berdasarkan pesan, kategori, siswa, atau ID"
-            className="pl-10"
-          />
-        </div>
       </Card>
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
-      ) : filteredAlerts.length === 0 ? (
+      ) : sortedAlerts.length === 0 ? (
         <EmptyState hasFilters={hasFilters} />
       ) : (
         <div className="space-y-4">
-          {filteredAlerts.map((alert) => {
+          {sortedAlerts.map((alert) => {
             const categoryMeta = getCategoryMeta(alert.kategori)
             const levelMeta = getLevelMeta(Number(alert.level))
 

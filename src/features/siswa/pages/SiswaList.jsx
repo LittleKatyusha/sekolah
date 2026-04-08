@@ -271,6 +271,9 @@ const SiswaList = () => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
     }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
+    }
   }, [])
 
   return (
