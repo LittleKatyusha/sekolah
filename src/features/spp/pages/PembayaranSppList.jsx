@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle, FileBarChart2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -297,6 +297,12 @@ const PembayaranSppList = () => {
             <Button variant="secondary" onClick={() => navigate('/keuangan/pembayaran-spp/tunggakan')}>
               <AlertTriangle size={18} className="mr-2 text-orange-500" />
               Rekap Tunggakan
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="pembayaran-spp.view">
+            <Button variant="secondary" onClick={() => navigate('/keuangan/pembayaran-spp/laporan-periode')}>
+              <FileBarChart2 size={18} className="mr-2 text-blue-500" />
+              Laporan Keuangan
             </Button>
           </PermissionGuard>
           <PermissionGuard permission="pembayaran-spp.create">

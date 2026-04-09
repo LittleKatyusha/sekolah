@@ -63,6 +63,7 @@ const PAGE_TITLES = {
   // Keuangan
   '/keuangan/tarif-spp': 'Tarif SPP',
   '/keuangan/pembayaran-spp': 'Pembayaran SPP',
+  '/keuangan/pembayaran-spp/laporan-periode': 'Laporan Keuangan SPP',
 
   // Lainnya
   '/ekstrakurikuler': 'Ekstrakurikuler',
@@ -140,6 +141,7 @@ const PREFIX_TITLES = [
   ['/admin/activity-logs', 'Activity Logs'],
   ['/admin/menus', 'Manajemen Menu'],
   ['/keuangan/tarif-spp', 'Tarif SPP'],
+  ['/keuangan/pembayaran-spp/laporan-periode', 'Laporan Keuangan SPP'],
   ['/keuangan/pembayaran-spp', 'Pembayaran SPP'],
   ['/absensi-siswa/rekap-bulanan', 'Rekap Absensi Siswa Bulanan'],
   ['/absensi-siswa', 'Absensi Siswa'],

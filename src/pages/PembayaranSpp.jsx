@@ -3,6 +3,7 @@ import PembayaranSppList from '../features/spp/pages/PembayaranSppList'
 import PembayaranSppForm from '../features/spp/pages/PembayaranSppForm'
 import PembayaranSppDetail from '../features/spp/pages/PembayaranSppDetail'
 import PembayaranSppTunggakan from '../features/spp/pages/PembayaranSppTunggakan'
+import LaporanSppPeriode from '../features/spp/pages/LaporanSppPeriode'
 
 const PembayaranSpp = () => {
   return (
@@ -10,6 +11,7 @@ const PembayaranSpp = () => {
       <Route path="/" element={<PembayaranSppList />} />
       <Route path="create" element={<PembayaranSppForm />} />
       <Route path="tunggakan" element={<PembayaranSppTunggakan />} />
+      <Route path="laporan-periode" element={<LaporanSppPeriode />} />
       <Route path=":id" element={<PembayaranSppDetail />} />
       <Route path=":id/edit" element={<PembayaranSppForm />} />
     </Routes>

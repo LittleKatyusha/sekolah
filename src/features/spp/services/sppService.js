@@ -81,6 +81,10 @@ export const pembayaranSppService = {
   getTunggakan: async (siswaId, params = {}) => {
     return await apiService.get(`${PEMBAYARAN_BASE}/siswa/${siswaId}/tunggakan`, { params })
   },
+
+  getLaporanPeriode: async (params = {}) => {
+    return await apiService.get(`${PEMBAYARAN_BASE}/laporan-periode`, { params })
+  },
 }
 
 export default {
