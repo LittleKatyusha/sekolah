@@ -24,6 +24,7 @@ const PAGE_TITLES = {
   '/wali': 'Wali Murid',
 
   // Absensi
+  '/absensi-siswa/rekap-bulanan': 'Rekap Absensi Siswa Bulanan',
   '/absensi-siswa': 'Absensi Siswa',
   '/absensi-guru': 'Absensi Guru',
   '/absensi-guru/rekap-bulanan': 'Rekap Absensi Guru Bulanan',
@@ -140,6 +141,7 @@ const PREFIX_TITLES = [
   ['/admin/menus', 'Manajemen Menu'],
   ['/keuangan/tarif-spp', 'Tarif SPP'],
   ['/keuangan/pembayaran-spp', 'Pembayaran SPP'],
+  ['/absensi-siswa/rekap-bulanan', 'Rekap Absensi Siswa Bulanan'],
   ['/absensi-siswa', 'Absensi Siswa'],
   ['/absensi-guru/rekap-bulanan', 'Rekap Absensi Guru Bulanan'],
   ['/absensi-guru', 'Absensi Guru'],

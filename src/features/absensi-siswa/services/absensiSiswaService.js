@@ -85,6 +85,8 @@ export const absensiSiswaService = {
   getByDateRange: async (data) => {
     return await apiService.post(`${BASE_URL}/date-range`, data)
   },
+
+  getRekapBulanan: (params = {}) => apiService.get(`${BASE_URL}/rekap-bulanan`, { params }),
 }
 
 export default absensiSiswaService

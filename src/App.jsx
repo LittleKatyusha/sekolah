@@ -34,6 +34,7 @@ const Guru = lazy(() => import('./pages/Guru'))
 const AbsensiSiswaList = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaList'))
 const AbsensiSiswaForm = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaForm'))
 const AbsensiSiswaDetail = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaDetail'))
+const AbsensiSiswaRekapBulanan = lazy(() => import('./features/absensi-siswa/pages/AbsensiSiswaRekapBulanan'))
 const AbsensiGuruList = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruList'))
 const AbsensiGuruForm = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruForm'))
 const AbsensiGuruDetail = lazy(() => import('./features/absensi-guru/pages/AbsensiGuruDetail'))
@@ -263,6 +264,7 @@ function App() {
               {/* Absensi Siswa */}
               <Route path="/absensi-siswa" element={<AbsensiSiswaList />} />
               <Route path="/absensi-siswa/tambah" element={<AbsensiSiswaForm />} />
+              <Route path="/absensi-siswa/rekap-bulanan" element={<AbsensiSiswaRekapBulanan />} />
               <Route path="/absensi-siswa/edit/:id" element={<AbsensiSiswaForm />} />
               <Route path="/absensi-siswa/:id" element={<AbsensiSiswaDetail />} />
 

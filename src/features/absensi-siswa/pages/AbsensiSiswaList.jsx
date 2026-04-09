@@ -7,6 +7,7 @@ import {
   User2,
   Sparkles,
   ClipboardList,
+  BarChart2,
 } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -656,6 +657,10 @@ const AdminAbsensiSiswaList = () => {
           </Button>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/absensi-siswa/rekap-bulanan')} title="Rekap Bulanan">
+            <BarChart2 size={18} className="mr-2" />
+            Rekap Bulanan
           </Button>
           <PermissionGuard permission="absensi-siswa.create">
             <Button onClick={handleAdd}>
