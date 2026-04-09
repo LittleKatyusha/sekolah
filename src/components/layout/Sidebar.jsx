@@ -25,6 +25,7 @@ import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 
 const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
+const SIDEBAR_MENU_CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const sidebarMenuRequestCache = new Map()
 
 const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${userId}`
@@ -72,11 +73,17 @@ const readSidebarMenuCache = (userId) => {
     if (!cached) return null
 
     const parsed = JSON.parse(cached)
-    if (!Array.isArray(parsed)) return null
 
-    const hydratedMenus = parsed.map(hydrateCachedMenuItem).filter(Boolean)
+    // Support legacy format (plain array) — treat as expired
+    if (Array.isArray(parsed)) return null
 
-    return hydratedMenus.length === parsed.length ? hydratedMenus : null
+    if (!parsed || !Array.isArray(parsed.data)) return null
+
+    if (Date.now() - parsed.cachedAt > SIDEBAR_MENU_CACHE_TTL_MS) return null
+
+    const hydratedMenus = parsed.data.map(hydrateCachedMenuItem).filter(Boolean)
+
+    return hydratedMenus.length === parsed.data.length ? hydratedMenus : null
   } catch {
     return null
   }
@@ -87,7 +94,8 @@ const writeSidebarMenuCache = (userId, menus) => {
 
   try {
     const serializedMenus = Array.isArray(menus) ? menus.map(serializeMenuItem) : []
-    window.sessionStorage.setItem(getSidebarMenuCacheKey(userId), JSON.stringify(serializedMenus))
+    const cacheEntry = { data: serializedMenus, cachedAt: Date.now() }
+    window.sessionStorage.setItem(getSidebarMenuCacheKey(userId), JSON.stringify(cacheEntry))
   } catch {
     // Ignore sessionStorage write failures and fall back to in-memory state only.
   }

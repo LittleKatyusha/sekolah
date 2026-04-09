@@ -1,5 +1,5 @@
 
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -11,6 +11,7 @@ import useAuthStore from './store/useAuthStore'
 import echoService from './services/echoService'
 import useNotificationStore from './store/useNotificationStore'
 import { setAuthExpiredHandler } from './utils/api'
+import { runCacheWarming } from './utils/cacheWarmer'
 import NavigationProgress from './components/ui/NavigationProgress'
 import useNavigationProgressStore from './store/useNavigationProgressStore'
 import { usePageTitle } from './hooks/usePageTitle'
@@ -217,6 +218,28 @@ function AuthExpiryNavigator() {
   return null
 }
 
+// ── Cache warming manager ─────────────────────────────────────────────────────
+// Fires background cache pre-warming once per login session so that reference
+// dropdowns and the sidebar menu are ready before the user navigates to them.
+function CacheWarmingManager() {
+  const { isAuthenticated, user } = useAuthStore()
+  const warmedRef = useRef(false)
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (!warmedRef.current) {
+        warmedRef.current = true
+        runCacheWarming(user)
+      }
+    } else {
+      // Reset so we warm again on next login
+      warmedRef.current = false
+    }
+  }, [isAuthenticated, user])
+
+  return null
+}
+
 function App() {
   const { isAuthenticated } = useAuthStore()
   return (
@@ -226,6 +249,7 @@ function App() {
         <TitleUpdater />
         <NavigationProgressObserver />
         <AuthExpiryNavigator />
+        <CacheWarmingManager />
         <WebSocketManager />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
