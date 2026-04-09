@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -126,14 +126,11 @@ const PresensiList = () => {
   const { options: statusAbsensiOptions } = useReferenceOptions('status_absensi')
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [searchText, setSearchText] = useState('')
-
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: searchText || '',
     filter: '{}',
-  }), [searchText])
+  }), [])
 
   const handleDetail = useCallback((data) => {
     navigate(`/akademik/presensi/${data.id}`)
@@ -162,6 +159,9 @@ const PresensiList = () => {
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
+    }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
 
@@ -297,16 +297,6 @@ const PresensiList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Presensi</h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari presensi..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
-            />
-          </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>

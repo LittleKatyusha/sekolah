@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
+import { useState, useMemo, useCallback, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, RefreshCw, BarChart2 } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -8,8 +8,6 @@ import ActionsMenu from '../../../components/ui/ActionsMenu'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-
-const DEBOUNCE_DELAY = 400
 
 const formatDate = (value) => {
   if (!value) return '-'
@@ -45,22 +43,12 @@ StatusBadge.displayName = 'StatusBadge'
 const AbsensiGuruList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [searchText, setSearchText] = useState('')
-  const [debouncedSearchText, setDebouncedSearchText] = useState('')
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchText(searchText)
-    }, DEBOUNCE_DELAY)
-    return () => clearTimeout(timer)
-  }, [searchText])
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: debouncedSearchText || '',
     filter: '{}',
-  }), [debouncedSearchText])
+  }), [])
 
   const handleDetail = useCallback((data) => {
     if (!data?.id) return
@@ -95,6 +83,10 @@ const AbsensiGuruList = () => {
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
+    }
+    // Also try to purge cache and reload if available
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
 
@@ -207,16 +199,6 @@ const AbsensiGuruList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Absensi Guru</h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari absensi guru..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
-            />
-          </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>

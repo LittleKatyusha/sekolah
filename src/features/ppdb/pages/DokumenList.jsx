@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { Plus, Search, MoreVertical, Eye, Edit, Trash2, RefreshCw } from 'lucide-react'
+import { Plus, MoreVertical, Eye, Edit, Trash2, RefreshCw } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -62,14 +62,11 @@ const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
 const DokumenList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const [search, setSearch] = useState('')
-
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    search: search || '',
     filter: '{}',
-  }), [search])
+  }), [])
 
   const handleDelete = useCallback(async (data) => {
     if (!data?.id) {
@@ -94,6 +91,9 @@ const DokumenList = () => {
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
       gridRef.current.refreshGrid()
+    }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
 
@@ -145,16 +145,6 @@ const DokumenList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dokumen PPDB</h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari dokumen..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500 focus:outline-none w-full sm:w-64"
-            />
-          </div>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
