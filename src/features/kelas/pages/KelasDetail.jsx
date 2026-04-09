@@ -5,6 +5,7 @@
  import '../../../utils/agGridModules'
  import Card from '../../../components/ui/Card'
  import Button from '../../../components/ui/Button'
+ import RecordHistory from '../../activity-logs/components/RecordHistory'
  import PermissionGuard from '../../../components/guards/PermissionGuard'
  import { kelasService } from '../services/kelasService'
  import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -256,6 +257,13 @@
            </Card>
          </div>
        </div>
+
+       <Card>
+         <div className="p-6">
+           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Perubahan</h3>
+           <RecordHistory table="mst_kelas" recordId={id} />
+         </div>
+       </Card>
      </div>
    )
  }

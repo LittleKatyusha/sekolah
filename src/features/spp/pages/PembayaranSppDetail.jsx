@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, DollarSign, User, Calendar, Hash, CreditCard, FileText } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import RecordHistory from '../../activity-logs/components/RecordHistory'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -276,6 +277,13 @@ const PembayaranSppDetail = () => {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Perubahan</h3>
+          <RecordHistory table="trx_pembayaran_spp" recordId={id} />
+        </div>
+      </Card>
     </div>
   )
 }

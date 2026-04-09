@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, User, Mail, Phone, School, Hash, CheckCircle, XCircle, ShieldCheck, FileText } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import RecordHistory from '../../activity-logs/components/RecordHistory'
 import { pendaftarService, dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
@@ -311,6 +312,13 @@ const PendaftarDetail = () => {
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-sm">Belum ada dokumen yang diunggah.</p>
           )}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Perubahan</h3>
+          <RecordHistory table="ppdb_pendaftar" recordId={id} />
         </div>
       </Card>
     </div>

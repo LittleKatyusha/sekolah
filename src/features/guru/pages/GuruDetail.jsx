@@ -5,6 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { guruService } from '../services/guruService'
+import RecordHistory from '../../activity-logs/components/RecordHistory'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
@@ -248,6 +249,13 @@ const GuruDetail = () => {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Perubahan</h3>
+          <RecordHistory table="mst_guru" recordId={id} />
+        </div>
+      </Card>
     </div>
   )
 }

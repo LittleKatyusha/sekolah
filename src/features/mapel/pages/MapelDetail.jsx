@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, BookOpen, Hash } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import RecordHistory from '../../activity-logs/components/RecordHistory'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { mapelService } from '../services/mapelService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -135,6 +136,13 @@ const MapelDetail = () => {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Perubahan</h3>
+          <RecordHistory table="mst_mapel" recordId={id} />
+        </div>
+      </Card>
     </div>
   )
 }

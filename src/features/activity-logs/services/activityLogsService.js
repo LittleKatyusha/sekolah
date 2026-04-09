@@ -64,6 +64,17 @@ export const activityLogsService = {
   getStatistics: async () => {
     return await apiService.get(`${BASE_URL}/statistics`)
   },
+
+  /**
+   * Get history of changes for a specific record
+   * @param {string} table - DB table name
+   * @param {number|string} id - Record ID
+   * @param {Object} params - Query parameters (per_page, page)
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getByRecord: async (table, id, params = {}) => {
+    return await apiService.get(`${BASE_URL}/record/${table}/${id}`, { params })
+  },
 }
 
 export default activityLogsService 

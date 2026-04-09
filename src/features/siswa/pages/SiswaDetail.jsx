@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../services/siswaService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import RecordHistory from '../../activity-logs/components/RecordHistory'
 
 const SiswaDetail = () => {
   const { id } = useParams()
@@ -196,6 +197,17 @@ const SiswaDetail = () => {
                 >
                   <BookOpen size={16} className="inline mr-2" />
                   Riwayat Akademik
+                </button>
+                <button
+                  onClick={() => setActiveTab('riwayat')}
+                  className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                    activeTab === 'riwayat'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <History size={16} className="inline mr-2" />
+                  Riwayat Perubahan
                 </button>
               </nav>
             </div>
@@ -449,6 +461,10 @@ const SiswaDetail = () => {
                   <BookOpen size={48} className="mx-auto text-gray-300 mb-3" />
                   <p className="text-gray-500">Riwayat akademik belum tersedia</p>
                 </div>
+              )}
+
+              {activeTab === 'riwayat' && (
+                <RecordHistory table="mst_siswa" recordId={id} />
               )}
             </div>
           </Card>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, ClipboardList, Hash } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import RecordHistory from '../../activity-logs/components/RecordHistory'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { raporService } from '../services/raporService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -285,6 +286,13 @@ const RaporDetail = () => {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Perubahan</h3>
+          <RecordHistory table="trx_rapor" recordId={id} />
+        </div>
+      </Card>
     </div>
   )
 }
