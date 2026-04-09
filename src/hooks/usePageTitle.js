@@ -26,6 +26,7 @@ const PAGE_TITLES = {
   // Absensi
   '/absensi-siswa': 'Absensi Siswa',
   '/absensi-guru': 'Absensi Guru',
+  '/absensi-guru/rekap-bulanan': 'Rekap Absensi Guru Bulanan',
 
   // Akademik
   '/akademik/nilai': 'Nilai',
@@ -140,6 +141,7 @@ const PREFIX_TITLES = [
   ['/keuangan/tarif-spp', 'Tarif SPP'],
   ['/keuangan/pembayaran-spp', 'Pembayaran SPP'],
   ['/absensi-siswa', 'Absensi Siswa'],
+  ['/absensi-guru/rekap-bulanan', 'Rekap Absensi Guru Bulanan'],
   ['/absensi-guru', 'Absensi Guru'],
   ['/bk/jenis', 'BK — Jenis'],
   ['/bk/kategori', 'BK — Kategori'],

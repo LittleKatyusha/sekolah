@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, RefreshCw } from 'lucide-react'
+import { Search, Plus, RefreshCw, BarChart2 } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -220,6 +220,12 @@ const AbsensiGuruList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
+          <PermissionGuard permission="absensi-guru.view">
+            <Button onClick={() => navigate('/absensi-guru/rekap-bulanan')} variant="outline">
+              <BarChart2 size={18} className="mr-2" />
+              Rekap Bulanan
+            </Button>
+          </PermissionGuard>
           <PermissionGuard permission="absensi-guru.create">
             <Button onClick={() => navigate('/absensi-guru/tambah')}>
               <Plus size={18} className="mr-2" />
