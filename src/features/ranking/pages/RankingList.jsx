@@ -221,7 +221,7 @@ const RankingList = () => {
       filter: true,
       flex: 1,
       minWidth: 120,
-      valueGetter: (params) => params.data?.kelas?.nama_kelas || '-'
+      valueGetter: (params) => params.data?.kelas || '-'
     },
     {
       field: 'semester',
