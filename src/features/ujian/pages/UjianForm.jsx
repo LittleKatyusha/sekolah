@@ -9,7 +9,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
-import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
+import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
@@ -21,9 +21,9 @@ const UjianForm = () => {
   const isEditMode = !!id
 
   const { options: jenisUjianOptions } = useReferenceOptions('jenis_ujian')
-  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
 
   const [loading, setLoading] = useState(false)
+  const [semesterOptions, setSemesterOptions] = useState([])
   const [fetchingData, setFetchingData] = useState(false)
   
   const [formData, setFormData] = useState({
@@ -32,16 +32,13 @@ const UjianForm = () => {
     jenis: '',
     nama: '',
     tanggal: '',
-    semester: '',
-    tahun_ajaran: '',
+    semester_id: '',
     keterangan: ''
   })
 
   const [errors, setErrors] = useState({})
   const [selectedMapelOption, setSelectedMapelOption] = useState(null)
   const [selectedKelasOption, setSelectedKelasOption] = useState(null)
-  const [selectedTahunAjaranOption, setSelectedTahunAjaranOption] = useState(null)
-  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
 
   const buildMapelOption = useCallback((mapel) => ({
     value: String(mapel.id),
@@ -52,15 +49,6 @@ const UjianForm = () => {
     value: String(kelas.id),
     label: kelas.nama_kelas || `Kelas #${kelas.id}`
   }), [])
-
-  const buildTahunAjaranOption = useCallback((tahunAjaran) => {
-    const label = tahunAjaran?.nama || tahunAjaran?.tahun_ajaran || tahunAjaran?.label || `Tahun Ajaran #${tahunAjaran?.id}`
-
-    return {
-      value: label,
-      label,
-    }
-  }, [])
 
   const searchMapelOptions = useCallback(async (keyword = '') => {
     const { data, error } = await mapelService.getMapel({
@@ -90,21 +78,6 @@ const UjianForm = () => {
     return []
   }, [buildKelasOption])
 
-  useEffect(() => {
-    const fetchTahunAjaranOptions = async () => {
-      const { data, error } = await tahunAjaranService.getAll({ per_page: 100 })
-
-      if (data?.data) {
-        setTahunAjaranOptions(data.data.map(buildTahunAjaranOption))
-        return
-      }
-
-      console.error('Failed to fetch tahun ajaran:', error)
-    }
-
-    fetchTahunAjaranOptions()
-  }, [buildTahunAjaranOption])
-
   const fetchUjian = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await ujianService.getById(id)
@@ -119,18 +92,9 @@ const UjianForm = () => {
         jenis: normalizeReferenceCode(ujian.jenis_kode ?? ujian.jenis, jenisUjianOptions),
         nama: ujian.nama || '',
         tanggal: ujian.tanggal || '',
-        semester: normalizeReferenceCode(ujian.semester_kode ?? ujian.semester, semesterOptions),
-        tahun_ajaran: ujian.tahun_ajaran || '',
+        semester_id: ujian.semester_id ? String(ujian.semester_id) : '',
         keterangan: ujian.keterangan || ''
       })
-
-      if (ujian.tahun_ajaran) {
-        setSelectedTahunAjaranOption(buildTahunAjaranOption({
-          nama: ujian.tahun_ajaran,
-        }))
-      } else {
-        setSelectedTahunAjaranOption(null)
-      }
 
       if (ujian.mapel?.id) {
         setSelectedMapelOption(buildMapelOption(ujian.mapel))
@@ -158,7 +122,21 @@ const UjianForm = () => {
       navigate('/akademik/ujian')
     }
     setFetchingData(false)
-  }, [buildKelasOption, buildMapelOption, buildTahunAjaranOption, id, jenisUjianOptions, navigate, semesterOptions])
+  }, [buildKelasOption, buildMapelOption, id, jenisUjianOptions, navigate])
+
+  useEffect(() => {
+    const fetchSemesterOptions = async () => {
+      const { data } = await semesterService.getAll({ per_page: 100 })
+      if (data?.data) {
+        const list = Array.isArray(data.data) ? data.data : data.data?.data || []
+        setSemesterOptions(list.map(item => ({
+          value: String(item.id),
+          label: item.nama || `Semester #${item.id}`
+        })))
+      }
+    }
+    fetchSemesterOptions()
+  }, [])
 
   useEffect(() => {
     if (isEditMode) {
@@ -182,9 +160,8 @@ const UjianForm = () => {
     if (!safeParseInt(formData.jenis)) newErrors.jenis = 'Jenis ujian wajib dipilih'
     if (!formData.nama) newErrors.nama = 'Nama ujian wajib diisi'
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal ujian wajib diisi'
-    if (!safeParseInt(formData.semester)) newErrors.semester = 'Semester wajib dipilih'
-    if (!formData.tahun_ajaran) newErrors.tahun_ajaran = 'Tahun ajaran wajib diisi'
-  
+    if (!safeParseInt(formData.semester_id)) newErrors.semester_id = 'Semester wajib dipilih'
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -201,7 +178,7 @@ const UjianForm = () => {
       mst_mapel_id: safeParseInt(formData.mst_mapel_id),
       mst_kelas_id: safeParseInt(formData.mst_kelas_id),
       jenis: safeParseInt(formData.jenis),
-      semester: safeParseInt(formData.semester),
+      semester_id: safeParseInt(formData.semester_id),
       keterangan: formData.keterangan || null
     }
 
@@ -344,39 +321,14 @@ const UjianForm = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Semester <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="semester"
-                  value={formData.semester}
-                  onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                >
-                  <option value="">Pilih semester</option>
-                  {semesterOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.semester && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {Array.isArray(errors.semester) ? errors.semester[0] : errors.semester}
-                  </p>
-                )}
-              </div>
-
-              {/* Tahun Ajaran */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tahun Ajaran <span className="text-red-500">*</span>
-                </label>
                 <SearchableSelect
-                  name="tahun_ajaran"
-                  value={formData.tahun_ajaran}
+                  name="semester_id"
+                  value={formData.semester_id}
                   onChange={handleChange}
-                  options={selectedTahunAjaranOption ? [selectedTahunAjaranOption, ...tahunAjaranOptions] : tahunAjaranOptions}
-                  placeholder="Pilih tahun ajaran"
-                  noOptionsText="Tidak ada tahun ajaran yang cocok"
-                  error={errors.tahun_ajaran}
+                  options={semesterOptions}
+                  placeholder="Pilih semester"
+                  noOptionsText="Tidak ada semester yang tersedia"
+                  error={errors.semester_id}
                 />
               </div>
 
