@@ -48,7 +48,7 @@ const SoalForm = () => {
 
   const buildUjianOption = useCallback((ujian) => ({
     value: String(ujian.id),
-    label: ujian.nama || `Ujian #${ujian.id}`
+    label: `${ujian.mapel?.nama} - ${ujian.jenis}`
   }), [])
 
   useEffect(() => {
