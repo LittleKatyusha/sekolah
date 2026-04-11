@@ -21,7 +21,7 @@ const KelasForm = () => {
   const [formData, setFormData] = useState({
     nama_kelas: '',
     tingkat: '',
-    tahun_ajaran: '',
+    tahun_ajaran_id: '',
     kapasitas: '',
     wali_guru_id: ''
   })
@@ -107,7 +107,7 @@ const KelasForm = () => {
     if (data) {
       const list = data.data || []
       setTahunAjaranOptions(list.map(t => ({
-        value: t.nama || t.tahun_ajaran || String(t.id),
+        value: String(t.id),
         label: t.nama || t.tahun_ajaran || String(t.id)
       })))
     } else {
@@ -142,7 +142,7 @@ const KelasForm = () => {
       setFormData({
         nama_kelas: kelas.nama_kelas || '',
         tingkat: kelas.tingkat || '',
-        tahun_ajaran: kelas.tahun_ajaran || '',
+        tahun_ajaran_id: kelas.tahun_ajaran_id ? String(kelas.tahun_ajaran_id) : '',
         kapasitas: kelas.kapasitas || '',
         wali_guru_id: waliGuruId
       })
@@ -189,7 +189,7 @@ const KelasForm = () => {
     const newErrors = {}
     if (!formData.nama_kelas) newErrors.nama_kelas = 'Nama kelas wajib diisi'
     if (!formData.tingkat) newErrors.tingkat = 'Tingkat wajib dipilih'
-    if (!formData.tahun_ajaran) newErrors.tahun_ajaran = 'Tahun ajaran wajib dipilih'
+    if (!formData.tahun_ajaran_id) newErrors.tahun_ajaran_id = 'Tahun ajaran wajib dipilih'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -206,7 +206,7 @@ const KelasForm = () => {
     const submitData = {
       nama_kelas: formData.nama_kelas,
       tingkat: parseInt(formData.tingkat),
-      tahun_ajaran: formData.tahun_ajaran,
+      tahun_ajaran_id: formData.tahun_ajaran_id ? parseInt(formData.tahun_ajaran_id) : null,
       kapasitas: formData.kapasitas ? parseInt(formData.kapasitas) : null,
       wali_guru_id: formData.wali_guru_id ? parseInt(formData.wali_guru_id) : null
     }
@@ -297,8 +297,8 @@ const KelasForm = () => {
                 Tahun Ajaran <span className="text-red-500">*</span>
               </label>
               <select
-                name="tahun_ajaran"
-                value={formData.tahun_ajaran}
+                name="tahun_ajaran_id"
+                value={formData.tahun_ajaran_id}
                 onChange={handleChange}
                 disabled={tahunAjaranLoading}
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
@@ -310,7 +310,7 @@ const KelasForm = () => {
                   </option>
                 ))}
               </select>
-              {errors.tahun_ajaran && <p className="mt-1 text-sm text-red-500">{errors.tahun_ajaran}</p>}
+              {errors.tahun_ajaran_id && <p className="mt-1 text-sm text-red-500">{errors.tahun_ajaran_id}</p>}
             </div>
 
             {/* Kapasitas */}
