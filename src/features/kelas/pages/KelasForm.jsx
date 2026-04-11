@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kelasService } from '../services/kelasService'
+import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import api from '../../../utils/api'
 
@@ -38,27 +39,25 @@ const KelasForm = () => {
 
   // Options for tingkat
   const tingkatOptions = [
+    { value: 7, label: 'Kelas 7' },
+    { value: 8, label: 'Kelas 8' },
+    { value: 9, label: 'Kelas 9' },
     { value: 10, label: 'Kelas 10' },
     { value: 11, label: 'Kelas 11' },
     { value: 12, label: 'Kelas 12' }
   ]
 
-  // Options for tahun ajaran - generate current year and next 2 years
-  const tahunAjaranOptions = (() => {
-    const currentYear = new Date().getFullYear()
-    return [
-      { value: `${currentYear}/${currentYear + 1}`, label: `${currentYear}/${currentYear + 1}` },
-      { value: `${currentYear - 1}/${currentYear}`, label: `${currentYear - 1}/${currentYear}` },
-      { value: `${currentYear + 1}/${currentYear + 2}`, label: `${currentYear + 1}/${currentYear + 2}` }
-    ]
-  })()
+  // Options for tahun ajaran - fetched from API
+  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
+  const [tahunAjaranLoading, setTahunAjaranLoading] = useState(false)
 
   useEffect(() => {
     if (isEditMode) {
       fetchKelas()
     }
-    // Fetch guru list on mount
+    // Fetch guru list and tahun ajaran on mount
     fetchGuruList()
+    fetchTahunAjaranList()
   }, [id])
 
   // Close dropdown when clicking outside
@@ -101,6 +100,21 @@ const KelasForm = () => {
       }
     }
   }, [guruSearch, isGuruOpen])
+
+  const fetchTahunAjaranList = async () => {
+    setTahunAjaranLoading(true)
+    const { data, error } = await tahunAjaranService.getAll()
+    if (data) {
+      const list = data.data || []
+      setTahunAjaranOptions(list.map(t => ({
+        value: t.nama || t.tahun_ajaran || String(t.id),
+        label: t.nama || t.tahun_ajaran || String(t.id)
+      })))
+    } else {
+      console.error('Error fetching tahun ajaran:', error)
+    }
+    setTahunAjaranLoading(false)
+  }
 
   const fetchGuruList = async (search = '') => {
     setGuruLoading(true)
@@ -286,9 +300,10 @@ const KelasForm = () => {
                 name="tahun_ajaran"
                 value={formData.tahun_ajaran}
                 onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                disabled={tahunAjaranLoading}
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <option value="">Pilih Tahun Ajaran</option>
+                <option value="">{tahunAjaranLoading ? 'Memuat...' : 'Pilih Tahun Ajaran'}</option>
                 {tahunAjaranOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
