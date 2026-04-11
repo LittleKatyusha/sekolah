@@ -11,13 +11,6 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { materiService } from '../services/materiService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
-const TIPE_OPTIONS = [
-  { value: 'dokumen', label: 'Dokumen' },
-  { value: 'video', label: 'Video' },
-  { value: 'link', label: 'Link' },
-  { value: 'lainnya', label: 'Lainnya' },
-]
-
 const STATUS_OPTIONS = [
   { value: '1', label: 'Aktif' },
   { value: '0', label: 'Nonaktif' },
@@ -35,7 +28,6 @@ const MateriForm = () => {
     mst_guru_mapel_id: '',
     judul: '',
     konten: '',
-    tipe: '',
     file_path: '',
     url_external: '',
     status: '1',
@@ -131,7 +123,6 @@ const MateriForm = () => {
         mst_guru_mapel_id: guruMapelId,
         judul: materi.judul || '',
         konten: materi.konten || '',
-        tipe: materi.tipe || '',
         file_path: materi.file_path || '',
         url_external: materi.url_external || '',
         status: materi.status !== null && materi.status !== undefined ? String(materi.status) : '1',
@@ -187,7 +178,6 @@ const MateriForm = () => {
       mst_guru_mapel_id: parseInt(formData.mst_guru_mapel_id),
       judul: formData.judul,
       konten: formData.konten || null,
-      tipe: formData.tipe || null,
       file_path: formData.file_path || null,
       url_external: formData.url_external || null,
       status: formData.status !== '' ? parseInt(formData.status) : null,
@@ -268,21 +258,6 @@ const MateriForm = () => {
                   searchPlaceholder="Cari guru mapel berdasarkan guru atau mapel..."
                   noOptionsText="Tidak ada guru mapel yang cocok"
                   error={errors.mst_guru_mapel_id}
-                />
-              </div>
-
-              {/* Tipe */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tipe
-                </label>
-                <SearchableSelect
-                  name="tipe"
-                  value={formData.tipe}
-                  onChange={handleChange}
-                  options={TIPE_OPTIONS}
-                  placeholder="Pilih tipe materi"
-                  error={errors.tipe}
                 />
               </div>
 
