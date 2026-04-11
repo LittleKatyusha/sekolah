@@ -193,6 +193,26 @@ const NilaiList = () => {
       minWidth: 180,
       cellRenderer: (params) => params.value || '-'
     },
+    { 
+      field: 'ujian.semester', 
+      backendField: 'ujian.semester',
+      headerName: 'Semester',
+      sortable: true,
+      filter: true,
+      flex: 1,
+      minWidth: 180,
+      cellRenderer: (params) => params.value || '-'
+    },
+    { 
+      field: 'ujian.tahun_ajaran', 
+      backendField: 'ujian.tahun_ajaran',
+      headerName: 'Tahun Ajaran',
+      sortable: true,
+      filter: true,
+      flex: 1,
+      minWidth: 180,
+      cellRenderer: (params) => params.value || '-'
+    },
     {
       field: 'ujian.mapel.nama',
       backendField: 'ujian.mapel.nama',
