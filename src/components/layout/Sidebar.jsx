@@ -125,6 +125,7 @@ const ICON_MAP = {
   'bi-person-badge': Users,
   'bi-person-check': Users,
   'bi-person-heart': Users,
+  'bi-person-lines-fill': Users,
   'bi-bar-chart': BarChart3,
   'bi-graph-up': BarChart3,
   'bi-table': Table2,
