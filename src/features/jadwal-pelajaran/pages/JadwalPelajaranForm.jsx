@@ -8,16 +8,9 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { jadwalPelajaranService } from '../services/jadwalPelajaranService'
 import { kelasService } from '../../kelas/services/kelasService'
+import { hariOperasionalService } from '../../hari-operasional/services/hariOperasionalService'
+import { guruMapelService } from '../../guru-mapel/services/guruMapelService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-const HARI_OPTIONS = [
-  { value: 'MON', label: 'Senin' },
-  { value: 'TUE', label: 'Selasa' },
-  { value: 'WED', label: 'Rabu' },
-  { value: 'THU', label: 'Kamis' },
-  { value: 'FRI', label: 'Jumat' },
-  { value: 'SAT', label: 'Sabtu' },
-]
 
 const JadwalPelajaranForm = () => {
   const { id } = useParams()
@@ -26,7 +19,8 @@ const JadwalPelajaranForm = () => {
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
-  
+  const [hariOptions, setHariOptions] = useState([])
+
   const [formData, setFormData] = useState({
     mst_kelas_id: '',
     mst_guru_mapel_id: '',
@@ -42,10 +36,30 @@ const JadwalPelajaranForm = () => {
 
   useEffect(() => {
     fetchKelas()
+    fetchHariOptions()
     if (isEditMode) {
       fetchJadwal()
     }
   }, [id])
+
+  const fetchHariOptions = async () => {
+    const HARI_LABEL_MAP = {
+      MON: 'Senin', TUE: 'Selasa', WED: 'Rabu',
+      THU: 'Kamis', FRI: 'Jumat', SAT: 'Sabtu', SUN: 'Minggu'
+    }
+    const { data, error } = await hariOperasionalService.getAll({ per_page: 100 })
+    if (data?.data) {
+      const options = data.data
+        .filter(item => item.is_active)
+        .map(item => ({
+          value: item.hari,
+          label: HARI_LABEL_MAP[item.hari] || item.hari
+        }))
+      setHariOptions(options)
+    } else {
+      console.error('Failed to fetch hari operasional:', error)
+    }
+  }
 
   const fetchKelas = async () => {
     const { data, error } = await kelasService.getAll({ per_page: 100 })
@@ -63,9 +77,9 @@ const JadwalPelajaranForm = () => {
   const buildGuruMapelOption = useCallback((guruMapel) => {
     if (!guruMapel) return null
 
-    const guruNama = guruMapel.guru?.nama || guruMapel.nama_guru || 'Guru'
-    const mapelNama = guruMapel.mapel?.nama || guruMapel.mapel?.nama_mapel || guruMapel.nama_mapel || 'Mapel'
-    const rawId = guruMapel.id ?? guruMapel.mst_guru_mapel_id
+    const guruNama = guruMapel.guru?.nama || 'Guru'
+    const mapelNama = guruMapel.mapel?.nama || 'Mapel'
+    const rawId = guruMapel.id
 
     if (!rawId) return null
 
@@ -76,28 +90,15 @@ const JadwalPelajaranForm = () => {
   }, [])
 
   const searchGuruMapelOptions = useCallback(async (keyword = '') => {
-    const normalizedKeyword = keyword.trim()
-
-    const { data, error } = await jadwalPelajaranService.getAll({
-      search: normalizedKeyword || undefined,
+    const { data, error } = await guruMapelService.getGuruMapel({
+      search: keyword.trim() || undefined,
       per_page: 20
     })
 
     if (data?.data) {
-      const seenIds = new Set()
-      return data.data.reduce((options, jadwal) => {
-        const option = buildGuruMapelOption(jadwal.guru_mapel)
-        if (!option || seenIds.has(option.value)) return options
-
-        const label = option.label.toLowerCase()
-        if (normalizedKeyword && !label.includes(normalizedKeyword.toLowerCase())) {
-          return options
-        }
-
-        seenIds.add(option.value)
-        options.push(option)
-        return options
-      }, [])
+      return data.data
+        .map(buildGuruMapelOption)
+        .filter(Boolean)
     }
 
     console.error('Failed to fetch guru mapel options:', error)
@@ -110,13 +111,8 @@ const JadwalPelajaranForm = () => {
       return
     }
 
-    const { data } = await jadwalPelajaranService.getAll({ per_page: 20 })
-    const jadwalList = data?.data || []
-    const matchedJadwal = jadwalList.find(
-      (jadwal) => String(jadwal.guru_mapel?.id) === String(guruMapelId)
-    )
-
-    const option = buildGuruMapelOption(matchedJadwal?.guru_mapel)
+    const { data } = await guruMapelService.getGuruMapelById(guruMapelId)
+    const option = buildGuruMapelOption(data?.data)
 
     if (option) {
       setSelectedGuruMapelOption(option)
@@ -274,7 +270,7 @@ const JadwalPelajaranForm = () => {
                   name="hari"
                   value={formData.hari}
                   onChange={handleChange}
-                  options={HARI_OPTIONS}
+                  options={hariOptions}
                   placeholder="Pilih hari"
                   error={errors.hari}
                 />
