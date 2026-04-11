@@ -37,7 +37,7 @@ const NilaiForm = () => {
 
   const buildUjianOption = useCallback((ujian) => ({
     value: String(ujian.id),
-    label: ujian.nama || `Ujian #${ujian.id}`
+    label: `${ujian.mapel.nama} - ${ujian.jenis} - ${ujian.semester}`
   }), [])
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {
