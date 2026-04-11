@@ -332,7 +332,7 @@ const RaporDetail = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI — Narasi Rapor Otomatis</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Generate narasi deskriptif rapor menggunakan AI (OpenAI)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Generate narasi deskriptif rapor menggunakan AI Akademihub</p>
               </div>
             </div>
 
