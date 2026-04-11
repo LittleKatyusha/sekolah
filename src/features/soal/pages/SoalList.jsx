@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -9,6 +9,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { deleteSoal } from '../services/soalService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import GenerateSoalModal from '../components/GenerateSoalModal'
 
 const getLabel = (value, options) => {
   if (!value || !options?.length) return value ?? '-'
@@ -126,6 +127,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 const SoalList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [generateModalOpen, setGenerateModalOpen] = useState(false)
   const { options: tipeSoalOptions } = useReferenceOptions('tipe_soal')
   const { options: tingkatKesulitanOptions } = useReferenceOptions('tingkat_kesulitan')
 
@@ -264,6 +266,11 @@ const SoalList = () => {
     }
   }, [])
 
+  const handleGenerateSuccess = useCallback((soals) => {
+    showSuccess(`${soals.length} soal berhasil di-generate dan disimpan ke bank soal!`)
+    handleRefresh()
+  }, [handleRefresh])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -273,6 +280,14 @@ const SoalList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="soal.create">
+            <Button
+              onClick={() => setGenerateModalOpen(true)}
+              variant="secondary"
+              className="border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-600 dark:text-violet-400 dark:hover:bg-violet-900/20"
+            >
+              <Sparkles size={18} className="mr-2" />
+              Generate AI
+            </Button>
             <Button onClick={() => navigate('/akademik/soals/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Soal
@@ -295,6 +310,12 @@ const SoalList = () => {
           height={600}
         />
       </Card>
+
+      <GenerateSoalModal
+        open={generateModalOpen}
+        onClose={() => setGenerateModalOpen(false)}
+        onSuccess={handleGenerateSuccess}
+      />
     </div>
   )
 }

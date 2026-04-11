@@ -19,3 +19,7 @@ export const updateSoal = async (id, updateData) => {
 export const deleteSoal = async (id) => {
   return apiService.delete(`/akademik/soals/${id}`)
 }
+
+export const generateSoalAi = async (params) => {
+  return apiService.post('/akademik/soals/generate', params)
+}
