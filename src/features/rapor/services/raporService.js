@@ -98,6 +98,19 @@ export const raporService = {
   generateKelas: async (data) => {
     return await apiService.post(`${BASE_URL}/generate-kelas`, data)
   },
+
+  /**
+   * Generate narasi rapor otomatis menggunakan AI (OpenAI)
+   * POST /akademik/rapor/{id}/generate-narasi
+   * @param {number|string} id - Rapor ID
+   * @param {Object} [options]
+   * @param {string|null} [options.catatan_guru] - Catatan tambahan dari guru
+   * @param {boolean} [options.pakai_cache] - Kembalikan narasi cache jika ada
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  generateNarasi: async (id, options = {}) => {
+    return await apiService.post(`${BASE_URL}/${id}/generate-narasi`, options)
+  },
 }
 
 export default raporService

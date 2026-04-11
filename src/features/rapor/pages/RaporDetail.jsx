@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, ClipboardList, Hash } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, ClipboardList, Hash, Sparkles, Copy, Check, RefreshCw } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
@@ -14,6 +14,12 @@ const RaporDetail = () => {
 
   const [loading, setLoading] = useState(false)
   const [rapor, setRapor] = useState(null)
+
+  // AI Narasi state
+  const [narasiLoading, setNarasiLoading] = useState(false)
+  const [narasi, setNarasi] = useState(null)
+  const [catatanGuru, setCatatanGuru] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     fetchRapor()
@@ -44,6 +50,28 @@ const RaporDetail = () => {
         showError('Gagal menghapus rapor')
       }
     }
+  }
+
+  const handleGenerateNarasi = async (pakaiCache = false) => {
+    setNarasiLoading(true)
+    const { data, error } = await raporService.generateNarasi(id, {
+      catatan_guru: catatanGuru || null,
+      pakai_cache: pakaiCache,
+    })
+    if (data?.data?.narasi) {
+      setNarasi(data.data.narasi)
+    } else {
+      showError(error?.message || 'Gagal generate narasi. Periksa konfigurasi OPENAI_API_KEY.')
+    }
+    setNarasiLoading(false)
+  }
+
+  const handleCopyNarasi = () => {
+    if (!narasi) return
+    navigator.clipboard.writeText(narasi).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
   const formatDate = (dateString) => {
@@ -293,6 +321,92 @@ const RaporDetail = () => {
           <RecordHistory table="trx_rapor" recordId={id} />
         </div>
       </Card>
+
+      {/* ── AI Narasi Rapor ──────────────────────────────────────── */}
+      <PermissionGuard permission="rapor.update">
+        <Card>
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 bg-violet-100 dark:bg-violet-900/30 rounded-lg flex items-center justify-center">
+                <Sparkles size={18} className="text-violet-600 dark:text-violet-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI — Narasi Rapor Otomatis</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Generate narasi deskriptif rapor menggunakan AI (OpenAI)</p>
+              </div>
+            </div>
+
+            {/* Catatan guru optional */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Catatan tambahan untuk AI <span className="text-gray-400">(opsional)</span>
+              </label>
+              <textarea
+                value={catatanGuru}
+                onChange={(e) => setCatatanGuru(e.target.value)}
+                rows={2}
+                maxLength={1000}
+                placeholder="Contoh: Siswa menunjukkan peningkatan besar di bidang seni dan aktif dalam organisasi..."
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              />
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              <Button
+                variant="primary"
+                onClick={() => handleGenerateNarasi(false)}
+                loading={narasiLoading}
+                disabled={narasiLoading}
+                className="bg-violet-600 hover:bg-violet-700 focus:ring-violet-500"
+              >
+                <Sparkles size={16} className="mr-2" />
+                {narasi ? 'Regenerate Narasi' : 'Generate Narasi'}
+              </Button>
+              {narasi && (
+                <Button
+                  variant="secondary"
+                  onClick={() => handleGenerateNarasi(true)}
+                  disabled={narasiLoading}
+                  size="sm"
+                >
+                  <RefreshCw size={14} className="mr-1" />
+                  Muat dari Cache
+                </Button>
+              )}
+            </div>
+
+            {/* Result */}
+            {narasiLoading && (
+              <div className="flex items-center gap-3 p-4 bg-violet-50 dark:bg-violet-900/10 rounded-lg border border-violet-200 dark:border-violet-800">
+                <div className="animate-spin h-5 w-5 border-2 border-violet-600 border-t-transparent rounded-full" />
+                <p className="text-sm text-violet-700 dark:text-violet-300">AI sedang menyusun narasi...</p>
+              </div>
+            )}
+
+            {!narasiLoading && narasi && (
+              <div className="relative">
+                <div className="p-4 bg-violet-50 dark:bg-violet-900/10 rounded-lg border border-violet-200 dark:border-violet-800">
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{narasi}</p>
+                </div>
+                <button
+                  onClick={handleCopyNarasi}
+                  title="Salin narasi"
+                  className="absolute top-3 right-3 p-1.5 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                >
+                  {copied
+                    ? <Check size={14} className="text-green-600" />
+                    : <Copy size={14} className="text-gray-500" />
+                  }
+                </button>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                  Narasi ini dapat disalin ke kolom <strong>Catatan Wali Kelas</strong> pada form edit rapor.
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      </PermissionGuard>
     </div>
   )
 }
