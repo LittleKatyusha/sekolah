@@ -1,26 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, FileText, Link, Hash, Layers } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, FileText, Link, Hash, AlignLeft } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { materiService } from '../services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-// Tipe mapping for display
-const TIPE_MAP = {
-  dokumen: { label: 'Dokumen', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  video: { label: 'Video', bg: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  link: { label: 'Link', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  lainnya: { label: 'Lainnya', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-}
-
 // Status mapping for display
 const STATUS_MAP = {
-  1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  nonaktif: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  0: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 }
 
 const MateriDetail = () => {
@@ -70,23 +60,12 @@ const MateriDetail = () => {
     })
   }
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, statusLabel) => {
     if (status === null || status === undefined) return '-'
-    const statusKey = String(status).toLowerCase()
-    const statusInfo = STATUS_MAP[status] || STATUS_MAP[statusKey] || { label: String(status), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+    const bg = STATUS_MAP[status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-        {statusInfo.label}
-      </span>
-    )
-  }
-
-  const getTipeBadge = (tipe) => {
-    if (!tipe) return '-'
-    const tipeInfo = TIPE_MAP[tipe] || { label: tipe, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${tipeInfo.bg}`}>
-        {tipeInfo.label}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${bg}`}>
+        {statusLabel || String(status)}
       </span>
     )
   }
@@ -137,8 +116,7 @@ const MateriDetail = () => {
                 {materi.judul || '-'}
               </h2>
               <div className="flex justify-center gap-2 mb-2">
-                {getTipeBadge(materi.tipe)}
-                {getStatusBadge(materi.status)}
+                {getStatusBadge(materi.status, materi.status_label)}
               </div>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
@@ -146,12 +124,7 @@ const MateriDetail = () => {
                   <span className="text-gray-500 dark:text-gray-400">ID</span>
                   <span className="font-medium text-gray-900 dark:text-white">{materi.id}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Urutan</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {materi.urutan ?? '-'}
-                  </span>
-                </div>
+
               </div>
             </div>
           </Card>
@@ -192,22 +165,12 @@ const MateriDetail = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Layers size={20} className="text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Tipe</p>
-                    <div className="mt-1">{getTipeBadge(materi.tipe)}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-50 dark:bg-orange-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Hash size={20} className="text-orange-600" />
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
-                    <div className="mt-1">{getStatusBadge(materi.status)}</div>
+                    <div className="mt-1">{getStatusBadge(materi.status, materi.status_label)}</div>
                   </div>
                 </div>
 
@@ -216,8 +179,8 @@ const MateriDetail = () => {
                     <FileText size={20} className="text-indigo-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">File Path</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{materi.file_path || '-'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">File Materi</p>
+                    <p className="font-medium text-gray-900 dark:text-white break-all">{materi.file_materi || '-'}</p>
                   </div>
                 </div>
 
@@ -226,39 +189,32 @@ const MateriDetail = () => {
                     <Link size={20} className="text-pink-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">URL External</p>
-                    {materi.url_external ? (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Link Video</p>
+                    {materi.link_video ? (
                       <a
-                        href={materi.url_external}
+                        href={materi.link_video}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-primary-600 hover:underline break-all"
                       >
-                        {materi.url_external}
+                        {materi.link_video}
                       </a>
                     ) : (
                       <p className="font-medium text-gray-900 dark:text-white">-</p>
                     )}
                   </div>
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Hash size={20} className="text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Urutan</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{materi.urutan ?? '-'}</p>
-                  </div>
-                </div>
               </div>
 
-              {/* Konten Section */}
-              {materi.konten && (
+              {/* Deskripsi Section */}
+              {materi.deskripsi && (
                 <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Konten</h4>
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlignLeft size={16} className="text-gray-500" />
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Deskripsi</h4>
+                  </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{materi.konten}</p>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{materi.deskripsi}</p>
                   </div>
                 </div>
               )}

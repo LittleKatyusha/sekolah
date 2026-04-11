@@ -10,20 +10,10 @@ import usePermission from '../../../hooks/usePermission'
 import { materiService } from '../services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-// Tipe mapping for display
-const TIPE_MAP = {
-  dokumen: { label: 'Dokumen', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  video: { label: 'Video', bg: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  link: { label: 'Link', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  lainnya: { label: 'Lainnya', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-}
-
 // Status mapping for display
 const STATUS_MAP = {
-  1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Draft', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  draft: { label: 'Draft', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  0: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -197,6 +187,15 @@ const MateriList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
+      field: 'deskripsi',
+      headerName: 'Deskripsi',
+      sortable: false,
+      filter: false,
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params) => params.value || '-'
+    },
+    {
       headerName: 'Guru / Mapel',
       sortable: false,
       filter: false,
@@ -211,51 +210,22 @@ const MateriList = () => {
       }
     },
     {
-      field: 'tipe',
-      headerName: 'Tipe',
-      sortable: false,
-      filter: false,
-      width: 120,
-      minWidth: 100,
-      cellRenderer: (params) => {
-        const tipe = params.value
-        if (!tipe) return '-'
-        const tipeInfo = TIPE_MAP[tipe] || { label: tipe, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${tipeInfo.bg}`}>
-            {tipeInfo.label}
-          </span>
-        )
-      }
-    },
-    {
       field: 'status',
-      backendField: 'status',
       headerName: 'Status',
       sortable: true,
       filter: false,
       width: 120,
       minWidth: 100,
       cellRenderer: (params) => {
-        const status = params.value
+        const { status, status_label } = params.data || {}
         if (status === null || status === undefined) return '-'
-        const statusKey = String(status).toLowerCase()
-        const statusInfo = STATUS_MAP[status] || STATUS_MAP[statusKey] || { label: String(status), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+        const bg = STATUS_MAP[status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
-            {statusInfo.label}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${bg}`}>
+            {status_label || String(status)}
           </span>
         )
       }
-    },
-    {
-      field: 'urutan',
-      headerName: 'Urutan',
-      sortable: false,
-      filter: false,
-      width: 100,
-      minWidth: 80,
-      cellRenderer: (params) => params.value ?? '-'
     },
     {
       headerName: 'Aksi',
