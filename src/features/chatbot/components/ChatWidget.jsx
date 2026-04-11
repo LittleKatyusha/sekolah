@@ -8,7 +8,7 @@ const ChatWidget = () => {
     {
       id: 0,
       role: 'assistant',
-      text: 'Halo! Saya asisten AI Sekolah Pintar. Ada yang bisa saya bantu?',
+      text: 'Halo! Saya asisten AI Akademihub. Ada yang bisa saya bantu?',
     },
   ])
   const [input, setInput] = useState('')
