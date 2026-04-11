@@ -8,7 +8,7 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { rankingService } from '../services/rankingService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
-import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 
@@ -17,8 +17,6 @@ const RankingForm = () => {
   const navigate = useNavigate()
   const isEditMode = !!id
 
-  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
-
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
 
@@ -26,7 +24,6 @@ const RankingForm = () => {
     mst_siswa_id: '',
     mst_kelas_id: '',
     semester: '',
-    tahun_ajaran: '',
     rata_rata_nilai: '',
     peringkat: ''
   })
@@ -34,6 +31,7 @@ const RankingForm = () => {
   const [errors, setErrors] = useState({})
   const [siswaOptions, setSiswaOptions] = useState([])
   const [kelasOptions, setKelasOptions] = useState([])
+  const [semesterOptions, setSemesterOptions] = useState([])
 
   useEffect(() => {
     fetchOptions()
@@ -43,9 +41,10 @@ const RankingForm = () => {
   }, [id])
 
   const fetchOptions = async () => {
-    const [siswaResult, kelasResult] = await Promise.all([
+    const [siswaResult, kelasResult, semesterResult] = await Promise.all([
       siswaService.getAll({ per_page: 100 }),
-      kelasService.getAll({ per_page: 100 })
+      kelasService.getAll({ per_page: 100 }),
+      semesterService.getAll({ per_page: 100 })
     ])
 
     if (siswaResult.data?.data) {
@@ -61,6 +60,14 @@ const RankingForm = () => {
         label: k.nama_kelas
       })))
     }
+
+    if (semesterResult.data?.data) {
+      const list = Array.isArray(semesterResult.data.data) ? semesterResult.data.data : semesterResult.data.data?.data || []
+      setSemesterOptions(list.map(s => ({
+        value: String(s.id),
+        label: s.nama || `Semester #${s.id}`
+      })))
+    }
   }
 
   const fetchRanking = async () => {
@@ -72,7 +79,6 @@ const RankingForm = () => {
         mst_siswa_id: ranking.siswa?.id ? String(ranking.siswa.id) : (ranking.mst_siswa_id ? String(ranking.mst_siswa_id) : ''),
         mst_kelas_id: ranking.kelas?.id ? String(ranking.kelas.id) : (ranking.mst_kelas_id ? String(ranking.mst_kelas_id) : ''),
         semester: ranking.semester ? String(ranking.semester) : '',
-        tahun_ajaran: ranking.tahun_ajaran || '',
         rata_rata_nilai: ranking.rata_rata_nilai !== null && ranking.rata_rata_nilai !== undefined ? String(ranking.rata_rata_nilai) : '',
         peringkat: ranking.peringkat !== null && ranking.peringkat !== undefined ? String(ranking.peringkat) : ''
       })
@@ -95,8 +101,7 @@ const RankingForm = () => {
     const newErrors = {}
     if (!formData.mst_siswa_id) newErrors.mst_siswa_id = 'Siswa wajib dipilih'
     if (!formData.mst_kelas_id) newErrors.mst_kelas_id = 'Kelas wajib dipilih'
-    if (!formData.semester) newErrors.semester = 'Semester wajib diisi'
-    if (!formData.tahun_ajaran.trim()) newErrors.tahun_ajaran = 'Tahun ajaran wajib diisi'
+    if (!formData.semester) newErrors.semester = 'Semester wajib dipilih'
     if (!formData.rata_rata_nilai) newErrors.rata_rata_nilai = 'Rata-rata nilai wajib diisi'
     if (!formData.peringkat) newErrors.peringkat = 'Peringkat wajib diisi'
 
@@ -114,8 +119,7 @@ const RankingForm = () => {
     const submitData = {
       mst_siswa_id: parseInt(formData.mst_siswa_id),
       mst_kelas_id: parseInt(formData.mst_kelas_id),
-      semester: formData.semester,
-      tahun_ajaran: formData.tahun_ajaran,
+      semester: parseInt(formData.semester),
       rata_rata_nilai: parseFloat(formData.rata_rata_nilai),
       peringkat: parseInt(formData.peringkat)
     }
@@ -206,21 +210,6 @@ const RankingForm = () => {
                   options={semesterOptions}
                   placeholder="Pilih semester"
                   error={errors.semester}
-                />
-              </div>
-
-              {/* Tahun Ajaran */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tahun Ajaran <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="text"
-                  name="tahun_ajaran"
-                  value={formData.tahun_ajaran}
-                  onChange={handleChange}
-                  placeholder="Contoh: 2024/2025"
-                  error={errors.tahun_ajaran}
                 />
               </div>
 
