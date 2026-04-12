@@ -3,10 +3,24 @@ import useAuthStore from '../store/useAuthStore'
 import useNavigationProgressStore from '../store/useNavigationProgressStore'
 import { showToast } from './sweetalert'
 
-// Create axios instance with default config
-const baseURL = import.meta.env.DEV
-  ? '/api/v1'
-  : (import.meta.env.VITE_API_BASE_URL || '/api/v1')
+// Derive base URL from subdomain at runtime (production) or use proxy (dev).
+// Production patterns (set one in .env.production):
+//   VITE_API_BASE_URL_PATTERN=https://{subdomain}.api.sekolah.app/api/v1
+//   VITE_API_BASE_URL=https://api.sekolah.app/api/v1   ← explicit override
+// Dev: all requests go through Vite proxy `/api` → VITE_API_PROXY_TARGET.
+const getBaseURL = () => {
+  if (import.meta.env.DEV) return '/api/v1'
+
+  const pattern = import.meta.env.VITE_API_BASE_URL_PATTERN
+  if (pattern) {
+    const subdomain = window.location.hostname.split('.')[0]
+    return pattern.replace('{subdomain}', subdomain).replace(/\/$/, '')
+  }
+
+  return (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
+}
+
+const baseURL = getBaseURL()
 
 const api = axios.create({
   baseURL,

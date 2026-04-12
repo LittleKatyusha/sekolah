@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import useAuthStore from '../store/useAuthStore'
 import { refreshToken as doRefresh } from '../utils/api'
@@ -46,11 +46,14 @@ const ProtectedRoute = ({ children }) => {
       .finally(() => { setInitializing(false) })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Guard against repeated hydration calls: only call me() once per session.
+  // Without this, every store update that changes `user` would re-trigger the
+  // effect while needsProfileHydration() is still true, creating a render loop.
+  const hydrationAttempted = useRef(false)
   useEffect(() => {
-    if (!isAuthenticated || !token || !needsProfileHydration(user)) {
-      return
-    }
-
+    if (!isAuthenticated || !token || !needsProfileHydration(user)) return
+    if (hydrationAttempted.current) return
+    hydrationAttempted.current = true
     authService.me().catch(() => {
       // Ignore hydration failures here; route access is controlled by auth state.
     })

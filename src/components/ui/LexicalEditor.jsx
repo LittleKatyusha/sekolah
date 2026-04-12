@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from 'react'
+import { useEffect, useCallback, useMemo, useState, useRef } from 'react'
 import { clsx } from 'clsx'
 import {
   $getRoot,
@@ -434,14 +434,17 @@ function LexicalEditor({
   minHeight = '150px',
 }) {
   const lastOnChangeValueRef = useRef('')
-  const initialConfig = {
+
+  // Memoize initialConfig so LexicalComposer never sees a new object reference
+  // on parent re-renders, which would cause the editor to reinitialize.
+  const initialConfig = useMemo(() => ({
     namespace: 'LexicalEditor',
     theme: editorTheme,
     nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, CodeNode, CodeHighlightNode, LinkNode],
     onError: (err) => {
       console.error('Lexical error:', err)
     },
-  }
+  }), []) // stable — no runtime dependencies
 
   return (
     <div className="w-full">

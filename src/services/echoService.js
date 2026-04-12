@@ -27,9 +27,6 @@
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 
-// Make Pusher available globally (required by laravel-echo)
-window.Pusher = Pusher
-
 // Channels that require a private subscription (auth).
 // App.Models.User.* channels are matched dynamically — see _isPrivate().
 const PRIVATE_CHANNELS = new Set([])
@@ -214,6 +211,11 @@ class EchoService {
   }
 
   _initEcho(token) {
+    // Make Pusher available globally (required by laravel-echo).
+    // Assigned here rather than at module level so it only runs when a
+    // WebSocket connection is actually needed (not on login / public pages).
+    if (!window.Pusher) window.Pusher = Pusher
+
     this._setStatus('connecting')
 
     const env = import.meta.env

@@ -36,7 +36,8 @@ const ChatWidget = () => {
     if (!text || loading) return
 
     const userMsg = { id: Date.now(), role: 'user', text }
-    setMessages((prev) => [...prev, userMsg])
+    // Cap history at 100 messages to prevent unbounded memory growth in long sessions
+    setMessages((prev) => [...prev, userMsg].slice(-100))
     setInput('')
     setLoading(true)
 
@@ -53,7 +54,7 @@ const ChatWidget = () => {
           text: 'Maaf, terjadi kesalahan. Silakan coba lagi.',
           isError: true,
         },
-      ])
+      ].slice(-100))
     } else {
       setMessages((prev) => [
         ...prev,
@@ -62,7 +63,7 @@ const ChatWidget = () => {
           role: 'assistant',
           text: data?.data?.reply ?? 'Maaf, saya tidak dapat merespon saat ini.',
         },
-      ])
+      ].slice(-100))
     }
   }
 

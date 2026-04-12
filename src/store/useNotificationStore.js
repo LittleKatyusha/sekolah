@@ -40,14 +40,22 @@ const useNotificationStore = create((set, get) => ({
   },
 
   markRead: (id) => {
-    set((state) => ({
-      notifications: state.notifications.map(n =>
-        n.id === id ? { ...n, read: true } : n
-      ),
-      unreadCount: Math.max(0, state.unreadCount - (
-        state.notifications.find(n => n.id === id && !n.read) ? 1 : 0
-      )),
-    }))
+    set((state) => {
+      // Single-pass: update the notification and track whether it was unread,
+      // avoiding a second find() traversal over the full array.
+      let wasUnread = false
+      const notifications = state.notifications.map(n => {
+        if (n.id === id && !n.read) {
+          wasUnread = true
+          return { ...n, read: true }
+        }
+        return n
+      })
+      return {
+        notifications,
+        unreadCount: Math.max(0, state.unreadCount - (wasUnread ? 1 : 0)),
+      }
+    })
   },
 
   markAllRead: () => {

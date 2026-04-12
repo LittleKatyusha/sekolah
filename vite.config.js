@@ -16,9 +16,23 @@ const getPackageName = (id) => {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1/'
-  const apiProxyTarget = env.VITE_API_PROXY_TARGET
-    || apiBaseUrl.replace(/\/api\/v\d+\/?$/i, '')
-    || 'http://localhost:8002'
+
+  // Resolve proxy target for dev server.
+  // Priority: VITE_API_PROXY_TARGET > pattern+subdomain > VITE_API_BASE_URL > fallback.
+  // For multi-backend dev: set VITE_API_BASE_URL_PATTERN + VITE_DEV_SUBDOMAIN in .env.local.
+  //   VITE_API_BASE_URL_PATTERN=https://{subdomain}.api.sekolah.app/api/v1
+  //   VITE_DEV_SUBDOMAIN=smpn1
+  const resolveProxyTarget = () => {
+    if (env.VITE_API_PROXY_TARGET) return env.VITE_API_PROXY_TARGET
+    if (env.VITE_API_BASE_URL_PATTERN) {
+      const subdomain = env.VITE_DEV_SUBDOMAIN || 'dev'
+      const resolved = env.VITE_API_BASE_URL_PATTERN.replace('{subdomain}', subdomain)
+      return resolved.replace(/\/api\/v\d+\/?$/i, '')
+    }
+    return apiBaseUrl.replace(/\/api\/v\d+\/?$/i, '') || 'http://localhost:8002'
+  }
+
+  const apiProxyTarget = resolveProxyTarget()
 
   return {
     plugins: [react()],
@@ -28,7 +42,9 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       open: false,
       watch: {
-        usePolling: true,
+        // usePolling is only needed inside Docker / network file systems.
+        // Enable via VITE_USE_POLLING=true in .env.local rather than always on.
+        usePolling: process.env.VITE_USE_POLLING === 'true',
       },
       hmr: {
         clientPort: 5173,
@@ -131,6 +147,10 @@ export default defineConfig(({ mode }) => {
 
             if (packageName.startsWith('@fullcalendar/')) {
               return 'fullcalendar-vendor'
+            }
+
+            if (packageName === 'xlsx') {
+              return 'xlsx-vendor'
             }
 
             if (packageName === 'lucide-react') {

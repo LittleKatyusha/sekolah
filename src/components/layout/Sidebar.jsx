@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -19,7 +19,7 @@ import {
   MessageCircle
 } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
-import { memo, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
 import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
@@ -184,11 +184,12 @@ const normalizePath = (path) => {
   return path.replace(/\/+$/, '') || '/'
 }
 
-const MenuItem = memo(({ item, currentPath, onClose, onNavigate }) => {
+const MenuItem = memo(({ item, onClose, onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false)
   const hasChildren = item.children && item.children.length > 0
 
-  if (typeof item.icon !== 'function' && typeof item.icon !== 'object') {
+  // Validate icon type in dev only — keep out of the hot render path in production
+  if (import.meta.env.DEV && typeof item.icon !== 'function' && typeof item.icon !== 'object') {
     console.error('[Sidebar][MenuItem] Invalid icon type detected', {
       id: item?.id,
       name: item?.name,
@@ -214,7 +215,6 @@ const MenuItem = memo(({ item, currentPath, onClose, onNavigate }) => {
               <MenuItem
                 key={child.id}
                 item={child}
-                currentPath={currentPath}
                 onClose={onClose}
                 onNavigate={onNavigate}
               />
@@ -233,9 +233,8 @@ const MenuItem = memo(({ item, currentPath, onClose, onNavigate }) => {
           isActive ? 'sidebar-link active' : 'sidebar-link'
         }
         onClick={() => {
-          if (normalizePath(item.to) !== currentPath) {
-            onNavigate?.(item.to)
-          }
+          // NavLink handles active styling; trigger progress bar and close mobile drawer
+          onNavigate?.()
           onClose?.()
         }}
       >
@@ -247,17 +246,14 @@ const MenuItem = memo(({ item, currentPath, onClose, onNavigate }) => {
 })
 
 const Sidebar = ({ isOpen, onClose }) => {
-  const location = useLocation()
   const { logout, user } = useAuthStore()
   const startNavigation = useNavigationProgressStore((state) => state.startNavigation)
   const [navigation, setNavigation] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const currentPath = normalizePath(location.pathname)
-
-  const handleMenuNavigate = () => {
+  const handleMenuNavigate = useCallback(() => {
     startNavigation()
-  }
+  }, [startNavigation])
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -439,7 +435,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                   <MenuItem
                     key={item.id}
                     item={item}
-                    currentPath={currentPath}
                     onClose={onClose}
                     onNavigate={handleMenuNavigate}
                   />

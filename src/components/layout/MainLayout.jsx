@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
-import ChatWidget from '../../features/chatbot/components/ChatWidget'
+
+// Lazy-load ChatWidget so react-markdown and chatbotService are not parsed
+// on every authenticated page load — they are only needed when the widget is opened.
+const ChatWidget = lazy(() => import('../../features/chatbot/components/ChatWidget'))
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -19,7 +22,9 @@ const MainLayout = () => {
         </main>
       </div>
 
-      <ChatWidget />
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
     </div>
   )
 }

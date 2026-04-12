@@ -168,7 +168,10 @@ export function useReferenceOptions(category, fallbackOptions = []) {
     return () => {
       cancelled = true
     }
-  }, [category, categoryKey, hasCategory, isArray, stableFallbackOptions])
+  // Use categoryKey (stable serialized form) instead of raw category to avoid
+  // running the effect twice when category is an array (both category and
+  // categoryKey would change together, causing a double execution).
+  }, [categoryKey, hasCategory, isArray, stableFallbackOptions])
 
   return { options, loading, error }
 }
