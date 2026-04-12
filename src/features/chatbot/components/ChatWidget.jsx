@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, X, Send, Trash2, Loader2, MessageSquare } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { chatbotService } from '../services/chatbotService'
 
 const ChatWidget = () => {
@@ -134,15 +135,30 @@ const ChatWidget = () => {
                   </div>
                 )}
                 <div
-                  className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                  className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed break-words ${
                     msg.role === 'user'
-                      ? 'bg-violet-600 text-white rounded-br-sm'
+                      ? 'bg-violet-600 text-white rounded-br-sm whitespace-pre-wrap'
                       : msg.isError
-                      ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-bl-sm'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-bl-sm'
+                      ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-bl-sm whitespace-pre-wrap'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-bl-sm prose prose-sm dark:prose-invert max-w-none'
                   }`}
                 >
-                  {msg.text}
+                  {msg.role === 'assistant' && !msg.isError ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 mb-1 space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-1 space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li className="leading-snug">{children}</li>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        code: ({ children }) => <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded text-xs">{children}</code>,
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
               </div>
             ))}
