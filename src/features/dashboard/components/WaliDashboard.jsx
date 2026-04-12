@@ -1,10 +1,12 @@
 import React from 'react'
-import { Users, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Users, CheckCircle, AlertTriangle, DollarSign, Globe } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import QuickActions from './QuickActions'
 
 const WaliDashboard = ({ data }) => {
   const { profile, children } = data
+  const navigate = useNavigate()
 
   return (
     <div className="space-y-8">
@@ -59,6 +61,16 @@ const WaliDashboard = ({ data }) => {
                     </span>
                   </div>
                 </div>
+
+                {child.tunggakan_spp_count > 0 && (
+                  <button
+                    onClick={() => navigate(`/keuangan/pembayaran-spp/tunggakan?siswaId=${child.id}`)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <Globe size={15} />
+                    Bayar Tunggakan Online
+                  </button>
+                )}
               </div>
             </Card>
           ))

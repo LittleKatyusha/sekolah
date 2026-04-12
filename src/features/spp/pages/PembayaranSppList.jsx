@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle, FileBarChart2 } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle, FileBarChart2, Globe, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -9,6 +9,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import Swal from 'sweetalert2'
 
 const getLabel = (value, options) => {
   if (!value || !options?.length) return value ?? '-'
@@ -31,7 +32,7 @@ const BULAN_MAP = {
   9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
 }
 
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onBayarOnline, detailPermission, editPermission, deletePermission, bayarOnlinePermission }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -103,6 +104,18 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editP
                 Edit
               </button>
             </PermissionGuard>
+            {onBayarOnline && data?.status !== 'lunas' && (
+              <PermissionGuard permission={bayarOnlinePermission}>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <button
+                  onClick={() => handleAction(onBayarOnline)}
+                  className="w-full px-4 py-2 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center gap-2"
+                >
+                  <Globe size={16} />
+                  Bayar Online
+                </button>
+              </PermissionGuard>
+            )}
             <PermissionGuard permission={deletePermission}>
               <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
               <button
@@ -160,6 +173,40 @@ const PembayaranSppList = () => {
       gridRef.current.api.refreshInfiniteCache()
     }
   }, [])
+
+  const handleBayarOnline = useCallback(async (data) => {
+    const namaBulan = data.nama_bulan || `Bulan ${data.bulan}`
+    const result = await Swal.fire({
+      title: 'Bayar Online via Winpay',
+      html: `Buat link pembayaran untuk <strong>${namaBulan} ${data.tahun}</strong>?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Buat Link',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#2563eb',
+    })
+    if (!result.isConfirmed) return
+    const { data: res, error } = await pembayaranSppService.bayarOnline({
+      mst_siswa_id: data.mst_siswa_id,
+      mst_tarif_spp_id: data.mst_tarif_spp_id,
+      bulan: data.bulan,
+      tahun: data.tahun,
+    })
+    if (error) {
+      showError((typeof error === 'object' ? error?.message : error) || 'Gagal membuat link pembayaran')
+      return
+    }
+    const url = res?.data?.checkout_url
+    if (url) {
+      await Swal.fire({
+        title: 'Link Pembayaran Siap',
+        html: `<a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 underline font-medium">Buka Halaman Pembayaran</a><div class="text-xs mt-2 text-gray-500 break-all">${url}</div>`,
+        icon: 'success',
+        confirmButtonText: 'Tutup',
+      })
+      handleRefresh()
+    }
+  }, [handleRefresh])
 
   const formatCurrency = (value) => {
     if (!value && value !== 0) return '-'
@@ -270,14 +317,16 @@ const PembayaranSppList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
+            onBayarOnline={() => handleBayarOnline(params.data)}
             detailPermission="pembayaran-spp.view"
             editPermission="pembayaran-spp.edit"
             deletePermission="pembayaran-spp.delete"
+            bayarOnlinePermission="pembayaran-spp.bayar"
           />
         </div>
       )
     }
-  ], [handleDelete, handleDetail, handleEdit, statusBayarOptions, metodePembayaranOptions])
+  ], [handleDelete, handleDetail, handleEdit, handleBayarOnline, statusBayarOptions, metodePembayaranOptions])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

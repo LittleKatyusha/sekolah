@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Search, CreditCard, AlertCircle, CheckSquare, Square } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Search, CreditCard, AlertCircle, CheckSquare, Square, Globe } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
@@ -28,10 +28,11 @@ const formatCurrency = (value) => {
 
 const PembayaranSppTunggakan = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   // Filter state
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
-  const [siswaId, setSiswaId] = useState('')
+  const [siswaId, setSiswaId] = useState(searchParams.get('siswaId') || '')
   const [tarifSppId, setTarifSppId] = useState('')
   const [tahun, setTahun] = useState(String(new Date().getFullYear()))
   const [tarifOptions, setTarifOptions] = useState([])
@@ -41,6 +42,7 @@ const PembayaranSppTunggakan = () => {
   const [selectedBulan, setSelectedBulan] = useState([])
   const [loadingSearch, setLoadingSearch] = useState(false)
   const [loadingBayar, setLoadingBayar] = useState(false)
+  const [loadingBayarOnline, setLoadingBayarOnline] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
 
   // Load tarif SPP options on mount
@@ -58,6 +60,19 @@ const PembayaranSppTunggakan = () => {
     }
     fetchTarif()
   }, [])
+
+  // Pre-fill siswa option label when siswaId comes from URL query param
+  useEffect(() => {
+    const prefilledId = searchParams.get('siswaId')
+    if (!prefilledId) return
+    siswaService.getById(prefilledId).then(({ data }) => {
+      const siswa = data?.data
+      if (siswa) {
+        const option = buildSiswaOption(siswa)
+        setSelectedSiswaOption(option)
+      }
+    })
+  }, []) // run once on mount
 
   // Siswa searchable select helpers
   const buildSiswaOption = useCallback(
@@ -185,6 +200,60 @@ const PembayaranSppTunggakan = () => {
     handleSearch()
   }
 
+  // Initiate Winpay online payment for a single selected month
+  const handleBayarOnline = async () => {
+    if (selectedBulan.length !== 1) {
+      showError('Pilih tepat satu bulan untuk bayar online')
+      return
+    }
+
+    const bulanDipilih = selectedBulan[0]
+    const nominal = tunggakan.find((t) => t.bulan === bulanDipilih)?.nominal ?? totalTerpilih
+
+    const result = await Swal.fire({
+      title: 'Bayar Online via Winpay',
+      html: `Buat link pembayaran untuk <strong>${BULAN_MAP[bulanDipilih]} ${tahun}</strong>?<br/>Nominal: <strong>${formatCurrency(nominal)}</strong>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Buat Link',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#2563eb',
+    })
+
+    if (!result.isConfirmed) return
+
+    setLoadingBayarOnline(true)
+    const { data, error } = await pembayaranSppService.bayarOnline({
+      mst_siswa_id: parseInt(siswaId),
+      mst_tarif_spp_id: parseInt(tarifSppId),
+      tahun: parseInt(tahun),
+      bulan: bulanDipilih,
+    })
+    setLoadingBayarOnline(false)
+
+    if (error) {
+      const msg = (typeof error === 'object' ? error?.message : error) || 'Gagal membuat link pembayaran online'
+      showError(msg)
+      return
+    }
+
+    const checkoutUrl = data?.data?.checkout_url
+    if (checkoutUrl) {
+      await Swal.fire({
+        title: 'Link Pembayaran Siap',
+        html: `Link pembayaran berhasil dibuat.<br/><br/>
+          <a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer"
+             class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            Buka Halaman Pembayaran
+          </a>
+          <div class="mt-3 text-xs text-gray-500 break-all">${checkoutUrl}</div>`,
+        icon: 'success',
+        confirmButtonText: 'Tutup',
+      })
+      handleSearch()
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -295,25 +364,47 @@ const PembayaranSppTunggakan = () => {
                 )}
               </h3>
               {tunggakan.length > 0 && selectedBulan.length > 0 && (
-                <PermissionGuard permission="pembayaran-spp.create">
-                  <Button
-                    onClick={handleBayarMultiple}
-                    disabled={loadingBayar}
-                    variant="primary"
-                  >
-                    {loadingBayar ? (
-                      <span className="flex items-center gap-2">
-                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                        Memproses...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <CreditCard size={16} />
-                        Bayar {selectedBulan.length} Bulan ({formatCurrency(totalTerpilih)})
-                      </span>
-                    )}
-                  </Button>
-                </PermissionGuard>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <PermissionGuard permission="pembayaran-spp.create">
+                    <Button
+                      onClick={handleBayarMultiple}
+                      disabled={loadingBayar || loadingBayarOnline}
+                      variant="primary"
+                    >
+                      {loadingBayar ? (
+                        <span className="flex items-center gap-2">
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                          Memproses...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <CreditCard size={16} />
+                          Bayar Tunai {selectedBulan.length} Bulan ({formatCurrency(totalTerpilih)})
+                        </span>
+                      )}
+                    </Button>
+                  </PermissionGuard>
+                  <PermissionGuard permission="pembayaran-spp.create">
+                    <Button
+                      onClick={handleBayarOnline}
+                      disabled={loadingBayarOnline || loadingBayar || selectedBulan.length !== 1}
+                      variant="secondary"
+                      title={selectedBulan.length !== 1 ? 'Pilih tepat 1 bulan untuk bayar online' : 'Buat link pembayaran online via Winpay'}
+                    >
+                      {loadingBayarOnline ? (
+                        <span className="flex items-center gap-2">
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600" />
+                          Membuat link...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Globe size={16} />
+                          Bayar Online
+                        </span>
+                      )}
+                    </Button>
+                  </PermissionGuard>
+                </div>
               )}
             </div>
 

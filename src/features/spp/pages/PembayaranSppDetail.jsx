@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, DollarSign, User, Calendar, Hash, CreditCard, FileText } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, DollarSign, User, Calendar, Hash, CreditCard, FileText, ExternalLink, Globe } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
@@ -257,6 +257,50 @@ const PembayaranSppDetail = () => {
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Keterangan</h4>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{pembayaran.keterangan}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Winpay online payment info */}
+              {pembayaran.winpay_checkout_url && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <Globe size={16} className="text-blue-500" />
+                    Pembayaran Online (Winpay)
+                  </h4>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Status Winpay</p>
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          pembayaran.winpay_status === 'paid' || pembayaran.winpay_status === 'success' || pembayaran.winpay_status === 'settlement'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : pembayaran.winpay_status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
+                          {pembayaran.winpay_status ?? 'pending'}
+                        </span>
+                      </div>
+                      {pembayaran.winpay_ref && (
+                        <div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Ref Merchant</p>
+                          <p className="text-xs font-mono text-gray-700 dark:text-gray-300 mt-1">{pembayaran.winpay_ref}</p>
+                        </div>
+                      )}
+                    </div>
+                    {(pembayaran.winpay_status === 'pending' || !pembayaran.winpay_status) && (
+                      <a
+                        href={pembayaran.winpay_checkout_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <ExternalLink size={15} />
+                        Lanjutkan Pembayaran
+                      </a>
+                    )}
+                    <p className="text-xs text-gray-400 break-all">{pembayaran.winpay_checkout_url}</p>
                   </div>
                 </div>
               )}
