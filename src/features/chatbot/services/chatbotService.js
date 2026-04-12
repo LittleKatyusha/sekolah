@@ -9,7 +9,7 @@ export const chatbotService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   sendMessage: async (text) => {
-    return await apiService.post(`${BASE_URL}/message`, { text })
+    return await apiService.post(`${BASE_URL}/message`, { message: text })
   },
 
   /**
