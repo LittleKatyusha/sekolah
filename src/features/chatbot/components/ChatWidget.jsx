@@ -60,7 +60,7 @@ const ChatWidget = () => {
         {
           id: Date.now(),
           role: 'assistant',
-          text: data?.reply ?? 'Maaf, saya tidak dapat merespon saat ini.',
+          text: data?.data?.reply ?? 'Maaf, saya tidak dapat merespon saat ini.',
         },
       ])
     }
