@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, Mail, Lock, Eye, EyeOff, GraduationCap, BookOpen, Users, Award, Star, CheckCircle2 } from 'lucide-react'
+import { LogIn, Mail, Lock, Eye, EyeOff, BookOpen, Users, Award, Star, CheckCircle2 } from 'lucide-react'
 import Button from '../components/ui/Button'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
@@ -109,13 +109,11 @@ const Login = () => {
         {/* Top: logo + name */}
         <div className="relative z-10 px-12 pt-12">
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400 shadow-lg">
-              <GraduationCap className="text-[#0f2d5a]" size={28} />
-            </div>
-            <div>
-              <h1 className="text-white text-2xl font-bold tracking-wide leading-tight">Akademihub</h1>
-              <p className="text-amber-300 text-xs font-medium tracking-widest uppercase">Sistem Informasi Akademik</p>
-            </div>
+            <img
+              src={logoVertical}
+              alt="Akademihub Logo"
+              className="h-16 w-auto drop-shadow-lg"
+            />
           </div>
         </div>
 
@@ -168,13 +166,11 @@ const Login = () => {
 
         {/* Mobile-only logo */}
         <div className="flex lg:hidden items-center gap-3 mb-10">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#0f2d5a]">
-            <GraduationCap className="text-amber-400" size={24} />
-          </div>
-          <div>
-            <p className="text-[#0f2d5a] font-bold text-lg leading-tight">Akademihub</p>
-            <p className="text-gray-500 text-xs tracking-widest uppercase">Sistem Informasi Akademik</p>
-          </div>
+          <img
+            src={logoVertical}
+            alt="Akademihub Logo"
+            className="h-12 w-auto"
+          />
         </div>
 
         <div className="w-full max-w-sm">
