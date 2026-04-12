@@ -102,7 +102,7 @@ const ChatWidget = () => {
             <Bot className="h-5 w-5 shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-semibold leading-none">AI Asisten Sekolah</p>
-              <p className="mt-0.5 text-xs text-violet-200">Didukung oleh OpenAI GPT-4o</p>
+              <p className="mt-0.5 text-xs text-violet-200">Didukung oleh OpenAI</p>
             </div>
             <button
               onClick={handleClearSession}
