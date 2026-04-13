@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const getPackageName = (id) => {
   const normalizedId = id.split('node_modules/')[1]
@@ -34,8 +36,41 @@ export default defineConfig(({ mode }) => {
 
   const apiProxyTarget = resolveProxyTarget()
 
+  // ── Firebase SW plugin ─────────────────────────────────────────────────────
+  // Processes src/firebase-messaging-sw-template.js and replaces __FIREBASE_CONFIG__
+  // with the real config from env vars, serving it at /firebase-messaging-sw.js.
+  const firebaseSWPlugin = () => {
+    const swTemplatePath = resolve(process.cwd(), 'src/firebase-messaging-sw-template.js')
+
+    const buildSWContent = () => {
+      const template = readFileSync(swTemplatePath, 'utf-8')
+      const config = {
+        apiKey: env.VITE_FIREBASE_API_KEY || '',
+        authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || '',
+        projectId: env.VITE_FIREBASE_PROJECT_ID || '',
+        storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || '',
+        messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+        appId: env.VITE_FIREBASE_APP_ID || '',
+      }
+      return template.replace('__FIREBASE_CONFIG__', JSON.stringify(config))
+    }
+
+    return {
+      name: 'firebase-messaging-sw',
+      configureServer(server) {
+        server.middlewares.use('/firebase-messaging-sw.js', (_req, res) => {
+          res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+          res.end(buildSWContent())
+        })
+      },
+      writeBundle() {
+        writeFileSync(resolve(process.cwd(), 'dist/firebase-messaging-sw.js'), buildSWContent())
+      },
+    }
+  }
+
   return {
-    plugins: [react()],
+    plugins: [react(), firebaseSWPlugin()],
     server: {
       host: true,
       port: 5173,

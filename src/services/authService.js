@@ -1,5 +1,6 @@
 import { apiService } from '../utils/api'
 import useAuthStore from '../store/useAuthStore'
+import { deleteFcmToken } from './fcmService'
 
 const BASE_URL = '/auth'
 
@@ -86,6 +87,8 @@ export const authService = {
       // Even if API call fails, we should clear local state
       return { data: null, error: null }
     } finally {
+      // Best-effort: remove FCM token before clearing auth state.
+      try { await deleteFcmToken() } catch { /* ignore */ }
       // Always clear auth state on logout
       useAuthStore.getState().logout()
     }

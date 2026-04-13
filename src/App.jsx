@@ -15,6 +15,7 @@ import { runCacheWarming } from './utils/cacheWarmer'
 import NavigationProgress from './components/ui/NavigationProgress'
 import useNavigationProgressStore from './store/useNavigationProgressStore'
 import { usePageTitle } from './hooks/usePageTitle'
+import { useFcmToken } from './hooks/useFcmToken'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -243,6 +244,14 @@ function CacheWarmingManager() {
   return null
 }
 
+// ── FCM token lifecycle manager ───────────────────────────────────────────────
+// Mounted only while authenticated; registers the browser FCM token with the
+// backend and revokes it on unmount (logout).
+function FcmManager() {
+  useFcmToken()
+  return null
+}
+
 function App() {
   const { isAuthenticated } = useAuthStore()
   return (
@@ -254,6 +263,7 @@ function App() {
         <AuthExpiryNavigator />
         <CacheWarmingManager />
         <WebSocketManager />
+        {isAuthenticated && <FcmManager />}
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
