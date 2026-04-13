@@ -226,16 +226,16 @@ function AuthExpiryNavigator() {
 // Fires background cache pre-warming once per login session so that reference
 // dropdowns and the sidebar menu are ready before the user navigates to them.
 function CacheWarmingManager() {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, token } = useAuthStore()
   const warmedRef = useRef(false)
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && token) {
       if (!warmedRef.current) {
         warmedRef.current = true
         runCacheWarming(user)
       }
-    } else {
+    } else if (!isAuthenticated) {
       // Reset so we warm again on next login
       warmedRef.current = false
     }
