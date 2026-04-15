@@ -47,7 +47,7 @@ const EksSiswaDetail = () => {
         setPendaftaran(data.data)
       } else {
         showError('Gagal mengambil data pendaftaran')
-        navigate('/ekstrakurikuler/siswa')
+        navigate('/ekstrakurikuler/pendaftaran')
       }
       setLoading(false)
     }
@@ -63,7 +63,7 @@ const EksSiswaDetail = () => {
       const { error } = await eksSiswaService.delete(pendaftaran.id)
       if (!error) {
         showSuccess(`${label} berhasil dihapus!`)
-        navigate('/ekstrakurikuler/siswa')
+        navigate('/ekstrakurikuler/pendaftaran')
       } else {
         showError('Gagal menghapus pendaftaran')
       }
@@ -82,7 +82,7 @@ const EksSiswaDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="secondary" onClick={() => navigate('/ekstrakurikuler/siswa')}>
+          <Button variant="secondary" onClick={() => navigate('/ekstrakurikuler/pendaftaran')}>
             <ArrowLeft size={18} className="mr-2" />
             Kembali
           </Button>
@@ -90,7 +90,7 @@ const EksSiswaDetail = () => {
         </div>
         <div className="flex gap-3">
           <PermissionGuard permission="ekskul-siswa.edit">
-            <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/siswa/${id}/edit`)}>
+            <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/pendaftaran/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>

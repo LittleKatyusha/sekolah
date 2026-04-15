@@ -11,12 +11,16 @@ const Ekstrakurikuler = () => {
     <Routes>
       <Route path="/" element={<EkstrakurikulerList />} />
       <Route path="create" element={<EkstrakurikulerForm />} />
+
+      {/* Pendaftaran routes — must come before :id wildcard */}
+      <Route path="pendaftaran" element={<EksSiswaList />} />
+      <Route path="pendaftaran/create" element={<EksSiswaForm />} />
+      <Route path="pendaftaran/:id" element={<EksSiswaDetail />} />
+      <Route path="pendaftaran/:id/edit" element={<EksSiswaForm />} />
+
+      {/* Ekstrakurikuler detail — must be last */}
       <Route path=":id" element={<EkstrakurikulerDetail />} />
       <Route path=":id/edit" element={<EkstrakurikulerForm />} />
-      <Route path="siswa" element={<EksSiswaList />} />
-      <Route path="siswa/create" element={<EksSiswaForm />} />
-      <Route path="siswa/:id" element={<EksSiswaDetail />} />
-      <Route path="siswa/:id/edit" element={<EksSiswaForm />} />
     </Routes>
   )
 }
