@@ -245,15 +245,15 @@ const PerpustakaanStats = () => {
             <Card title="Distribusi Status Buku">
               <div className="space-y-3 py-2">
                 {distribusiStatus.map((item, i) => {
-                  const total = distribusiStatus.reduce((sum, s) => sum + (s.total || 0), 0)
-                  const pct = total > 0 ? ((item.total / total) * 100) : 0
+                  const total = distribusiStatus.reduce((sum, s) => sum + (s.jumlah || 0), 0)
+                  const pct = total > 0 ? ((item.jumlah / total) * 100) : 0
                   const color = statusColorMap[item.status] || COLORS[i % COLORS.length]
                   return (
                     <div key={i} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
                         <span className="font-medium text-gray-700 dark:text-gray-300">{item.status}</span>
                         <span className="text-gray-600 dark:text-gray-400">
-                          {formatNumber(item.total)} ({pct.toFixed(1)}%)
+                          {formatNumber(item.jumlah)} ({pct.toFixed(1)}%)
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
