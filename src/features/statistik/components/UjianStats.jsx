@@ -11,6 +11,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import statistikService from '../services/statistikService'
+import useReferenceOptions from '../../../hooks/useReferenceOptions'
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
 
@@ -69,12 +70,8 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-const semesterOptions = [
-  { value: '1', label: 'Semester 1' },
-  { value: '2', label: 'Semester 2' },
-]
-
 const UjianStats = ({ kelasOptions = [], mapelOptions = [] }) => {
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)

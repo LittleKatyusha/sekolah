@@ -9,7 +9,6 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
-import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
@@ -21,18 +20,18 @@ const UjianForm = () => {
   const isEditMode = !!id
 
   const { options: jenisUjianOptions } = useReferenceOptions('jenis_ujian')
+  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
 
   const [loading, setLoading] = useState(false)
-  const [semesterOptions, setSemesterOptions] = useState([])
   const [fetchingData, setFetchingData] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     mst_mapel_id: '',
     mst_kelas_id: '',
     jenis: '',
     nama: '',
     tanggal: '',
-    semester_id: '',
+    semester: '',
     keterangan: ''
   })
 
@@ -86,15 +85,15 @@ const UjianForm = () => {
       const mapelId = ujian.mst_mapel_id ? String(ujian.mst_mapel_id) : (ujian.mapel?.id ? String(ujian.mapel.id) : '')
       const kelasId = ujian.mst_kelas_id ? String(ujian.mst_kelas_id) : (ujian.kelas?.id ? String(ujian.kelas.id) : '')
 
-      setFormData({
-        mst_mapel_id: mapelId,
-        mst_kelas_id: kelasId,
-        jenis: normalizeReferenceCode(ujian.jenis_kode ?? ujian.jenis, jenisUjianOptions),
-        nama: ujian.nama || '',
-        tanggal: ujian.tanggal || '',
-        semester_id: ujian.semester_id ? String(ujian.semester_id) : '',
-        keterangan: ujian.keterangan || ''
-      })
+    setFormData({
+      mst_mapel_id: mapelId,
+      mst_kelas_id: kelasId,
+      jenis: normalizeReferenceCode(ujian.jenis_kode ?? ujian.jenis, jenisUjianOptions),
+      nama: ujian.nama || '',
+      tanggal: ujian.tanggal || '',
+      semester: normalizeReferenceCode(ujian.semester_kode ?? ujian.semester, semesterOptions),
+      keterangan: ujian.keterangan || ''
+    })
 
       if (ujian.mapel?.id) {
         setSelectedMapelOption(buildMapelOption(ujian.mapel))
@@ -122,21 +121,7 @@ const UjianForm = () => {
       navigate('/akademik/ujian')
     }
     setFetchingData(false)
-  }, [buildKelasOption, buildMapelOption, id, jenisUjianOptions, navigate])
-
-  useEffect(() => {
-    const fetchSemesterOptions = async () => {
-      const { data } = await semesterService.getAll({ per_page: 100 })
-      if (data?.data) {
-        const list = Array.isArray(data.data) ? data.data : data.data?.data || []
-        setSemesterOptions(list.map(item => ({
-          value: String(item.id),
-          label: item.nama || `Semester #${item.id}`
-        })))
-      }
-    }
-    fetchSemesterOptions()
-  }, [])
+  }, [buildKelasOption, buildMapelOption, id, jenisUjianOptions, semesterOptions, navigate])
 
   useEffect(() => {
     if (isEditMode) {
@@ -154,13 +139,13 @@ const UjianForm = () => {
 
   const validate = () => {
     const newErrors = {}
-  
+
     if (!safeParseInt(formData.mst_mapel_id)) newErrors.mst_mapel_id = 'Mata pelajaran wajib dipilih'
     if (!safeParseInt(formData.mst_kelas_id)) newErrors.mst_kelas_id = 'Kelas wajib dipilih'
     if (!safeParseInt(formData.jenis)) newErrors.jenis = 'Jenis ujian wajib dipilih'
     if (!formData.nama) newErrors.nama = 'Nama ujian wajib diisi'
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal ujian wajib diisi'
-    if (!safeParseInt(formData.semester_id)) newErrors.semester_id = 'Semester wajib dipilih'
+    if (!safeParseInt(formData.semester)) newErrors.semester = 'Semester wajib dipilih'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -178,7 +163,7 @@ const UjianForm = () => {
       mst_mapel_id: safeParseInt(formData.mst_mapel_id),
       mst_kelas_id: safeParseInt(formData.mst_kelas_id),
       jenis: safeParseInt(formData.jenis),
-      semester_id: safeParseInt(formData.semester_id),
+      semester: safeParseInt(formData.semester),
       keterangan: formData.keterangan || null
     }
 
@@ -316,21 +301,30 @@ const UjianForm = () => {
                 />
               </div>
 
-              {/* Semester */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Semester <span className="text-red-500">*</span>
-                </label>
-                <SearchableSelect
-                  name="semester_id"
-                  value={formData.semester_id}
-                  onChange={handleChange}
-                  options={semesterOptions}
-                  placeholder="Pilih semester"
-                  noOptionsText="Tidak ada semester yang tersedia"
-                  error={errors.semester_id}
-                />
-              </div>
+            {/* Semester */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Semester <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="semester"
+                value={formData.semester}
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              >
+                <option value="">Pilih semester</option>
+                {semesterOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.semester && (
+                <p className="mt-1 text-sm text-red-500">
+                  {Array.isArray(errors.semester) ? errors.semester[0] : errors.semester}
+                </p>
+              )}
+            </div>
 
               {/* Keterangan */}
               <div className="md:col-span-2">
