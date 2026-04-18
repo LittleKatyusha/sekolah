@@ -12,10 +12,10 @@ import { usePageTitle } from '../../../hooks/usePageTitle'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 
 const STATUS_MAP = {
-  Hadir: { label: 'Hadir', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  Izin: { label: 'Izin', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  Sakit: { label: 'Sakit', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  Alpha: { label: 'Alpha', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  hadir: { label: 'Hadir', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  izin: { label: 'Izin', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  sakit: { label: 'Sakit', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  alpha: { label: 'Alpha', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
 const getLabel = (value, options) => {
@@ -215,8 +215,8 @@ const PresensiList = () => {
       valueGetter: (params) => {
         const gm = params.data?.guru_mapel
         if (!gm) return '-'
-        const guru = gm.guru?.nama || ''
-        const mapel = gm.mapel?.nama_mapel || gm.mapel?.nama || ''
+        const guru = gm.guru_nama || ''
+        const mapel = gm.mapel_nama || ''
         return guru && mapel ? `${guru} - ${mapel}` : guru || mapel || '-'
       }
     },
@@ -239,7 +239,7 @@ const PresensiList = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
-      field: 'status_label',
+      field: 'status_absensi',
       backendField: 'status',
       headerName: 'Status',
       sortable: true,
