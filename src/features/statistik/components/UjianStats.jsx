@@ -12,6 +12,8 @@ import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import statistikService from '../services/statistikService'
 import useReferenceOptions from '../../../hooks/useReferenceOptions'
+import { kelasService } from '../../kelas/services/kelasService'
+import { mapelService } from '../../mapel/services/mapelService'
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
 
@@ -70,7 +72,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-const UjianStats = ({ kelasOptions = [], mapelOptions = [] }) => {
+const UjianStats = () => {
   const { options: semesterOptions } = useReferenceOptions('kategori_semester')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
@@ -81,6 +83,33 @@ const UjianStats = ({ kelasOptions = [], mapelOptions = [] }) => {
     semester: '',
     kkm: '70',
   })
+  const [kelasOptions, setKelasOptions] = useState([])
+  const [mapelOptions, setMapelOptions] = useState([])
+
+  // Fetch dropdown options
+  useEffect(() => {
+    const fetchOptions = async () => {
+      const [kelasRes, mapelRes] = await Promise.all([
+        kelasService.getAll({ per_page: 100 }),
+        mapelService.getMapel({ per_page: 100 }),
+      ])
+      if (kelasRes?.data?.data) {
+        const kelasList = Array.isArray(kelasRes.data.data) ? kelasRes.data.data : kelasRes.data.data?.data || []
+        setKelasOptions(kelasList.map(item => ({
+          value: String(item.id),
+          label: item.nama_kelas || `Kelas #${item.id}`,
+        })))
+      }
+      if (mapelRes?.data?.data) {
+        const mapelList = Array.isArray(mapelRes.data.data) ? mapelRes.data.data : mapelRes.data.data?.data || []
+        setMapelOptions(mapelList.map(item => ({
+          value: String(item.id),
+          label: `${item.kode ? `${item.kode} - ` : ''}${item.nama || `Mapel #${item.id}`}`,
+        })))
+      }
+    }
+    fetchOptions()
+  }, [])
 
   const fetchData = useCallback(async () => {
     setLoading(true)

@@ -11,6 +11,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import statistikService from '../services/statistikService'
+import { kelasService } from '../../kelas/services/kelasService'
 
 const DONUT_COLORS = ['#10B981', '#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6']
 const PAYMENT_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#06B6D4']
@@ -81,11 +82,27 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => ({
   label: String(currentYear - i),
 }))
 
-const KeuanganStats = ({ kelasOptions = [] }) => {
+const KeuanganStats = () => {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [filters, setFilters] = useState({ tahun: '', mst_kelas_id: '' })
+  const [kelasOptions, setKelasOptions] = useState([])
+
+  // Fetch dropdown options
+  useEffect(() => {
+    const fetchOptions = async () => {
+      const { data: res } = await kelasService.getAll({ per_page: 100 })
+      if (res?.data) {
+        const kelasList = Array.isArray(res.data) ? res.data : res.data?.data || []
+        setKelasOptions(kelasList.map(item => ({
+          value: String(item.id),
+          label: item.nama_kelas || `Kelas #${item.id}`,
+        })))
+      }
+    }
+    fetchOptions()
+  }, [])
 
   const fetchData = useCallback(async () => {
     setLoading(true)

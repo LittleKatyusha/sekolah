@@ -8,6 +8,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import statistikService from '../services/statistikService'
+import { kelasService } from '../../kelas/services/kelasService'
+import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
 const GENDER_COLORS = { 'Laki-laki': '#3B82F6', 'Perempuan': '#EC4899' }
@@ -43,11 +45,40 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const renderPieLabel = ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`
 
-const AkademikStats = ({ tahunAjaranOptions = [], kelasOptions = [] }) => {
+const AkademikStats = () => {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [filters, setFilters] = useState({ tahun_ajaran_id: '', mst_kelas_id: '' })
+  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
+  const [kelasOptions, setKelasOptions] = useState([])
+
+  // Fetch dropdown options
+  useEffect(() => {
+    const fetchOptions = async () => {
+      const [tahunRes, kelasRes] = await Promise.all([
+        tahunAjaranService.getAll({ per_page: 100 }),
+        kelasService.getAll({ per_page: 100 }),
+      ])
+      
+      if (tahunRes.data?.data) {
+        const tahunList = Array.isArray(tahunRes.data.data) ? tahunRes.data.data : tahunRes.data.data?.data || []
+        setTahunAjaranOptions(tahunList.map(item => ({
+          value: String(item.id),
+          label: item.nama || `Tahun Ajaran #${item.id}`,
+        })))
+      }
+      
+      if (kelasRes.data?.data) {
+        const kelasList = Array.isArray(kelasRes.data.data) ? kelasRes.data.data : kelasRes.data.data?.data || []
+        setKelasOptions(kelasList.map(item => ({
+          value: String(item.id),
+          label: item.nama_kelas || `Kelas #${item.id}`,
+        })))
+      }
+    }
+    fetchOptions()
+  }, [])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
