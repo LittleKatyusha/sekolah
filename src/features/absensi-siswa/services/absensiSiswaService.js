@@ -1,6 +1,6 @@
 import { apiService } from '../../../utils/api'
 
-const BASE_URL = '/absensi-siswa'
+const BASE_URL = '/akademik/absensi-siswa'
 
 export const absensiSiswaService = {
   /**
@@ -22,7 +22,7 @@ export const absensiSiswaService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getAbsensiBySiswa: async (siswaId, params = {}) => {
-    return await apiService.get(`${BASE_URL}/siswa/${siswaId}`, { params })
+    return await apiService.get(BASE_URL, { params: { ...params, mst_siswa_id: siswaId } })
   },
 
   /**
@@ -31,7 +31,7 @@ export const absensiSiswaService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getSummaryBySiswa: async (siswaId) => {
-    return await apiService.get(`${BASE_URL}/siswa/${siswaId}/summary`)
+    return await apiService.get(`${BASE_URL}/summary`, { params: { mst_siswa_id: siswaId } })
   },
 
   /**

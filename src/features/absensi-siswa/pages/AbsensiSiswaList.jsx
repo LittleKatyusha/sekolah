@@ -456,20 +456,13 @@ const AdminAbsensiSiswaList = () => {
     fetchSummary()
   }, [selectedSiswaId])
 
-  const endpoint = useMemo(
-    () => (selectedSiswaId ? `/absensi-siswa/siswa/${selectedSiswaId}` : '/absensi-siswa'),
-    [selectedSiswaId]
-  )
+  const endpoint = '/akademik/absensi-siswa'
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
-    filter: JSON.stringify({
-      tanggal_mulai: filters.tanggal_mulai || '',
-      tanggal_akhir: filters.tanggal_akhir || '',
-      siswa_id: selectedSiswaId || '',
-    }),
-    tanggal_mulai: filters.tanggal_mulai || undefined,
+    mst_siswa_id: selectedSiswaId || undefined,
+    tanggal_awal: filters.tanggal_mulai || undefined,
     tanggal_akhir: filters.tanggal_akhir || undefined,
   }), [filters.tanggal_akhir, filters.tanggal_mulai, selectedSiswaId])
 

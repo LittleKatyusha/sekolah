@@ -220,7 +220,7 @@ const AbsensiGuruList = () => {
       <Card>
         <InfiniteGrid
           ref={gridRef}
-          endpoint="/absensi-guru"
+          endpoint="/akademik/absensi-guru"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
