@@ -53,6 +53,14 @@ export const formatJenisLabel = (value, { short = false } = {}) => {
   const knownLabel = short ? JENIS_SHORT_LABELS[token] : JENIS_LONG_LABELS[token]
   if (knownLabel) return knownLabel
 
+  // Handle full label values like "Harian", "Penilaian Tengah Semester", etc.
+  const normalized = String(value).trim().toLowerCase()
+  if (normalized === 'harian') return short ? 'Harian' : 'Harian'
+  if (normalized === 'penilaian tengah semester' || normalized === 'pts') return short ? 'PTS' : 'Penilaian Tengah Semester'
+  if (normalized === 'uas' || normalized === 'penilaian akhir semester') return short ? 'UAS' : 'UAS'
+  if (normalized === 'try out' || normalized === 'tryout') return short ? 'Try Out' : 'Try Out'
+  if (normalized === 'ujian sekolah' || normalized === 'us') return short ? 'Ujian Sekolah' : 'Ujian Sekolah'
+
   return String(value)
 }
 
@@ -65,8 +73,14 @@ export const formatSemesterLabel = (value) => {
   if (value === null || value === undefined || value === '') return '-'
 
   const normalized = String(value).trim().toLowerCase()
-  if (normalized === '1' || normalized === 'ganjil') return 'Ganjil'
-  if (normalized === '2' || normalized === 'genap') return 'Genap'
+  
+  // Handle kode values (1, 2)
+  if (normalized === '1') return 'Ganjil'
+  if (normalized === '2') return 'Genap'
+  
+  // Handle full format like "Ganjil 2025/2026"
+  if (normalized.includes('ganjil')) return 'Ganjil'
+  if (normalized.includes('genap')) return 'Genap'
 
   return String(value)
 }

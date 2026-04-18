@@ -132,8 +132,12 @@ const UjianList = () => {
     sort_by: 'id',
     sort_dir: 'desc',
     filter: '{}',
-    ...(selectedKelas ? { mst_kelas_id: selectedKelas } : {}),
-  }), [selectedKelas])
+  }), [])
+
+  // Dynamic endpoint based on selected kelas filter
+  const endpoint = selectedKelas 
+    ? `/akademik/ujian/kelas/${selectedKelas}` 
+    : '/akademik/ujian/'
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -349,8 +353,9 @@ const UjianList = () => {
 
       <Card>
         <InfiniteGrid
+          key={endpoint}
           ref={gridRef}
-          endpoint="/akademik/ujian/"
+          endpoint={endpoint}
           requestMode="ag-grid"
           staticParams={staticParams}
           columnDefs={columnDefs}
