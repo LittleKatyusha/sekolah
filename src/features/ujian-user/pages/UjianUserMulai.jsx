@@ -6,10 +6,19 @@ import Button from '../../../components/ui/Button'
 import { ujianUserService } from '../services/ujianUserService'
 import { showSuccess, showError, showConfirm, showWarning } from '../../../utils/sweetalert'
 
+// Local storage keys
+const getStorageKey = (ujianUserId, key) => `ujian_${ujianUserId}_${key}`
+const STORAGE_KEYS = {
+  JAWABAN: 'jawaban',
+  SISA_WAKTU: 'sisa_waktu',
+  CURRENT_SOAL: 'current_soal',
+  TIMER_START: 'timer_start',
+}
+
 const UjianUserMulai = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  
+
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [ujianUser, setUjianUser] = useState(null)
@@ -18,6 +27,53 @@ const UjianUserMulai = () => {
   const [jawaban, setJawaban] = useState({})
   const [sisaWaktu, setSisaWaktu] = useState(0)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
+
+  // Helper functions for local storage
+  const saveToLocalStorage = useCallback((key, value) => {
+    if (!id) return
+    try {
+      localStorage.setItem(getStorageKey(id, key), JSON.stringify(value))
+    } catch (error) {
+      console.error('Error saving to localStorage:', error)
+    }
+  }, [id])
+
+  const loadFromLocalStorage = useCallback((key, defaultValue = null) => {
+    if (!id) return defaultValue
+    try {
+      const item = localStorage.getItem(getStorageKey(id, key))
+      return item ? JSON.parse(item) : defaultValue
+    } catch (error) {
+      console.error('Error loading from localStorage:', error)
+      return defaultValue
+    }
+  }, [id])
+
+  const clearLocalStorage = useCallback(() => {
+    if (!id) return
+    try {
+      Object.values(STORAGE_KEYS).forEach(key => {
+        localStorage.removeItem(getStorageKey(id, key))
+      })
+    } catch (error) {
+      console.error('Error clearing localStorage:', error)
+    }
+  }, [id])
+
+  // Save state before page unload (refresh/close tab)
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Save current state to localStorage before unloading
+      if (ujianUser && isTimerRunning) {
+        saveToLocalStorage(STORAGE_KEYS.JAWABAN, jawaban)
+        saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, currentSoalIndex)
+        saveToLocalStorage(STORAGE_KEYS.SISA_WAKTU, sisaWaktu)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [ujianUser, jawaban, currentSoalIndex, sisaWaktu, isTimerRunning, saveToLocalStorage])
 
   // Fetch ujian user data and soal
   useEffect(() => {
@@ -30,25 +86,45 @@ const UjianUserMulai = () => {
     if (data) {
       const ujianUserData = data.data
       setUjianUser(ujianUserData)
-      
-      // Set sisa waktu from API or default to 3600 seconds (1 hour)
-      const initialSisaWaktu = ujianUserData.sisa_waktu || 3600
-      setSisaWaktu(initialSisaWaktu > 0 ? initialSisaWaktu : 3600)
-      setIsTimerRunning(true)
-      
-      // Initialize jawaban from existing data
-      if (ujianUserData.jawaban && ujianUserData.jawaban.length > 0) {
-        const initialJawaban = {}
-        ujianUserData.jawaban.forEach(j => {
-          initialJawaban[j.soal_id] = j.jawaban
-        })
-        setJawaban(initialJawaban)
-      }
-      
+
       // Mock soal data - in real implementation, this should come from API
-      // For now, we'll create placeholder soal based on ujian data
       const mockSoal = generateMockSoal(ujianUserData)
       setSoalList(mockSoal)
+
+      // Try to load saved data from local storage
+      const savedJawaban = loadFromLocalStorage(STORAGE_KEYS.JAWABAN, {})
+      const savedCurrentSoal = loadFromLocalStorage(STORAGE_KEYS.CURRENT_SOAL, 0)
+      const savedSisaWaktu = loadFromLocalStorage(STORAGE_KEYS.SISA_WAKTU, null)
+      const savedTimerStart = loadFromLocalStorage(STORAGE_KEYS.TIMER_START, null)
+
+      // Set current soal index from local storage or default to 0
+      setCurrentSoalIndex(savedCurrentSoal)
+
+      // Calculate remaining time
+      let initialSisaWaktu = ujianUserData.sisa_waktu || 3600
+
+      // If there's saved timer data, calculate elapsed time
+      if (savedSisaWaktu !== null && savedTimerStart !== null) {
+        const elapsedSeconds = Math.floor((Date.now() - savedTimerStart) / 1000)
+        initialSisaWaktu = Math.max(0, savedSisaWaktu - elapsedSeconds)
+      }
+
+      setSisaWaktu(initialSisaWaktu > 0 ? initialSisaWaktu : 3600)
+
+      // Merge saved jawaban with existing jawaban from API
+      const initialJawaban = { ...savedJawaban }
+      if (ujianUserData.jawaban && ujianUserData.jawaban.length > 0) {
+        ujianUserData.jawaban.forEach(j => {
+          if (!initialJawaban[j.soal_id]) {
+            initialJawaban[j.soal_id] = j.jawaban
+          }
+        })
+      }
+      setJawaban(initialJawaban)
+
+      // Start timer and save start timestamp
+      setIsTimerRunning(true)
+      saveToLocalStorage(STORAGE_KEYS.TIMER_START, Date.now())
     } else {
       showError('Gagal mengambil data ujian')
       navigate('/akademik/ujian-user')
@@ -79,17 +155,20 @@ const UjianUserMulai = () => {
     if (isTimerRunning && sisaWaktu > 0) {
       interval = setInterval(() => {
         setSisaWaktu(prev => {
+          const newTime = prev <= 1 ? 0 : prev - 1
+          // Save remaining time to localStorage
+          saveToLocalStorage(STORAGE_KEYS.SISA_WAKTU, newTime)
           if (prev <= 1) {
             setIsTimerRunning(false)
             handleTimeUp()
             return 0
           }
-          return prev - 1
+          return newTime
         })
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isTimerRunning, sisaWaktu])
+  }, [isTimerRunning, sisaWaktu, saveToLocalStorage])
 
   const handleTimeUp = async () => {
     showWarning('Waktu ujian telah habis! Jawaban akan dikirim otomatis.', 'Waktu Habis')
@@ -110,26 +189,36 @@ const UjianUserMulai = () => {
   }
 
   const handleJawabanChange = (soalId, pilihanId) => {
-    setJawaban(prev => ({
-      ...prev,
-      [soalId]: pilihanId
-    }))
+    setJawaban(prev => {
+      const newJawaban = {
+        ...prev,
+        [soalId]: pilihanId
+      }
+      // Save to localStorage
+      saveToLocalStorage(STORAGE_KEYS.JAWABAN, newJawaban)
+      return newJawaban
+    })
   }
 
   const handleNext = () => {
     if (currentSoalIndex < soalList.length - 1) {
-      setCurrentSoalIndex(prev => prev + 1)
+      const newIndex = currentSoalIndex + 1
+      setCurrentSoalIndex(newIndex)
+      saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, newIndex)
     }
   }
 
   const handlePrev = () => {
     if (currentSoalIndex > 0) {
-      setCurrentSoalIndex(prev => prev - 1)
+      const newIndex = currentSoalIndex - 1
+      setCurrentSoalIndex(newIndex)
+      saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, newIndex)
     }
   }
 
   const handleSoalClick = (index) => {
     setCurrentSoalIndex(index)
+    saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, index)
   }
 
   const handleSubmitUjian = async (isAutoSubmit = false) => {
@@ -163,6 +252,8 @@ const UjianUserMulai = () => {
     const { data, error } = await ujianUserService.selesaikanUjian(id, submitData)
     
     if (!error) {
+      // Clear local storage after successful submission
+      clearLocalStorage()
       showSuccess('Ujian berhasil diselesaikan!', 'Selesai')
       navigate(`/akademik/ujian-user/${id}`)
     } else {
