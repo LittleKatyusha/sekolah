@@ -30,12 +30,10 @@ export const materiService = {
    * @param {Object} data - Materi data
    * @param {number} data.mst_guru_mapel_id - Guru Mapel ID (required)
    * @param {string} data.judul - Title (required)
-   * @param {string} [data.konten] - Content/description (optional)
-   * @param {string} [data.tipe] - Type: dokumen, video, link, lainnya (optional)
-   * @param {string} [data.file_path] - File path (optional)
-   * @param {string} [data.url_external] - External URL (optional)
+   * @param {string} [data.deskripsi] - Content/description (optional)
+   * @param {string} [data.file_materi] - File path (optional)
+   * @param {string} [data.link_video] - Video URL (optional)
    * @param {number|string} [data.status] - Status (optional)
-   * @param {number} [data.urutan] - Order/sequence (optional)
    * @returns {Promise<{data: any, error: any}>}
    */
   create: async (data) => {

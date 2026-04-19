@@ -27,11 +27,10 @@ const MateriForm = () => {
   const [formData, setFormData] = useState({
     mst_guru_mapel_id: '',
     judul: '',
-    konten: '',
-    file_path: '',
-    url_external: '',
-    status: '1',
-    urutan: ''
+    deskripsi: '',
+    file_materi: '',
+    link_video: '',
+    status: '1'
   })
 
   const [errors, setErrors] = useState({})
@@ -122,11 +121,10 @@ const MateriForm = () => {
       setFormData({
         mst_guru_mapel_id: guruMapelId,
         judul: materi.judul || '',
-        konten: materi.konten || '',
-        file_path: materi.file_path || '',
-        url_external: materi.url_external || '',
-        status: materi.status !== null && materi.status !== undefined ? String(materi.status) : '1',
-        urutan: materi.urutan !== null && materi.urutan !== undefined ? String(materi.urutan) : ''
+        deskripsi: materi.deskripsi || '',
+        file_materi: materi.file_materi || '',
+        link_video: materi.link_video || '',
+        status: materi.status !== null && materi.status !== undefined ? String(materi.status) : '1'
       })
 
       if (materi.guru_mapel) {
@@ -177,11 +175,10 @@ const MateriForm = () => {
     const submitData = {
       mst_guru_mapel_id: parseInt(formData.mst_guru_mapel_id),
       judul: formData.judul,
-      konten: formData.konten || null,
-      file_path: formData.file_path || null,
-      url_external: formData.url_external || null,
-      status: formData.status !== '' ? parseInt(formData.status) : null,
-      urutan: formData.urutan !== '' ? parseInt(formData.urutan) : null
+      deskripsi: formData.deskripsi || null,
+      file_materi: formData.file_materi || null,
+      link_video: formData.link_video || null,
+      status: formData.status !== '' ? parseInt(formData.status) : null
     }
 
     let result
@@ -261,48 +258,48 @@ const MateriForm = () => {
                 />
               </div>
 
-              {/* Konten */}
+              {/* Deskripsi */}
               <div className="md:col-span-2">
                 <LexicalEditor
-                  label="Konten"
+                  label="Deskripsi"
                   required
-                  value={formData.konten}
-                  onChange={(html) => setFormData(prev => ({ ...prev, konten: html }))}
-                  placeholder="Tulis konten materi..."
+                  value={formData.deskripsi}
+                  onChange={(html) => setFormData(prev => ({ ...prev, deskripsi: html }))}
+                  placeholder="Tulis deskripsi materi..."
                   minHeight="200px"
                 />
-                {errors.konten && (
-                  <p className="mt-1 text-sm text-red-500">{errors.konten}</p>
+                {errors.deskripsi && (
+                  <p className="mt-1 text-sm text-red-500">{errors.deskripsi}</p>
                 )}
               </div>
 
-              {/* File Path */}
+              {/* File Materi */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  File Path
+                  File Materi
                 </label>
                 <Input
                   type="text"
-                  name="file_path"
-                  value={formData.file_path}
+                  name="file_materi"
+                  value={formData.file_materi}
                   onChange={handleChange}
-                  placeholder="Path file (opsional)"
-                  error={errors.file_path}
+                  placeholder="Path file materi (opsional)"
+                  error={errors.file_materi}
                 />
               </div>
 
-              {/* URL External */}
+              {/* Link Video */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  URL External
+                  Link Video
                 </label>
                 <Input
                   type="text"
-                  name="url_external"
-                  value={formData.url_external}
+                  name="link_video"
+                  value={formData.link_video}
                   onChange={handleChange}
-                  placeholder="URL external (opsional)"
-                  error={errors.url_external}
+                  placeholder="Link video (opsional)"
+                  error={errors.link_video}
                 />
               </div>
 
@@ -321,20 +318,6 @@ const MateriForm = () => {
                 />
               </div>
 
-              {/* Urutan */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Urutan
-                </label>
-                <Input
-                  type="number"
-                  name="urutan"
-                  value={formData.urutan}
-                  onChange={handleChange}
-                  placeholder="Urutan (opsional)"
-                  error={errors.urutan}
-                />
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

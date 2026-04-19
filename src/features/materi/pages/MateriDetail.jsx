@@ -60,6 +60,14 @@ const MateriDetail = () => {
     })
   }
 
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html) => {
+    if (!html) return ''
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ''
+  }
+
   const getStatusBadge = (status, statusLabel) => {
     if (status === null || status === undefined) return '-'
     const bg = STATUS_MAP[status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
@@ -214,7 +222,7 @@ const MateriDetail = () => {
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Deskripsi</h4>
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{materi.deskripsi}</p>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{stripHtmlTags(materi.deskripsi)}</p>
                   </div>
                 </div>
               )}

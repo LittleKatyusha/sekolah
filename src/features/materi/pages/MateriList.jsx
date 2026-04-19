@@ -10,6 +10,14 @@ import usePermission from '../../../hooks/usePermission'
 import { materiService } from '../services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
+// Helper function to strip HTML tags
+const stripHtmlTags = (html) => {
+  if (!html) return ''
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  return tmp.textContent || tmp.innerText || ''
+}
+
 // Status mapping for display
 const STATUS_MAP = {
   1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -193,7 +201,10 @@ const MateriList = () => {
       filter: false,
       flex: 2,
       minWidth: 200,
-      cellRenderer: (params) => params.value || '-'
+      cellRenderer: (params) => {
+        const plainText = stripHtmlTags(params.value)
+        return plainText || '-'
+      }
     },
     {
       headerName: 'Guru / Mapel',
