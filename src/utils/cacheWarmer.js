@@ -156,7 +156,7 @@ export const warmSidebarMenuCache = async (userId) => {
  * Runs all cache warming tasks in the background after login.
  * Fire-and-forget: all errors are caught internally.
  *
- * @param {{ id: string|number }} user - The authenticated user object
+ * @param {{ id: string|number, role: string }} user - The authenticated user object
  */
 export const runCacheWarming = (user) => {
   if (typeof window === 'undefined') return
@@ -164,10 +164,17 @@ export const runCacheWarming = (user) => {
   // Use idle callback when available so warming doesn't compete with render
   const schedule = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 200))
 
+  const isAdmin = user?.role === 'admin'
+
   schedule(async () => {
-    await Promise.allSettled([
-      warmReferenceCache(),
-      warmSidebarMenuCache(user?.id),
-    ])
+    const tasks = [warmSidebarMenuCache(user?.id)]
+
+    // /admin/references/* is restricted to admin role only — skip for other roles
+    // to avoid 403 Forbidden errors on login
+    if (isAdmin) {
+      tasks.push(warmReferenceCache())
+    }
+
+    await Promise.allSettled(tasks)
   })
 }
