@@ -8,8 +8,8 @@ import useAuthStore from '../store/useAuthStore'
  */
 const checkPermission = (user, code) => {
   if (!code) return true
-  // Admin role always has full access
-  if (user?.role === 'admin') return true
+  // SUPER_ADMIN always has full access
+  if (user?.role?.toUpperCase() === 'SUPER_ADMIN') return true
   const perms = user?.permissions
   if (!Array.isArray(perms)) return false
   return perms.some((p) =>
