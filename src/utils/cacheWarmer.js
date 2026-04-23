@@ -164,14 +164,19 @@ export const runCacheWarming = (user) => {
   // Use idle callback when available so warming doesn't compete with render
   const schedule = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 200))
 
-  const isAdmin = user?.role === 'admin'
+  // Roles allowed to access /admin/references/* endpoints
+  const ADMIN_REFERENCE_ROLES = new Set([
+    'SUPER_ADMIN', 'ADMIN_SEKOLAH', 'KEPALA_SEKOLAH', 'WAKIL_KEPALA_SEKOLAH',
+    'STAFF_KEUANGAN', 'STAFF_PERPUSTAKAAN', 'ADMIN_PPDB',
+  ])
+  const canAccessAdminRoutes = ADMIN_REFERENCE_ROLES.has(user?.role?.toUpperCase())
 
   schedule(async () => {
     const tasks = [warmSidebarMenuCache(user?.id)]
 
-    // /admin/references/* is restricted to admin role only — skip for other roles
+    // /admin/references/* is restricted — skip for non-admin roles
     // to avoid 403 Forbidden errors on login
-    if (isAdmin) {
+    if (canAccessAdminRoutes) {
       tasks.push(warmReferenceCache())
     }
 
