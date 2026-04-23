@@ -18,11 +18,18 @@ import {
   Send,
   MessageCircle
 } from 'lucide-react'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+import { far } from '@fortawesome/free-regular-svg-icons'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
 import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
+
+library.add(fas, far, fab)
 
 const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
 const SIDEBAR_MENU_CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
@@ -30,7 +37,45 @@ const sidebarMenuRequestCache = new Map()
 
 const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${userId}`
 
-const getIconComponent = (iconName) => ICON_MAP[iconName] || HelpCircle
+// Parse FontAwesome icon class strings into [prefix, iconName] tuples
+// Supports FA5 format: "fas fa-home", "far fa-check", "fab fa-whatsapp"
+// Supports FA6 format: "fa-solid fa-home", "fa-regular fa-check", "fa-brands fa-whatsapp"
+const parseFAIcon = (iconName) => {
+  if (!iconName) return null
+  // FA6: "fa-solid fa-home", "fa-regular fa-check", "fa-brands fa-whatsapp"
+  const fa6Match = iconName.match(/^fa-(solid|regular|brands)\s+fa-(.+)$/)
+  if (fa6Match) {
+    const styleMap = { solid: 'fas', regular: 'far', brands: 'fab' }
+    return [styleMap[fa6Match[1]], fa6Match[2]]
+  }
+  // FA5: "fas fa-home", "far fa-check", "fab fa-whatsapp", "fa fa-home"
+  const fa5Match = iconName.match(/^(fas|far|fab|fa)\s+fa-(.+)$/)
+  if (fa5Match) {
+    return [fa5Match[1] === 'fa' ? 'fas' : fa5Match[1], fa5Match[2]]
+  }
+  return null
+}
+
+const createFAIconComponent = (iconName) => {
+  const parsed = parseFAIcon(iconName)
+  if (!parsed) return null
+  const [prefix, name] = parsed
+  const FAIcon = ({ size = 20, className }) => (
+    <FontAwesomeIcon
+      icon={[prefix, name]}
+      style={{ width: size, height: size }}
+      className={className}
+    />
+  )
+  FAIcon.displayName = `FAIcon(${iconName})`
+  return FAIcon
+}
+
+const getIconComponent = (iconName) => {
+  if (!iconName) return HelpCircle
+  if (parseFAIcon(iconName)) return createFAIconComponent(iconName) || HelpCircle
+  return ICON_MAP[iconName] || HelpCircle
+}
 
 const serializeMenuItem = (item) => ({
   id: item.id,
