@@ -93,6 +93,15 @@ export const pendaftarService = {
     return await apiService.post(`${PENDAFTAR_BASE}/batch-seleksi`, { ids, status })
   },
 
+  /**
+   * Update nilai rapor for a pendaftar via the new endpoint.
+   * @param {number|string} id - pendaftar ID
+   * @param {Object} nilaiRapor - map of kode_mapel → nilai, e.g. { mtk: 95, ipa: 88 }
+   */
+  updateNilaiRapor: async (id, nilaiRapor) => {
+    return await apiService.put(`${PENDAFTAR_BASE}/${id}/nilai-rapor`, { nilai_rapor: nilaiRapor })
+  },
+
   getStatistics: async (sekolahId, params = {}) => {
     return await apiService.get(`${PENDAFTAR_BASE}/sekolah/${sekolahId}/statistics`, { params })
   },
@@ -213,6 +222,36 @@ export const seleksiService = {
     apiService.post(`${SELEKSI_BASE}/gelombang/${gelombangId}/fraud-scan`),
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PPDB Nilai Rapor
+// ─────────────────────────────────────────────────────────────────────────────
+const NILAI_RAPOR_BASE = '/ppdb/nilai-rapor'
+
+export const nilaiRaporService = {
+  getByPendaftaran: async (pendaftaranId) =>
+    apiService.get(`${NILAI_RAPOR_BASE}/pendaftaran/${pendaftaranId}`),
+
+  getById: async (id) =>
+    apiService.get(`${NILAI_RAPOR_BASE}/${id}`),
+
+  create: async (data) =>
+    apiService.post(NILAI_RAPOR_BASE, data),
+
+  update: async (id, data) =>
+    apiService.put(`${NILAI_RAPOR_BASE}/${id}`, data),
+
+  delete: async (id) =>
+    apiService.delete(`${NILAI_RAPOR_BASE}/${id}`),
+
+  /**
+   * Bulk store nilai rapor for a pendaftar.
+   * @param {number} pendaftaranId
+   * @param {Array<{kode_mapel: string, nilai: number}>} items
+   */
+  bulkStore: async (pendaftaranId, items) =>
+    apiService.post(`${NILAI_RAPOR_BASE}/pendaftaran/${pendaftaranId}/bulk`, { nilai_rapor: items }),
+}
+
 export default {
   gelombangService,
   pendaftarService,
@@ -220,6 +259,7 @@ export default {
   kriteriaSeleksiService,
   kuotaJurusanService,
   seleksiService,
+  nilaiRaporService,
 }
 
 /**

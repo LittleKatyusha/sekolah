@@ -22,6 +22,9 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const UsersList = lazy(() => import('./features/users/pages/UsersList'))
 const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
 const UsersDetail = lazy(() => import('./features/users/pages/UsersDetail'))
+const UserDevicesList = lazy(() => import('./features/user-devices/pages/UserDevicesList'))
+const UserDevicesForm = lazy(() => import('./features/user-devices/pages/UserDevicesForm'))
+const UserDevicesDetail = lazy(() => import('./features/user-devices/pages/UserDevicesDetail'))
 const ActivityLogsList = lazy(() => import('./features/activity-logs/pages/ActivityLogsList'))
 const ActivityLogDetail = lazy(() => import('./features/activity-logs/pages/ActivityLogDetail'))
 const MenuList = lazy(() => import('./features/menus/pages/MenuList'))
@@ -460,6 +463,12 @@ function App() {
               <Route path="/admin/users/create" element={<UsersForm />} />
               <Route path="/admin/users/:id" element={<UsersDetail />} />
               <Route path="/admin/users/:id/edit" element={<UsersForm />} />
+
+              {/* User Devices */}
+              <Route path="/admin/user-devices" element={<UserDevicesList />} />
+              <Route path="/admin/user-devices/create" element={<UserDevicesForm />} />
+              <Route path="/admin/user-devices/:id" element={<UserDevicesDetail />} />
+              <Route path="/admin/user-devices/:id/edit" element={<UserDevicesForm />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/data-grid" element={<DataGrid />} />
               <Route path="/settings" element={<Settings />} />

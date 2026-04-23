@@ -8,9 +8,9 @@ import { gelombangService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 const METODE_LABELS = {
-  manual: 'Manual',
-  saw: 'SAW',
-  weighted_rank: 'Weighted Rank',
+  1: 'Manual',
+  2: 'SAW',
+  3: 'Weighted Rank',
 }
 
 const GelombangDetail = () => {
@@ -245,7 +245,7 @@ const GelombangDetail = () => {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Metode Seleksi</p>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {METODE_LABELS[gelombang.metode_seleksi] || gelombang.metode_seleksi || 'Manual'}
+                          {gelombang.metode_seleksi_label ?? METODE_LABELS[gelombang.metode_seleksi] ?? 'Manual'}
                         </p>
                       </div>
                     </div>

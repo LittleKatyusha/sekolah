@@ -33,7 +33,7 @@ const KuotaJurusanList = () => {
   }
 
   const handleDelete = async (kuota) => {
-    const result = await showDeleteConfirm(`Kuota jurusan "${kuota.nama_jurusan}"`)
+    const result = await showDeleteConfirm(`Kuota jurusan "${kuota.jurusan?.nama_kelas ?? kuota.jurusan_id ?? ''}"`)  
     if (result.isConfirmed) {
       const { error } = await kuotaJurusanService.delete(kuota.id)
       if (!error) {
@@ -124,7 +124,7 @@ const KuotaJurusanList = () => {
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{k.nama_jurusan}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{k.jurusan?.nama_kelas ?? `Jurusan #${k.jurusan_id}`}</h3>
                       {k.jurusan_id && (
                         <span className="text-xs text-gray-400">ID Jurusan: {k.jurusan_id}</span>
                       )}

@@ -16,9 +16,9 @@ const STATUS_OPTIONS = [
 ]
 
 const METODE_OPTIONS = [
-  { value: 'manual', label: 'Manual — Admin menentukan sendiri' },
-  { value: 'saw', label: 'SAW — Simple Additive Weighting (normalisasi min-max)' },
-  { value: 'weighted_rank', label: 'Weighted Rank — Peringkat tertimbang (toleran outlier)' },
+  { value: '1', label: 'Manual — Admin menentukan sendiri' },
+  { value: '2', label: 'SAW — Simple Additive Weighting (normalisasi min-max)' },
+  { value: '3', label: 'Weighted Rank — Peringkat tertimbang (toleran outlier)' },
 ]
 
 const BOOL_OPTIONS = [
@@ -46,7 +46,7 @@ const GelombangForm = () => {
     // Seleksi
     kuota_total: '0',
     is_seleksi_otomatis: '0',
-    metode_seleksi: 'manual',
+    metode_seleksi: '1',
     allow_cadangan: '1',
     persentase_cadangan: '20',
   })
@@ -86,7 +86,7 @@ const GelombangForm = () => {
         // Seleksi
         kuota_total: g.kuota_total != null ? String(g.kuota_total) : '0',
         is_seleksi_otomatis: g.is_seleksi_otomatis ? '1' : '0',
-        metode_seleksi: g.metode_seleksi || 'manual',
+        metode_seleksi: g.metode_seleksi != null ? String(g.metode_seleksi) : '1',
         allow_cadangan: g.allow_cadangan !== false ? '1' : '0',
         persentase_cadangan: g.persentase_cadangan != null ? String(g.persentase_cadangan) : '20',
       })
@@ -132,7 +132,7 @@ const GelombangForm = () => {
       // Seleksi
       kuota_total: parseInt(formData.kuota_total) || 0,
       is_seleksi_otomatis: formData.is_seleksi_otomatis === '1',
-      metode_seleksi: formData.metode_seleksi,
+      metode_seleksi: parseInt(formData.metode_seleksi) || 1,
       allow_cadangan: formData.allow_cadangan === '1',
       persentase_cadangan: parseInt(formData.persentase_cadangan) || 20,
     }

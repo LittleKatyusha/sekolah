@@ -261,37 +261,37 @@ const PembayaranSppDetail = () => {
                 </div>
               )}
 
-              {/* Winpay online payment info */}
-              {pembayaran.winpay_checkout_url && (
+              {/* Online payment info via gateway log */}
+              {pembayaran.latest_gateway_log && (
                 <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                     <Globe size={16} className="text-blue-500" />
-                    Pembayaran Online (Winpay)
+                    Pembayaran Online ({pembayaran.latest_gateway_log.gateway ?? 'Gateway'})
                   </h4>
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg space-y-3">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Status Winpay</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
                         <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          pembayaran.winpay_status === 'paid' || pembayaran.winpay_status === 'success' || pembayaran.winpay_status === 'settlement'
+                          ['paid', 'success', 'settlement'].includes(pembayaran.latest_gateway_log.status)
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            : pembayaran.winpay_status === 'pending'
+                            : pembayaran.latest_gateway_log.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                               : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                         }`}>
-                          {pembayaran.winpay_status ?? 'pending'}
+                          {pembayaran.latest_gateway_log.status ?? 'pending'}
                         </span>
                       </div>
-                      {pembayaran.winpay_ref && (
+                      {pembayaran.latest_gateway_log.reference && (
                         <div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">Ref Merchant</p>
-                          <p className="text-xs font-mono text-gray-700 dark:text-gray-300 mt-1">{pembayaran.winpay_ref}</p>
+                          <p className="text-xs font-mono text-gray-700 dark:text-gray-300 mt-1">{pembayaran.latest_gateway_log.reference}</p>
                         </div>
                       )}
                     </div>
-                    {(pembayaran.winpay_status === 'pending' || !pembayaran.winpay_status) && (
+                    {(pembayaran.latest_gateway_log.status === 'pending' || !pembayaran.latest_gateway_log.status) && pembayaran.latest_gateway_log.checkout_url && (
                       <a
-                        href={pembayaran.winpay_checkout_url}
+                        href={pembayaran.latest_gateway_log.checkout_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -300,7 +300,9 @@ const PembayaranSppDetail = () => {
                         Lanjutkan Pembayaran
                       </a>
                     )}
-                    <p className="text-xs text-gray-400 break-all">{pembayaran.winpay_checkout_url}</p>
+                    {pembayaran.latest_gateway_log.checkout_url && (
+                      <p className="text-xs text-gray-400 break-all">{pembayaran.latest_gateway_log.checkout_url}</p>
+                    )}
                   </div>
                 </div>
               )}

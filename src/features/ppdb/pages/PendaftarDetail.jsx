@@ -6,7 +6,6 @@ import Button from '../../../components/ui/Button'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
 import { pendaftarService, dokumenService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const STATUS_MAP = {
@@ -18,14 +17,7 @@ const STATUS_MAP = {
   ditolak: { label: 'Ditolak', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
-const getLabel = (value, options) => {
-  if (!value || !options?.length) return value ?? '-'
-  const opt = options.find(o => o.value === String(value) || o.value === value)
-  return opt ? opt.label : value
-}
-
 const PendaftarDetail = () => {
-  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -181,7 +173,7 @@ const PendaftarDetail = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400">JK</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{getLabel(pendaftar.jenis_kelamin, jenisKelaminOptions)}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{pendaftar.jenis_kelamin_label ?? '-'}</span>
                 </div>
               </div>
             </div>
