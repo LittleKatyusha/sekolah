@@ -68,6 +68,48 @@ const useNotificationStore = create((set, get) => ({
   clearAll: () => set({ notifications: [], unreadCount: 0 }),
 
   setWsStatus: (status) => set({ wsStatus: status }),
+
+  // ─── API-persisted actions ───────────────────────────────────────────────
+
+  /** Replace in-memory list with persisted data from API */
+  loadFromApi: (items, unreadCount) => {
+    const notifications = items.map(n => ({
+      id:        n.id,
+      type:      n.type     || 'info',
+      urgency:   n.urgency  || 'low',
+      title:     n.judul    || '',
+      body:      n.pesan    || '',
+      data:      n.data     || {},
+      read:      !!n.is_read,
+      read_at:   n.read_at  || null,
+      createdAt: n.created_at,
+    }))
+    set({ notifications, unreadCount: unreadCount ?? 0 })
+  },
+
+  setUnreadCount: (count) => set({ unreadCount: count }),
+
+  /** Mark a notification read by its numeric API id */
+  markReadApi: (id) => {
+    set((state) => {
+      let wasUnread = false
+      const notifications = state.notifications.map(n => {
+        if (n.id === id && !n.read) {
+          wasUnread = true
+          return { ...n, read: true }
+        }
+        return n
+      })
+      return { notifications, unreadCount: Math.max(0, state.unreadCount - (wasUnread ? 1 : 0)) }
+    })
+  },
+
+  markAllReadApi: () => {
+    set((state) => ({
+      notifications: state.notifications.map(n => ({ ...n, read: true })),
+      unreadCount:   0,
+    }))
+  },
 }))
 
 export default useNotificationStore

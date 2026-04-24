@@ -117,6 +117,7 @@ const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
 const SiswaInsightPage = lazy(() => import('./features/siswa/pages/SiswaInsightPage'))
+const NotifikasiPage = lazy(() => import('./features/notifikasi/pages/NotifikasiPage'))
 const EWS = lazy(() => import('./pages/EWS'))
 const JadwalPelajaran = lazy(() => import('./pages/JadwalPelajaran'))
 const HariOperasional = lazy(() => import('./features/hari-operasional/pages/HariOperasionalList'))
@@ -395,6 +396,9 @@ function App() {
 
               {/* SPK */}
               <Route path="/spk/*" element={<Spk />} />
+
+              {/* Notifikasi */}
+              <Route path="/notifikasi" element={<NotifikasiPage />} />
 
               {/* EWS */}
               <Route path="/ews/*" element={<EWS />} />

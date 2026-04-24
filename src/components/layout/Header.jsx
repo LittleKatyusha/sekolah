@@ -2,9 +2,11 @@ import { Menu, Moon, Sun, Bell, Wifi, WifiOff, CheckCheck, Trash2 } from 'lucide
 import useThemeStore from '../../store/useThemeStore'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import useNotificationStore from '../../store/useNotificationStore'
 import useAuthStore from '../../store/useAuthStore'
 import { getTheme } from '../../constants/roleThemes'
+import { notifikasiService } from '../../features/notifikasi/services/notifikasiService'
 
 // ── Notification type colour map ──────────────────────────────────────────────
 const TYPE_DOT = {
@@ -33,7 +35,17 @@ const WsIndicator = ({ status }) => {
 
 // ── Notification dropdown ─────────────────────────────────────────────────────
 const NotificationPanel = ({ onClose }) => {
-  const { notifications, unreadCount, markAllRead, markRead, clearAll } = useNotificationStore()
+  const { notifications, unreadCount, markAllRead, markRead, clearAll, loadFromApi, setUnreadCount } = useNotificationStore()
+
+  // Load persisted notifications from API on first open
+  useEffect(() => {
+    notifikasiService.getAll({ page: 1 })
+      .then(res => {
+        if (res?.data) loadFromApi(res.data, res.meta?.unread_count ?? 0)
+      })
+      .catch(() => {/* silently ignore — WS notifications still work */})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
@@ -80,6 +92,17 @@ const NotificationPanel = ({ onClose }) => {
           </li>
         ))}
       </ul>
+
+      {/* Footer */}
+      <div className="px-4 py-2.5 border-t border-gray-100 dark:border-gray-700 text-center">
+        <Link
+          to="/notifikasi"
+          onClick={onClose}
+          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+        >
+          Lihat semua notifikasi →
+        </Link>
+      </div>
     </div>
   )
 }

@@ -71,6 +71,16 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), firebaseSWPlugin()],
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: './src/test-setup.js',
+      include: ['src/**/*.test.{js,jsx}'],
+      coverage: {
+        provider: 'v8',
+        include: ['src/features/**', 'src/services/**', 'src/store/**'],
+      },
+    },
     server: {
       host: true,
       port: 5173,
