@@ -129,6 +129,20 @@ const readSidebarMenuCache = (userId) => {
 
     const hydratedMenus = parsed.data.map(hydrateCachedMenuItem).filter(Boolean)
 
+    // DEV DIAGNOSTIC — remove after root cause is confirmed
+    if (import.meta.env.DEV) {
+      const sampleChild = parsed.data
+        .flatMap(m => m.children ?? [])
+        .find(Boolean)
+      console.debug('[Sidebar] readSidebarMenuCache hit', {
+        userId,
+        itemCount: parsed.data.length,
+        hydratedCount: hydratedMenus.length,
+        sampleChildTo: sampleChild?.to,   // should NOT be undefined
+        cachedAt: new Date(parsed.cachedAt).toISOString(),
+      })
+    }
+
     return hydratedMenus.length === parsed.data.length ? hydratedMenus : null
   } catch {
     return null

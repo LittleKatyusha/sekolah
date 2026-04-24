@@ -108,18 +108,6 @@ export const warmReferenceCache = async () => {
 
 const SIDEBAR_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
-const serializeMenuItem = (item) => ({
-  id: item.id,
-  name: item.nama_menu ?? item.name,
-  to: item._frontendRoute ?? item.to,
-  iconName: typeof item.icon === 'string' ? item.icon : item.iconName ?? null,
-  children: Array.isArray(item.sub_menus)
-    ? item.sub_menus.filter((s) => s.is_active).map(serializeMenuItem)
-    : Array.isArray(item.children)
-    ? item.children.map(serializeMenuItem)
-    : [],
-})
-
 const toFrontendRoute = (url) => {
   if (!url || url === '#') return null
   return url.replace(/^\/api\/v[0-9]+/, '') || '/'
@@ -128,6 +116,18 @@ const toFrontendRoute = (url) => {
 const flattenForCache = (item) => ({
   ...item,
   _frontendRoute: toFrontendRoute(item.url ?? item.to),
+})
+
+const serializeMenuItem = (item) => ({
+  id: item.id,
+  name: item.nama_menu ?? item.name,
+  to: item._frontendRoute ?? item.to ?? null,
+  iconName: typeof item.icon === 'string' ? item.icon : item.iconName ?? null,
+  children: Array.isArray(item.sub_menus)
+    ? item.sub_menus.filter((s) => s.is_active).map((s) => serializeMenuItem(flattenForCache(s)))
+    : Array.isArray(item.children)
+    ? item.children.map((c) => serializeMenuItem(flattenForCache(c)))
+    : [],
 })
 
 /**
