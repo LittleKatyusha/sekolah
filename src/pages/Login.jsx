@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, Mail, Lock, Eye, EyeOff, BookOpen, Users, Award, Star, CheckCircle2 } from 'lucide-react'
-import Button from '../components/ui/Button'
+import { LogIn, Mail, Lock, Eye, EyeOff, BookOpen, Users, Award, TrendingUp, AlertCircle } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
 import logoVertical from '../assets/logo akademihub-01-04.png'
@@ -14,9 +13,7 @@ const REMEMBER_ME_KEY = 'login_remember_me'
 const getSavedCredentials = () => {
   try {
     const saved = localStorage.getItem(REMEMBER_ME_KEY)
-    if (saved) {
-      return JSON.parse(saved)
-    }
+    if (saved) return JSON.parse(saved)
   } catch {
     // ignore parse errors
   }
@@ -28,11 +25,25 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
 })
 
+const FEATURES = [
+  { icon: BookOpen,   text: 'Manajemen kurikulum & materi pembelajaran' },
+  { icon: Users,      text: 'Data siswa, guru, dan staf terpusat' },
+  { icon: Award,      text: 'Pelaporan nilai & rapor otomatis' },
+  { icon: TrendingUp, text: 'Analitik performa sekolah real-time' },
+]
+
+const STATS = [
+  { label: 'Siswa Aktif',     value: '2.400+' },
+  { label: 'Tenaga Pengajar', value: '120+' },
+  { label: 'Mata Pelajaran',  value: '48' },
+]
+
 const Login = () => {
   const navigate = useNavigate()
   const { login } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
 
   const savedCredentials = getSavedCredentials()
   const [rememberMe, setRememberMe] = useState(!!savedCredentials)
@@ -45,18 +56,12 @@ const Login = () => {
     },
   })
 
-  const [error, setError] = useState('')
-
   const onSubmit = async (data) => {
     setLoading(true)
     setError('')
 
-    // Save or clear remembered credentials
     if (rememberMe) {
-      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({
-        email: data.email,
-        password: data.password,
-      }))
+      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email: data.email, password: data.password }))
     } else {
       localStorage.removeItem(REMEMBER_ME_KEY)
     }
@@ -68,216 +73,230 @@ const Login = () => {
       })
 
       if (apiError) {
-        // Handle API errors - stay on page, show error
-        const errorMessage = apiError.message || apiError.error || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.'
-        setError(errorMessage)
+        setError(apiError.message || apiError.error || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.')
         setLoading(false)
         return
       }
 
-      // Response format: { success, message, data: { access_token, refresh_token, token_type, expires_in, user } }
       if (!response?.success) {
-        // Handle unsuccessful response - stay on page, show error
-        const errorMessage = response?.message || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.'
-        setError(errorMessage)
+        setError(response?.message || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.')
         setLoading(false)
         return
       }
 
-      // Only navigate on successful login
       login(response.data)
       setLoading(false)
       navigate('/dashboard')
-    } catch (err) {
-      // Handle unexpected errors - stay on page, show error
+    } catch {
       setError('Terjadi kesalahan. Silakan coba lagi beberapa saat.')
       setLoading(false)
     }
   }
 
+  const inputClass = (hasError) =>
+    `w-full h-11 pl-10 pr-4 border rounded-xl text-sm text-slate-900 placeholder-slate-400 bg-slate-50/60 outline-none transition-all duration-200 ${
+      hasError
+        ? 'border-red-400 ring-2 ring-red-100'
+        : 'border-slate-200 hover:border-slate-300 focus:border-[#0f2d5a] focus:ring-2 focus:ring-[#0f2d5a]/10 focus:bg-white'
+    }`
+
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
+    <div className="min-h-screen flex flex-col lg:flex-row">
 
-      {/* ── LEFT PANEL – School Branding ─────────────────────────────── */}
-      <div className="relative hidden lg:flex lg:w-[55%] flex-col justify-between overflow-hidden bg-[#0f2d5a]">
+      {/* ── LEFT PANEL ─────────────────────────────────────────────── */}
+      <div
+        className="relative hidden lg:flex lg:w-[55%] flex-col justify-between overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #040e1f 0%, #0b2245 50%, #143872 100%)' }}
+      >
+        {/* Dot-grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.18]"
+          style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+        />
 
-        {/* Decorative circles */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/5"></div>
-        <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-[#1a4a8a]/60"></div>
-        <div className="absolute -bottom-20 left-1/4 w-72 h-72 rounded-full bg-white/5"></div>
+        {/* Ambient glow orbs */}
+        <div
+          className="absolute -top-32 -right-32 w-[560px] h-[560px] rounded-full opacity-20 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #3b82f6, transparent 70%)' }}
+        />
+        <div
+          className="absolute -bottom-40 -left-20 w-[480px] h-[480px] rounded-full opacity-[0.13] pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #f59e0b, transparent 70%)' }}
+        />
 
-        {/* Top: logo + name */}
+        {/* Logo */}
         <div className="relative z-10 px-12 pt-12">
-          <div className="flex items-center gap-4">
-            <img
-              src={logoVertical}
-              alt="Akademihub Logo"
-              className="h-16 w-auto drop-shadow-lg"
-            />
-          </div>
+          <img src={logoVertical} alt="Akademihub Logo" className="h-14 w-auto drop-shadow-xl" />
         </div>
 
-        {/* Center: tagline + feature list */}
-        <div className="relative z-10 px-12 py-10">
-          <h2 className="text-white text-4xl font-extrabold leading-tight mb-3">
+        {/* Hero text + features */}
+        <div className="relative z-10 px-12 py-8">
+          <h2 className="text-white text-[2.75rem] font-black leading-[1.15] tracking-tight mb-4">
             Platform Pendidikan<br />
             <span className="text-amber-400">Terpadu &amp; Modern</span>
           </h2>
-          <p className="text-blue-200 text-base leading-relaxed mb-10 max-w-sm">
-            Kelola seluruh aktivitas akademik — dari absensi, nilai, hingga komunikasi orang tua — dalam satu sistem yang terintegrasi.
+          <p className="text-blue-200/75 text-[0.95rem] leading-relaxed max-w-[360px] mb-10">
+            Kelola seluruh aktivitas akademik — dari absensi, nilai, hingga komunikasi orang tua — dalam satu sistem terintegrasi.
           </p>
 
-          <ul className="space-y-4">
-            {[
-              { icon: BookOpen,  text: 'Manajemen kurikulum & materi pembelajaran' },
-              { icon: Users,     text: 'Data siswa, guru, dan staf terpusat' },
-              { icon: Award,     text: 'Pelaporan nilai & rapor otomatis' },
-              { icon: Star,      text: 'Analitik performa sekolah real-time' },
-            ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-400/20 shrink-0">
-                  <Icon className="text-amber-400" size={16} />
+          <ul className="space-y-3.5">
+            {FEATURES.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3.5">
+                <span
+                  className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
+                  style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.22)' }}
+                >
+                  <Icon className="text-amber-400" size={17} />
                 </span>
-                <span className="text-blue-100 text-sm">{text}</span>
+                <span className="text-blue-100/85 text-sm leading-snug">{text}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Bottom: stats bar */}
-        <div className="relative z-10 px-12 pb-10">
-          <div className="flex gap-8 border-t border-white/10 pt-6">
-            {[
-              { label: 'Siswa Aktif', value: '2.400+' },
-              { label: 'Tenaga Pengajar', value: '120+' },
-              { label: 'Mata Pelajaran', value: '48' },
-            ].map(({ label, value }) => (
+        {/* Stats */}
+        <div className="relative z-10 px-12 pb-12">
+          <div className="flex gap-10 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            {STATS.map(({ label, value }) => (
               <div key={label}>
-                <p className="text-amber-400 text-xl font-bold">{value}</p>
-                <p className="text-blue-300 text-xs mt-0.5">{label}</p>
+                <p className="text-amber-400 text-2xl font-extrabold tracking-tight">{value}</p>
+                <p className="text-blue-300/60 text-[0.7rem] mt-0.5 font-semibold uppercase tracking-widest">{label}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── RIGHT PANEL – Login Form ──────────────────────────────────── */}
-      <div className="flex flex-1 flex-col justify-center items-center px-6 py-12 bg-white">
+      {/* ── RIGHT PANEL ────────────────────────────────────────────── */}
+      <div className="flex flex-1 flex-col justify-center items-center px-6 py-12 bg-gradient-to-br from-slate-50 to-blue-50/50">
 
-        {/* Mobile-only logo */}
-        <div className="flex lg:hidden items-center gap-3 mb-10">
-          <img
-            src={logoVertical}
-            alt="Akademihub Logo"
-            className="h-12 w-auto"
-          />
+        {/* Mobile logo */}
+        <div className="flex lg:hidden mb-10">
+          <img src={logoVertical} alt="Akademihub Logo" className="h-12 w-auto" />
         </div>
 
-        <div className="w-full max-w-sm">
+        {/* Card */}
+        <div className="w-full max-w-[420px] bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/60 px-8 py-10 animate-fade-in">
+
           {/* Heading */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Masuk ke Akun Anda</h2>
-            <p className="mt-1 text-sm text-gray-500">Selamat datang kembali. Silakan masukkan kredensial Anda.</p>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
+              style={{ background: 'rgba(15,45,90,0.07)' }}
+            >
+              <LogIn className="text-[#0f2d5a]" size={20} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Selamat Datang</h2>
+            <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">
+              Masuk ke akun Akademihub Anda untuk melanjutkan.
+            </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
 
-            {/* Error message */}
+            {/* Global error */}
             {error && (
-              <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-red-400" />
-                {error}
+              <div role="alert" className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm text-red-700 bg-red-50 border border-red-100">
+                <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500" />
+                <span>{error}</span>
               </div>
             )}
 
             {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
                 Alamat Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                </div>
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input
+                  id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="nama@sekolah.id"
                   {...register('email')}
-                  className={`w-full pl-10 pr-4 py-2.5 border ${
-                    errors.email ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-[#0f2d5a]'
-                  } rounded-lg bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+                  className={inputClass(!!errors.email)}
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-red-600">
+                  <AlertCircle size={12} />
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
                 Kata Sandi
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-gray-400" />
-                </div>
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   placeholder="Masukkan kata sandi"
                   {...register('password')}
-                  className={`w-full pl-10 pr-11 py-2.5 border ${
-                    errors.password ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-[#0f2d5a]'
-                  } rounded-lg bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+                  className={`${inputClass(!!errors.password)} pr-12`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-red-600">
+                  <AlertCircle size={12} />
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
             {/* Remember me */}
-            <div className="flex items-center">
-              <label className="flex items-center gap-2 cursor-pointer select-none group">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 accent-[#0f2d5a] cursor-pointer rounded"
-                />
-                <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Ingat saya
-                </span>
-              </label>
-            </div>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none group w-fit">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#0f2d5a] cursor-pointer"
+              />
+              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
+                Ingat saya
+              </span>
+            </label>
 
             {/* Submit */}
-            <Button
+            <button
               type="submit"
-              loading={loading}
-              className="w-full bg-[#0f2d5a] hover:bg-[#1a4a8a] text-white py-2.5 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+              disabled={loading}
+              className="w-full h-11 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#0f2d5a] to-[#1a4a8a] hover:from-[#0a2249] hover:to-[#143a72] shadow-lg shadow-[#0f2d5a]/20 hover:shadow-[#0f2d5a]/30 focus:outline-none focus:ring-2 focus:ring-[#0f2d5a] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
             >
               {loading ? (
-                <span>Memproses...</span>
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Memproses...
+                </>
               ) : (
                 <>
-                  <LogIn size={17} className="mr-2" />
+                  <LogIn size={17} />
                   Masuk
                 </>
               )}
-            </Button>
+            </button>
           </form>
 
           {/* Footer */}
-          <p className="mt-10 text-center text-xs text-gray-400">
+          <p className="mt-8 text-center text-xs text-slate-400">
             &copy; 2026 Akademihub. Hak cipta dilindungi.
           </p>
         </div>
