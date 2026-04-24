@@ -28,6 +28,7 @@ import { memo, useCallback, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
 import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
+import { getTheme } from '../../constants/roleThemes'
 
 library.add(fas, far, fab)
 
@@ -255,7 +256,7 @@ const MenuItem = memo(({ item, onClose, onNavigate }) => {
           {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
         {isOpen && (
-          <ul className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+          <ul className="ml-4 mt-1 space-y-1 border-l-2 pl-2" style={{ borderColor: 'var(--sb-child-border)' }}>
             {item.children.map((child) => (
               <MenuItem
                 key={child.id}
@@ -295,6 +296,7 @@ const MenuItem = memo(({ item, onClose, onNavigate }) => {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useAuthStore()
+  const theme = getTheme(user?.role)
   const startNavigation = useNavigationProgressStore((state) => state.startNavigation)
   const [navigation, setNavigation] = useState([])
   const [loading, setLoading] = useState(true)
@@ -422,17 +424,17 @@ const Sidebar = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 z-30 h-screen w-64 
-          bg-white dark:bg-gray-800 
-          border-r border-gray-200 dark:border-gray-700
+          fixed top-0 left-0 z-30 h-screen w-64
+          sidebar-themed border-r
           transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
         `}
+        style={theme.vars}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 px-4">
+          <div className="flex items-center justify-center h-16 border-b sb-divider px-4" style={{ borderColor: 'var(--sb-border)' }}>
             <img
               src={logoHorizontal}
               alt="AkademiHub"
@@ -441,20 +443,29 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
 
           {/* User info */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-b" style={{ borderColor: 'var(--sb-border)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                <span className="text-primary-600 dark:text-primary-400 font-semibold">
-                  {user?.name?.charAt(0) || 'A'}
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: 'var(--sb-avatar)' }}
+              >
+                <span className="text-sm font-bold" style={{ color: 'var(--sb-avatar-text)' }}>
+                  {user?.name?.charAt(0)?.toUpperCase() || 'A'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--sb-active-text)' }}>
                   {user?.name || 'Admin User'}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p className="text-xs truncate" style={{ color: 'var(--sb-text-muted)' }}>
                   {user?.email || 'admin@example.com'}
                 </p>
+                <span
+                  className="inline-block mt-1 text-[10px] font-semibold tracking-wide uppercase"
+                  style={{ color: 'var(--sb-accent)' }}
+                >
+                  {theme.label}
+                </span>
               </div>
             </div>
           </div>
@@ -465,16 +476,16 @@ const Sidebar = ({ isOpen, onClose }) => {
               <ul className="space-y-2">
                 {[...Array(5)].map((_, i) => (
                   <li key={i} className="animate-pulse">
-                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                    <div className="h-10 rounded-lg" style={{ backgroundColor: 'var(--sb-hover)' }}></div>
                   </li>
                 ))}
               </ul>
             ) : error ? (
-              <div className="text-sm text-red-600 dark:text-red-400 text-center p-4">
+              <div className="text-sm text-red-400 text-center p-4">
                 {error}
               </div>
             ) : navigation.length === 0 ? (
-              <div className="text-sm text-gray-500 dark:text-gray-400 text-center p-4">
+              <div className="text-sm text-center p-4" style={{ color: 'var(--sb-text-muted)' }}>
                 No menu items available
               </div>
             ) : (
@@ -492,10 +503,10 @@ const Sidebar = ({ isOpen, onClose }) => {
           </nav>
 
           {/* Logout button */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-t" style={{ borderColor: 'var(--sb-border)' }}>
             <button
               onClick={handleLogout}
-              className="sidebar-link w-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="sidebar-link logout-action w-full"
             >
               <LogOut size={20} />
               <span>Logout</span>

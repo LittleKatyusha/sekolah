@@ -3,6 +3,8 @@ import useThemeStore from '../../store/useThemeStore'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import useNotificationStore from '../../store/useNotificationStore'
+import useAuthStore from '../../store/useAuthStore'
+import { getTheme } from '../../constants/roleThemes'
 
 // ── Notification type colour map ──────────────────────────────────────────────
 const TYPE_DOT = {
@@ -85,6 +87,8 @@ const NotificationPanel = ({ onClose }) => {
 // ── Header ────────────────────────────────────────────────────────────────────
 const Header = ({ onMenuClick }) => {
   const { isDarkMode, toggleTheme } = useThemeStore()
+  const user         = useAuthStore(s => s.user)
+  const theme        = getTheme(user?.role)
   const pageTitle    = usePageTitle()
   const unreadCount  = useNotificationStore(s => s.unreadCount)
   const wsStatus     = useNotificationStore(s => s.wsStatus)
@@ -108,6 +112,8 @@ const Header = ({ onMenuClick }) => {
 
   return (
     <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      {/* Role-accent strip */}
+      <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${theme.vars['--sb-avatar']}, ${theme.vars['--sb-accent']})` }} />
       <div className="flex items-center justify-between h-16 px-4">
         {/* Left side */}
         <div className="flex items-center gap-4">
