@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { formatDateShort, formatDateTime } from '../../utils/formatters'
 import { siswaService } from '../siswa/services/siswaService'
-import { tahunAjaranService } from '../tahun-ajaran/services/tahunAjaranService'
+import { semesterService } from '../semester/services/semesterService'
 import tesMinatBakatService from './services/tesMinatBakatService'
 
 const makeBadge = (label, className) => (
@@ -194,35 +194,33 @@ export const tesMinatBakatResources = {
     basePath: '/akademik/tes-minat-bakat/tes',
     service: tesMinatBakatService.tes,
     fields: [
-      { name: 'kode_tes', label: 'Kode Tes', type: 'text', placeholder: 'Contoh: TMB-2026-001' },
-      { name: 'nama', label: 'Nama Tes', type: 'text', placeholder: 'Masukkan nama tes', required: true },
-      { name: 'tahun_ajaran_id', label: 'Tahun Ajaran', type: 'select', optionsKey: 'tahunAjaran', valueType: 'integer', placeholder: 'Pilih tahun ajaran' },
-      { name: 'jenis_tes', label: 'Jenis Tes', type: 'select', options: JENIS_TES_OPTIONS, valueType: 'integer', required: true, placeholder: 'Pilih jenis tes' },
-      { name: 'tanggal_mulai', label: 'Tanggal Mulai', type: 'datetime-local' },
-      { name: 'tanggal_selesai', label: 'Tanggal Selesai', type: 'datetime-local' },
+      { name: 'nama_tes', label: 'Nama Tes', type: 'text', placeholder: 'Masukkan nama tes', required: true },
+      { name: 'semester_id', label: 'Semester', type: 'select', optionsKey: 'semester', valueType: 'integer', placeholder: 'Pilih semester' },
+      { name: 'tipe_tes', label: 'Tipe Tes', type: 'select', options: JENIS_TES_OPTIONS, valueType: 'integer', required: true, placeholder: 'Pilih tipe tes' },
+      { name: 'waktu_mulai', label: 'Waktu Mulai', type: 'datetime-local' },
+      { name: 'waktu_selesai', label: 'Waktu Selesai', type: 'datetime-local' },
       { name: 'durasi_menit', label: 'Durasi (Menit)', type: 'number', valueType: 'integer', placeholder: '90' },
       { name: 'status', label: 'Status', type: 'select', options: STATUS_TES_OPTIONS, valueType: 'integer', placeholder: 'Pilih status' },
       { name: 'deskripsi', label: 'Deskripsi', type: 'textarea', span: 2, rows: 3, placeholder: 'Deskripsi tes' },
       { name: 'catatan', label: 'Catatan', type: 'textarea', span: 2, rows: 3, placeholder: 'Catatan tambahan' },
     ],
     optionLoaders: {
-      tahunAjaran: async () => await loadOptions(
-        tahunAjaranService.getAll,
-        (item) => ({ value: item.id, label: item.nama_tahun_ajaran || item.tahun_ajaran || item.nama || `Tahun Ajaran #${item.id}` })
+      semester: async () => await loadOptions(
+        semesterService.getAll,
+        (item) => ({ value: item.id, label: item.nama || item.kode || `Semester #${item.id}` })
       ),
     },
     buildColumns: ({ handleDetail, handleEdit, handleDelete, getRowActions, ActionsMenu }) => [
-      { field: 'kode_tes', headerName: 'Kode', minWidth: 130, flex: 1 },
-      { field: 'nama', headerName: 'Nama Tes', minWidth: 220, flex: 2 },
+      { field: 'nama_tes', headerName: 'Nama Tes', minWidth: 220, flex: 2 },
       {
-        headerName: 'Tahun Ajaran',
+        headerName: 'Semester',
         minWidth: 180,
         flex: 1,
-        cellRenderer: (params) => params.data?.tahun_ajaran?.nama_tahun_ajaran || params.data?.tahun_ajaran?.tahun_ajaran || '-',
+        cellRenderer: (params) => params.data?.semester?.nama || params.data?.semester?.kode || '-',
       },
       {
-        field: 'jenis_tes',
-        headerName: 'Jenis',
+        field: 'tipe_tes',
+        headerName: 'Tipe',
         minWidth: 140,
         cellRenderer: (params) => renderOptionBadge(params.value, JENIS_TES_MAP),
       },
@@ -232,7 +230,7 @@ export const tesMinatBakatResources = {
         cellRenderer: (params) => params.data?.peserta?.length ?? 0,
       },
       {
-        field: 'tanggal_mulai',
+        field: 'waktu_mulai',
         headerName: 'Mulai',
         minWidth: 150,
         cellRenderer: (params) => formatDateShort(params.value),
@@ -267,15 +265,14 @@ export const tesMinatBakatResources = {
       {
         title: 'Informasi Tes',
         fields: [
-          { label: 'Kode Tes', value: (record) => getName(record.kode_tes) },
-          { label: 'Nama Tes', value: (record) => getName(record.nama) },
-          { label: 'Jenis Tes', value: (record) => renderOptionBadge(record.jenis_tes, JENIS_TES_MAP) },
+          { label: 'Nama Tes', value: (record) => getName(record.nama_tes) },
+          { label: 'Tipe Tes', value: (record) => renderOptionBadge(record.tipe_tes, JENIS_TES_MAP) },
           { label: 'Status', value: (record) => renderOptionBadge(record.status, STATUS_TES_MAP) },
-          { label: 'Tahun Ajaran', value: (record) => getName(record.tahun_ajaran?.nama_tahun_ajaran || record.tahun_ajaran?.tahun_ajaran) },
+          { label: 'Semester', value: (record) => getName(record.semester?.nama || record.semester?.kode) },
           { label: 'Jumlah Peserta', value: (record) => record.peserta?.length ?? 0 },
           { label: 'Jumlah Pertanyaan', value: (record) => record.pertanyaan?.length ?? 0 },
-          { label: 'Tanggal Mulai', value: (record) => formatDateTime(record.tanggal_mulai) },
-          { label: 'Tanggal Selesai', value: (record) => formatDateTime(record.tanggal_selesai) },
+          { label: 'Waktu Mulai', value: (record) => formatDateTime(record.waktu_mulai) },
+          { label: 'Waktu Selesai', value: (record) => formatDateTime(record.waktu_selesai) },
           { label: 'Durasi', value: (record) => record.durasi_menit ? `${record.durasi_menit} menit` : '-' },
           { label: 'Deskripsi', value: (record) => getName(record.deskripsi) },
           { label: 'Catatan', value: (record) => getName(record.catatan) },
@@ -283,11 +280,11 @@ export const tesMinatBakatResources = {
       },
     ],
     summary: (record) => ({
-      title: record.nama || 'Tes Minat dan Bakat',
-      subtitle: record.kode_tes || 'Tanpa kode tes',
+      title: record.nama_tes || 'Tes Minat dan Bakat',
+      subtitle: record.tipe_tes ? (JENIS_TES_MAP[record.tipe_tes] || 'Tipe tidak diketahui') : 'Tanpa tipe tes',
       badge: renderOptionBadge(record.status, STATUS_TES_MAP),
     }),
-    getDeleteLabel: (record) => `tes "${record.nama || record.kode_tes || record.id}"`,
+    getDeleteLabel: (record) => `tes "${record.nama_tes || record.id}"`,
   },
   aspek: {
     key: 'aspek',
@@ -377,8 +374,8 @@ export const tesMinatBakatResources = {
     optionLoaders: {
       tes: async () => await loadOptions(
         tesMinatBakatService.tes.getAll,
-        (item) => ({ value: item.id, label: item.nama || item.kode_tes || `Tes #${item.id}` }),
-        { sort_by: 'nama', sort_dir: 'asc' }
+        (item) => ({ value: item.id, label: item.nama_tes || `Tes #${item.id}` }),
+        { sort_by: 'nama_tes', sort_dir: 'asc' }
       ),
       aspek: async () => await loadOptions(
         tesMinatBakatService.aspek.getAll,
@@ -477,7 +474,7 @@ export const tesMinatBakatResources = {
     service: tesMinatBakatService.peserta,
     fields: [
       { name: 'trx_tes_minat_bakat_id', label: 'Tes', type: 'select', optionsKey: 'tes', valueType: 'integer', required: true, placeholder: 'Pilih tes' },
-      { name: 'mst_siswa_id', label: 'Siswa', type: 'select', optionsKey: 'siswa', valueType: 'integer', required: true, placeholder: 'Pilih siswa' },
+      { name: 'siswa_id', label: 'Siswa', type: 'select', optionsKey: 'siswa', valueType: 'integer', required: true, placeholder: 'Pilih siswa' },
       { name: 'nomor_peserta', label: 'Nomor Peserta', type: 'text', placeholder: 'Nomor peserta' },
       { name: 'status', label: 'Status', type: 'select', options: STATUS_PESERTA_OPTIONS, valueType: 'integer', placeholder: 'Pilih status' },
       { name: 'hasil_ringkas', label: 'Hasil Ringkas', type: 'textarea', span: 2, rows: 3, placeholder: 'Ringkasan hasil peserta' },
@@ -486,8 +483,8 @@ export const tesMinatBakatResources = {
     optionLoaders: {
       tes: async () => await loadOptions(
         tesMinatBakatService.tes.getAll,
-        (item) => ({ value: item.id, label: item.nama || item.kode_tes || `Tes #${item.id}` }),
-        { sort_by: 'nama', sort_dir: 'asc' }
+        (item) => ({ value: item.id, label: item.nama_tes || `Tes #${item.id}` }),
+        { sort_by: 'nama_tes', sort_dir: 'asc' }
       ),
       siswa: async () => await loadOptions(
         siswaService.getAll,

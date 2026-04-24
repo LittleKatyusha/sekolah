@@ -212,6 +212,7 @@ function AuthExpiryNavigator() {
 
   useEffect(() => {
     const handleAuthExpired = () => {
+      useAuthStore.getState().logout()
       navigate('/login', { replace: true })
     }
 

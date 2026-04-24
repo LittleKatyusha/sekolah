@@ -11,19 +11,9 @@ import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweeta
 
 // Status mapping for display
 const STATUS_MAP = {
-  DRAFT: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-  PENDING: { label: 'Pending', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  APPROVED: { label: 'Approved', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  REJECTED: { label: 'Rejected', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-}
-
-// Visibility mapping
-const VISIBILITY_MAP = {
-  GLOBAL: { label: 'Global', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  ROLE: { label: 'Role', bg: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  KELAS: { label: 'Kelas', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  JURUSAN: { label: 'Jurusan', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
-  CUSTOM: { label: 'Custom', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+  0: { label: 'Cancelled', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  1: { label: 'Active', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  2: { label: 'Completed', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
 }
 
 const KalenderAkademikList = () => {
@@ -134,16 +124,6 @@ const KalenderAkademikList = () => {
       cellRenderer: (params) => formatDate(params.value)
     },
     {
-      field: 'tahun_ajaran',
-      backendField: 'tahunAjaran.nama',
-      headerName: 'Tahun Ajaran',
-      sortable: true,
-      filter: true,
-      width: 140,
-      minWidth: 120,
-      valueGetter: (params) => params.data?.tahun_ajaran?.nama || '-'
-    },
-    {
       field: 'status',
       headerName: 'Status',
       sortable: true,
@@ -152,29 +132,11 @@ const KalenderAkademikList = () => {
       minWidth: 100,
       cellRenderer: (params) => {
         const status = params.value
-        if (!status) return '-'
+        if (status === null || status === undefined) return '-'
         const statusInfo = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
             {statusInfo.label}
-          </span>
-        )
-      }
-    },
-    {
-      field: 'visibility',
-      headerName: 'Visibility',
-      sortable: true,
-      filter: true,
-      width: 120,
-      minWidth: 100,
-      cellRenderer: (params) => {
-        const visibility = params.value
-        if (!visibility) return '-'
-        const visInfo = VISIBILITY_MAP[visibility] || { label: visibility, bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${visInfo.bg}`}>
-            {visInfo.label}
           </span>
         )
       }

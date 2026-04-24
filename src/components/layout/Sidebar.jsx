@@ -270,6 +270,9 @@ const MenuItem = memo(({ item, onClose, onNavigate }) => {
     )
   }
 
+  // Skip leaf items with no route (url='#' or null from backend)
+  if (!item.to) return null
+
   return (
     <li>
       <NavLink

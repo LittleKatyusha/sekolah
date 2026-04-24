@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, Loader2, Wifi, WifiOff, Edit2, Trash2, MessageSquare, Paperclip, BookOpen, User, Clock, ArrowDown } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, Wifi, WifiOff, Edit2, Trash2, MessageSquare, BookOpen, User, Clock, ArrowDown } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import useNotificationStore from '../../../store/useNotificationStore'
 import useAuthStore from '../../../store/useAuthStore'
@@ -163,10 +163,11 @@ const ForumDetail = () => {
 
     setSubmitting(true)
     const { error } = await forumService.create({
-      parent_id: parseInt(id),
-      pesan: replyText,
-      sys_user_id: user?.id,
-      mst_guru_mapel_id: topic?.mst_guru_mapel_id || topic?.guru_mapel?.id
+      sekolah_id: topic?.sekolah_id,
+      created_by: user?.id,
+      judul: `Re: ${topic?.judul || ''}`.substring(0, 200),
+      konten: replyText,
+      tipe: topic?.tipe || 1
     })
 
     if (!error) {
@@ -225,13 +226,13 @@ const ForumDetail = () => {
     )
   }
 
-  const topicAuthor = topic.user?.name || 'Unknown'
-  const mapelName = topic.guru_mapel?.mapel?.nama
-  const guruName = topic.guru_mapel?.guru?.nama
-  const isTopicOwner = user?.id === (topic.user?.id || topic.sys_user_id)
+  const topicAuthor = topic.createdBy?.name || 'Unknown'
+  const mapelName = topic.mapel?.nama
+  const kelasName = topic.kelas?.nama
+  const isTopicOwner = user?.id === topic.created_by
 
   // Sanitize HTML content with DOMPurify
-  const sanitizedTopicContent = DOMPurify.sanitize(topic.pesan || '')
+  const sanitizedTopicContent = DOMPurify.sanitize(topic.konten || '')
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -267,7 +268,7 @@ const ForumDetail = () => {
                 <span className="flex items-center gap-1">
                   <BookOpen size={14} />
                   {mapelName}
-                  {guruName && ` — ${guruName}`}
+                  {kelasName && ` — ${kelasName}`}
                 </span>
               )}
             </div>
@@ -277,15 +278,6 @@ const ForumDetail = () => {
               className="prose dark:prose-invert max-w-none mt-4 text-gray-700 dark:text-gray-300"
               dangerouslySetInnerHTML={{ __html: sanitizedTopicContent }}
             />
-
-            {topic.file_lampiran && (
-              <div className="mt-4 flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400">
-                <Paperclip size={14} />
-                <a href={topic.file_lampiran} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                  {topic.file_lampiran}
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -326,9 +318,9 @@ const ForumDetail = () => {
         ) : (
           <div className="space-y-3">
             {replies.map((reply) => {
-              const replyAuthor = reply.user?.name || 'Unknown'
-              const isOwner = user?.id === (reply.user?.id || reply.sys_user_id)
-              const sanitizedReplyContent = DOMPurify.sanitize(reply.pesan || '')
+              const replyAuthor = reply.createdBy?.name || 'Unknown'
+              const isOwner = user?.id === reply.created_by
+              const sanitizedReplyContent = DOMPurify.sanitize(reply.konten || '')
 
               return (
                 <div
@@ -378,15 +370,6 @@ const ForumDetail = () => {
                         className="prose dark:prose-invert max-w-none mt-2 text-sm text-gray-700 dark:text-gray-300"
                         dangerouslySetInnerHTML={{ __html: sanitizedReplyContent }}
                       />
-
-                      {reply.file_lampiran && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-primary-600 dark:text-primary-400">
-                          <Paperclip size={12} />
-                          <a href={reply.file_lampiran} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            {reply.file_lampiran}
-                          </a>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

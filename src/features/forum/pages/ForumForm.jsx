@@ -16,12 +16,11 @@ const ForumForm = () => {
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(true)
-  const [isTopik, setIsTopik] = useState(false)
+  const [tipe, setTipe] = useState(1)
 
   const [formData, setFormData] = useState({
     judul: '',
-    pesan: '',
-    file_lampiran: ''
+    konten: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -39,11 +38,10 @@ const ForumForm = () => {
     const { data, error } = await forumService.getById(id)
     if (data) {
       const forum = data
-      setIsTopik(!!forum.is_topik)
+      setTipe(forum.tipe || 1)
       setFormData({
         judul: forum.judul || '',
-        pesan: forum.pesan || '',
-        file_lampiran: forum.file_lampiran || ''
+        konten: forum.konten || ''
       })
     } else {
       showError('Gagal mengambil data forum')
@@ -62,8 +60,8 @@ const ForumForm = () => {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.pesan.trim() && !formData.pesan.replace(/<[^>]*>/g, '').trim()) {
-      newErrors.pesan = 'Pesan wajib diisi'
+    if (!formData.konten.trim() && !formData.konten.replace(/<[^>]*>/g, '').trim()) {
+      newErrors.konten = 'Konten wajib diisi'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -76,12 +74,8 @@ const ForumForm = () => {
     setLoading(true)
 
     const submitData = {
-      pesan: formData.pesan,
-      file_lampiran: formData.file_lampiran || null
-    }
-
-    if (isTopik) {
-      submitData.judul = formData.judul || null
+      konten: formData.konten,
+      judul: formData.judul || null
     }
 
     const { error } = await forumService.update(id, submitData)
@@ -107,7 +101,7 @@ const ForumForm = () => {
           Kembali
         </Button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Edit {isTopik ? 'Topik' : 'Balasan'}
+          Edit {tipe === 2 ? 'Pengumuman' : tipe === 3 ? 'Q&A' : 'Diskusi'}
         </h1>
       </div>
 
@@ -118,48 +112,32 @@ const ForumForm = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {isTopik && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Judul
-                </label>
-                <Input
-                  type="text"
-                  name="judul"
-                  value={formData.judul}
-                  onChange={handleChange}
-                  placeholder="Judul topik"
-                  error={errors.judul}
-                />
-              </div>
-            )}
-
-            <div>
-              <LexicalEditor
-                label="Pesan"
-                required
-                value={formData.pesan}
-                onChange={(html) => setFormData(prev => ({ ...prev, pesan: html }))}
-                placeholder="Tulis pesan..."
-                minHeight="150px"
-              />
-              {errors.pesan && (
-                <p className="mt-1 text-sm text-red-500">{errors.pesan}</p>
-              )}
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                File Lampiran
+                Judul
               </label>
               <Input
                 type="text"
-                name="file_lampiran"
-                value={formData.file_lampiran}
+                name="judul"
+                value={formData.judul}
                 onChange={handleChange}
-                placeholder="Path file lampiran (opsional)"
-                error={errors.file_lampiran}
+                placeholder="Judul forum"
+                error={errors.judul}
               />
+            </div>
+
+            <div>
+              <LexicalEditor
+                label="Konten"
+                required
+                value={formData.konten}
+                onChange={(html) => setFormData(prev => ({ ...prev, konten: html }))}
+                placeholder="Tulis konten..."
+                minHeight="150px"
+              />
+              {errors.konten && (
+                <p className="mt-1 text-sm text-red-500">{errors.konten}</p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

@@ -142,7 +142,7 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
       const nextState = { ...previous, [name]: type === 'checkbox' ? checked : value }
 
       if (resourceKey === 'peserta' && name === 'trx_tes_minat_bakat_id') {
-        nextState.mst_siswa_id = ''
+        nextState.siswa_id = ''
       }
 
       if (resourceKey === 'jawaban' && name === 'trx_tes_minat_bakat_peserta_id') {
