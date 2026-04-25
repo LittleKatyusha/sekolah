@@ -163,6 +163,7 @@ const Dashboard = () => {
   const userRole = user?.role?.toUpperCase()
 
   if (GURU_ROLES.has(userRole)) {
+    if (!dashboardData) return <LoadingSkeleton />
     return (
       <Suspense fallback={<LoadingSkeleton />}>
         <GuruDashboard data={dashboardData} authUser={user} />
@@ -171,6 +172,7 @@ const Dashboard = () => {
   }
 
   if (SISWA_ROLES.has(userRole)) {
+    if (!dashboardData) return <LoadingSkeleton />
     return (
       <Suspense fallback={<LoadingSkeleton />}>
         <SiswaDashboard data={dashboardData} authUser={user} />
@@ -179,6 +181,7 @@ const Dashboard = () => {
   }
 
   if (WALI_ROLES.has(userRole)) {
+    if (!dashboardData) return <LoadingSkeleton />
     return (
       <Suspense fallback={<LoadingSkeleton />}>
         <WaliDashboard data={dashboardData} />
