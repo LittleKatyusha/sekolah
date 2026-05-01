@@ -29,7 +29,6 @@ const PRESTASI_OPTIONS = [
 ]
 
 const PendaftarForm = () => {
-  const { options: jenisKelaminOptions } = useReferenceOptions('jenis_kelamin')
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
@@ -54,11 +53,6 @@ const PendaftarForm = () => {
     pilihan_jurusan_id: '',
     status_pendaftaran: 'draft',
     // Akademik
-    nilai_rata_rata_rapor: '',
-    nilai_mtk: '',
-    nilai_ipa: '',
-    nilai_bindo: '',
-    nilai_bing: '',
     jumlah_prestasi: '0',
     tingkat_prestasi_tertinggi: 'none',
     poin_pelanggaran: '0',
@@ -98,18 +92,13 @@ const PendaftarForm = () => {
         email: p.email || '',
         password: '',
         nisn: p.nisn || '',
-        jenis_kelamin: p.jenis_kelamin || '',
+        jenis_kelamin: p.jenis_kelamin != null ? String(p.jenis_kelamin) : '',
         telp_hp: p.telp_hp || '',
         asal_sekolah: p.asal_sekolah || '',
         tanggal_lahir: p.tanggal_lahir || '',
         pilihan_jurusan_id: p.pilihan_jurusan_id ? String(p.pilihan_jurusan_id) : '',
         status_pendaftaran: p.status_pendaftaran || 'draft',
         // Akademik
-        nilai_rata_rata_rapor: p.nilai_rata_rata_rapor != null ? String(p.nilai_rata_rata_rapor) : '',
-        nilai_mtk: p.nilai_mtk != null ? String(p.nilai_mtk) : '',
-        nilai_ipa: p.nilai_ipa != null ? String(p.nilai_ipa) : '',
-        nilai_bindo: p.nilai_bindo != null ? String(p.nilai_bindo) : '',
-        nilai_bing: p.nilai_bing != null ? String(p.nilai_bing) : '',
         jumlah_prestasi: p.jumlah_prestasi != null ? String(p.jumlah_prestasi) : '0',
         tingkat_prestasi_tertinggi: p.tingkat_prestasi_tertinggi || 'none',
         poin_pelanggaran: p.poin_pelanggaran != null ? String(p.poin_pelanggaran) : '0',
@@ -150,18 +139,13 @@ const PendaftarForm = () => {
     const submitData = {
       nama_lengkap: formData.nama_lengkap,
       email: formData.email,
-      jenis_kelamin: formData.jenis_kelamin,
+      jenis_kelamin: formData.jenis_kelamin ? parseInt(formData.jenis_kelamin) : null,
       nisn: formData.nisn || null,
       telp_hp: formData.telp_hp || null,
       asal_sekolah: formData.asal_sekolah || null,
       tanggal_lahir: formData.tanggal_lahir || null,
       pilihan_jurusan_id: formData.pilihan_jurusan_id ? parseInt(formData.pilihan_jurusan_id) : null,
       // Akademik
-      nilai_rata_rata_rapor: formData.nilai_rata_rata_rapor !== '' ? parseFloat(formData.nilai_rata_rata_rapor) : null,
-      nilai_mtk: formData.nilai_mtk !== '' ? parseFloat(formData.nilai_mtk) : null,
-      nilai_ipa: formData.nilai_ipa !== '' ? parseFloat(formData.nilai_ipa) : null,
-      nilai_bindo: formData.nilai_bindo !== '' ? parseFloat(formData.nilai_bindo) : null,
-      nilai_bing: formData.nilai_bing !== '' ? parseFloat(formData.nilai_bing) : null,
       jumlah_prestasi: parseInt(formData.jumlah_prestasi) || 0,
       tingkat_prestasi_tertinggi: formData.tingkat_prestasi_tertinggi || 'none',
       poin_pelanggaran: parseInt(formData.poin_pelanggaran) || 0,
@@ -278,7 +262,10 @@ const PendaftarForm = () => {
 
                 <div>
                   <LabelField required>Jenis Kelamin</LabelField>
-                  <SearchableSelect name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} options={jenisKelaminOptions} placeholder="Pilih jenis kelamin" error={errors.jenis_kelamin} />
+                  <SearchableSelect name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} options={[
+                    { value: '1', label: 'Laki-laki' },
+                    { value: '2', label: 'Perempuan' },
+                  ]} placeholder="Pilih jenis kelamin" error={errors.jenis_kelamin} />
                 </div>
 
                 <div>
@@ -318,34 +305,10 @@ const PendaftarForm = () => {
             {/* ── Section: Akademik ── */}
             {activeSection === 'akademik' && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                    Nilai Rapor
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      { name: 'nilai_rata_rata_rapor', label: 'Rata-rata Rapor' },
-                      { name: 'nilai_mtk', label: 'Matematika' },
-                      { name: 'nilai_ipa', label: 'IPA / Sains' },
-                      { name: 'nilai_bindo', label: 'Bahasa Indonesia' },
-                      { name: 'nilai_bing', label: 'Bahasa Inggris' },
-                    ].map(f => (
-                      <div key={f.name}>
-                        <LabelField>{f.label}</LabelField>
-                        <Input
-                          type="number"
-                          name={f.name}
-                          value={formData[f.name]}
-                          onChange={handleChange}
-                          placeholder="0–100"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          error={errors[f.name]}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                    Nilai rapor dikelola melalui halaman <strong>Nilai Rapor</strong> setelah pendaftar tersimpan.
+                  </p>
                 </div>
 
                 <div>

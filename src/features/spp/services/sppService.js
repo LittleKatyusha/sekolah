@@ -89,10 +89,18 @@ export const pembayaranSppService = {
   /**
    * Inisiasi pembayaran online via Winpay Checkout Page.
    * @param {Object} data - { mst_siswa_id, mst_tarif_spp_id, bulan, tahun }
-   * @returns {Promise<{data: {pembayaran_id, checkout_url, winpay_ref}, error}>}
+   * @returns {Promise<{pembayaran_id, checkout_url, winpay_ref}>}
    */
   bayarOnline: async (data) => {
     return await apiService.post(`${PEMBAYARAN_BASE}/bayar-online`, data)
+  },
+
+  /**
+   * Get all gateway logs for a pembayaran.
+   * @param {number|string} id
+   */
+  getGatewayLogs: async (id) => {
+    return await apiService.get(`${PEMBAYARAN_BASE}/${id}/gateway-logs`)
   },
 }
 

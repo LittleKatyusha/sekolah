@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, FileText, Clock, Monitor, User, BookOpen } from 'lucide-react'
+import { ArrowLeft, FileText, Clock, User, BookOpen } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { logAksesMateriService } from '../services/logAksesMateriService'
@@ -55,18 +55,17 @@ const LogAksesMateriDetail = () => {
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informasi Akses</h2>
             <InfoRow label="ID" value={data.id} icon={FileText} />
-            <InfoRow label="Materi" value={data.materi?.judul || data.mst_materi_id} icon={BookOpen} />
-            <InfoRow label="Siswa" value={data.siswa?.nama || data.mst_siswa_id} icon={User} />
+            <InfoRow label="Materi" value={data.materi?.judul || data.materi_id} icon={BookOpen} />
+            <InfoRow label="Siswa" value={data.siswa?.nama || data.siswa_id} icon={User} />
             <InfoRow label="Waktu Akses" value={data.waktu_akses ? new Date(data.waktu_akses).toLocaleString('id-ID') : '-'} icon={Clock} />
             <InfoRow label="Durasi" value={formatDurasi(data.durasi_detik)} icon={Clock} />
-            <InfoRow label="Perangkat" value={data.perangkat} icon={Monitor} />
           </div>
         </Card>
         <Card>
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Metadata</h2>
-            <InfoRow label="Materi ID" value={data.mst_materi_id} icon={FileText} />
-            <InfoRow label="Siswa ID" value={data.mst_siswa_id} icon={FileText} />
+            <InfoRow label="Materi ID" value={data.materi_id} icon={FileText} />
+            <InfoRow label="Siswa ID" value={data.siswa_id} icon={FileText} />
             <InfoRow label="Dibuat" value={data.created_at ? new Date(data.created_at).toLocaleString('id-ID') : '-'} icon={Clock} />
             <InfoRow label="Diperbarui" value={data.updated_at ? new Date(data.updated_at).toLocaleString('id-ID') : '-'} icon={Clock} />
           </div>

@@ -128,7 +128,7 @@ const ForumList = () => {
     const authorName = topic.user?.name || 'Unknown'
     const mapelName = topic.guru_mapel?.mapel?.nama
     const replyCount = topic.replies?.length || topic.replies_count || 0
-    const preview = truncateText(stripHtml(topic.pesan), 180)
+    const preview = truncateText(stripHtml(topic.konten), 180)
 
     return (
       <article

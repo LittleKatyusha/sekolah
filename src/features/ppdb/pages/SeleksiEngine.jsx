@@ -25,9 +25,9 @@ const STATUS_LABELS = {
 }
 
 const METODE_LABELS = {
-  manual: 'Manual',
-  saw: 'SAW (Simple Additive Weighting)',
-  weighted_rank: 'Weighted Rank',
+  1: 'Manual',
+  2: 'SAW (Simple Additive Weighting)',
+  3: 'Weighted Rank',
 }
 
 const SeleksiEngine = () => {
@@ -78,12 +78,12 @@ const SeleksiEngine = () => {
   const totalBobot = kriterias.reduce((s, k) => s + parseFloat(k.bobot || 0), 0)
   const bobotValid = Math.abs(totalBobot - 100) <= 0.01
   const hasFinalized = hasil.some(h => h.is_finalized)
-  const canRun = gelombang && gelombang.metode_seleksi !== 'manual' && bobotValid && !hasFinalized
+  const canRun = gelombang && gelombang.metode_seleksi !== 1 && bobotValid && !hasFinalized
 
   const handleRunSeleksi = async () => {
     if (!canRun) return
     const result = await showConfirm(
-      `Seleksi akan dijalankan menggunakan metode ${METODE_LABELS[gelombang.metode_seleksi]}. ${options.with_fraud_scan ? 'Fraud scan akan dijalankan terlebih dahulu. ' : ''}Data yang ada akan ditimpa. Lanjutkan?`,
+      `Seleksi akan dijalankan menggunakan metode ${METODE_LABELS[gelombang.metode_seleksi] ?? gelombang.metode_seleksi_label}. ${options.with_fraud_scan ? 'Fraud scan akan dijalankan terlebih dahulu. ' : ''}Data yang ada akan ditimpa. Lanjutkan?`,
       'Jalankan Seleksi Otomatis'
     )
     if (!result.isConfirmed) return
@@ -184,7 +184,7 @@ const SeleksiEngine = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Engine Seleksi</h1>
             {gelombang && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                {gelombang.nama_gelombang} — {METODE_LABELS[gelombang.metode_seleksi] || gelombang.metode_seleksi}
+                {gelombang.nama_gelombang} — {gelombang.metode_seleksi_label ?? METODE_LABELS[gelombang.metode_seleksi] ?? gelombang.metode_seleksi}
               </p>
             )}
           </div>
@@ -231,13 +231,13 @@ const SeleksiEngine = () => {
       </div>
 
       {/* Validation warnings */}
-      {gelombang?.metode_seleksi === 'manual' && (
+      {gelombang?.metode_seleksi === 1 && (
         <div className="flex items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg text-sm">
           <AlertCircle size={16} className="flex-shrink-0" />
           Gelombang ini menggunakan metode seleksi <strong>Manual</strong>. Scoring otomatis tidak tersedia. Gunakan Batch Seleksi di halaman Pendaftaran.
         </div>
       )}
-      {!bobotValid && gelombang?.metode_seleksi !== 'manual' && (
+      {!bobotValid && gelombang?.metode_seleksi !== 1 && (
         <div className="flex items-center gap-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-lg text-sm">
           <AlertCircle size={16} className="flex-shrink-0" />
           Total bobot kriteria {totalBobot.toFixed(1)}% — harus tepat 100% agar seleksi dapat dijalankan.
@@ -279,7 +279,7 @@ const SeleksiEngine = () => {
       </div>
 
       {/* Options */}
-      {gelombang?.metode_seleksi !== 'manual' && (
+      {gelombang?.metode_seleksi !== 1 && (
         <Card>
           <div className="p-5">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Opsi Seleksi</h3>

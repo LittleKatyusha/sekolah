@@ -9,15 +9,14 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderAkademikService } from '../services/kalenderAkademikService'
-import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
+import { semesterService } from '../../semester/services/semesterService'
 import { showError } from '../../../utils/sweetalert'
 
 // Status mapping for display
 const STATUS_MAP = {
-  DRAFT: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-  PENDING: { label: 'Pending', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  APPROVED: { label: 'Approved', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  REJECTED: { label: 'Rejected', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  0: { label: 'Cancelled', bg: 'bg-red-100 text-red-800' },
+  1: { label: 'Active', bg: 'bg-green-100 text-green-800' },
+  2: { label: 'Completed', bg: 'bg-blue-100 text-blue-800' },
 }
 
 /**
@@ -45,9 +44,8 @@ const transformToCalendarEvents = (events) => {
         deskripsi: event.deskripsi,
         lokasi: event.lokasi,
         status: event.status,
-        visibility: event.visibility,
         tipe: event.tipe,
-        tahun_ajaran: event.tahun_ajaran,
+        semester: event.semester,
       }
     }
   })
@@ -61,12 +59,12 @@ const KalenderAkademikCalendar = () => {
   // State
   const [events, setEvents] = useState([])
   const [eventTypes, setEventTypes] = useState([])
-  const [tahunAjaranList, setTahunAjaranList] = useState([])
+  const [semesterList, setSemesterList] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Filters
-  const [filterTahunAjaran, setFilterTahunAjaran] = useState('')
+  const [filterSemester, setFilterSemester] = useState('')
   const [filterTipe, setFilterTipe] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
@@ -82,13 +80,13 @@ const KalenderAkademikCalendar = () => {
   }, [])
 
   /**
-   * Fetch tahun ajaran list from API for filter
+   * Fetch semester list from API for filter
    */
-  const fetchTahunAjaran = useCallback(async () => {
-    const { data, error } = await tahunAjaranService.getAll({ per_page: 100 })
+  const fetchSemester = useCallback(async () => {
+    const { data, error } = await semesterService.getAll({ per_page: 100 })
     if (!error && data?.data) {
       const list = Array.isArray(data.data) ? data.data : data.data.data || []
-      setTahunAjaranList(list)
+      setSemesterList(list)
     }
   }, [])
 
@@ -99,7 +97,7 @@ const KalenderAkademikCalendar = () => {
     setLoading(true)
     try {
       const params = {}
-      if (filterTahunAjaran) params.tahun_ajaran_id = filterTahunAjaran
+      if (filterSemester) params.semester_id = filterSemester
       if (filterTipe) params.tipe_id = filterTipe
       if (filterStatus) params.status = filterStatus
 
@@ -121,13 +119,13 @@ const KalenderAkademikCalendar = () => {
     } finally {
       setLoading(false)
     }
-  }, [filterTahunAjaran, filterTipe, filterStatus])
+  }, [filterSemester, filterTipe, filterStatus])
 
   // Initial data fetch
   useEffect(() => {
     fetchEventTypes()
-    fetchTahunAjaran()
-  }, [fetchEventTypes, fetchTahunAjaran])
+    fetchSemester()
+  }, [fetchEventTypes, fetchSemester])
 
   useEffect(() => {
     fetchEvents()
@@ -155,19 +153,19 @@ const KalenderAkademikCalendar = () => {
   const handleRefresh = useCallback(() => {
     fetchEvents()
     fetchEventTypes()
-    fetchTahunAjaran()
-  }, [fetchEvents, fetchEventTypes, fetchTahunAjaran])
+    fetchSemester()
+  }, [fetchEvents, fetchEventTypes, fetchSemester])
 
   /**
    * Clear all filters
    */
   const handleClearFilters = useCallback(() => {
-    setFilterTahunAjaran('')
+    setFilterSemester('')
     setFilterTipe('')
     setFilterStatus('')
   }, [])
 
-  const hasActiveFilters = filterTahunAjaran || filterTipe || filterStatus
+  const hasActiveFilters = filterSemester || filterTipe || filterStatus
 
   /**
    * Custom event content renderer
@@ -280,16 +278,16 @@ const KalenderAkademikCalendar = () => {
 
           {/* Filter dropdowns */}
           <div className={`flex flex-col sm:flex-row gap-3 ${filtersOpen ? 'block' : 'hidden sm:flex'}`}>
-            {/* Tahun Ajaran Filter */}
+            {/* Semester Filter */}
             <div className="flex-1 min-w-0">
               <select
-                value={filterTahunAjaran}
-                onChange={(e) => setFilterTahunAjaran(e.target.value)}
+                value={filterSemester}
+                onChange={(e) => setFilterSemester(e.target.value)}
                 className="input-field text-sm w-full"
               >
-                <option value="">Semua Tahun Ajaran</option>
-                {tahunAjaranList.map(ta => (
-                  <option key={ta.id} value={ta.id}>{ta.nama}</option>
+                <option value="">Semua Semester</option>
+                {semesterList.map(s => (
+                  <option key={s.id} value={s.id}>{s.nama}</option>
                 ))}
               </select>
             </div>
@@ -316,10 +314,9 @@ const KalenderAkademikCalendar = () => {
                 className="input-field text-sm w-full"
               >
                 <option value="">Semua Status</option>
-                <option value="DRAFT">Draft</option>
-                <option value="PENDING">Pending</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="0">Cancelled</option>
+                <option value="1">Active</option>
+                <option value="2">Completed</option>
               </select>
             </div>
 

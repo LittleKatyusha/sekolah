@@ -16,6 +16,10 @@ import KuotaJurusanList from '../features/ppdb/pages/KuotaJurusanList'
 import KuotaJurusanForm from '../features/ppdb/pages/KuotaJurusanForm'
 import SeleksiEngine from '../features/ppdb/pages/SeleksiEngine'
 import HasilSeleksiList from '../features/ppdb/pages/HasilSeleksiList'
+// Nilai Rapor
+import NilaiRaporList from '../features/ppdb/pages/NilaiRaporList'
+import NilaiRaporForm from '../features/ppdb/pages/NilaiRaporForm'
+import NilaiRaporBulkForm from '../features/ppdb/pages/NilaiRaporBulkForm'
 
 const Ppdb = () => {
   return (
@@ -62,6 +66,12 @@ const Ppdb = () => {
       <Route path="dokumen/create" element={<DokumenForm />} />
       <Route path="dokumen/:id" element={<DokumenDetail />} />
       <Route path="dokumen/:id/edit" element={<DokumenForm />} />
+
+      {/* ── Nilai Rapor ── */}
+      <Route path="nilai-rapor" element={<NilaiRaporList />} />
+      <Route path="nilai-rapor/create" element={<NilaiRaporForm />} />
+      <Route path="nilai-rapor/bulk" element={<NilaiRaporBulkForm />} />
+      <Route path="nilai-rapor/:id/edit" element={<NilaiRaporForm />} />
 
       <Route path="*" element={<Navigate to="/ppdb/gelombang" replace />} />
     </Routes>

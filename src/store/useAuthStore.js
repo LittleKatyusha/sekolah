@@ -28,6 +28,7 @@ const useAuthStore = create(
       isAuthenticated: false,
 
       login: (loginData) => {
+        clearSessionCaches()
         set({
           user: loginData.user,
           token: loginData.access_token,

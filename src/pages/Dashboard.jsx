@@ -4,6 +4,11 @@ import useAuthStore from '../store/useAuthStore'
 import { dashboardService } from '../features/dashboard/services/dashboardService'
 import StatCard from '../features/dashboard/components/StatCard'
 
+// ── Role groups ──────────────────────────────────────────────────────────────
+const GURU_ROLES = new Set(['GURU', 'WALI_KELAS', 'GURU_BK'])
+const SISWA_ROLES = new Set(['SISWA'])
+const WALI_ROLES = new Set(['WALI_SISWA'])
+
 const SPPTrendChart = lazy(() => import('../features/dashboard/components/SPPTrendChart'))
 const PaymentStatusChart = lazy(() => import('../features/dashboard/components/PaymentStatusChart'))
 const Attendance7DaysChart = lazy(() => import('../features/dashboard/components/Attendance7DaysChart'))
@@ -153,10 +158,12 @@ const Dashboard = () => {
     )
   }
 
-  // Role-based rendering (requires full data to determine role)
-  const role = dashboardData?.role
+  // Role-based rendering — use user.role (available immediately) so routing
+  // does not depend on the dashboard API response containing a 'role' field.
+  const userRole = user?.role?.toUpperCase()
 
-  if (role === 'guru') {
+  if (GURU_ROLES.has(userRole)) {
+    if (!dashboardData) return <LoadingSkeleton />
     return (
       <Suspense fallback={<LoadingSkeleton />}>
         <GuruDashboard data={dashboardData} authUser={user} />
@@ -164,7 +171,8 @@ const Dashboard = () => {
     )
   }
 
-  if (role === 'siswa') {
+  if (SISWA_ROLES.has(userRole)) {
+    if (!dashboardData) return <LoadingSkeleton />
     return (
       <Suspense fallback={<LoadingSkeleton />}>
         <SiswaDashboard data={dashboardData} authUser={user} />
@@ -172,7 +180,8 @@ const Dashboard = () => {
     )
   }
 
-  if (role === 'wali') {
+  if (WALI_ROLES.has(userRole)) {
+    if (!dashboardData) return <LoadingSkeleton />
     return (
       <Suspense fallback={<LoadingSkeleton />}>
         <WaliDashboard data={dashboardData} />

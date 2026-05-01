@@ -19,7 +19,6 @@ const KuotaJurusanForm = () => {
   const [formData, setFormData] = useState({
     ppdb_gelombang_id: gelombangId || '',
     jurusan_id: '',
-    nama_jurusan: '',
     kuota: '',
     kuota_cadangan: '0',
   })
@@ -39,7 +38,6 @@ const KuotaJurusanForm = () => {
       setFormData({
         ppdb_gelombang_id: String(k.ppdb_gelombang_id || gelombangId),
         jurusan_id: k.jurusan_id ? String(k.jurusan_id) : '',
-        nama_jurusan: k.nama_jurusan || '',
         kuota: String(k.kuota ?? ''),
         kuota_cadangan: String(k.kuota_cadangan ?? '0'),
       })
@@ -58,7 +56,7 @@ const KuotaJurusanForm = () => {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.nama_jurusan.trim()) newErrors.nama_jurusan = 'Nama jurusan wajib diisi'
+    if (!formData.jurusan_id) newErrors.jurusan_id = 'ID Jurusan wajib diisi'
     if (!formData.kuota) newErrors.kuota = 'Kuota wajib diisi'
     else if (parseInt(formData.kuota) < 1) newErrors.kuota = 'Kuota minimal 1'
     setErrors(newErrors)
@@ -73,7 +71,6 @@ const KuotaJurusanForm = () => {
     const submitData = {
       ppdb_gelombang_id: parseInt(formData.ppdb_gelombang_id),
       jurusan_id: formData.jurusan_id ? parseInt(formData.jurusan_id) : null,
-      nama_jurusan: formData.nama_jurusan,
       kuota: parseInt(formData.kuota),
       kuota_cadangan: parseInt(formData.kuota_cadangan) || 0,
     }
@@ -114,32 +111,18 @@ const KuotaJurusanForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nama Jurusan <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="text"
-                  name="nama_jurusan"
-                  value={formData.nama_jurusan}
-                  onChange={handleChange}
-                  placeholder="mis: IPA, IPS, Teknik Komputer"
-                  error={errors.nama_jurusan}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  ID Jurusan
+                  ID Jurusan <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="number"
                   name="jurusan_id"
                   value={formData.jurusan_id}
                   onChange={handleChange}
-                  placeholder="ID dari master jurusan (opsional)"
+                  placeholder="ID dari master jurusan"
                   error={errors.jurusan_id}
                 />
                 <p className="mt-1 text-xs text-gray-400">
-                  Kosongkan jika jurusan belum terdaftar di master data.
+                  Nama jurusan akan diambil otomatis dari data master.
                 </p>
               </div>
 

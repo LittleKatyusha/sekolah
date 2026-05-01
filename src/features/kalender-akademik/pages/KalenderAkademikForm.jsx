@@ -7,25 +7,13 @@ import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderAkademikService } from '../services/kalenderAkademikService'
-import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { semesterService } from '../../semester/services/semesterService'
-import { roleService } from '../../roles/services/rolesService'
-import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
-const VISIBILITY_OPTIONS = [
-  { value: 'GLOBAL', label: 'Global' },
-  { value: 'ROLE', label: 'Role' },
-  { value: 'KELAS', label: 'Kelas' },
-  { value: 'JURUSAN', label: 'Jurusan' },
-  { value: 'CUSTOM', label: 'Custom' },
-]
-
 const STATUS_OPTIONS = [
-  { value: 'DRAFT', label: 'Draft' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'REJECTED', label: 'Rejected' },
+  { value: '0', label: 'Cancelled' },
+  { value: '1', label: 'Active' },
+  { value: '2', label: 'Completed' },
 ]
 
 const KalenderAkademikForm = () => {
@@ -37,29 +25,25 @@ const KalenderAkademikForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
 
   const [formData, setFormData] = useState({
-    tahun_ajaran_id: '',
     semester_id: '',
     tipe_id: '',
     judul: '',
     deskripsi: '',
     tanggal_mulai: '',
     tanggal_selesai: '',
+    waktu_mulai: '',
+    waktu_selesai: '',
     is_all_day: true,
     is_recurring: false,
     recurring_rule: '',
     lokasi: '',
-    visibility: 'GLOBAL',
-    status: 'DRAFT',
-    roles: [],
-    kelas: [],
+    status: '1',
+    prioritas: '2',
   })
 
   const [errors, setErrors] = useState({})
-  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
   const [semesterOptions, setSemesterOptions] = useState([])
   const [tipeOptions, setTipeOptions] = useState([])
-  const [roleOptions, setRoleOptions] = useState([])
-  const [kelasOptions, setKelasOptions] = useState([])
 
   useEffect(() => {
     fetchDropdownOptions()
@@ -69,21 +53,10 @@ const KalenderAkademikForm = () => {
   }, [id])
 
   const fetchDropdownOptions = async () => {
-    const [tahunResult, semesterResult, tipeResult, rolesResult, kelasResult] = await Promise.all([
-      tahunAjaranService.getAll({ per_page: 100 }),
+    const [semesterResult, tipeResult] = await Promise.all([
       semesterService.getAll({ per_page: 100 }),
       kalenderAkademikService.getAllTipe({ per_page: 100 }),
-      roleService.getAll({ per_page: 200 }),
-      kelasService.getAll({ per_page: 200 }),
     ])
-
-    if (tahunResult.data) {
-      const list = tahunResult.data?.data || []
-      setTahunAjaranOptions(list.map(item => ({
-        value: String(item.id),
-        label: item.nama || item.tahun_ajaran || `Tahun Ajaran #${item.id}`
-      })))
-    }
 
     if (semesterResult.data) {
       const list = semesterResult.data?.data || []
@@ -101,15 +74,6 @@ const KalenderAkademikForm = () => {
       })))
     }
 
-    if (rolesResult.data) {
-      const list = rolesResult.data?.data || rolesResult.data?.data?.data || []
-      setRoleOptions(Array.isArray(list) ? list : [])
-    }
-
-    if (kelasResult.data) {
-      const list = kelasResult.data?.data || kelasResult.data?.data?.data || []
-      setKelasOptions(Array.isArray(list) ? list : [])
-    }
   }
 
   const fetchKalender = async () => {
@@ -124,21 +88,20 @@ const KalenderAkademikForm = () => {
       }
 
       setFormData({
-        tahun_ajaran_id: kalender.tahun_ajaran_id ? String(kalender.tahun_ajaran_id) : '',
         semester_id: kalender.semester_id ? String(kalender.semester_id) : '',
         tipe_id: kalender.tipe_id ? String(kalender.tipe_id) : '',
         judul: kalender.judul || '',
         deskripsi: kalender.deskripsi || '',
         tanggal_mulai: formatDateForInput(kalender.tanggal_mulai),
         tanggal_selesai: formatDateForInput(kalender.tanggal_selesai),
+        waktu_mulai: kalender.waktu_mulai || '',
+        waktu_selesai: kalender.waktu_selesai || '',
         is_all_day: kalender.is_all_day ?? true,
         is_recurring: kalender.is_recurring ?? false,
         recurring_rule: kalender.recurring_rule || '',
         lokasi: kalender.lokasi || '',
-        visibility: kalender.visibility || 'GLOBAL',
-        status: kalender.status || 'DRAFT',
-        roles: Array.isArray(kalender.roles) ? kalender.roles.map(r => r.role_id ?? r.id) : [],
-        kelas: Array.isArray(kalender.kelas) ? kalender.kelas.map(k => k.kelas_id ?? k.id) : [],
+        status: String(kalender.status ?? 1),
+        prioritas: String(kalender.prioritas ?? 2),
       })
     } else {
       showError('Gagal mengambil data kalender akademik')
@@ -158,26 +121,13 @@ const KalenderAkademikForm = () => {
     }
   }
 
-  const handleAudienceToggle = (field, id) => {
-    setFormData(prev => {
-      const current = prev[field] || []
-      const numId = Number(id)
-      return {
-        ...prev,
-        [field]: current.includes(numId)
-          ? current.filter(i => i !== numId)
-          : [...current, numId],
-      }
-    })
-  }
 
   const validate = () => {
     const newErrors = {}
     if (!formData.judul.trim()) newErrors.judul = 'Judul wajib diisi'
-    if (!formData.tahun_ajaran_id) newErrors.tahun_ajaran_id = 'Tahun Ajaran wajib dipilih'
+    if (!formData.semester_id) newErrors.semester_id = 'Semester wajib dipilih'
     if (!formData.tipe_id) newErrors.tipe_id = 'Tipe wajib dipilih'
     if (!formData.tanggal_mulai) newErrors.tanggal_mulai = 'Tanggal mulai wajib diisi'
-    if (!formData.tanggal_selesai) newErrors.tanggal_selesai = 'Tanggal selesai wajib diisi'
     if (formData.tanggal_mulai && formData.tanggal_selesai && formData.tanggal_selesai < formData.tanggal_mulai) {
       newErrors.tanggal_selesai = 'Tanggal selesai harus setelah tanggal mulai'
     }
@@ -194,31 +144,25 @@ const KalenderAkademikForm = () => {
     setLoading(true)
 
     const submitData = {
-      tahun_ajaran_id: parseInt(formData.tahun_ajaran_id),
-      semester_id: formData.semester_id ? parseInt(formData.semester_id) : null,
+      semester_id: parseInt(formData.semester_id),
       tipe_id: parseInt(formData.tipe_id),
       judul: formData.judul,
       deskripsi: formData.deskripsi || null,
       tanggal_mulai: formData.tanggal_mulai,
-      tanggal_selesai: formData.tanggal_selesai,
+      tanggal_selesai: formData.tanggal_selesai || null,
+      waktu_mulai: formData.waktu_mulai || null,
+      waktu_selesai: formData.waktu_selesai || null,
       is_all_day: formData.is_all_day,
       is_recurring: formData.is_recurring,
       recurring_rule: formData.recurring_rule || null,
       lokasi: formData.lokasi || null,
-      visibility: formData.visibility,
-    }
-
-    // Audience fields
-    if (['ROLE', 'CUSTOM'].includes(formData.visibility)) {
-      submitData.roles = formData.roles
-    }
-    if (['KELAS', 'CUSTOM'].includes(formData.visibility)) {
-      submitData.kelas = formData.kelas
+      status: parseInt(formData.status),
+      prioritas: parseInt(formData.prioritas),
     }
 
     // Include status only on update
     if (isEditMode) {
-      submitData.status = formData.status
+      submitData.status = parseInt(formData.status)
     }
 
     let result
@@ -280,32 +224,17 @@ const KalenderAkademikForm = () => {
                 />
               </div>
 
-              {/* Tahun Ajaran */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tahun Ajaran <span className="text-red-500">*</span>
-                </label>
-                <SearchableSelect
-                  name="tahun_ajaran_id"
-                  value={formData.tahun_ajaran_id}
-                  onChange={handleChange}
-                  options={tahunAjaranOptions}
-                  placeholder="Pilih tahun ajaran"
-                  error={errors.tahun_ajaran_id}
-                />
-              </div>
-
               {/* Semester */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Semester
+                  Semester <span className="text-red-500">*</span>
                 </label>
                 <SearchableSelect
                   name="semester_id"
                   value={formData.semester_id}
                   onChange={handleChange}
                   options={semesterOptions}
-                  placeholder="Pilih semester (opsional)"
+                  placeholder="Pilih semester"
                   error={errors.semester_id}
                 />
               </div>
@@ -324,93 +253,6 @@ const KalenderAkademikForm = () => {
                   error={errors.tipe_id}
                 />
               </div>
-
-              {/* Visibility */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Visibility
-                </label>
-                <SearchableSelect
-                  name="visibility"
-                  value={formData.visibility}
-                  onChange={handleChange}
-                  options={VISIBILITY_OPTIONS}
-                  placeholder="Pilih visibility"
-                  error={errors.visibility}
-                />
-              </div>
-
-              {/* Audience: Role (visible when visibility=ROLE or CUSTOM) */}
-              {['ROLE', 'CUSTOM'].includes(formData.visibility) && (
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Target Role <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
-                    {roleOptions.map(role => {
-                      const id = role.id
-                      const checked = formData.roles.includes(Number(id))
-                      return (
-                        <label key={id} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => handleAudienceToggle('roles', id)}
-                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                            {role.name || role.nama || `Role #${id}`}
-                          </span>
-                        </label>
-                      )
-                    })}
-                    {roleOptions.length === 0 && (
-                      <span className="text-sm text-gray-400 col-span-full">Tidak ada data role</span>
-                    )}
-                  </div>
-                  {formData.roles.length > 0 && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {formData.roles.length} role dipilih
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Audience: Kelas (visible when visibility=KELAS or CUSTOM) */}
-              {['KELAS', 'CUSTOM'].includes(formData.visibility) && (
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Target Kelas <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
-                    {kelasOptions.map(kelas => {
-                      const id = kelas.id
-                      const checked = formData.kelas.includes(Number(id))
-                      return (
-                        <label key={id} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => handleAudienceToggle('kelas', id)}
-                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                            {kelas.nama_kelas || kelas.nama || `Kelas #${id}`}
-                          </span>
-                        </label>
-                      )
-                    })}
-                    {kelasOptions.length === 0 && (
-                      <span className="text-sm text-gray-400 col-span-full">Tidak ada data kelas</span>
-                    )}
-                  </div>
-                  {formData.kelas.length > 0 && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {formData.kelas.length} kelas dipilih
-                    </p>
-                  )}
-                </div>
-              )}
 
               {/* Tanggal Mulai */}
               <div>

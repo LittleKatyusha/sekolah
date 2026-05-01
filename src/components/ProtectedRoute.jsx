@@ -8,16 +8,17 @@ const needsProfileHydration = (user) => {
   if (!user?.role) return false
 
   const profile = user.profile || {}
+  const role = user.role?.toUpperCase()
 
-  if (user.role === 'guru') {
+  if (role === 'GURU' || role === 'WALI_KELAS' || role === 'GURU_BK') {
     return !profile.id && !profile.mst_guru_id
   }
 
-  if (user.role === 'siswa') {
+  if (role === 'SISWA') {
     return !profile.id && !profile.mst_siswa_id
   }
 
-  if (user.role === 'wali') {
+  if (role === 'WALI_SISWA') {
     return !profile.nama
   }
 

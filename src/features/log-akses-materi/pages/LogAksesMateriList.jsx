@@ -75,14 +75,13 @@ const LogAksesMateriList = () => {
 
   const columnDefs = useMemo(() => [
     { field: 'id', backendField: 'id', headerName: 'ID', width: 80, sortable: true },
-    { field: 'materi.judul', backendField: 'materi.judul', headerName: 'Materi', flex: 1, minWidth: 200, valueGetter: (p) => p.data?.materi?.judul || p.data?.mst_materi_id || '-' },
-    { field: 'siswa.nama', backendField: 'siswa.nama', headerName: 'Siswa', width: 180, valueGetter: (p) => p.data?.siswa?.nama || p.data?.mst_siswa_id || '-' },
+    { field: 'materi.judul', backendField: 'materi.judul', headerName: 'Materi', flex: 1, minWidth: 200, valueGetter: (p) => p.data?.materi?.judul || p.data?.materi_id || '-' },
+    { field: 'siswa.nama', backendField: 'siswa.nama', headerName: 'Siswa', width: 180, valueGetter: (p) => p.data?.siswa?.nama || p.data?.siswa_id || '-' },
     {
       field: 'waktu_akses', backendField: 'waktu_akses', headerName: 'Waktu Akses', width: 170, sortable: true,
       cellRenderer: (p) => p.value ? new Date(p.value).toLocaleString('id-ID') : '-'
     },
     { field: 'durasi_detik', backendField: 'durasi_detik', headerName: 'Durasi', width: 110, cellRenderer: (p) => formatDurasi(p.value) },
-    { field: 'perangkat', backendField: 'perangkat', headerName: 'Perangkat', width: 130, cellRenderer: (p) => p.value || '-' },
     {
       headerName: 'Aksi', width: 80, sortable: false, filter: false,
       cellRenderer: (params) => (

@@ -48,12 +48,15 @@ export const forumService = {
   /**
    * Create new forum
    * @param {Object} data - Forum data
-   * @param {number} data.mst_guru_mapel_id - Guru Mapel ID (required)
-   * @param {number} data.sys_user_id - User ID (required)
-   * @param {number} [data.parent_id] - Parent forum ID (optional, for replies)
-   * @param {string} [data.judul] - Title (optional)
-   * @param {string} data.pesan - Message (required)
-   * @param {string} [data.file_lampiran] - Attachment file path (optional)
+   * @param {number} data.sekolah_id - Sekolah ID (required)
+   * @param {number} data.created_by - User ID (required)
+   * @param {string} data.judul - Title (required, max 200)
+   * @param {string} data.konten - Content (required)
+   * @param {number} [data.kelas_id] - Kelas ID (optional)
+   * @param {number} [data.mapel_id] - Mapel ID (optional)
+   * @param {number} [data.tipe] - Type: 1=diskusi, 2=pengumuman, 3=QnA (optional)
+   * @param {number} [data.status] - Status: 0=draft, 1=aktif, 2=closed (optional)
+   * @param {boolean} [data.is_anonymous] - Anonymous post (optional)
    * @returns {Promise<{data: any, error: any}>}
    */
   create: async (payload) => {
@@ -98,50 +101,9 @@ export const forumService = {
   },
 
   /**
-   * Get forum topics by guru mapel ID
-   * @param {number|string} guruMapelId - Guru Mapel ID
-   * @param {Object} [params] - Optional query parameters
-   * @param {string} [params.search] - Search keyword
-   * @param {Object} [options] - Additional options
-   * @param {AbortSignal} [options.signal] - AbortController signal for cancellation
-   * @returns {Promise<{data: any, error: any}>}
-   */
-  getTopicsByGuruMapel: async (guruMapelId, params = {}, options = {}) => {
-    try {
-      const config = options.signal ? { params, signal: options.signal } : { params }
-      const { data, error } = await apiService.get(`${BASE_URL}/guru-mapel/${guruMapelId}/topics`, config)
-      if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Failed to fetch topics')
-      return { data: data?.data || [], error: null }
-    } catch (error) {
-      if (error.name === 'AbortError') return { data: null, error: 'cancelled' }
-      return { data: null, error: error.message || 'Failed to fetch topics' }
-    }
-  },
-
-  /**
-   * Get replies for a forum post
-   * @param {number|string} parentId - Parent forum ID
-   * @param {Object} [options] - Additional options
-   * @param {AbortSignal} [options.signal] - AbortController signal for cancellation
-   * @returns {Promise<{data: any, error: any}>}
-   */
-  getReplies: async (parentId, options = {}) => {
-    try {
-      const config = options.signal ? { signal: options.signal } : {}
-      const { data, error } = await apiService.get(`${BASE_URL}/${parentId}/replies`, config)
-      if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Failed to fetch replies')
-      return { data: data?.data || [], error: null }
-    } catch (error) {
-      if (error.name === 'AbortError') return { data: null, error: 'cancelled' }
-      return { data: null, error: error.message || 'Failed to fetch replies' }
-    }
-  },
-
-  /**
    * Get forum posts by user ID
    * @param {number|string} userId - User ID
    * @param {Object} [params] - Optional query parameters
-   * @param {number} [params.mst_guru_mapel_id] - Filter by guru mapel
    * @param {Object} [options] - Additional options
    * @param {AbortSignal} [options.signal] - AbortController signal for cancellation
    * @returns {Promise<{data: any, error: any}>}

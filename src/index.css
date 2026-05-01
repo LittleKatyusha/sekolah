@@ -398,3 +398,55 @@
    padding: 0.25rem;
  }
 }
+
+/* ── Role-themed sidebar ──────────────────────────────────────────────────── */
+
+/*
+ * .sidebar-themed is applied to <aside> together with inline CSS custom
+ * properties (--sb-*) per role. The properties cascade to all children,
+ * letting descendant rules reference them without prop-drilling.
+ */
+
+.sidebar-themed {
+  background: linear-gradient(180deg, var(--sb-from), var(--sb-to)) !important;
+  border-color: var(--sb-border) !important;
+}
+
+/* All dividers inside the themed sidebar */
+.sidebar-themed .sb-divider {
+  border-color: var(--sb-border) !important;
+}
+
+/* Nav link default state */
+.sidebar-themed .sidebar-link {
+  color: var(--sb-text) !important;
+  background-color: transparent !important;
+}
+
+/* Nav link hover */
+.sidebar-themed .sidebar-link:hover {
+  background-color: var(--sb-hover) !important;
+  color: #ffffff !important;
+}
+
+/* Nav link active (current route) */
+.sidebar-themed .sidebar-link.active {
+  background-color: var(--sb-active) !important;
+  color: var(--sb-active-text) !important;
+  font-weight: 600 !important;
+}
+
+/* Submenu expand/collapse button hover */
+.sidebar-themed button.sidebar-link:hover {
+  color: #ffffff !important;
+}
+
+/* Logout button — keeps red semantics on dark bg */
+.sidebar-themed .logout-action {
+  color: #f87171 !important;
+}
+
+.sidebar-themed .logout-action:hover {
+  background-color: var(--sb-logout-hover) !important;
+  color: #f87171 !important;
+}

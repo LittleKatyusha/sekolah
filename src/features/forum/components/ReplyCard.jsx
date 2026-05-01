@@ -5,14 +5,14 @@ const ReplyCard = memo(function ReplyCard({ reply, onEdit, onDelete, canEdit = f
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 ${getAvatarColor(reply.user?.nama)}`}>
-          {getInitials(reply.user?.nama)}
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 ${getAvatarColor(reply.createdBy?.name)}`}>
+          {getInitials(reply.createdBy?.name)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-900 dark:text-white">
-                {reply.user?.nama || 'Anonim'}
+                {reply.is_anonymous ? 'Anonim' : (reply.createdBy?.name || 'Anonim')}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {timeAgo(reply.created_at)}
@@ -41,7 +41,7 @@ const ReplyCard = memo(function ReplyCard({ reply, onEdit, onDelete, canEdit = f
           </div>
           <div
             className="prose dark:prose-invert max-w-none mt-2 text-gray-700 dark:text-gray-300"
-            dangerouslySetInnerHTML={{ __html: reply.pesan || '' }}
+            dangerouslySetInnerHTML={{ __html: reply.konten || '' }}
           />
         </div>
       </div>

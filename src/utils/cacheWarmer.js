@@ -108,18 +108,6 @@ export const warmReferenceCache = async () => {
 
 const SIDEBAR_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
-const serializeMenuItem = (item) => ({
-  id: item.id,
-  name: item.nama_menu ?? item.name,
-  to: item._frontendRoute ?? item.to,
-  iconName: typeof item.icon === 'string' ? item.icon : item.iconName ?? null,
-  children: Array.isArray(item.sub_menus)
-    ? item.sub_menus.filter((s) => s.is_active).map(serializeMenuItem)
-    : Array.isArray(item.children)
-    ? item.children.map(serializeMenuItem)
-    : [],
-})
-
 const toFrontendRoute = (url) => {
   if (!url || url === '#') return null
   return url.replace(/^\/api\/v[0-9]+/, '') || '/'
@@ -128,6 +116,18 @@ const toFrontendRoute = (url) => {
 const flattenForCache = (item) => ({
   ...item,
   _frontendRoute: toFrontendRoute(item.url ?? item.to),
+})
+
+const serializeMenuItem = (item) => ({
+  id: item.id,
+  name: item.nama_menu ?? item.name,
+  to: item._frontendRoute ?? item.to ?? null,
+  iconName: typeof item.icon === 'string' ? item.icon : item.iconName ?? null,
+  children: Array.isArray(item.sub_menus)
+    ? item.sub_menus.filter((s) => s.is_active).map((s) => serializeMenuItem(flattenForCache(s)))
+    : Array.isArray(item.children)
+    ? item.children.map((c) => serializeMenuItem(flattenForCache(c)))
+    : [],
 })
 
 /**
@@ -156,7 +156,7 @@ export const warmSidebarMenuCache = async (userId) => {
  * Runs all cache warming tasks in the background after login.
  * Fire-and-forget: all errors are caught internally.
  *
- * @param {{ id: string|number }} user - The authenticated user object
+ * @param {{ id: string|number, role: string }} user - The authenticated user object
  */
 export const runCacheWarming = (user) => {
   if (typeof window === 'undefined') return
@@ -164,10 +164,22 @@ export const runCacheWarming = (user) => {
   // Use idle callback when available so warming doesn't compete with render
   const schedule = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 200))
 
+  // Roles allowed to access /admin/references/* endpoints
+  const ADMIN_REFERENCE_ROLES = new Set([
+    'SUPER_ADMIN', 'ADMIN_SEKOLAH', 'KEPALA_SEKOLAH', 'WAKIL_KEPALA_SEKOLAH',
+    'STAFF_KEUANGAN', 'STAFF_PERPUSTAKAAN', 'ADMIN_PPDB',
+  ])
+  const canAccessAdminRoutes = ADMIN_REFERENCE_ROLES.has(user?.role?.toUpperCase())
+
   schedule(async () => {
-    await Promise.allSettled([
-      warmReferenceCache(),
-      warmSidebarMenuCache(user?.id),
-    ])
+    const tasks = [warmSidebarMenuCache(user?.id)]
+
+    // /admin/references/* is restricted — skip for non-admin roles
+    // to avoid 403 Forbidden errors on login
+    if (canAccessAdminRoutes) {
+      tasks.push(warmReferenceCache())
+    }
+
+    await Promise.allSettled(tasks)
   })
 }

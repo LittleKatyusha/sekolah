@@ -7,8 +7,8 @@ function TopicHeader({ topic, onEdit, onDelete, canEdit = false, canDelete = fal
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
       <div className="flex items-start gap-4">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 ${getAvatarColor(topic.user?.nama)}`}>
-          {getInitials(topic.user?.nama)}
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 ${getAvatarColor(topic.createdBy?.name)}`}>
+          {getInitials(topic.createdBy?.name)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4">
@@ -17,11 +17,11 @@ function TopicHeader({ topic, onEdit, onDelete, canEdit = false, canDelete = fal
                 {topic.judul}
               </h1>
               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <span className="font-medium">{topic.user?.nama || 'Anonim'}</span>
+                <span className="font-medium">{topic.is_anonymous ? 'Anonim' : (topic.createdBy?.name || 'Anonim')}</span>
                 <span>•</span>
                 <span>{timeAgo(topic.created_at)}</span>
                 <span>•</span>
-                <span>{topic.views || 0} views</span>
+                <span>{topic.view_count || 0} views</span>
               </div>
             </div>
             {(canEdit || canDelete) && (
@@ -47,7 +47,7 @@ function TopicHeader({ topic, onEdit, onDelete, canEdit = false, canDelete = fal
           </div>
           <div
             className="prose dark:prose-invert max-w-none mt-4 text-gray-700 dark:text-gray-300"
-            dangerouslySetInnerHTML={{ __html: topic.pesan || '' }}
+            dangerouslySetInnerHTML={{ __html: topic.konten || '' }}
           />
         </div>
       </div>

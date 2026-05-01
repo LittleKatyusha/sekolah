@@ -319,13 +319,8 @@ const DashboardAttendanceCard = ({ role, profile, authUser, onAttendanceRecorded
             Memuat status absensi hari ini...
           </div>
         ) : loadError ? (
-          <div className="space-y-3 rounded-xl bg-red-50 px-3 py-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+          <div className="rounded-xl bg-red-50 px-3 py-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
             <p>{loadError}</p>
-            {import.meta.env.DEV && (
-              <pre className="overflow-x-auto rounded-lg bg-black/5 p-3 text-[11px] leading-5 text-red-700 dark:bg-white/5 dark:text-red-300">
-                {JSON.stringify(runtimeSnapshot, null, 2)}
-              </pre>
-            )}
           </div>
         ) : hasCheckedIn ? (
           <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900/40 dark:bg-green-900/10">

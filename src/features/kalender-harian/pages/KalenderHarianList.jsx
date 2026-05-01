@@ -5,7 +5,6 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderHarianService } from '../services/kalenderHarianService'
-import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
 import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -95,10 +94,13 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
   if (!data) return null
 
   const toggleItems = [
-    { field: 'is_operasional', label: 'Operasional', color: 'green' },
-    { field: 'is_libur', label: 'Libur', color: 'red' },
-    { field: 'is_efektif', label: 'Efektif', color: 'blue' },
+    { value: 1, label: 'Aktif', color: 'green' },
+    { value: 0, label: 'Cancelled', color: 'red' },
+    { value: 2, label: 'Completed', color: 'blue' },
   ]
+
+  const STATUS_LABELS = { 0: 'Cancelled', 1: 'Aktif', 2: 'Completed' }
+  const STATUS_COLORS = { 0: 'red', 1: 'green', 2: 'blue' }
 
   return createPortal(
     <div
@@ -119,10 +121,10 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
         </button>
       </div>
 
-      {/* Toggle switches */}
+      {/* Status options */}
       <div className="p-4 space-y-3">
-        {toggleItems.map(({ field, label, color }) => (
-          <div key={field} className="flex items-center justify-between">
+        {toggleItems.map(({ value, label, color }) => (
+          <div key={value} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${
                 color === 'green' ? 'bg-green-500' :
@@ -132,9 +134,9 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
             </div>
             <PermissionGuard permission="kalender-harian.edit">
               <button
-                onClick={() => onToggle(data, field)}
+                onClick={() => onToggle(data, value)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  data[field]
+                  data.status === value
                     ? color === 'green' ? 'bg-green-500 focus:ring-green-500'
                       : color === 'red' ? 'bg-red-500 focus:ring-red-500'
                       : 'bg-blue-500 focus:ring-blue-500'
@@ -143,7 +145,7 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                    data[field] ? 'translate-x-6' : 'translate-x-1'
+                    data.status === value ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -152,26 +154,19 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
         ))}
       </div>
 
-      {/* Status summary */}
+      {/* Status display */}
       <div className="px-4 pb-3 flex gap-1.5 flex-wrap">
-        {data.is_operasional && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-            Operasional
-          </span>
-        )}
-        {data.is_libur && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-            Libur
-          </span>
-        )}
-        {data.is_efektif && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-            Efektif
-          </span>
-        )}
-        {!data.is_operasional && !data.is_libur && !data.is_efektif && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
-            Tidak ada status
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+          data.status === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+          data.status === 0 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+          data.status === 2 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
+          'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+        }`}>
+          {STATUS_LABELS[data.status] || 'Tidak ada status'}
+        </span>
+        {data.catatan && (
+          <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+            {data.catatan}
           </span>
         )}
       </div>
@@ -185,10 +180,8 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
     tanggal_mulai: '',
     tanggal_selesai: '',
-    tahun_ajaran_id: '',
     semester_id: '',
   })
-  const [tahunAjaranList, setTahunAjaranList] = useState([])
   const [semesterList, setSemesterList] = useState([])
   const [loadingOptions, setLoadingOptions] = useState(false)
 
@@ -196,13 +189,9 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
     if (isOpen) {
       setLoadingOptions(true)
       Promise.all([
-        tahunAjaranService.getAll({ per_page: 100 }),
         semesterService.getAll({ per_page: 100 }),
       ])
-        .then(([tahunRes, semesterRes]) => {
-          if (tahunRes.data) {
-            setTahunAjaranList(tahunRes.data.data || [])
-          }
+        .then(([semesterRes]) => {
           if (semesterRes.data) {
             setSemesterList(semesterRes.data.data || [])
           }
@@ -223,7 +212,7 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!formData.tanggal_mulai || !formData.tanggal_selesai || !formData.tahun_ajaran_id || !formData.semester_id) {
+    if (!formData.tanggal_mulai || !formData.tanggal_selesai || !formData.semester_id) {
       showError('Semua field wajib diisi')
       return
     }
@@ -233,7 +222,6 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
     }
     onSubmit({
       ...formData,
-      tahun_ajaran_id: parseInt(formData.tahun_ajaran_id),
       semester_id: parseInt(formData.semester_id),
     })
   }
@@ -281,27 +269,6 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
               required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Tahun Ajaran <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="tahun_ajaran_id"
-              value={formData.tahun_ajaran_id}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
-              required
-              disabled={loadingOptions}
-            >
-              <option value="">-- Pilih Tahun Ajaran --</option>
-              {tahunAjaranList.map((ta) => (
-                <option key={ta.id} value={ta.id}>
-                  {ta.nama || ta.kode || `Tahun Ajaran ${ta.id}`}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div>
@@ -427,27 +394,24 @@ const KalenderHarianList = () => {
     setCurrentMonth(today.getMonth())
   }, [])
 
-  // ── Toggle handler (same pattern as original) ──────────────────────────
-  const handleToggle = useCallback(async (record, field) => {
-    const newValue = !record[field]
-    const { error } = await kalenderHarianService.update(record.id, { [field]: newValue })
+  // ── Toggle handler: set status value ──────────────────────────────────
+  const handleToggle = useCallback(async (record, statusValue) => {
+    const { error } = await kalenderHarianService.update(record.id, { status: statusValue })
     if (!error) {
-      showSuccess(`${field.replace('is_', '').replace(/^\w/, (c) => c.toUpperCase())} berhasil diubah`)
-      // Optimistic local update
+      showSuccess('Status berhasil diubah')
       setData((prev) =>
         prev.map((item) =>
-          item.id === record.id ? { ...item, [field]: newValue } : item
+          item.id === record.id ? { ...item, status: statusValue } : item
         )
       )
-      // Also update popover data if it's the same record
       setPopover((prev) => {
         if (prev.open && prev.data?.id === record.id) {
-          return { ...prev, data: { ...prev.data, [field]: newValue } }
+          return { ...prev, data: { ...prev.data, status: statusValue } }
         }
         return prev
       })
     } else {
-      showError(`Gagal mengubah ${field.replace('is_', '')}`)
+      showError('Gagal mengubah status')
     }
   }, [])
 
@@ -481,12 +445,12 @@ const KalenderHarianList = () => {
     })
   }, [dayDataMap])
 
-  // ── Get cell background class ──────────────────────────────────────────
+  // ── Get cell background class based on status ──────────────────────────
   const getCellBg = useCallback((dayData) => {
     if (!dayData) return 'bg-gray-50 dark:bg-gray-800/50'
-    if (dayData.is_libur) return 'bg-red-50 dark:bg-red-900/20'
-    if (dayData.is_efektif) return 'bg-green-50 dark:bg-green-900/20'
-    if (dayData.is_operasional) return 'bg-blue-50 dark:bg-blue-900/20'
+    if (dayData.status === 0) return 'bg-red-50 dark:bg-red-900/20'
+    if (dayData.status === 1) return 'bg-green-50 dark:bg-green-900/20'
+    if (dayData.status === 2) return 'bg-blue-50 dark:bg-blue-900/20'
     return 'bg-gray-50 dark:bg-gray-800/50'
   }, [])
 
@@ -505,15 +469,15 @@ const KalenderHarianList = () => {
 
   // ── Summary stats ──────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    let operasional = 0
-    let libur = 0
-    let efektif = 0
+    let aktif = 0
+    let cancelled = 0
+    let completed = 0
     data.forEach((item) => {
-      if (item.is_operasional) operasional++
-      if (item.is_libur) libur++
-      if (item.is_efektif) efektif++
+      if (item.status === 1) aktif++
+      if (item.status === 0) cancelled++
+      if (item.status === 2) completed++
     })
-    return { operasional, libur, efektif, total: data.length }
+    return { aktif, cancelled, completed, total: data.length }
   }, [data])
 
   return (
@@ -523,7 +487,7 @@ const KalenderHarianList = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kalender Harian</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Kelola status harian: operasional, libur, dan efektif
+            Kelola status harian kalender
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -572,15 +536,15 @@ const KalenderHarianList = () => {
           <div className="flex items-center gap-4 text-sm">
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="text-gray-600 dark:text-gray-400">Operasional: {stats.operasional}</span>
+              <span className="text-gray-600 dark:text-gray-400">Aktif: {stats.aktif}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-red-500" />
-              <span className="text-gray-600 dark:text-gray-400">Libur: {stats.libur}</span>
+              <span className="text-gray-600 dark:text-gray-400">Cancelled: {stats.cancelled}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-blue-500" />
-              <span className="text-gray-600 dark:text-gray-400">Efektif: {stats.efektif}</span>
+              <span className="text-gray-600 dark:text-gray-400">Completed: {stats.completed}</span>
             </span>
           </div>
         </div>
@@ -666,18 +630,14 @@ const KalenderHarianList = () => {
                         {dayNum}
                       </span>
 
-                      {/* Dot indicators */}
+                      {/* Dot indicator based on status */}
                       {hasData && (
                         <div className="flex items-center gap-1 mt-auto">
-                          {dayData.is_operasional && (
-                            <span className="w-2 h-2 rounded-full bg-green-500" title="Operasional" />
-                          )}
-                          {dayData.is_libur && (
-                            <span className="w-2 h-2 rounded-full bg-red-500" title="Libur" />
-                          )}
-                          {dayData.is_efektif && (
-                            <span className="w-2 h-2 rounded-full bg-blue-500" title="Efektif" />
-                          )}
+                          <span className={`w-2 h-2 rounded-full ${
+                            dayData.status === 0 ? 'bg-red-500' :
+                            dayData.status === 1 ? 'bg-green-500' :
+                            dayData.status === 2 ? 'bg-blue-500' : 'bg-gray-400'
+                          }`} />
                         </div>
                       )}
                     </button>
@@ -696,31 +656,19 @@ const KalenderHarianList = () => {
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             <div className="flex items-center gap-2">
               <div className="w-6 h-4 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Libur</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">Cancelled</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-4 rounded bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Efektif</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">Aktif</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-4 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Operasional</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">Completed</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-4 rounded bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" />
               <span className="text-xs text-gray-600 dark:text-gray-400">Tidak ada data</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Dot Operasional</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Dot Libur</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Dot Efektif</span>
             </div>
           </div>
         </div>
