@@ -5,6 +5,20 @@
     <link rel="icon" type="image/png" href="/logo-akademihub.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AkademiHub</title>
+    <!-- Firebase Messaging Service Worker Registration -->
+    <script type="module">
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then((registration) => {
+              console.log('Firebase SW registered:', registration.scope)
+            })
+            .catch((error) => {
+              console.warn('Firebase SW registration failed:', error)
+            })
+        })
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
