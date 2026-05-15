@@ -177,7 +177,7 @@ const PembayaranSppList = () => {
   const handleBayarOnline = useCallback(async (data) => {
     const namaBulan = data.nama_bulan || `Bulan ${data.bulan}`
     const result = await Swal.fire({
-      title: 'Bayar Online via Winpay',
+      title: 'Bayar Online via Midtrans',
       html: `Buat link pembayaran untuk <strong>${namaBulan} ${data.tahun}</strong>?`,
       icon: 'question',
       showCancelButton: true,

@@ -87,9 +87,9 @@ export const pembayaranSppService = {
   },
 
   /**
-   * Inisiasi pembayaran online via Winpay Checkout Page.
+   * Inisiasi pembayaran online via Midtrans SNAP.
    * @param {Object} data - { mst_siswa_id, mst_tarif_spp_id, bulan, tahun }
-   * @returns {Promise<{pembayaran_id, checkout_url, winpay_ref}>}
+   * @returns {Promise<{pembayaran_id, checkout_url, midtrans_order_id}>}
    */
   bayarOnline: async (data) => {
     return await apiService.post(`${PEMBAYARAN_BASE}/bayar-online`, data)
