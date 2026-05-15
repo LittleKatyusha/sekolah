@@ -281,7 +281,7 @@ export const tesMinatBakatResources = {
     ],
     summary: (record) => ({
       title: record.nama_tes || 'Tes Minat dan Bakat',
-      subtitle: record.tipe_tes ? (JENIS_TES_MAP[record.tipe_tes] || 'Tipe tidak diketahui') : 'Tanpa tipe tes',
+      subtitle: record.tipe_tes ? (JENIS_TES_MAP[record.tipe_tes]?.label || 'Tipe tidak diketahui') : 'Tanpa tipe tes',
       badge: renderOptionBadge(record.status, STATUS_TES_MAP),
     }),
     getDeleteLabel: (record) => `tes "${record.nama_tes || record.id}"`,
