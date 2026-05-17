@@ -34,7 +34,10 @@ const ActionsMenu = ({
   const showEdit = onEdit && (editPermission ? hasPermission(editPermission) : true)
   const showDelete = onDelete && (deletePermission ? hasPermission(deletePermission) : true)
 
-  // Determine if menu should render at all
+  // Determine if at least one action callback was provided (button should always render)
+  const hasAnyAction = !!(onDetail || onEdit || onDelete || resolvedExtraActions.length > 0)
+  
+  // Determine if at least one menu item is visible after permission filtering
   const hasVisibleActions = showDetail || filteredExtraActions.length > 0 || showEdit || showDelete
 
   const handleAction = (action) => {
@@ -47,10 +50,25 @@ const ActionsMenu = ({
 
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 192
-      })
+      const menuWidth = 192
+      const menuHeight = 200
+
+      let top = rect.bottom
+      let left = rect.right - menuWidth
+
+      // Flip above button if menu overflows bottom viewport
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight
+      }
+
+      // Clamp left to viewport
+      if (left < 0) {
+        left = 8
+      } else if (left + menuWidth > window.innerWidth) {
+        left = window.innerWidth - menuWidth - 8
+      }
+
+      setPosition({ top, left })
     }
 
     setIsOpen(!isOpen)
@@ -74,7 +92,7 @@ const ActionsMenu = ({
 
   return (
     <div className="relative">
-      {hasVisibleActions && (
+      {hasAnyAction && (
         <button
           ref={buttonRef}
           onClick={handleButtonClick}
