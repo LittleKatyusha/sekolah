@@ -75,7 +75,8 @@ const GuruMapelForm = () => {
     return []
   }, [])
 
-  const handleSelectChange = (name, value) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value ?? '' }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }))
   }
@@ -146,7 +147,7 @@ const GuruMapelForm = () => {
                 <SearchableSelect
                   name="mst_guru_id"
                   value={formData.mst_guru_id}
-                  onChange={(val) => handleSelectChange('mst_guru_id', val)}
+                  onChange={handleChange}
                   options={selectedGuruOption ? [selectedGuruOption] : []}
                   loadOptions={searchGuruOptions}
                   placeholder="Pilih Guru"
@@ -166,7 +167,7 @@ const GuruMapelForm = () => {
                 <SearchableSelect
                   name="mst_mapel_id"
                   value={formData.mst_mapel_id}
-                  onChange={(val) => handleSelectChange('mst_mapel_id', val)}
+                  onChange={handleChange}
                   options={selectedMapelOption ? [selectedMapelOption] : []}
                   loadOptions={searchMapelOptions}
                   placeholder="Pilih Mata Pelajaran"

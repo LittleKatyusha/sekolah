@@ -9,6 +9,16 @@ import { waliService } from '../services/waliService';
 import referenceService from '../../../services/referenceService';
 import { showSuccess, showError } from '../../../utils/sweetalert';
 import { usePageTitle } from '../../../hooks/usePageTitle';
+import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils';
+
+const mapReferenceOptions = (response) => {
+  if (!response.data?.success) return [];
+
+  return response.data.data.map((item) => ({
+    value: String(item.kode),
+    label: item.nama,
+  }));
+};
 
 const WaliForm = () => {
   const { id } = useParams();
@@ -40,11 +50,16 @@ const WaliForm = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    fetchDropdownOptions();
-    if (isEditMode) {
-      fetchWali();
-    }
-  }, [id]);
+    const init = async () => {
+      const options = await fetchDropdownOptions();
+      if (isEditMode) {
+        await fetchWali(options);
+      }
+    };
+
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEditMode]);
 
   const fetchDropdownOptions = async () => {
     setFetchingOptions(true);
@@ -56,45 +71,30 @@ const WaliForm = () => {
       referenceService.getReferencesByCategory('pekerjaan'),
     ]);
 
-    // Transform API response to options format (kode as value, nama as label)
-    if (jenisKelaminRes.data?.success) {
-      setJenisKelaminOptions(
-        jenisKelaminRes.data.data.map((item) => ({
-          value: item.kode,
-          label: item.nama,
-        }))
-      );
-      // Set default value if options exist and formData is empty
-      if (jenisKelaminRes.data.data.length > 0 && !formData.jenis_kelamin) {
-        setFormData((prev) => ({
-          ...prev,
-          jenis_kelamin: Number(jenisKelaminRes.data.data[0].kode),
-        }));
-      }
-    }
+    const nextJenisKelaminOptions = mapReferenceOptions(jenisKelaminRes);
+    const nextPendidikanOptions = mapReferenceOptions(pendidikanRes);
+    const nextPekerjaanOptions = mapReferenceOptions(pekerjaanRes);
 
-    if (pendidikanRes.data?.success) {
-      setPendidikanOptions(
-        pendidikanRes.data.data.map((item) => ({
-          value: item.kode,
-          label: item.nama,
-        }))
-      );
-    }
+    setJenisKelaminOptions(nextJenisKelaminOptions);
+    setPendidikanOptions(nextPendidikanOptions);
+    setPekerjaanOptions(nextPekerjaanOptions);
 
-    if (pekerjaanRes.data?.success) {
-      setPekerjaanOptions(
-        pekerjaanRes.data.data.map((item) => ({
-          value: item.kode,
-          label: item.nama,
-        }))
-      );
+    if (nextJenisKelaminOptions.length > 0 && !formData.jenis_kelamin) {
+      setFormData((prev) => ({
+        ...prev,
+        jenis_kelamin: nextJenisKelaminOptions[0].value,
+      }));
     }
 
     setFetchingOptions(false);
+    return {
+      jenisKelaminOptions: nextJenisKelaminOptions,
+      pendidikanOptions: nextPendidikanOptions,
+      pekerjaanOptions: nextPekerjaanOptions,
+    };
   };
 
-  const fetchWali = async () => {
+  const fetchWali = async (options = { jenisKelaminOptions, pendidikanOptions, pekerjaanOptions }) => {
     setFetchingData(true);
     const { data, error } = await waliService.getWaliById(id);
     if (data) {
@@ -102,12 +102,11 @@ const WaliForm = () => {
       setFormData({
         nama: wali.nama || '',
         nik: wali.nik || '',
-        // API returns integer IDs for these fields
-        jenis_kelamin: wali.jenis_kelamin || '',
+        jenis_kelamin: normalizeReferenceCode(wali.jenis_kelamin, options.jenisKelaminOptions),
         no_hp: wali.no_hp || '',
         alamat: wali.alamat || '',
-        pendidikan_terakhir: wali.pendidikan_terakhir || '',
-        pekerjaan: wali.pekerjaan || '',
+        pendidikan_terakhir: normalizeReferenceCode(wali.pendidikan_terakhir, options.pendidikanOptions),
+        pekerjaan: normalizeReferenceCode(wali.pekerjaan, options.pekerjaanOptions),
         penghasilan: wali.penghasilan || '',
       });
     } else {
@@ -119,10 +118,7 @@ const WaliForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // Convert select values to integers for reference fields
-    const fieldsToConvert = ['jenis_kelamin', 'pendidikan_terakhir', 'pekerjaan'];
-    const newValue = fieldsToConvert.includes(name) ? (value ? Number(value) : '') : value;
-    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -145,11 +141,18 @@ const WaliForm = () => {
 
     setLoading(true);
 
+    const submitData = {
+      ...formData,
+      jenis_kelamin: safeParseInt(formData.jenis_kelamin),
+      pendidikan_terakhir: formData.pendidikan_terakhir ? safeParseInt(formData.pendidikan_terakhir) : null,
+      pekerjaan: formData.pekerjaan ? safeParseInt(formData.pekerjaan) : null,
+    };
+
     let result;
     if (isEditMode) {
-      result = await waliService.updateWali(id, formData);
+      result = await waliService.updateWali(id, submitData);
     } else {
-      result = await waliService.createWali(formData);
+      result = await waliService.createWali(submitData);
     }
 
     const { error } = result;

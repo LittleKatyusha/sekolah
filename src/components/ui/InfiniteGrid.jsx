@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef, useEffect } from 'react'
+import { useMemo, useCallback, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { AgGridReact } from '@ag-grid-community/react'
 import '../../utils/agGridModules'
 import { apiService } from '../../utils/api'
@@ -57,7 +57,7 @@ const normalizeStaticParams = (value) => {
  * @param {boolean} [props.rowSelection=false] - Enable row selection
  * @param {Object} [props.restProps] - Additional props passed to AgGridReact
  */
-const InfiniteGrid = ({
+const InfiniteGrid = forwardRef(({
   endpoint,
   columnDefs,
   defaultColDef = {},
@@ -76,7 +76,7 @@ const InfiniteGrid = ({
   rowSelection = false,
   requestMode = 'ag-grid',
   ...restProps
-}) => {
+}, ref) => {
   const gridRef = useRef(null)
 
   const staticParamsKey = useMemo(
@@ -164,12 +164,13 @@ const InfiniteGrid = ({
     }
   }, [])
 
-  // Expose refresh method via ref
-  useEffect(() => {
-    if (gridRef.current) {
-      gridRef.current.refreshGrid = refreshGrid
+  // Expose refresh method via ref using useImperativeHandle
+  useImperativeHandle(ref, () => ({
+    refreshGrid,
+    get api() {
+      return gridRef.current?.api
     }
-  }, [refreshGrid])
+  }), [refreshGrid])
 
   return (
     <div className={themeClass} style={{ height }}>
@@ -194,9 +195,8 @@ const InfiniteGrid = ({
       />
     </div>
   )
-}
+})
 
-// Add refreshGrid method to the component
 InfiniteGrid.displayName = 'InfiniteGrid'
 
 export default InfiniteGrid

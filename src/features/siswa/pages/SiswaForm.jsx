@@ -51,7 +51,7 @@ const SiswaForm = () => {
     asal_sekolah: '',
     anak_ke: '',
     mst_kelas_id: '',
-    status: 'Aktif',
+    status: '1',
     foto: ''
   })
 
@@ -91,7 +91,7 @@ const SiswaForm = () => {
           asal_sekolah: siswa.asal_sekolah || '',
           anak_ke: siswa.anak_ke || '',
           mst_kelas_id: siswa.kelas?.id || '',
-          status: siswa.status || 'Aktif',
+          status: normalizeReferenceCode(siswa.status, statusSiswaOptions) || '1',
           foto: siswa.foto || ''
         })
       } else {
@@ -111,7 +111,7 @@ const SiswaForm = () => {
       mounted = false
       controller.abort()
     }
-  }, [id, isEditMode, navigate])
+  }, [agamaOptions, id, isEditMode, jenisKelaminOptions, navigate, statusSiswaOptions])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -150,6 +150,7 @@ const SiswaForm = () => {
       // kirim sebagai kode numerik agar konsisten dengan sys_references
       jenis_kelamin: safeParseInt(formData.jenis_kelamin),
       agama: formData.agama ? safeParseInt(formData.agama) : null,
+      status: formData.status ? safeParseInt(formData.status) : null,
     
       nisn: formData.nisn || null,
       nik: formData.nik || null,
