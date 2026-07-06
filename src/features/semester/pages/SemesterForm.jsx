@@ -15,6 +15,11 @@ const STATUS_OPTIONS = [
   { value: '0', label: 'Nonaktif' },
 ]
 
+const formatDateForInput = (dateStr) => {
+  if (!dateStr) return ''
+  return String(dateStr).split('T')[0]
+}
+
 const SemesterForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -60,8 +65,8 @@ const SemesterForm = () => {
       setFormData({
         tahun_ajaran_id: item.tahun_ajaran_id ? String(item.tahun_ajaran_id) : (item.tahun_ajaran?.id ? String(item.tahun_ajaran.id) : ''),
         nama: item.nama || '',
-        tanggal_mulai: item.tanggal_mulai || '',
-        tanggal_selesai: item.tanggal_selesai || '',
+        tanggal_mulai: formatDateForInput(item.tanggal_mulai),
+        tanggal_selesai: formatDateForInput(item.tanggal_selesai),
         is_active: item.is_active !== null && item.is_active !== undefined ? String(Number(item.is_active)) : '0',
       })
     } else {

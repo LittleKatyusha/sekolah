@@ -420,7 +420,7 @@ const KelasForm = () => {
             <Button type="button" variant="secondary" onClick={() => navigate('/kelas')}>
               Batal
             </Button>
-            <PermissionGuard permission={isEditMode ? 'kelas.edit' : 'kelas.create'}>
+            <PermissionGuard permission={isEditMode ? 'kelas.update' : 'kelas.create'}>
               <Button type="submit" disabled={loading}>
                 <Save size={18} className="mr-2" />
                 {loading ? 'Menyimpan...' : 'Simpan'}
