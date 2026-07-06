@@ -19,6 +19,11 @@ const GOLONGAN_DARAH_OPTIONS = [
   { value: 'O', label: 'O' }
 ]
 
+const normalizeGolonganDarah = (value) => {
+  const normalized = String(value || '').trim().toUpperCase()
+  return GOLONGAN_DARAH_OPTIONS.some((option) => option.value === normalized) ? normalized : ''
+}
+
 const SiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -84,7 +89,7 @@ const SiswaForm = () => {
           alamat: siswa.alamat || '',
           email: siswa.email || '',
           no_hp: siswa.no_hp || '',
-          golongan_darah: siswa.golongan_darah || '',
+          golongan_darah: normalizeGolonganDarah(siswa.golongan_darah),
           tinggi_badan: siswa.tinggi_badan || '',
           berat_badan: siswa.berat_badan || '',
           tanggal_masuk: siswa.tanggal_masuk || '',
@@ -158,7 +163,7 @@ const SiswaForm = () => {
       alamat: formData.alamat || null,
       email: formData.email || null,
       no_hp: formData.no_hp || null,
-      golongan_darah: formData.golongan_darah || null,
+      golongan_darah: normalizeGolonganDarah(formData.golongan_darah) || null,
       tinggi_badan: formData.tinggi_badan ? Number(formData.tinggi_badan) : null,
       berat_badan: formData.berat_badan ? Number(formData.berat_badan) : null,
       tanggal_masuk: formData.tanggal_masuk || null,

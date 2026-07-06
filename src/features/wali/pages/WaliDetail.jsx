@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Phone, MapPin, Briefcase, Calendar, BookOpen, Shield, Wallet } from 'lucide-react'
+import { ArrowLeft, User, Users, Phone, MapPin, Briefcase, BookOpen, Wallet } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { waliService } from '../services/waliService'
@@ -109,10 +109,6 @@ const WaliDetail = () => {
                   <span className="text-gray-500 dark:text-gray-400">Pendidikan</span>
                   <span className="font-medium text-gray-900 dark:text-white">{getPendidikanLabel(wali.pendidikan_terakhir)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Tanggal Lahir</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{formatDate(wali.tanggal_lahir)}</span>
-                </div>
               </div>
             </div>
           </Card>
@@ -156,16 +152,6 @@ const WaliDetail = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar size={20} className="text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Tanggal Lahir</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(wali.tanggal_lahir)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Briefcase size={20} className="text-green-600" />
                   </div>
@@ -186,16 +172,6 @@ const WaliDetail = () => {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Shield size={20} className="text-cyan-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Agama</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{wali.agama || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Wallet size={20} className="text-emerald-600" />
                   </div>
@@ -214,6 +190,31 @@ const WaliDetail = () => {
                     <p className="font-medium text-gray-900 dark:text-white">{wali.alamat || '-'}</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">Siswa Terhubung</h4>
+                {wali.siswa?.length ? (
+                  <div className="space-y-3">
+                    {wali.siswa.map((siswa) => (
+                      <div
+                        key={siswa.id}
+                        className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+                      >
+                        <div className="w-10 h-10 bg-sky-50 dark:bg-sky-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users size={20} className="text-sky-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{siswa.nama}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">NIS: {siswa.nis || '-'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Hubungan: {siswa.hubungan || '-'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Belum ada siswa yang terhubung.</p>
+                )}
               </div>
 
               {/* User Account Info */}
