@@ -116,6 +116,7 @@ const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
+const Reports = lazy(() => import('./pages/Reports'))
 const SiswaInsightPage = lazy(() => import('./features/siswa/pages/SiswaInsightPage'))
 const NotifikasiPage = lazy(() => import('./features/notifikasi/pages/NotifikasiPage'))
 const EWS = lazy(() => import('./pages/EWS'))
@@ -393,6 +394,9 @@ function App() {
 
               {/* Statistik */}
               <Route path="/statistik/*" element={<Statistik />} />
+
+              {/* Laporan (Point 5) */}
+              <Route path="/laporan" element={<Reports />} />
 
               {/* SPK */}
               <Route path="/spk/*" element={<Spk />} />
