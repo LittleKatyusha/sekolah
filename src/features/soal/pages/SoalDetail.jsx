@@ -227,12 +227,13 @@ const SoalDetail = () => {
                 </div>
               </div>
               
-              <div className="prose prose-sm max-w-none dark:prose-invert mb-8">
-                <p className="text-gray-900 dark:text-white font-medium">{soal.pertanyaan}</p>
-              </div>
+              <div
+                className="prose prose-sm max-w-none dark:prose-invert mb-8 text-gray-900 dark:text-white font-medium"
+                dangerouslySetInnerHTML={{ __html: soal.pertanyaan || '' }}
+              />
               
               {/* Render options only for multiple choice */}
-              {soal.tipe === 1 && soal.opsi && soal.opsi.length > 0 && (
+              {(soal.tipe === 1 || soal.tipe === '1') && soal.opsi?.length > 0 && (
                 <div className="mt-8">
                   <div className="flex items-center gap-3 mb-4">
                     <List size={20} className="text-gray-500 dark:text-gray-400" />
@@ -240,26 +241,28 @@ const SoalDetail = () => {
                   </div>
                   
                   <div className="space-y-3">
-                    {soal.opsi.map((opsi, index) => (
+                    {soal.opsi.map((opsi, index) => {
+                      const isJawaban = opsi.is_jawaban === true || opsi.is_jawaban === 1 || opsi.is_jawaban === '1'
+                      return (
                       <div 
                         key={opsi.id} 
                         className={`p-4 rounded-lg border ${
-                          opsi.is_benar
+                          isJawaban
                             ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
                             : 'border-gray-200 dark:border-gray-700'
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-                            opsi.is_benar
+                            isJawaban
                               ? 'bg-green-500 text-white' 
                               : 'bg-gray-200 dark:bg-gray-700'
                           }`}>
                             {String.fromCharCode(65 + index)}
                           </div>
                           <div className="flex-1">
-                            <p className="text-gray-900 dark:text-white">{opsi.opsi_teks}</p>
-                            {opsi.is_benar && (
+                            <p className="text-gray-900 dark:text-white">{opsi.teks_opsi}</p>
+                            {isJawaban && (
                               <div className="mt-2 flex items-center text-green-600 dark:text-green-400 text-sm">
                                 <CheckCircle size={16} className="mr-1" />
                                 Jawaban Benar
@@ -268,7 +271,8 @@ const SoalDetail = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}

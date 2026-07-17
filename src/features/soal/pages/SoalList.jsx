@@ -177,7 +177,10 @@ const SoalList = () => {
       flex: 2,
       minWidth: 200,
       cellRenderer: (params) => {
-        const pertanyaan = params.value || ''
+        const raw = params.value || ''
+        const tmp = document.createElement('div')
+        tmp.innerHTML = raw
+        const pertanyaan = (tmp.textContent || tmp.innerText || '').trim()
         return pertanyaan.length > 100
           ? `${pertanyaan.substring(0, 100)}...`
           : pertanyaan
