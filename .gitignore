@@ -42,3 +42,8 @@ nginx/
 compose.yaml
 skills-lock.json
 .impeccable.md
+
+# Local docker / infra (do not commit)
+docker/pgbouncer/
+docker/php/
+/tests/
