@@ -76,11 +76,21 @@ const RankingForm = () => {
     if (data) {
       const ranking = data.data
       setFormData({
-        mst_siswa_id: ranking.siswa?.id ? String(ranking.siswa.id) : (ranking.mst_siswa_id ? String(ranking.mst_siswa_id) : ''),
-        mst_kelas_id: ranking.kelas?.id ? String(ranking.kelas.id) : (ranking.mst_kelas_id ? String(ranking.mst_kelas_id) : ''),
-        semester: ranking.semester ? String(ranking.semester) : '',
-        rata_rata_nilai: ranking.rata_rata_nilai !== null && ranking.rata_rata_nilai !== undefined ? String(ranking.rata_rata_nilai) : '',
-        peringkat: ranking.peringkat !== null && ranking.peringkat !== undefined ? String(ranking.peringkat) : ''
+        mst_siswa_id: ranking.siswa?.id
+          ? String(ranking.siswa.id)
+          : (ranking.mst_siswa_id ? String(ranking.mst_siswa_id) : ''),
+        mst_kelas_id: ranking.kelas?.id
+          ? String(ranking.kelas.id)
+          : (ranking.mst_kelas_id ? String(ranking.mst_kelas_id) : ''),
+        semester: ranking.semester !== null && ranking.semester !== undefined
+          ? String(ranking.semester)
+          : '',
+        rata_rata_nilai: ranking.rata_rata_nilai !== null && ranking.rata_rata_nilai !== undefined
+          ? String(ranking.rata_rata_nilai)
+          : '',
+        peringkat: ranking.peringkat !== null && ranking.peringkat !== undefined
+          ? String(ranking.peringkat)
+          : ''
       })
     } else {
       showError('Gagal mengambil data ranking')

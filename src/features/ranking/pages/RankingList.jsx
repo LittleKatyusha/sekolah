@@ -138,7 +138,8 @@ const RankingList = () => {
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
-    const label = `Ranking "${data.siswa?.nama || ''} - Peringkat ${data.peringkat || ''}"`
+    const siswaNama = typeof data.siswa === 'object' ? (data.siswa?.nama || '') : (data.siswa || '')
+    const label = `Ranking "${siswaNama} - Peringkat ${data.peringkat || ''}"`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await rankingService.delete(data.id)
@@ -221,16 +222,21 @@ const RankingList = () => {
       filter: true,
       flex: 1,
       minWidth: 120,
-      valueGetter: (params) => params.data?.kelas || '-'
+      valueGetter: (params) => {
+        const kelas = params.data?.kelas
+        if (!kelas) return '-'
+        return typeof kelas === 'object' ? (kelas.nama_kelas || '-') : kelas
+      }
     },
     {
-      field: 'semester',
+      field: 'semester_nama',
       backendField: 'rapor.semester',
       headerName: 'Semester',
       sortable: true,
       filter: false,
       width: 120,
       minWidth: 100,
+      valueGetter: (params) => params.data?.semester_nama || params.data?.semester || '-',
       cellRenderer: (params) => params.value || '-'
     },
     {

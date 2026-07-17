@@ -31,7 +31,8 @@ const RankingDetail = () => {
   }
 
   const handleDelete = async () => {
-    const label = `Ranking "${ranking.siswa?.nama || ''} - Peringkat ${ranking.peringkat || ''}"`
+    const siswaNama = typeof ranking.siswa === 'object' ? (ranking.siswa?.nama || '') : (ranking.siswa || '')
+    const label = `Ranking "${siswaNama} - Peringkat ${ranking.peringkat || ''}"`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await rankingService.delete(ranking.id)
@@ -97,7 +98,7 @@ const RankingDetail = () => {
                 <Trophy size={48} className="text-yellow-500" />
               </div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                {ranking.siswa?.nama || '-'}
+                {typeof ranking.siswa === 'object' ? (ranking.siswa?.nama || '-') : (ranking.siswa || '-')}
               </h2>
               <div className="flex justify-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
@@ -136,9 +137,13 @@ const RankingDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Siswa</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{ranking.siswa?.nama || '-'}</p>
-                    {ranking.siswa?.nis && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">NIS: {ranking.siswa.nis}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {typeof ranking.siswa === 'object' ? (ranking.siswa?.nama || '-') : (ranking.siswa || '-')}
+                    </p>
+                    {(ranking.siswa?.nis || ranking.nis) && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        NIS: {ranking.siswa?.nis || ranking.nis}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -150,7 +155,9 @@ const RankingDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Kelas</p>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {ranking.kelas?.nama_kelas || '-'}
+                      {typeof ranking.kelas === 'object'
+                        ? (ranking.kelas?.nama_kelas || '-')
+                        : (ranking.kelas || '-')}
                     </p>
                   </div>
                 </div>
@@ -161,7 +168,9 @@ const RankingDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Semester</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{ranking.semester || '-'}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {ranking.semester_nama || ranking.semester || '-'}
+                    </p>
                   </div>
                 </div>
 
