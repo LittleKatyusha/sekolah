@@ -15,11 +15,12 @@ const STATUS_MAP = {
 }
 
 const SUBMISSION_STATUS_MAP = {
-  sudah: { label: 'Sudah Dikumpulkan', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  belum: { label: 'Belum Dikumpulkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  'tepat waktu': { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  1: { label: 'Sudah Dikumpulkan', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  0: { label: 'Belum Dikumpulkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
 }
 
 const TugasDetail = () => {
@@ -319,10 +320,17 @@ const TugasDetail = () => {
                         {submission.siswa?.nama || submission.siswa?.name || '-'}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                        {formatDateTime(submission.waktu_kumpl)}
+                        {formatDateTime(submission.waktu_kumpul || submission.waktu_kumpl)}
                       </td>
                       <td className="px-4 py-3">
-                        {getSubmissionStatusBadge(submission.status_kumpl)}
+                        {getSubmissionStatusBadge(
+                          submission.status_label
+                          ?? submission.status_kumpul_label
+                          ?? submission.status_kumpl_label
+                          ?? submission.status
+                          ?? submission.status_kumpul
+                          ?? submission.status_kumpl
+                        )}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                         {submission.nilai !== null && submission.nilai !== undefined ? submission.nilai : '-'}

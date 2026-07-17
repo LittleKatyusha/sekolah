@@ -207,18 +207,29 @@ const TugasSiswaList = () => {
       cellRenderer: (params) => formatDateTime(params.value)
     },
     {
-      field: 'status_kumpl_label',
-      backendField: 'status_kumpul',
+      field: 'status_label',
+      backendField: 'status',
       headerName: 'Status',
       sortable: true,
       filter: false,
       width: 160,
       minWidth: 140,
+      valueGetter: (params) => {
+        const row = params.data
+        if (!row) return null
+        return row.status_label
+          ?? row.status_kumpul_label
+          ?? row.status_kumpl_label
+          ?? (row.status !== null && row.status !== undefined ? row.status : null)
+          ?? row.status_kumpul
+          ?? row.status_kumpl
+          ?? null
+      },
       cellRenderer: (params) => {
         const label = params.value
-        if (!label) return '-'
+        if (label === null || label === undefined || label === '') return '-'
         const statusKey = String(label).toLowerCase()
-        const statusInfo = STATUS_MAP[statusKey] || { label: String(label), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
+        const statusInfo = STATUS_MAP[label] || STATUS_MAP[statusKey] || { label: String(label), bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg}`}>
             {statusInfo.label}

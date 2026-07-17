@@ -91,6 +91,10 @@ const TUGAS_SISWA_LIST_URL = '/akademik/tugas-siswa/'
 export const tugasSiswaService = {
   normalizePayload: (data = {}) => ({
     ...data,
+    tugas_id: data.tugas_id ?? data.mst_tugas_id ?? null,
+    siswa_id: data.siswa_id ?? data.mst_siswa_id ?? null,
+    mst_tugas_id: data.mst_tugas_id ?? data.tugas_id ?? null,
+    mst_siswa_id: data.mst_siswa_id ?? data.siswa_id ?? null,
     jawaban_teks: data.jawaban_teks ?? data.jawaban ?? null,
     file_siswa: data.file_siswa ?? data.file_path ?? null,
     waktu_kumpul: data.waktu_kumpul ?? data.waktu_kumpl ?? null,

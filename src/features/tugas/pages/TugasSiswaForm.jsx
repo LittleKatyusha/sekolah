@@ -85,7 +85,10 @@ const TugasSiswaForm = () => {
         jawaban_teks: ts.jawaban_teks || ts.jawaban || '',
         file_siswa: ts.file_siswa || ts.file_path || '',
         waktu_kumpul: waktuKumpl,
-        status_kumpul: ts.status_kumpul !== null && ts.status_kumpul !== undefined ? String(ts.status_kumpul) : (ts.status_kumpl !== null && ts.status_kumpl !== undefined ? String(ts.status_kumpl) : ''),
+        status_kumpul: (() => {
+          const status = ts.status ?? ts.status_kumpul ?? ts.status_kumpl
+          return status !== null && status !== undefined ? String(status) : ''
+        })(),
         nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
         catatan_guru: ts.catatan_guru || ts.catatan || ''
       })
@@ -147,9 +150,14 @@ const TugasSiswaForm = () => {
     } else {
       console.error(error)
       if (error.errors) {
-        setErrors(error.errors)
+        const mapped = { ...error.errors }
+        if (mapped.tugas_id && !mapped.mst_tugas_id) mapped.mst_tugas_id = mapped.tugas_id
+        if (mapped.siswa_id && !mapped.mst_siswa_id) mapped.mst_siswa_id = mapped.siswa_id
+        setErrors(mapped)
+        const firstMsg = Object.values(mapped).flat()[0]
+        if (firstMsg) showError(Array.isArray(firstMsg) ? firstMsg[0] : firstMsg)
       } else {
-        showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} tugas siswa`)
+        showError(error.message || `Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} tugas siswa`)
       }
     }
     setLoading(false)

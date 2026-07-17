@@ -183,7 +183,7 @@ const TugasSiswaDetail = () => {
                 {tugasSiswa.siswa?.nis ? `NIS: ${tugasSiswa.siswa.nis}` : ''}
               </p>
               <div className="flex justify-center gap-2 mb-2">
-                {getStatusBadge(tugasSiswa.status_kumpul_label || tugasSiswa.status_kumpl_label || tugasSiswa.status_kumpul || tugasSiswa.status_kumpl)}
+                {getStatusBadge(tugasSiswa.status_label ?? tugasSiswa.status_kumpul_label ?? tugasSiswa.status_kumpl_label ?? tugasSiswa.status ?? tugasSiswa.status_kumpul ?? tugasSiswa.status_kumpl)}
               </div>
 
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-left space-y-3">
@@ -261,7 +261,7 @@ const TugasSiswaDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Status Kumpul</p>
-                    <div className="mt-1">{getStatusBadge(tugasSiswa.status_kumpul_label || tugasSiswa.status_kumpl_label || tugasSiswa.status_kumpul || tugasSiswa.status_kumpl)}</div>
+                    <div className="mt-1">{getStatusBadge(tugasSiswa.status_label ?? tugasSiswa.status_kumpul_label ?? tugasSiswa.status_kumpl_label ?? tugasSiswa.status ?? tugasSiswa.status_kumpul ?? tugasSiswa.status_kumpl)}</div>
                   </div>
                 </div>
 

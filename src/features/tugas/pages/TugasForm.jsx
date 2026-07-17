@@ -6,7 +6,7 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { tugasService } from '../services/tugasService'
-import { guruService } from '../../guru/services/guruService'
+import { guruMapelService } from '../../guru-mapel/services/guruMapelService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -38,6 +38,8 @@ const TugasForm = () => {
   const [selectedKelasOption, setSelectedKelasOption] = useState(null)
 
   const buildGuruMapelOption = useCallback((guruMapel) => {
+    if (!guruMapel?.id) return null
+
     const guruNama = guruMapel?.guru?.nama || guruMapel?.nama_guru || 'Guru'
     const mapelNama =
       guruMapel?.mapel?.nama ||
@@ -57,44 +59,38 @@ const TugasForm = () => {
   }), [])
 
   const searchGuruMapelOptions = useCallback(async (keyword = '') => {
-    const guruResult = await guruService.getAll({
-      search: keyword || undefined,
+    const { data, error } = await guruMapelService.getGuruMapel({
+      search: keyword.trim() || undefined,
       per_page: 20
     })
 
-    const guruList = guruResult.data?.data || []
-    const options = []
-
-    for (const guru of guruList) {
-      if (Array.isArray(guru.mapels)) {
-        for (const mapel of guru.mapels) {
-          const pivotId = mapel.pivot?.id
-          if (!pivotId) continue
-
-          options.push({
-            value: String(pivotId),
-            label: `${guru.nama || 'Guru'} - ${mapel.nama || mapel.nama_mapel || 'Mapel'}`
-          })
-        }
-      }
-
-      if (Array.isArray(guru.guru_mapel)) {
-        for (const guruMapel of guru.guru_mapel) {
-          if (!guruMapel?.id) continue
-          options.push(buildGuruMapelOption({
-            ...guruMapel,
-            guru: guruMapel.guru || { nama: guru.nama }
-          }))
-        }
-      }
+    if (data?.data) {
+      return data.data
+        .map(buildGuruMapelOption)
+        .filter(Boolean)
     }
 
-    const seen = new Set()
-    return options.filter((option) => {
-      const key = String(option.value)
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
+    console.error('Failed to fetch guru mapel options:', error)
+    return []
+  }, [buildGuruMapelOption])
+
+  const hydrateSelectedGuruMapelOption = useCallback(async (guruMapelId) => {
+    if (!guruMapelId) {
+      setSelectedGuruMapelOption(null)
+      return
+    }
+
+    const { data } = await guruMapelService.getGuruMapelById(guruMapelId)
+    const option = buildGuruMapelOption(data?.data)
+
+    if (option) {
+      setSelectedGuruMapelOption(option)
+      return
+    }
+
+    setSelectedGuruMapelOption({
+      value: String(guruMapelId),
+      label: `Guru Mapel #${guruMapelId}`
     })
   }, [buildGuruMapelOption])
 
@@ -151,7 +147,10 @@ const TugasForm = () => {
       })
 
       if (tugas.guru_mapel?.id) {
-        setSelectedGuruMapelOption(buildGuruMapelOption(tugas.guru_mapel))
+        const option = buildGuruMapelOption(tugas.guru_mapel)
+        if (option) setSelectedGuruMapelOption(option)
+      } else if (guruMapelId) {
+        await hydrateSelectedGuruMapelOption(guruMapelId)
       }
 
       if (tugas.kelas?.id) {
@@ -162,13 +161,21 @@ const TugasForm = () => {
       navigate('/akademik/tugas')
     }
     setFetchingData(false)
-  }, [buildGuruMapelOption, buildKelasOption, id, navigate])
+  }, [buildGuruMapelOption, buildKelasOption, hydrateSelectedGuruMapelOption, id, navigate])
 
   useEffect(() => {
     if (isEditMode) {
       fetchTugas()
     }
   }, [fetchTugas, isEditMode])
+
+  useEffect(() => {
+    if (formData.mst_guru_mapel_id && !selectedGuruMapelOption) {
+      hydrateSelectedGuruMapelOption(formData.mst_guru_mapel_id)
+    } else if (!formData.mst_guru_mapel_id) {
+      setSelectedGuruMapelOption(null)
+    }
+  }, [formData.mst_guru_mapel_id, hydrateSelectedGuruMapelOption, selectedGuruMapelOption])
 
   useEffect(() => {
     if (formData.mst_kelas_id) {
