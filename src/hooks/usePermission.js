@@ -2,20 +2,50 @@ import { useCallback, useMemo } from 'react'
 import useAuthStore from '../store/useAuthStore'
 
 /**
+ * Flatten permissions from top-level user.permissions or nested roles[].permissions.
+ */
+const resolvePermissions = (user) => {
+  if (Array.isArray(user?.permissions) && user.permissions.length > 0) {
+    return user.permissions
+  }
+
+  if (Array.isArray(user?.roles)) {
+    return user.roles.flatMap((role) =>
+      Array.isArray(role?.permissions) ? role.permissions : []
+    )
+  }
+
+  return []
+}
+
+/**
+ * Backend seeds *.update while many UI guards still check *.edit.
+ */
+const permissionAliases = (code) => {
+  if (!code || typeof code !== 'string') return [code]
+  if (code.endsWith('.edit')) return [code, `${code.slice(0, -5)}.update`]
+  if (code.endsWith('.update')) return [code, `${code.slice(0, -7)}.edit`]
+  return [code]
+}
+
+/**
  * Check if a user object has a specific permission.
- * Admin role always has all permissions.
+ * SUPER_ADMIN always has all permissions.
  * Pure function — no `this` dependency.
  */
 const checkPermission = (user, code) => {
   if (!code) return true
-  // SUPER_ADMIN and admin always have full access
-  const role = user?.role?.toUpperCase()
-  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return true
-  const perms = user?.permissions
-  if (!Array.isArray(perms)) return false
-  return perms.some((p) =>
-    typeof p === 'string' ? p === code : p?.code === code
-  )
+  const role = user?.role?.toUpperCase?.() || user?.role
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ADMIN_SEKOLAH') return true
+
+  const perms = resolvePermissions(user)
+  if (!Array.isArray(perms) || perms.length === 0) return false
+
+  const candidates = permissionAliases(code)
+  return perms.some((p) => {
+    const permCode = typeof p === 'string' ? p : p?.code
+    return candidates.includes(permCode)
+  })
 }
 
 /**
@@ -26,7 +56,7 @@ const checkPermission = (user, code) => {
 const usePermission = () => {
   const user = useAuthStore((state) => state.user)
 
-  const permissions = useMemo(() => user?.permissions || [], [user?.permissions])
+  const permissions = useMemo(() => resolvePermissions(user), [user])
 
   const hasPermission = useCallback(
     (code) => checkPermission(user, code),
