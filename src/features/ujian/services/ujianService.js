@@ -36,13 +36,12 @@ export const ujianService = {
    * @param {number} data.mst_mapel_id - Mapel ID (required)
    * @param {number} data.mst_kelas_id - Kelas ID (required)
    * @param {number} data.jenis - Jenis ujian 1-5 (required)
-   * @param {string} data.nama - Nama ujian (required)
-   * @param {string} data.tanggal - Tanggal ujian YYYY-MM-DD (required)
-   * @param {number} data.semester - Semester 1-2 (required)
-   * @param {string} data.tahun_ajaran - Tahun ajaran (required)
-   * @param {string} [data.keterangan] - Keterangan (optional)
-   * @returns {Promise<{data: any, error: any}>}
-   */
+    * @param {string} data.nama - Nama ujian (required)
+    * @param {string} data.tanggal - Tanggal ujian YYYY-MM-DD (required)
+    * @param {number} data.semester_id - ID mst_semester (required)
+    * @param {string} [data.keterangan] - Keterangan (optional)
+    * @returns {Promise<{data: any, error: any}>}
+    */
   create: async (data) => {
     return await apiService.post(BASE_URL, data)
   },
@@ -56,8 +55,7 @@ export const ujianService = {
    * @param {number} data.jenis - Jenis ujian 1-5 (required)
    * @param {string} data.nama - Nama ujian (required)
    * @param {string} data.tanggal - Tanggal ujian YYYY-MM-DD (required)
-   * @param {number} data.semester - Semester 1-2 (required)
-   * @param {string} data.tahun_ajaran - Tahun ajaran (required)
+   * @param {number} data.semester_id - ID mst_semester (required)
    * @param {string} [data.keterangan] - Keterangan (optional)
    * @returns {Promise<{data: any, error: any}>}
    */

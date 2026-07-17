@@ -9,6 +9,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { kelasService } from '../../kelas/services/kelasService'
+import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { normalizeReferenceCode, safeParseInt } from '../../../utils/referenceUtils'
@@ -20,7 +21,6 @@ const UjianForm = () => {
   const isEditMode = !!id
 
   const { options: jenisUjianOptions } = useReferenceOptions('jenis_ujian')
-  const { options: semesterOptions } = useReferenceOptions('kategori_semester')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -31,13 +31,14 @@ const UjianForm = () => {
     jenis: '',
     nama: '',
     tanggal: '',
-    semester: '',
+    semester_id: '',
     keterangan: ''
   })
 
   const [errors, setErrors] = useState({})
   const [selectedMapelOption, setSelectedMapelOption] = useState(null)
   const [selectedKelasOption, setSelectedKelasOption] = useState(null)
+  const [semesterOptions, setSemesterOptions] = useState([])
 
   const buildMapelOption = useCallback((mapel) => ({
     value: String(mapel.id),
@@ -77,6 +78,20 @@ const UjianForm = () => {
     return []
   }, [buildKelasOption])
 
+  const fetchSemesterOptions = useCallback(async () => {
+    const { data, error } = await semesterService.getAll({ per_page: 100 })
+    if (data?.data) {
+      const list = Array.isArray(data.data) ? data.data : data.data?.data || []
+      setSemesterOptions(list.map((item) => ({
+        value: String(item.id),
+        label: item.nama || item.semester || `Semester #${item.id}`
+      })))
+      return
+    }
+    console.error('Failed to fetch semester:', error)
+    setSemesterOptions([])
+  }, [])
+
   const fetchUjian = useCallback(async () => {
     setFetchingData(true)
     const { data, error } = await ujianService.getById(id)
@@ -84,16 +99,21 @@ const UjianForm = () => {
       const ujian = data.data
       const mapelId = ujian.mst_mapel_id ? String(ujian.mst_mapel_id) : (ujian.mapel?.id ? String(ujian.mapel.id) : '')
       const kelasId = ujian.mst_kelas_id ? String(ujian.mst_kelas_id) : (ujian.kelas?.id ? String(ujian.kelas.id) : '')
+      const semesterId = ujian.semester_id
+        ? String(ujian.semester_id)
+        : (typeof ujian.semester === 'number' || (typeof ujian.semester === 'string' && /^\d+$/.test(ujian.semester))
+          ? String(ujian.semester)
+          : '')
 
-    setFormData({
-      mst_mapel_id: mapelId,
-      mst_kelas_id: kelasId,
-      jenis: normalizeReferenceCode(ujian.jenis_kode ?? ujian.jenis, jenisUjianOptions),
-      nama: ujian.nama || '',
-      tanggal: ujian.tanggal || '',
-      semester: normalizeReferenceCode(ujian.semester_kode ?? ujian.semester, semesterOptions),
-      keterangan: ujian.keterangan || ''
-    })
+      setFormData({
+        mst_mapel_id: mapelId,
+        mst_kelas_id: kelasId,
+        jenis: normalizeReferenceCode(ujian.jenis_kode ?? ujian.jenis, jenisUjianOptions),
+        nama: ujian.nama || '',
+        tanggal: ujian.tanggal || '',
+        semester_id: semesterId,
+        keterangan: ujian.keterangan || ''
+      })
 
       if (ujian.mapel?.id) {
         setSelectedMapelOption(buildMapelOption(ujian.mapel))
@@ -121,7 +141,11 @@ const UjianForm = () => {
       navigate('/akademik/ujian')
     }
     setFetchingData(false)
-  }, [buildKelasOption, buildMapelOption, id, jenisUjianOptions, semesterOptions, navigate])
+  }, [buildKelasOption, buildMapelOption, id, jenisUjianOptions, navigate])
+
+  useEffect(() => {
+    fetchSemesterOptions()
+  }, [fetchSemesterOptions])
 
   useEffect(() => {
     if (isEditMode) {
@@ -145,7 +169,7 @@ const UjianForm = () => {
     if (!safeParseInt(formData.jenis)) newErrors.jenis = 'Jenis ujian wajib dipilih'
     if (!formData.nama) newErrors.nama = 'Nama ujian wajib diisi'
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal ujian wajib diisi'
-    if (!safeParseInt(formData.semester)) newErrors.semester = 'Semester wajib dipilih'
+    if (!safeParseInt(formData.semester_id)) newErrors.semester_id = 'Semester wajib dipilih'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -153,22 +177,23 @@ const UjianForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validate()) return
 
     setLoading(true)
-    
+
     const submitData = {
-      ...formData,
       mst_mapel_id: safeParseInt(formData.mst_mapel_id),
       mst_kelas_id: safeParseInt(formData.mst_kelas_id),
       jenis: safeParseInt(formData.jenis),
-      semester: safeParseInt(formData.semester),
+      nama: formData.nama,
+      tanggal: formData.tanggal,
+      semester_id: safeParseInt(formData.semester_id),
       keterangan: formData.keterangan || null
     }
 
     let result
-    
+
     if (isEditMode) {
       result = await ujianService.update(id, submitData)
     } else {
@@ -185,7 +210,7 @@ const UjianForm = () => {
       if (error.errors) {
         setErrors(error.errors)
       } else {
-        showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} ujian`)
+        showError(error.message || `Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} ujian`)
       }
     }
     setLoading(false)
@@ -211,7 +236,6 @@ const UjianForm = () => {
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Mapel */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Mata Pelajaran <span className="text-red-500">*</span>
@@ -229,7 +253,6 @@ const UjianForm = () => {
                 />
               </div>
 
-              {/* Kelas */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Kelas <span className="text-red-500">*</span>
@@ -247,7 +270,6 @@ const UjianForm = () => {
                 />
               </div>
 
-              {/* Jenis Ujian */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Jenis Ujian <span className="text-red-500">*</span>
@@ -272,7 +294,6 @@ const UjianForm = () => {
                 )}
               </div>
 
-              {/* Nama Ujian */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nama Ujian <span className="text-red-500">*</span>
@@ -287,7 +308,6 @@ const UjianForm = () => {
                 />
               </div>
 
-              {/* Tanggal */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tanggal Ujian <span className="text-red-500">*</span>
@@ -301,32 +321,30 @@ const UjianForm = () => {
                 />
               </div>
 
-            {/* Semester */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Semester <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="semester"
-                value={formData.semester}
-                onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              >
-                <option value="">Pilih semester</option>
-                {semesterOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.semester && (
-                <p className="mt-1 text-sm text-red-500">
-                  {Array.isArray(errors.semester) ? errors.semester[0] : errors.semester}
-                </p>
-              )}
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Semester <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="semester_id"
+                  value={formData.semester_id}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Pilih semester</option>
+                  {semesterOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.semester_id && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {Array.isArray(errors.semester_id) ? errors.semester_id[0] : errors.semester_id}
+                  </p>
+                )}
+              </div>
 
-              {/* Keterangan */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Keterangan
