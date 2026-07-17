@@ -7,10 +7,10 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { materiService } from '../services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
-// Status mapping for display
+// Status mapping for display (backend: 1 Aktif, 0 Draft)
 const STATUS_MAP = {
   1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  0: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  0: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
 }
 
 const MateriDetail = () => {
@@ -97,7 +97,7 @@ const MateriDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Materi</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="materi.edit">
+          <PermissionGuard permission="materi.update">
             <Button variant="warning" onClick={() => navigate(`/akademik/materi/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit

@@ -578,7 +578,7 @@ Follow the pattern `{module}.{action}`:
 | `tugas-siswa` | `tugas-siswa.view`, `tugas-siswa.submit`, `tugas-siswa.grade` |
 | `rapor` | `rapor.view`, `rapor.create`, `rapor.edit`, `rapor.delete` |
 | `ranking` | `ranking.view`, `ranking.create`, `ranking.edit`, `ranking.delete` |
-| `materi` | `materi.view`, `materi.create`, `materi.edit`, `materi.delete` |
+| `materi` | `materi.view`, `materi.create`, `materi.update`, `materi.delete` |
 | `forum` | `forum.view`, `forum.create`, `forum.edit`, `forum.delete` |
 | `bk` | `bk.view`, `bk.{sub}.create`, `bk.{sub}.edit`, `bk.{sub}.delete` |
 | `perpustakaan` | `perpustakaan.buku.view`, `perpustakaan.buku.create`, `perpustakaan.peminjaman.return` |

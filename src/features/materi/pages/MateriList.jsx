@@ -18,10 +18,10 @@ const stripHtmlTags = (html) => {
   return tmp.textContent || tmp.innerText || ''
 }
 
-// Status mapping for display
+// Status mapping for display (backend: 1 Aktif, 0 Draft)
 const STATUS_MAP = {
   1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  0: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  0: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -255,7 +255,7 @@ const MateriList = () => {
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
               detailPermission="materi.view"
-              editPermission="materi.edit"
+              editPermission="materi.update"
               deletePermission="materi.delete"
             />
           </div>

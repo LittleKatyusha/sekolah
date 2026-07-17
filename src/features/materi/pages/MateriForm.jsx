@@ -13,7 +13,7 @@ import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const STATUS_OPTIONS = [
   { value: '1', label: 'Aktif' },
-  { value: '0', label: 'Nonaktif' },
+  { value: '0', label: 'Draft' },
 ]
 
 const MateriForm = () => {
@@ -262,10 +262,9 @@ const MateriForm = () => {
               <div className="md:col-span-2">
                 <LexicalEditor
                   label="Deskripsi"
-                  required
                   value={formData.deskripsi}
                   onChange={(html) => setFormData(prev => ({ ...prev, deskripsi: html }))}
-                  placeholder="Tulis deskripsi materi..."
+                  placeholder="Tulis deskripsi materi (opsional)..."
                   minHeight="200px"
                 />
                 {errors.deskripsi && (
@@ -324,7 +323,7 @@ const MateriForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/materi')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'materi.edit' : 'materi.create'}>
+              <PermissionGuard permission={isEditMode ? 'materi.update' : 'materi.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}
