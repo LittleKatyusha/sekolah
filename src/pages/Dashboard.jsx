@@ -92,11 +92,14 @@ const Dashboard = () => {
     let mounted = true
     setLoading(true)
     setError(null)
+    const userRole = user?.role?.toUpperCase()
 
-    // Fast path: summary cards rendered as soon as they arrive
-    dashboardService.getSummaryCards()
-      .then((data) => { if (mounted) setSummaryCards(data) })
-      .catch(() => {}) // fallback: full data fetch will cover this
+    if (!SISWA_ROLES.has(userRole) && !WALI_ROLES.has(userRole)) {
+      // Fast path: summary cards rendered as soon as they arrive
+      dashboardService.getSummaryCards()
+        .then((data) => { if (mounted) setSummaryCards(data) })
+        .catch(() => {}) // fallback: full data fetch will cover this
+    }
 
     // Full data fetch in parallel — provides role + chart data
     dashboardService.getDashboardData()
@@ -112,7 +115,7 @@ const Dashboard = () => {
       .finally(() => { if (mounted) setLoading(false) })
 
     return () => { mounted = false }
-  }, [reloadKey])
+  }, [reloadKey, user?.role])
 
   if (loading && !summaryCards) {
     return <LoadingSkeleton />
