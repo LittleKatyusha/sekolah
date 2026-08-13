@@ -86,6 +86,7 @@ const Dashboard = () => {
   const [summaryCards, setSummaryCards] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -103,7 +104,7 @@ const Dashboard = () => {
         if (!mounted) return
         setDashboardData(data)
         // If summary cards haven't arrived yet, use the ones embedded in full data
-        if (!summaryCards && data?.summary_cards) setSummaryCards(data.summary_cards)
+        setSummaryCards((current) => current || data?.summary_cards || null)
       })
       .catch((err) => {
         if (mounted) setError(err.message || 'Failed to load dashboard data')
@@ -111,7 +112,7 @@ const Dashboard = () => {
       .finally(() => { if (mounted) setLoading(false) })
 
     return () => { mounted = false }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reloadKey])
 
   if (loading && !summaryCards) {
     return <LoadingSkeleton />
@@ -123,19 +124,14 @@ const Dashboard = () => {
         <AlertCircle className="h-16 w-16 text-red-500" />
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-            Failed to Load Dashboard
+            Dashboard tidak dapat dimuat
           </h2>
           <p className="text-gray-600 dark:text-gray-400">{error}</p>
-          {user && (
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              User Role: {user.role || 'Not set'}
-            </p>
-          )}
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => setReloadKey((value) => value + 1)}
             className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
-            Retry
+            Coba lagi
           </button>
         </div>
       </div>

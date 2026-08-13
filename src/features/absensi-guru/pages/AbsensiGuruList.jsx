@@ -24,8 +24,8 @@ ActionsMenu.displayName = 'ActionsMenu'
 const StatusBadge = memo(({ status }) => {
   const statusConfig = {
     1: { label: 'Hadir', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-    2: { label: 'Sakit', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
-    3: { label: 'Izin', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+    2: { label: 'Izin', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+    3: { label: 'Sakit', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
     4: { label: 'Alpha', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
     hadir: { label: 'Hadir', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
     sakit: { label: 'Sakit', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
@@ -44,11 +44,7 @@ const AbsensiGuruList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
 
-  const staticParams = useMemo(() => ({
-    sort_by: 'id',
-    sort_dir: 'desc',
-    filter: '{}',
-  }), [])
+  const staticParams = useMemo(() => ({}), [])
 
   const handleDetail = useCallback((data) => {
     if (!data?.id) return
@@ -221,6 +217,7 @@ const AbsensiGuruList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/akademik/absensi-guru"
+          requestMode="legacy"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

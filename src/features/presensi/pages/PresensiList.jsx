@@ -126,11 +126,7 @@ const PresensiList = () => {
   const { options: statusAbsensiOptions } = useReferenceOptions('status_absensi')
   const navigate = useNavigate()
   const gridRef = useRef(null)
-  const staticParams = useMemo(() => ({
-    sort_by: 'id',
-    sort_dir: 'desc',
-    filter: '{}',
-  }), [])
+  const staticParams = useMemo(() => ({}), [])
 
   const handleDetail = useCallback((data) => {
     navigate(`/akademik/presensi/${data.id}`)
@@ -313,7 +309,7 @@ const PresensiList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/akademik/presensi"
-          requestMode="ag-grid"
+          requestMode="legacy"
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

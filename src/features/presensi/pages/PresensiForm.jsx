@@ -157,11 +157,8 @@ const PresensiForm = () => {
 
     setLoading(true)
     const submitData = {
-      mst_siswa_id: parseInt(formData.mst_siswa_id),
-      mst_guru_mapel_id: parseInt(formData.mst_guru_mapel_id),
-      tanggal: formData.tanggal,
       jam_masuk: formData.jam_masuk || null,
-      status: formData.status,
+      status: Number(formData.status),
       keterangan: formData.keterangan || null
     }
 

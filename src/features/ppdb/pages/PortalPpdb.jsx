@@ -260,8 +260,8 @@ const DaftarTab = () => {
             <Label required>Jenis Kelamin</Label>
             <select name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} className={fieldClass(errors, 'jenis_kelamin')}>
               <option value="">— Pilih —</option>
-              <option value="1">Laki-laki</option>
-              <option value="2">Perempuan</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
             </select>
             <FieldError msg={errors.jenis_kelamin} />
           </div>

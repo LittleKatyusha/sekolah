@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
-import RoleGuard from './components/guards/RoleGuard'
+import RouteAccessGuard from './components/guards/RouteAccessGuard'
 import MainLayout from './components/layout/MainLayout'
 import Login from './pages/Login'
 import Unauthorized from './pages/Unauthorized'
@@ -278,7 +278,7 @@ function App() {
             {/* Public PPDB portal — no authentication required */}
             <Route path="/ppdb/portal" element={<PortalPpdb />} />
 
-            <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+            <Route element={<ProtectedRoute><RouteAccessGuard><MainLayout /></RouteAccessGuard></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
 

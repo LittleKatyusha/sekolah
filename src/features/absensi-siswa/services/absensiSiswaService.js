@@ -1,6 +1,11 @@
 import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/akademik/absensi-siswa'
+const dateRange = ({ tanggal_mulai, tanggal_akhir, ...params } = {}) => ({
+  ...params,
+  ...(tanggal_mulai ? { tanggal_awal: tanggal_mulai } : {}),
+  ...(tanggal_akhir ? { tanggal_akhir } : {}),
+})
 
 export const absensiSiswaService = {
   /**
@@ -12,7 +17,7 @@ export const absensiSiswaService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getAbsensiSiswa: async (params = {}) => {
-    return await apiService.get(BASE_URL, { params })
+    return await apiService.get(BASE_URL, { params: dateRange(params) })
   },
 
   /**
@@ -22,7 +27,7 @@ export const absensiSiswaService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getAbsensiBySiswa: async (siswaId, params = {}) => {
-    return await apiService.get(BASE_URL, { params: { ...params, mst_siswa_id: siswaId } })
+    return await apiService.get(`${BASE_URL}/siswa/${siswaId}`, { params: dateRange(params) })
   },
 
   /**
@@ -83,7 +88,7 @@ export const absensiSiswaService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getByDateRange: async (data) => {
-    return await apiService.post(`${BASE_URL}/date-range`, data)
+    return await apiService.post(`${BASE_URL}/date-range`, dateRange(data))
   },
 
   getRekapBulanan: (params = {}) => apiService.get(`${BASE_URL}/rekap-bulanan`, { params }),

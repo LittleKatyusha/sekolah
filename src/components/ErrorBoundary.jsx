@@ -13,7 +13,6 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
     this.setState({
       error,
       errorInfo
@@ -45,7 +44,7 @@ class ErrorBoundary extends React.Component {
                 We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.
               </p>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="text-left mb-6">
                   <summary className="cursor-pointer text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Error Details (Development Only)

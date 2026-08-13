@@ -12,6 +12,8 @@ vi.mock('../services/notifikasiService', () => ({
   },
 }))
 
+vi.mock('../../../utils/sweetalert', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
+
 import { notifikasiService } from '../services/notifikasiService'
 
 const mockItems = [

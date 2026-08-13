@@ -250,7 +250,7 @@ const UjianUserList = () => {
       const { error } = await ujianUserService.mulaiUjian(data.id)
       if (!error) {
         showSuccess('Ujian berhasil dimulai!')
-        navigate(`/akademik/ujian-user/${data.id}/mulai`)
+        navigate(`/akademik/ujian-user/${data.id}`)
       } else {
         showError('Gagal memulai ujian')
       }

@@ -3,21 +3,54 @@ import useAuthStore from '../store/useAuthStore'
 import useNavigationProgressStore from '../store/useNavigationProgressStore'
 import { showToast } from './sweetalert'
 
-// Derive base URL from subdomain at runtime (production) or use proxy (dev).
+const API_PATH = '/api/v1'
+const TENANT_LABEL = /^(?!-)[a-z0-9-]{1,63}(?<!-)$/i
+
+const trimTrailingSlash = (value) => value.replace(/\/+$/, '')
+
+export const getTenantFromHostname = (hostname) => {
+  const [tenant] = String(hostname || '').toLowerCase().split('.')
+  return String(hostname || '').includes('.') && TENANT_LABEL.test(tenant) && tenant !== 'www' ? tenant : null
+}
+
+export const resolveApiBaseUrl = ({ dev, hostname, baseUrl, pattern }) => {
+  if (dev) return API_PATH
+
+  if (pattern) {
+    const tenant = getTenantFromHostname(hostname)
+    if (!tenant || !pattern.includes('{subdomain}')) return API_PATH
+
+    try {
+      const url = new URL(pattern.replaceAll('{subdomain}', tenant))
+      return url.protocol === 'https:' ? trimTrailingSlash(url.toString()) : API_PATH
+    } catch {
+      return API_PATH
+    }
+  }
+
+  if (!baseUrl) return API_PATH
+  if (baseUrl.startsWith('/')) return trimTrailingSlash(baseUrl)
+
+  try {
+    const url = new URL(baseUrl)
+    return trimTrailingSlash(url.toString())
+  } catch {
+    return API_PATH
+  }
+}
+
+// Derive base URL from a validated tenant subdomain in production, or use proxy in dev.
 // Production patterns (set one in .env.production):
 //   VITE_API_BASE_URL_PATTERN=https://{subdomain}.api.sekolah.app/api/v1
 //   VITE_API_BASE_URL=https://api.sekolah.app/api/v1   ← explicit override
 // Dev: all requests go through Vite proxy `/api` → VITE_API_PROXY_TARGET.
-const getBaseURL = () => {
-  if (import.meta.env.DEV) return '/api/v1'
-
-  const pattern = import.meta.env.VITE_API_BASE_URL_PATTERN
-  if (pattern) {
-    const subdomain = window.location.hostname.split('.')[0]
-    return pattern.replace('{subdomain}', subdomain).replace(/\/$/, '')
-  }
-
-  return (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
+export const getBaseURL = () => {
+  return resolveApiBaseUrl({
+    dev: import.meta.env.DEV,
+    hostname: window.location.hostname,
+    baseUrl: import.meta.env.VITE_API_BASE_URL,
+    pattern: import.meta.env.VITE_API_BASE_URL_PATTERN,
+  })
 }
 
 const baseURL = getBaseURL()
@@ -76,7 +109,7 @@ export const refreshToken = async () => {
     refresh_token: refreshTokenValue,
   })
 
-  if (response.data.success) {
+  if (response.data?.success && response.data?.data?.access_token) {
     const { access_token, refresh_token, expires_in } = response.data.data
     useAuthStore.getState().setToken(access_token, refresh_token)
     return access_token
@@ -130,7 +163,8 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     // Handle 401 - Unauthorized (try to refresh token)
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isRefreshRequest = originalRequest?.url === '/auth/refresh'
+    if (error.response?.status === 401 && originalRequest && !isRefreshRequest && !originalRequest._retry) {
       if (isRefreshing) {
         // If already refreshing, add to queue
         return new Promise((resolve, reject) => {
@@ -169,26 +203,11 @@ api.interceptors.response.use(
       switch (status) {
         case 403:
           showToast(data.message || 'Anda tidak memiliki izin untuk melakukan aksi ini.', 'error')
-          if (import.meta.env.DEV) console.error('Access forbidden:', data.message || data)
-          break
-        case 404:
-          if (import.meta.env.DEV) console.error('Resource not found:', data.message || data)
           break
         case 422:
           // Validation error - return the errors for form handling
-          if (import.meta.env.DEV) console.error('Validation error:', data.errors || data.message)
           break
-        case 500:
-          if (import.meta.env.DEV) console.error('Server error:', data.message || data)
-          break
-        default:
-          if (import.meta.env.DEV) console.error('API Error:', data.message || data)
       }
-    } else if (error.request) {
-      // Network error
-      if (import.meta.env.DEV) console.error('Network error: Unable to connect to server')
-    } else {
-      if (import.meta.env.DEV) console.error('Error:', error.message)
     }
 
     return Promise.reject(error)
@@ -219,7 +238,7 @@ export const apiService = {
       const response = await api.get(url, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response?.data || error.message }
+      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
     }
   },
 
@@ -229,7 +248,7 @@ export const apiService = {
       const response = await api.post(url, data, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response?.data || error.message }
+      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
     }
   },
 
@@ -239,7 +258,7 @@ export const apiService = {
       const response = await api.put(url, data, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response?.data || error.message }
+      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
     }
   },
 
@@ -249,7 +268,7 @@ export const apiService = {
       const response = await api.patch(url, data, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response?.data || error.message }
+      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
     }
   },
 
@@ -259,7 +278,7 @@ export const apiService = {
       const response = await api.delete(url, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response?.data || error.message }
+      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
     }
   },
 }

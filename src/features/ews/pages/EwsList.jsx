@@ -116,10 +116,24 @@ const EmptyState = ({ hasFilters }) => (
   </Card>
 )
 
+const ErrorState = ({ onRetry }) => (
+  <Card>
+    <div className="py-16 px-6 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/30 mx-auto flex items-center justify-center mb-4">
+        <AlertTriangle size={24} className="text-red-600 dark:text-red-400" />
+      </div>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Data EWS tidak dapat dimuat</h2>
+      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">Periksa koneksi, lalu coba lagi.</p>
+      <Button variant="secondary" className="mt-5" onClick={onRetry}>Coba lagi</Button>
+    </div>
+  </Card>
+)
+
 const EwsList = () => {
   const navigate = useNavigate()
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [siswaOptions, setSiswaOptions] = useState([])
   const [filters, setFilters] = useState({
@@ -128,29 +142,39 @@ const EwsList = () => {
     level: '',
     is_resolved: '',
   })
+  const [pagination, setPagination] = useState({ page: 1, total: 0, lastPage: 1 })
 
-  const fetchAlerts = useCallback(async (activeFilters = filters) => {
+  const fetchAlerts = useCallback(async (activeFilters = filters, page = pagination.page) => {
     setLoading(true)
+    setLoadError(false)
 
     const params = {}
     if (activeFilters.mst_siswa_id) params.mst_siswa_id = activeFilters.mst_siswa_id
     if (activeFilters.kategori) params.kategori = activeFilters.kategori
     if (activeFilters.level) params.level = activeFilters.level
     if (activeFilters.is_resolved !== '') params.is_resolved = activeFilters.is_resolved
+    params.page = page
+    params.per_page = 20
 
     const { data, error } = await ewsService.getAll(params)
 
     if (error) {
       showError(error.message || 'Gagal mengambil data EWS')
       setAlerts([])
+      setLoadError(true)
       setLoading(false)
       return
     }
 
     const nextAlerts = Array.isArray(data?.data) ? data.data : []
     setAlerts(nextAlerts)
+    setPagination({
+      page: Number(data?.meta?.current_page || page),
+      total: Number(data?.meta?.total || nextAlerts.length),
+      lastPage: Number(data?.meta?.last_page || 1),
+    })
     setLoading(false)
-  }, [filters])
+  }, [filters, pagination.page])
 
   useEffect(() => {
     fetchAlerts(filters)
@@ -192,6 +216,7 @@ const EwsList = () => {
       ...prev,
       [name]: value,
     }))
+    setPagination((prev) => ({ ...prev, page: 1 }))
   }, [])
 
   const handleRefresh = useCallback(() => {
@@ -291,7 +316,7 @@ const EwsList = () => {
             <RefreshCw size={18} className="mr-2" />
             Refresh
           </Button>
-          <PermissionGuard permission="ews.create">
+          <PermissionGuard permission="ews.manage">
             <Button onClick={handleTriggerSelected} disabled={!filters.mst_siswa_id || submitting} loading={submitting}>
               <Zap size={18} className="mr-2" />
               Trigger Siswa
@@ -304,7 +329,7 @@ const EwsList = () => {
         <StatsCard
           title="Total Alert"
           value={stats.total}
-          subtitle="Seluruh alert dari hasil query backend"
+          subtitle={`${pagination.total} alert cocok di server`}
           icon={BellRing}
           iconClassName="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
         />
@@ -400,11 +425,14 @@ const EwsList = () => {
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
+      ) : loadError ? (
+        <ErrorState onRetry={handleRefresh} />
       ) : sortedAlerts.length === 0 ? (
         <EmptyState hasFilters={hasFilters} />
       ) : (
-        <div className="space-y-4">
-          {sortedAlerts.map((alert) => {
+        <>
+          <div className="space-y-4">
+            {sortedAlerts.map((alert) => {
             const categoryMeta = getCategoryMeta(alert.kategori)
             const levelMeta = getLevelMeta(Number(alert.level))
 
@@ -456,7 +484,7 @@ const EwsList = () => {
                         <Eye size={18} className="mr-2" />
                         Detail
                       </Button>
-                      <PermissionGuard permission="ews.edit">
+                      <PermissionGuard permission="ews.manage">
                         <Button
                           variant="outline"
                           onClick={() => handleTrigger(alert.mst_siswa_id, getSiswaLabel(alert))}
@@ -466,7 +494,7 @@ const EwsList = () => {
                           Trigger Ulang
                         </Button>
                       </PermissionGuard>
-                      <PermissionGuard permission="ews.edit">
+                      <PermissionGuard permission="ews.manage">
                         <Button
                           variant={alert.is_resolved ? 'success' : 'primary'}
                           onClick={() => handleResolve(alert)}
@@ -481,8 +509,18 @@ const EwsList = () => {
                 </div>
               </Card>
             )
-          })}
-        </div>
+            })}
+          </div>
+          {pagination.lastPage > 1 && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Halaman {pagination.page} dari {pagination.lastPage}</span>
+              <div className="flex gap-2">
+                <Button variant="secondary" disabled={loading || pagination.page <= 1} onClick={() => fetchAlerts(filters, pagination.page - 1)}>Sebelumnya</Button>
+                <Button variant="secondary" disabled={loading || pagination.page >= pagination.lastPage} onClick={() => fetchAlerts(filters, pagination.page + 1)}>Berikutnya</Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

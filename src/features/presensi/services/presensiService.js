@@ -1,6 +1,11 @@
 import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/akademik/presensi'
+const dateRange = ({ tanggal_mulai, tanggal_akhir, ...params } = {}) => ({
+  ...params,
+  ...(tanggal_mulai ? { tanggal_awal: tanggal_mulai } : {}),
+  ...(tanggal_akhir ? { tanggal_akhir } : {}),
+})
 
 export const presensiService = {
   /**
@@ -14,7 +19,7 @@ export const presensiService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getPresensi: async (params = {}) => {
-    return await apiService.get(BASE_URL, { params })
+    return await apiService.get(BASE_URL, { params: dateRange(params) })
   },
 
   /**
@@ -67,7 +72,7 @@ export const presensiService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getPresensiBySiswa: async (siswaId, params = {}) => {
-    return await apiService.get(`${BASE_URL}/siswa/${siswaId}`, { params })
+    return await apiService.get(`${BASE_URL}/siswa/${siswaId}`, { params: dateRange(params) })
   },
 
   /**
@@ -77,7 +82,7 @@ export const presensiService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getPresensiByGuruMapel: async (guruMapelId, params = {}) => {
-    return await apiService.get(`${BASE_URL}/guru-mapel/${guruMapelId}`, { params })
+    return await apiService.get(`${BASE_URL}/guru-mapel/${guruMapelId}`, { params: dateRange(params) })
   },
 
   /**
@@ -99,7 +104,7 @@ export const presensiService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   getPresensiSummary: async (siswaId, params = {}) => {
-    return await apiService.get(`${BASE_URL}/siswa/${siswaId}/summary`, { params })
+    return await apiService.get(`${BASE_URL}/siswa/${siswaId}/summary`, { params: dateRange(params) })
   },
 
   /**

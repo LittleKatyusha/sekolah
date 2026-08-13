@@ -67,15 +67,25 @@ export const ujianUserService = {
     return await apiService.post(`${BASE_URL}/${id}/mulai`)
   },
 
+  getSoal: async (id) => {
+    return await apiService.get(`${BASE_URL}/${id}/soal`)
+  },
+
+  simpanJawaban: async (data) => {
+    return await apiService.post('/akademik/ujian-jawaban', data)
+  },
+
+  updateJawaban: async (id, data) => {
+    return await apiService.put(`/akademik/ujian-jawaban/${id}`, data)
+  },
+
   /**
    * Finish exam (selesaikan ujian)
    * @param {number|string} id - Ujian User ID
-   * @param {Object} data - Jawaban data
-   * @param {Array} data.jawaban - Array of jawaban objects
    * @returns {Promise<{data: any, error: any}>}
    */
-  selesaikanUjian: async (id, data = {}) => {
-    return await apiService.post(`${BASE_URL}/${id}/selesaikan`, data)
+  selesaikanUjian: async (id) => {
+    return await apiService.post(`${BASE_URL}/${id}/selesaikan`)
   },
 }
 

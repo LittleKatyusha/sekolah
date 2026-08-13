@@ -14,7 +14,7 @@ const normalizeStatusToken = (status) => {
 
 const getStatusLabel = (status) => {
   const normalized = normalizeStatusToken(status)
-  const map = { '1': 'Hadir', '2': 'Sakit', '3': 'Izin', '4': 'Alpha', hadir: 'Hadir', sakit: 'Sakit', izin: 'Izin', alpha: 'Alpha', alpa: 'Alpha' }
+  const map = { '1': 'Hadir', '2': 'Izin', '3': 'Sakit', '4': 'Alpha', hadir: 'Hadir', sakit: 'Sakit', izin: 'Izin', alpha: 'Alpha', alpa: 'Alpha' }
   return map[normalized] || status || '-'
 }
 
@@ -22,8 +22,8 @@ const getStatusBadgeClass = (status) => {
   const normalized = normalizeStatusToken(status)
   const map = {
     '1': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    '2': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    '3': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    '2': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    '3': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
     '4': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     hadir: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     sakit: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',

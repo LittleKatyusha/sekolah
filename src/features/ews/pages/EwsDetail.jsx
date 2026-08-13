@@ -204,13 +204,13 @@ const EwsDetail = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <PermissionGuard permission="ews.edit">
+          <PermissionGuard permission="ews.manage">
             <Button variant="outline" onClick={handleTrigger} disabled={submitting || !alert.mst_siswa_id}>
               <RotateCw size={18} className="mr-2" />
               Trigger Ulang
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="ews.edit">
+          <PermissionGuard permission="ews.manage">
             <Button
               variant={alert.is_resolved ? 'success' : 'primary'}
               onClick={handleResolve}

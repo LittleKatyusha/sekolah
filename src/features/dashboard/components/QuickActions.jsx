@@ -9,7 +9,7 @@ const quickActionsByRole = {
     { label: 'Kelola Guru', icon: BookOpen, path: '/guru', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
     { label: 'Kelola Kelas', icon: GraduationCap, path: '/kelas', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
     { label: 'Pembayaran SPP', icon: DollarSign, path: '/pembayaran-spp', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
-    { label: 'Absensi', icon: ClipboardList, path: '/absensi', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+    { label: 'Absensi', icon: ClipboardList, path: '/absensi-siswa', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
     { label: 'Statistik', icon: BarChart3, path: '/statistik', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
   ],
   guru: [
@@ -27,7 +27,7 @@ const quickActionsByRole = {
   ],
   wali: [
     { label: 'Pembayaran SPP', icon: DollarSign, path: '/pembayaran-spp', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
-    { label: 'Absensi Anak', icon: ClipboardList, path: '/absensi', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+    { label: 'Absensi Anak', icon: ClipboardList, path: '/absensi-siswa', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
     { label: 'Nilai Anak', icon: FileText, path: '/nilai', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
   ],
 }

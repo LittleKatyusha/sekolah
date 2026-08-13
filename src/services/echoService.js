@@ -34,6 +34,39 @@ const PRIVATE_CHANNELS = new Set([])
 // Pusher internal event prefixes to suppress from listeners
 const PUSHER_INTERNAL = 'pusher:'
 
+const API_VERSION_SUFFIX = /\/api\/v\d+\/?$/i
+
+export const resolveTenantValue = (value, hostname) => {
+  if (!value?.includes('{subdomain}')) return value
+  const tenant = hostname?.split('.')[0]
+  return tenant && /^(?!-)[a-z0-9-]{1,63}(?<!-)$/i.test(tenant)
+    ? value.replaceAll('{subdomain}', tenant)
+    : value
+}
+
+export const resolveBroadcastAuthEndpoint = (env, hostname = window.location.hostname) => {
+  const explicit = resolveTenantValue(env.VITE_BROADCAST_AUTH_ENDPOINT, hostname)
+  if (explicit) {
+    try { return new URL(explicit).toString() } catch { return null }
+  }
+
+  const apiBase = resolveTenantValue(
+    env.VITE_BROADCAST_AUTH_BASE_URL || env.VITE_API_BASE_URL_PATTERN || env.VITE_API_BASE_URL,
+    hostname,
+  )
+  if (!apiBase) return null
+
+  try {
+    const url = new URL(apiBase)
+    url.pathname = url.pathname.replace(API_VERSION_SUFFIX, '/api').replace(/\/$/, '') + '/broadcasting/auth'
+    url.search = ''
+    url.hash = ''
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
 class EchoService {
   constructor() {
     this._echo           = null
@@ -190,24 +223,7 @@ class EchoService {
   }
 
   _resolveBroadcastAuthEndpoint(env) {
-    // Explicit full endpoint override for split-container deployments.
-    if (env.VITE_BROADCAST_AUTH_ENDPOINT) {
-      return env.VITE_BROADCAST_AUTH_ENDPOINT
-    }
-
-    // Optional base URL override when API host is different from frontend host.
-    const rawBase = env.VITE_BROADCAST_AUTH_BASE_URL || env.VITE_API_BASE_URL || '/api/v1'
-
-    // Laravel Broadcast::routes in backend is registered under /api,
-    // while regular REST endpoints in this frontend use /api/v1.
-    const normalizedBase = rawBase.replace(/\/?v\d+\/?$/, '').replace(/\/$/, '')
-
-    if (/^https?:\/\//i.test(normalizedBase)) {
-      return `${normalizedBase}/broadcasting/auth`
-    }
-
-    const pathname = normalizedBase.startsWith('/') ? normalizedBase : `/${normalizedBase}`
-    return `${pathname}/broadcasting/auth`
+    return resolveBroadcastAuthEndpoint(env)
   }
 
   _initEcho(token) {
@@ -221,13 +237,14 @@ class EchoService {
     const env = import.meta.env
     const appKey = env.VITE_REVERB_APP_KEY || env.VITE_PUSHER_APP_KEY
     const scheme = env.VITE_REVERB_SCHEME || (import.meta.env.DEV ? 'ws' : 'wss')
-    const wsHost = env.VITE_REVERB_HOST || window.location.hostname
+    const wsHost = resolveTenantValue(env.VITE_REVERB_HOST, window.location.hostname) || window.location.hostname
     const defaultPort = scheme === 'wss' ? 443 : 8080
     const rawPort = Number(env.VITE_REVERB_PORT)
     const wsPort = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : defaultPort
     const forceTLS = scheme === 'wss'
 
-    if (!appKey || !wsHost) {
+    const authEndpoint = this._resolveBroadcastAuthEndpoint(env)
+    if (!appKey || !wsHost || !authEndpoint) {
       console.warn('[Echo] missing Reverb/Pusher configuration. Set VITE_REVERB_APP_KEY (or VITE_PUSHER_APP_KEY) and VITE_REVERB_HOST.')
       this._setStatus('error')
       return
@@ -244,7 +261,7 @@ class EchoService {
         enabledTransports: ['ws', 'wss'],
         // Backend registers Broadcast::routes(['middleware' => ['auth:api']])
         // under /api/broadcasting/auth.
-        authEndpoint: this._resolveBroadcastAuthEndpoint(env),
+        authEndpoint,
         auth: {
           headers: {
             Authorization: `Bearer ${token}`,

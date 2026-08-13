@@ -159,6 +159,7 @@ const AbsensiGuruForm = () => {
 
     const submitData = {
       ...formData,
+      mst_guru_id: Number(formData.mst_guru_id),
       status: Number(formData.status),
       keterangan: formData.keterangan || null,
       jam_masuk: formData.jam_masuk || null,

@@ -29,6 +29,7 @@ import { menuService } from '../../features/menus/services/menuService'
 import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 import { getTheme } from '../../constants/roleThemes'
+import { canAccessPath } from '../../utils/routeAccess'
 
 library.add(fas, far, fab)
 
@@ -36,7 +37,7 @@ const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
 const SIDEBAR_MENU_CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const sidebarMenuRequestCache = new Map()
 
-const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${userId}`
+const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${window.location.hostname}:${userId}`
 
 // Parse FontAwesome icon class strings into [prefix, iconName] tuples
 // Supports FA5 format: "fas fa-home", "far fa-check", "fab fa-whatsapp"
@@ -128,20 +129,6 @@ const readSidebarMenuCache = (userId) => {
     if (Date.now() - parsed.cachedAt > SIDEBAR_MENU_CACHE_TTL_MS) return null
 
     const hydratedMenus = parsed.data.map(hydrateCachedMenuItem).filter(Boolean)
-
-    // DEV DIAGNOSTIC — remove after root cause is confirmed
-    if (import.meta.env.DEV) {
-      const sampleChild = parsed.data
-        .flatMap(m => m.children ?? [])
-        .find(Boolean)
-      console.debug('[Sidebar] readSidebarMenuCache hit', {
-        userId,
-        itemCount: parsed.data.length,
-        hydratedCount: hydratedMenus.length,
-        sampleChildTo: sampleChild?.to,   // should NOT be undefined
-        cachedAt: new Date(parsed.cachedAt).toISOString(),
-      })
-    }
 
     return hydratedMenus.length === parsed.data.length ? hydratedMenus : null
   } catch {
@@ -249,15 +236,6 @@ const MenuItem = memo(({ item, onClose, onNavigate }) => {
   const hasChildren = item.children && item.children.length > 0
 
   // Validate icon type in dev only — keep out of the hot render path in production
-  if (import.meta.env.DEV && typeof item.icon !== 'function' && typeof item.icon !== 'object') {
-    console.error('[Sidebar][MenuItem] Invalid icon type detected', {
-      id: item?.id,
-      name: item?.name,
-      iconType: typeof item?.icon,
-      iconValue: item?.icon
-    })
-  }
-
   if (hasChildren) {
     return (
       <li>
@@ -352,8 +330,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         const { data, error: apiError } = await request
 
         if (apiError) {
-          console.error('Failed to fetch menus:', apiError)
-          setError('Failed to load menu')
+          setError(apiError?.message || 'Menu tidak dapat dimuat.')
           setNavigation([])
           clearSidebarMenuCache(user.id)
           return
@@ -394,6 +371,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             menuItem.children = item.sub_menus
               .filter(subMenu => subMenu.is_active)
               .map(mapMenuItem)
+              .filter((child) => !child.to || canAccessPath(user, child.to) || child.children.length > 0)
           }
 
           return menuItem
@@ -403,12 +381,12 @@ const Sidebar = ({ isOpen, onClose }) => {
         const mappedMenus = menuData
           .filter(item => item.is_active)
           .map(mapMenuItem)
+          .filter((item) => !item.to || canAccessPath(user, item.to) || item.children.length > 0)
 
         writeSidebarMenuCache(user.id, mappedMenus)
         setNavigation(mappedMenus)
-      } catch (err) {
-        console.error('Error fetching menus:', err)
-        setError('Failed to load menu')
+      } catch {
+        setError('Menu tidak dapat dimuat.')
         setNavigation([])
         clearSidebarMenuCache(user.id)
       } finally {
@@ -448,7 +426,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-center h-16 border-b sb-divider px-4" style={{ borderColor: 'var(--sb-border)' }}>
+          <div className="flex items-center justify-start h-16 border-b sb-divider px-4" style={{ borderColor: 'var(--sb-border)' }}>
             <img
               src={logoHorizontal}
               alt="AkademiHub"
@@ -458,7 +436,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* User info */}
           <div className="p-4 border-b" style={{ borderColor: 'var(--sb-border)' }}>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-start gap-3 text-left">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                 style={{ backgroundColor: 'var(--sb-avatar)' }}

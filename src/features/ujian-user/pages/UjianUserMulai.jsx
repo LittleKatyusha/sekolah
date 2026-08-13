@@ -1,498 +1,115 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Clock, AlertCircle, ChevronLeft, ChevronRight, Flag, Send, BookOpen, User } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { AlertCircle, BookOpen, ChevronLeft, ChevronRight, Clock, Send, User } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianUserService } from '../services/ujianUserService'
-import { showSuccess, showError, showConfirm, showWarning } from '../../../utils/sweetalert'
+import { showConfirm, showError, showSuccess, showWarning } from '../../../utils/sweetalert'
 
-// Local storage keys
-const getStorageKey = (ujianUserId, key) => `ujian_${ujianUserId}_${key}`
-const STORAGE_KEYS = {
-  JAWABAN: 'jawaban',
-  SISA_WAKTU: 'sisa_waktu',
-  CURRENT_SOAL: 'current_soal',
-  TIMER_START: 'timer_start',
-}
+const isEssay = (soal) => soal.tipe === 2 || soal.tipe === 'essay'
+const hasAnswer = (answer) => Boolean(answer?.mst_soal_opsi_id || answer?.jawaban_teks?.trim())
+const expired = (error) => error?.status === 409
 
 const UjianUserMulai = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-
   const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
+  const [finishing, setFinishing] = useState(false)
   const [ujianUser, setUjianUser] = useState(null)
   const [soalList, setSoalList] = useState([])
-  const [currentSoalIndex, setCurrentSoalIndex] = useState(0)
-  const [jawaban, setJawaban] = useState({})
-  const [sisaWaktu, setSisaWaktu] = useState(0)
-  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const [answers, setAnswers] = useState({})
+  const [pending, setPending] = useState({})
+  const [index, setIndex] = useState(0)
+  const [seconds, setSeconds] = useState(0)
+  const [isExpired, setIsExpired] = useState(false)
 
-  // Helper functions for local storage
-  const saveToLocalStorage = useCallback((key, value) => {
-    if (!id) return
-    try {
-      localStorage.setItem(getStorageKey(id, key), JSON.stringify(value))
-    } catch (error) {
-      console.error('Error saving to localStorage:', error)
-    }
-  }, [id])
+  const endExpired = useCallback(() => {
+    setIsExpired(true)
+    showWarning('Waktu ujian telah habis. Jawaban tidak dapat diubah.', 'Waktu Habis')
+  }, [])
 
-  const loadFromLocalStorage = useCallback((key, defaultValue = null) => {
-    if (!id) return defaultValue
-    try {
-      const item = localStorage.getItem(getStorageKey(id, key))
-      return item ? JSON.parse(item) : defaultValue
-    } catch (error) {
-      console.error('Error loading from localStorage:', error)
-      return defaultValue
-    }
-  }, [id])
-
-  const clearLocalStorage = useCallback(() => {
-    if (!id) return
-    try {
-      Object.values(STORAGE_KEYS).forEach(key => {
-        localStorage.removeItem(getStorageKey(id, key))
-      })
-    } catch (error) {
-      console.error('Error clearing localStorage:', error)
-    }
-  }, [id])
-
-  // Save state before page unload (refresh/close tab)
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      // Save current state to localStorage before unloading
-      if (ujianUser && isTimerRunning) {
-        saveToLocalStorage(STORAGE_KEYS.JAWABAN, jawaban)
-        saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, currentSoalIndex)
-        saveToLocalStorage(STORAGE_KEYS.SISA_WAKTU, sisaWaktu)
-      }
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [ujianUser, jawaban, currentSoalIndex, sisaWaktu, isTimerRunning, saveToLocalStorage])
-
-  // Fetch ujian user data and soal
-  useEffect(() => {
-    fetchUjianUserData()
-  }, [id])
-
-  const fetchUjianUserData = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await ujianUserService.getById(id)
-    if (data) {
-      const ujianUserData = data.data
-      setUjianUser(ujianUserData)
-
-      // Mock soal data - in real implementation, this should come from API
-      const mockSoal = generateMockSoal(ujianUserData)
-      setSoalList(mockSoal)
-
-      // Try to load saved data from local storage
-      const savedJawaban = loadFromLocalStorage(STORAGE_KEYS.JAWABAN, {})
-      const savedCurrentSoal = loadFromLocalStorage(STORAGE_KEYS.CURRENT_SOAL, 0)
-      const savedSisaWaktu = loadFromLocalStorage(STORAGE_KEYS.SISA_WAKTU, null)
-      const savedTimerStart = loadFromLocalStorage(STORAGE_KEYS.TIMER_START, null)
-
-      // Set current soal index from local storage or default to 0
-      setCurrentSoalIndex(savedCurrentSoal)
-
-      // Calculate remaining time
-      let initialSisaWaktu = ujianUserData.sisa_waktu || 3600
-
-      // If there's saved timer data, calculate elapsed time
-      if (savedSisaWaktu !== null && savedTimerStart !== null) {
-        const elapsedSeconds = Math.floor((Date.now() - savedTimerStart) / 1000)
-        initialSisaWaktu = Math.max(0, savedSisaWaktu - elapsedSeconds)
-      }
-
-      setSisaWaktu(initialSisaWaktu > 0 ? initialSisaWaktu : 3600)
-
-      // Merge saved jawaban with existing jawaban from API
-      const initialJawaban = { ...savedJawaban }
-      if (ujianUserData.jawaban && ujianUserData.jawaban.length > 0) {
-        ujianUserData.jawaban.forEach(j => {
-          if (!initialJawaban[j.soal_id]) {
-            initialJawaban[j.soal_id] = j.jawaban
-          }
-        })
-      }
-      setJawaban(initialJawaban)
-
-      // Start timer and save start timestamp
-      setIsTimerRunning(true)
-      saveToLocalStorage(STORAGE_KEYS.TIMER_START, Date.now())
-    } else {
-      showError('Gagal mengambil data ujian')
+    const session = await ujianUserService.getById(id)
+    if (session.error || !session.data?.data) {
+      showError(session.error?.message || 'Gagal mengambil sesi ujian')
       navigate('/akademik/ujian-user')
+      return
     }
+    const questions = await ujianUserService.getSoal(id)
+    if (questions.error || !Array.isArray(questions.data?.data)) {
+      showError(questions.error?.message || 'Soal ujian tidak tersedia. Hubungi pengawas.')
+      setLoading(false)
+      return
+    }
+    const list = questions.data.data
+    setUjianUser(session.data.data)
+    setSoalList(list)
+    setAnswers(Object.fromEntries(list.map((soal) => [soal.id, soal.jawaban || {}])))
+    setSeconds(session.data.data.sisa_waktu == null ? null : Math.max(0, session.data.data.sisa_waktu))
     setLoading(false)
-  }
+  }, [id, navigate])
 
-  // Generate mock soal for demo purposes
-  // In real implementation, soal should come from API endpoint
-  const generateMockSoal = (ujianUserData) => {
-    // This is a placeholder - replace with actual API call to get soal
-    return Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      soal: `Soal nomor ${i + 1} untuk ujian ${ujianUserData.ujian?.nama || 'ini'}. Berikut adalah pertanyaan contoh yang akan ditampilkan kepada siswa.`,
-      pilihan: [
-        { id: 'A', teks: `Pilihan jawaban A untuk soal ${i + 1}` },
-        { id: 'B', teks: `Pilihan jawaban B untuk soal ${i + 1}` },
-        { id: 'C', teks: `Pilihan jawaban C untuk soal ${i + 1}` },
-        { id: 'D', teks: `Pilihan jawaban D untuk soal ${i + 1}` },
-      ],
-      tipe: 'pilihan_ganda'
-    }))
-  }
+  useEffect(() => { load() }, [load])
 
-  // Timer countdown
   useEffect(() => {
-    let interval
-    if (isTimerRunning && sisaWaktu > 0) {
-      interval = setInterval(() => {
-        setSisaWaktu(prev => {
-          const newTime = prev <= 1 ? 0 : prev - 1
-          // Save remaining time to localStorage
-          saveToLocalStorage(STORAGE_KEYS.SISA_WAKTU, newTime)
-          if (prev <= 1) {
-            setIsTimerRunning(false)
-            handleTimeUp()
-            return 0
-          }
-          return newTime
-        })
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [isTimerRunning, sisaWaktu, saveToLocalStorage])
+    if (loading || isExpired || seconds == null || seconds <= 0) return undefined
+    const timer = window.setInterval(() => setSeconds((value) => value - 1), 1000)
+    return () => window.clearInterval(timer)
+  }, [isExpired, loading, seconds])
 
-  const handleTimeUp = async () => {
-    showWarning('Waktu ujian telah habis! Jawaban akan dikirim otomatis.', 'Waktu Habis')
-    await handleSubmitUjian(true)
+  useEffect(() => {
+    if (!loading && seconds === 0 && ujianUser && !isExpired) endExpired()
+  }, [endExpired, isExpired, loading, seconds, ujianUser])
+
+  const save = async (soal, value) => {
+    if (isExpired || pending[soal.id]) return
+    const previous = answers[soal.id] || {}
+    const payload = isEssay(soal)
+      ? { jawaban_teks: value, ragu_ragu: false }
+      : { mst_soal_opsi_id: value, ragu_ragu: false }
+    const request = previous.id
+      ? ujianUserService.updateJawaban(previous.id, payload)
+      : ujianUserService.simpanJawaban({ trx_ujian_user_id: Number(id), mst_soal_id: soal.id, ...payload })
+    setPending((state) => ({ ...state, [soal.id]: true }))
+    const { data, error } = await request
+    setPending((state) => ({ ...state, [soal.id]: false }))
+    if (expired(error)) return endExpired()
+    if (error || !data?.data) return showError(error?.message || 'Jawaban gagal disimpan')
+    setAnswers((state) => ({ ...state, [soal.id]: data.data }))
   }
 
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const getTimerColorClass = () => {
-    if (sisaWaktu < 300) return 'text-red-600 animate-pulse' // Less than 5 minutes
-    if (sisaWaktu < 600) return 'text-yellow-600' // Less than 10 minutes
-    return 'text-green-600'
-  }
-
-  const handleJawabanChange = (soalId, pilihanId) => {
-    setJawaban(prev => {
-      const newJawaban = {
-        ...prev,
-        [soalId]: pilihanId
-      }
-      // Save to localStorage
-      saveToLocalStorage(STORAGE_KEYS.JAWABAN, newJawaban)
-      return newJawaban
-    })
-  }
-
-  const handleNext = () => {
-    if (currentSoalIndex < soalList.length - 1) {
-      const newIndex = currentSoalIndex + 1
-      setCurrentSoalIndex(newIndex)
-      saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, newIndex)
-    }
-  }
-
-  const handlePrev = () => {
-    if (currentSoalIndex > 0) {
-      const newIndex = currentSoalIndex - 1
-      setCurrentSoalIndex(newIndex)
-      saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, newIndex)
-    }
-  }
-
-  const handleSoalClick = (index) => {
-    setCurrentSoalIndex(index)
-    saveToLocalStorage(STORAGE_KEYS.CURRENT_SOAL, index)
-  }
-
-  const handleSubmitUjian = async (isAutoSubmit = false) => {
-    if (!isAutoSubmit) {
-      const answeredCount = Object.keys(jawaban).length
-      const unansweredCount = soalList.length - answeredCount
-      
-      let confirmMessage = `Anda telah menjawab ${answeredCount} dari ${soalList.length} soal.`
-      if (unansweredCount > 0) {
-        confirmMessage += `\n\nAda ${unansweredCount} soal yang belum dijawab.`
-      }
-      confirmMessage += `\n\nApakah Anda yakin ingin mengirim jawaban?`
-      
-      const result = await showConfirm(confirmMessage, 'Konfirmasi Pengiriman')
+  const finish = async (auto = false) => {
+    if (finishing) return
+    if (!auto) {
+      const done = soalList.filter((soal) => hasAnswer(answers[soal.id])).length
+      const result = await showConfirm(`Anda telah menjawab ${done} dari ${soalList.length} soal. Kirim jawaban?`, 'Selesaikan Ujian')
       if (!result.isConfirmed) return
     }
-
-    setSubmitting(true)
-    setIsTimerRunning(false)
-
-    // Prepare jawaban data
-    const jawabanArray = Object.entries(jawaban).map(([soalId, jawabanValue]) => ({
-      soal_id: parseInt(soalId),
-      jawaban: jawabanValue
-    }))
-
-    const submitData = {
-      jawaban: jawabanArray
+    setFinishing(true)
+    const { error } = await ujianUserService.selesaikanUjian(id)
+    if (error) {
+      if (expired(error)) endExpired()
+      else showError(error.message || 'Gagal menyelesaikan ujian')
+      setFinishing(false)
+      return
     }
-
-    const { data, error } = await ujianUserService.selesaikanUjian(id, submitData)
-    
-    if (!error) {
-      // Clear local storage after successful submission
-      clearLocalStorage()
-      showSuccess('Ujian berhasil diselesaikan!', 'Selesai')
-      navigate(`/akademik/ujian-user/${id}`)
-    } else {
-      showError('Gagal mengirim jawaban. Silakan coba lagi.')
-      setSubmitting(false)
-      setIsTimerRunning(true)
-    }
+    showSuccess('Ujian berhasil diselesaikan!', 'Selesai')
+    navigate(`/akademik/ujian-user/${id}`)
   }
 
-  const getAnsweredCount = () => {
-    return Object.keys(jawaban).length
-  }
+  const formatTime = (value) => value == null ? '--:--:--' : [Math.floor(value / 3600), Math.floor(value % 3600 / 60), value % 60].map((part) => String(part).padStart(2, '0')).join(':')
+  if (loading) return <div className="flex h-screen items-center justify-center"><div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600" /></div>
+  if (!ujianUser || !soalList.length) return <div className="flex h-screen flex-col items-center justify-center gap-4"><AlertCircle size={48} className="text-red-500" /><p>Soal ujian tidak tersedia.</p><Button variant="secondary" onClick={() => navigate('/akademik/ujian-user')}>Kembali</Button></div>
 
-  const getUnansweredCount = () => {
-    return soalList.length - getAnsweredCount()
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    )
-  }
-
-  if (!ujianUser || soalList.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <AlertCircle size={48} className="text-red-500 mb-4" />
-        <p className="text-lg text-gray-700 dark:text-gray-300">Tidak dapat memuat data ujian</p>
-        <Button variant="secondary" onClick={() => navigate('/akademik/ujian-user')} className="mt-4">
-          Kembali
-        </Button>
-      </div>
-    )
-  }
-
-  const currentSoal = soalList[currentSoalIndex]
-  const progressPercentage = ((currentSoalIndex + 1) / soalList.length) * 100
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <BookOpen size={24} className="text-primary-600" />
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {ujianUser.ujian?.nama || 'Ujian'}
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                  <User size={14} />
-                  {ujianUser.siswa?.nama || 'Siswa'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Timer */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 ${getTimerColorClass()}`}>
-              <Clock size={20} />
-              <span className="font-mono font-bold text-lg">
-                {formatTime(sisaWaktu)}
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 h-1">
-          <div 
-            className="bg-primary-600 h-1 transition-all duration-300"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Soal Navigation Sidebar */}
-          <div className="lg:col-span-1 order-2 lg:order-1">
-            <Card className="sticky top-24">
-              <div className="p-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Navigasi Soal
-                </h3>
-                <div className="grid grid-cols-5 gap-2">
-                  {soalList.map((soal, index) => {
-                    const isAnswered = jawaban[soal.id] !== undefined
-                    const isCurrent = index === currentSoalIndex
-                    
-                    return (
-                      <button
-                        key={soal.id}
-                        onClick={() => handleSoalClick(index)}
-                        className={`
-                          w-10 h-10 rounded-lg text-sm font-medium transition-colors
-                          ${isCurrent 
-                            ? 'bg-primary-600 text-white' 
-                            : isAnswered
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-300 dark:border-green-700'
-                              : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                          }
-                        `}
-                      >
-                        {index + 1}
-                      </button>
-                    )
-                  })}
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-4 h-4 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded"></div>
-                    <span className="text-gray-600 dark:text-gray-400">Sudah dijawab ({getAnsweredCount()})</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded"></div>
-                    <span className="text-gray-600 dark:text-gray-400">Belum dijawab ({getUnansweredCount()})</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-4 h-4 bg-primary-600 rounded"></div>
-                    <span className="text-gray-600 dark:text-gray-400">Soal aktif</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Soal Content */}
-          <div className="lg:col-span-3 order-1 lg:order-2">
-            <Card>
-              <div className="p-6">
-                {/* Soal Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Soal {currentSoalIndex + 1} dari {soalList.length}
-                  </span>
-                  {jawaban[currentSoal.id] && (
-                    <span className="flex items-center gap-1 text-sm text-green-600">
-                      <Flag size={14} />
-                      Sudah dijawab
-                    </span>
-                  )}
-                </div>
-
-                {/* Soal Text */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    {currentSoal.soal}
-                  </h3>
-                </div>
-
-                {/* Pilihan Jawaban */}
-                <div className="space-y-3">
-                  {currentSoal.pilihan.map((pilihan) => (
-                    <label
-                      key={pilihan.id}
-                      className={`
-                        flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
-                        ${jawaban[currentSoal.id] === pilihan.id
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                        }
-                      `}
-                    >
-                      <input
-                        type="radio"
-                        name={`soal-${currentSoal.id}`}
-                        value={pilihan.id}
-                        checked={jawaban[currentSoal.id] === pilihan.id}
-                        onChange={() => handleJawabanChange(currentSoal.id, pilihan.id)}
-                        className="mt-1 w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
-                      />
-                      <div className="flex-1">
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {pilihan.id}.
-                        </span>
-                        <span className="ml-2 text-gray-700 dark:text-gray-300">
-                          {pilihan.teks}
-                        </span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    variant="secondary"
-                    onClick={handlePrev}
-                    disabled={currentSoalIndex === 0}
-                  >
-                    <ChevronLeft size={18} className="mr-2" />
-                    Sebelumnya
-                  </Button>
-                  
-                  {currentSoalIndex === soalList.length - 1 ? (
-                    <Button
-                      variant="primary"
-                      onClick={() => handleSubmitUjian(false)}
-                      disabled={submitting}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Send size={18} className="mr-2" />
-                      {submitting ? 'Mengirim...' : 'Kirim Jawaban'}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      onClick={handleNext}
-                    >
-                      Selanjutnya
-                      <ChevronRight size={18} className="ml-2" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Submit Button (Mobile) */}
-            <div className="mt-4 lg:hidden">
-              <Button
-                variant="primary"
-                onClick={() => handleSubmitUjian(false)}
-                disabled={submitting}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <Send size={18} className="mr-2" />
-                {submitting ? 'Mengirim...' : 'Kirim Jawaban'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
+  const soal = soalList[index]
+  const answer = answers[soal.id] || {}
+  const answered = soalList.filter((item) => hasAnswer(answers[item.id])).length
+  return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <header className="sticky top-0 z-50 border-b bg-white shadow-sm dark:bg-gray-800"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4"><div className="flex items-center gap-3"><BookOpen className="text-primary-600" /><div><h1 className="font-semibold">{ujianUser.ujian?.nama || 'Ujian'}</h1><p className="flex items-center gap-1 text-sm text-gray-500"><User size={14} />{ujianUser.siswa?.nama || 'Siswa'}</p></div></div><div className={`flex items-center gap-2 font-mono font-bold ${seconds != null && seconds < 300 ? 'text-red-600' : 'text-green-600'}`}><Clock size={20} />{formatTime(seconds)}</div></div></header>
+    <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-4"><Card className="order-2 lg:order-1"><div className="p-4"><p className="mb-3 font-semibold">Soal ({answered}/{soalList.length})</p><div className="grid grid-cols-5 gap-2">{soalList.map((item, itemIndex) => <button key={item.id} type="button" onClick={() => setIndex(itemIndex)} className={`h-10 rounded ${itemIndex === index ? 'bg-primary-600 text-white' : hasAnswer(answers[item.id]) ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{itemIndex + 1}</button>)}</div></div></Card>
+      <Card className="order-1 lg:col-span-3"><div className="p-6"><div className="mb-6 flex justify-between text-sm text-gray-500"><span>Soal {index + 1} dari {soalList.length}</span>{pending[soal.id] && <span>Menyimpan...</span>}</div><h2 className="mb-8 text-lg font-medium whitespace-pre-wrap">{soal.pertanyaan}</h2>{isEssay(soal) ? <textarea aria-label="Jawaban essay" defaultValue={answer.jawaban_teks || ''} disabled={isExpired || pending[soal.id]} onBlur={(event) => save(soal, event.target.value)} className="min-h-40 w-full rounded border p-3" placeholder="Tulis jawaban Anda" /> : <div className="space-y-3">{soal.opsi.map((opsi) => <label key={opsi.id} className={`flex cursor-pointer gap-3 rounded border-2 p-4 ${answer.mst_soal_opsi_id === opsi.id ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}><input type="radio" name={`soal-${soal.id}`} checked={answer.mst_soal_opsi_id === opsi.id} disabled={isExpired || pending[soal.id]} onChange={() => save(soal, opsi.id)} /><span>{opsi.teks_opsi}</span></label>)}</div>}<div className="mt-8 flex justify-between border-t pt-6"><Button variant="secondary" disabled={index === 0} onClick={() => setIndex(index - 1)}><ChevronLeft size={18} />Sebelumnya</Button>{index === soalList.length - 1 ? <Button disabled={finishing} onClick={() => finish(false)}><Send size={18} />{finishing ? 'Mengirim...' : 'Kirim Jawaban'}</Button> : <Button onClick={() => setIndex(index + 1)}>Selanjutnya<ChevronRight size={18} /></Button>}</div></div></Card></main>
+  </div>
 }
 
 export default UjianUserMulai

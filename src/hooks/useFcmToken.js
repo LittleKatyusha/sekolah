@@ -75,6 +75,5 @@ export function useFcmToken() {
       cleanup()
     }
   // Run once on mount; the parent (FcmManager) only mounts when authenticated.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }

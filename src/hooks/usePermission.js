@@ -4,7 +4,7 @@ import useAuthStore from '../store/useAuthStore'
 /**
  * Flatten permissions from top-level user.permissions or nested roles[].permissions.
  */
-const resolvePermissions = (user) => {
+export const resolvePermissions = (user) => {
   if (Array.isArray(user?.permissions) && user.permissions.length > 0) {
     return user.permissions
   }
@@ -33,13 +33,16 @@ const permissionAliases = (code) => {
  * SUPER_ADMIN always has all permissions.
  * Pure function — no `this` dependency.
  */
-const checkPermission = (user, code) => {
+export const checkPermission = (user, code) => {
   if (!code) return true
   const role = user?.role?.toUpperCase?.() || user?.role
-  if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ADMIN_SEKOLAH') return true
+  if (role === 'SUPER_ADMIN') return true
 
   const perms = resolvePermissions(user)
-  if (!Array.isArray(perms) || perms.length === 0) return false
+  // Login payloads from older auth endpoints omit permissions. Let the backend
+  // remain authoritative until `/auth/me` supplies the current permission set.
+  if (!Array.isArray(user?.permissions) && !Array.isArray(user?.roles)) return true
+  if (perms.length === 0) return false
 
   const candidates = permissionAliases(code)
   return perms.some((p) => {

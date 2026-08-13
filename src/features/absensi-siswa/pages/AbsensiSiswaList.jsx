@@ -65,16 +65,16 @@ const STATUS_META = {
     softClass: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/40',
   },
   '2': {
-    label: 'Sakit',
-    className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    accentClass: 'text-orange-600 dark:text-orange-400',
-    softClass: 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-900/40',
-  },
-  '3': {
     label: 'Izin',
     className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     accentClass: 'text-yellow-600 dark:text-yellow-400',
     softClass: 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-900/40',
+  },
+  '3': {
+    label: 'Sakit',
+    className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    accentClass: 'text-orange-600 dark:text-orange-400',
+    softClass: 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-900/40',
   },
   '4': {
     label: 'Alpha',
