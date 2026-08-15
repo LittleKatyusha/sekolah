@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Plus } from 'lucide-react'
+import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -14,6 +14,8 @@ const SekolahDetail = () => {
   const [sekolah, setSekolah] = useState(null)
   const [settings, setSettings] = useState([])
   const [loadingSettings, setLoadingSettings] = useState(false)
+  const [savingAi, setSavingAi] = useState(false)
+  const [aiSettings, setAiSettings] = useState({ base_url: '', model_id: '' })
 
   useEffect(() => {
     fetchSekolah()
@@ -39,9 +41,24 @@ const SekolahDetail = () => {
     setLoadingSettings(true)
     const { data } = await sekolahService.getSettings(sekolahId)
     if (data) {
-      setSettings(data.data || [])
+      const values = data.data || []
+      setSettings(values)
+      setAiSettings({
+        base_url: values.find(({ key }) => key === 'ai_base_url')?.value || '',
+        model_id: values.find(({ key }) => key === 'ai_model_id')?.value || '',
+      })
     }
     setLoadingSettings(false)
+  }
+
+  const handleSaveAi = async (event) => {
+    event.preventDefault()
+    setSavingAi(true)
+    const { error } = await sekolahService.updateAiSettings(sekolah.id, aiSettings)
+    setSavingAi(false)
+    if (error) return showError(error?.message || 'Gagal menyimpan konfigurasi AI')
+    showSuccess('Konfigurasi AI berhasil disimpan!')
+    fetchSettings(sekolah.id)
   }
 
   const handleDeleteSetting = async (settingId, key) => {
@@ -223,6 +240,26 @@ const SekolahDetail = () => {
       </div>
 
       {/* Settings Section */}
+      <PermissionGuard permission="sekolah.settings.update">
+        <Card>
+          <form onSubmit={handleSaveAi} className="p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Integrasi AI</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Base URL
+                <input type="url" required placeholder="https://api.openai.com/v1" className="input-field mt-2" value={aiSettings.base_url} onChange={(event) => setAiSettings({ ...aiSettings, base_url: event.target.value })} />
+              </label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Model ID
+                <input required placeholder="gpt-4o-mini" className="input-field mt-2" value={aiSettings.model_id} onChange={(event) => setAiSettings({ ...aiSettings, model_id: event.target.value })} />
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">API key tetap dikelola server. HTTPS wajib di production.</p>
+            <Button type="submit" disabled={savingAi}><Save size={18} className="mr-2" />{savingAi ? 'Menyimpan...' : 'Simpan Konfigurasi AI'}</Button>
+          </form>
+        </Card>
+      </PermissionGuard>
+
       <Card>
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">

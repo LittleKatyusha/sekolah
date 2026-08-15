@@ -73,6 +73,10 @@ export const sekolahService = {
     return await apiService.get(`${BASE_URL}/${sekolahId}/settings`)
   },
 
+  updateAiSettings: async (sekolahId, data) => {
+    return await apiService.put(`${BASE_URL}/${sekolahId}/settings/ai`, data)
+  },
+
   /**
    * Get a specific setting by ID for a sekolah
    * Endpoint: GET /sekolah/{sekolahId}/settings/{id}
