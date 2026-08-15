@@ -17624,7 +17624,7 @@
                 "generate"
               ]
             },
-            "description": "Generate laporan secara sinkron menggunakan JasperReports Server.",
+            "description": "Generate laporan secara sinkron menggunakan mesin laporan lokal.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"report_name\": \"student_report\",\n  \"format\": \"pdf\",\n  \"parameters\": {}\n}",
@@ -17663,7 +17663,7 @@
                 "generate-async"
               ]
             },
-            "description": "Generate laporan secara asinkron menggunakan JasperReports Server.",
+            "description": "Generate laporan secara asinkron menggunakan mesin laporan lokal.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"report_name\": \"student_report\",\n  \"format\": \"pdf\",\n  \"parameters\": {}\n}",
@@ -17847,7 +17847,7 @@
                 "test"
               ]
             },
-            "description": "Menguji koneksi ke JasperReports Server (public endpoint, tidak memerlukan autentikasi)."
+            "description": "Menguji ketersediaan mesin laporan lokal."
           },
           "response": []
         }
