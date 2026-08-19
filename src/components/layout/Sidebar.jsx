@@ -398,9 +398,12 @@ const Sidebar = ({ isOpen, onClose }) => {
     fetchMenus()
   }, [user?.id])
 
-  const handleLogout = () => {
-    logout()
-    window.location.href = '/login'
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } finally {
+      window.location.href = '/login'
+    }
   }
 
   return (
