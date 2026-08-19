@@ -33,26 +33,6 @@ export const authService = {
   },
 
   /**
-   * Register a new user
-   * @param {Object} userData - User registration data
-   * @param {string} userData.name - User name
-   * @param {string} userData.email - User email
-   * @param {string} userData.password - User password
-   * @param {string} userData.password_confirmation - Password confirmation
-   * @param {string} [userData.role] - User role (default: guru)
-   * @returns {Promise<{data: any, error: any}>}
-   */
-  register: async ({ name, email, password, password_confirmation, role = 'guru' }) => {
-    return await apiService.post(`${BASE_URL}/register`, {
-      name,
-      email,
-      password,
-      password_confirmation,
-      role,
-    })
-  },
-
-  /**
    * Refresh access token using refresh token
    * @returns {Promise<{data: any, error: any}>}
    */

@@ -94,14 +94,6 @@ export const pembayaranSppService = {
   bayarOnline: async (data) => {
     return await apiService.post(`${PEMBAYARAN_BASE}/bayar-online`, data)
   },
-
-  /**
-   * Get all gateway logs for a pembayaran.
-   * @param {number|string} id
-   */
-  getGatewayLogs: async (id) => {
-    return await apiService.get(`${PEMBAYARAN_BASE}/${id}/gateway-logs`)
-  },
 }
 
 export default {
