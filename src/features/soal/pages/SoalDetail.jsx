@@ -229,7 +229,7 @@ const SoalDetail = () => {
               
               <div
                 className="prose prose-sm max-w-none dark:prose-invert mb-8 text-gray-900 dark:text-white font-medium"
-                dangerouslySetInnerHTML={{ __html: soal.pertanyaan || '' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(soal.pertanyaan || '') }}
               />
               
               {/* Render options only for multiple choice */}
