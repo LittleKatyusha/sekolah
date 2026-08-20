@@ -187,6 +187,7 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
+        endTrackedRequest()
         // Token refresh failed - logout user
         useAuthStore.getState().logout()
         notifyAuthExpired()

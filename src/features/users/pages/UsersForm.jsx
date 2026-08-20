@@ -25,9 +25,10 @@ const UsersForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
-    role: 2, // Default to Guru
-    is_active: true
+    role: 2, // Default to Guru (ID: 2)
+    is_active: true,
   })
 
   const [errors, setErrors] = useState({})
@@ -79,8 +80,8 @@ const UsersForm = () => {
     }
     if (!isEditMode && !formData.password) {
       newErrors.password = 'Password wajib diisi'
-    } else if (formData.password && formData.password.length < 6) {
-      newErrors.password = 'Password minimal 6 karakter'
+    } else if (formData.password && formData.password.length < 8) {
+      newErrors.password = 'Password minimal 8 karakter'
     }
     
     setErrors(newErrors)
