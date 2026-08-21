@@ -5,24 +5,25 @@ const BASE_URL = '/whatsapp'
 const unwrapResponse = (response) => response?.data?.data ?? response?.data ?? null
 
 export const wahaService = {
-  getSessionStatus: async () => {
-    const response = await apiService.get(`${BASE_URL}/session`)
+  getSessionStatus: async (appkey) => {
+    const params = appkey ? { appkey } : {}
+    const response = await apiService.get(`${BASE_URL}/session`, { params })
     return {
       ...response,
       payload: unwrapResponse(response),
     }
   },
 
-  startSession: async () => {
-    const response = await apiService.post(`${BASE_URL}/session/start`, {})
+  startSession: async (appkey) => {
+    const response = await apiService.post(`${BASE_URL}/session/start`, { appkey })
     return {
       ...response,
       payload: unwrapResponse(response),
     }
   },
 
-  stopSession: async () => {
-    const response = await apiService.post(`${BASE_URL}/session/stop`, {})
+  stopSession: async (appkey) => {
+    const response = await apiService.post(`${BASE_URL}/session/stop`, { appkey })
     return {
       ...response,
       payload: unwrapResponse(response),
@@ -31,6 +32,14 @@ export const wahaService = {
 
   getQrCode: async () => {
     const response = await apiService.get(`${BASE_URL}/qr`)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
+  listDevices: async () => {
+    const response = await apiService.get(`${BASE_URL}/devices`)
     return {
       ...response,
       payload: unwrapResponse(response),

@@ -130,6 +130,8 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   const navigate = useNavigate()
   const [sessionPayload, setSessionPayload] = useState(null)
   const [qrPayload, setQrPayload] = useState(null)
+  const [devices, setDevices] = useState([])
+  const [selectedAppkey, setSelectedAppkey] = useState('')
   const [lastResponse, setLastResponse] = useState(null)
   const [messageForm, setMessageForm] = useState(createInitialMessageForm)
   const [sppForm, setSppForm] = useState(createInitialSppForm)
@@ -186,36 +188,45 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   const loadSessionStatus = useCallback(async ({ notify = false } = {}) => {
     return handleApiAction({
       key: 'session',
-      request: () => wahaService.getSessionStatus(),
-      successMessage: notify ? 'Status sesi WAHA berhasil diperbarui.' : '',
+      request: () => wahaService.getSessionStatus(selectedAppkey || undefined),
+      successMessage: notify ? 'Status Saung WA berhasil diperbarui.' : '',
       onSuccess: (payload) => setSessionPayload(payload),
     })
-  }, [handleApiAction])
+  }, [handleApiAction, selectedAppkey])
 
   const loadQrCode = useCallback(async ({ notify = false } = {}) => {
     return handleApiAction({
       key: 'qr',
       request: () => wahaService.getQrCode(),
-      successMessage: notify ? 'QR code WAHA berhasil dimuat.' : '',
+      successMessage: notify ? 'QR Saung WA berhasil dimuat.' : '',
       onSuccess: (payload) => setQrPayload(payload),
     })
   }, [handleApiAction])
 
+  const loadDevices = useCallback(async () => {
+    const response = await wahaService.listDevices()
+    const list = response.payload?.data ?? response.payload ?? []
+    setDevices(Array.isArray(list) ? list : [])
+  }, [])
+
+  useEffect(() => {
+    loadDevices()
+  }, [loadDevices])
+
   useEffect(() => {
     loadSessionStatus().then((sessionData) => {
-      // Only fetch QR when session is not already connected
       const normalizedState = String(sessionData?.status || sessionData?.state || '').toUpperCase()
       if (!sessionData || !['WORKING', 'CONNECTED'].includes(normalizedState)) {
         loadQrCode()
       }
     })
-  }, [loadQrCode, loadSessionStatus])
+  }, [loadQrCode, loadSessionStatus, selectedAppkey])
 
   const handleStartSession = async () => {
     const started = await handleApiAction({
       key: 'start',
-      request: () => wahaService.startSession(),
-      successMessage: 'Sesi WAHA berhasil dimulai.',
+      request: () => wahaService.startSession(selectedAppkey || undefined),
+      successMessage: 'Saung WA device berhasil diaktifkan.',
     })
 
     if (started) {
@@ -227,8 +238,8 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   const handleStopSession = async () => {
     const stopped = await handleApiAction({
       key: 'stop',
-      request: () => wahaService.stopSession(),
-      successMessage: 'Sesi WAHA berhasil dihentikan.',
+      request: () => wahaService.stopSession(selectedAppkey || undefined),
+      successMessage: 'Saung WA device berhasil dinonaktifkan.',
     })
 
     if (stopped !== null) {
@@ -239,14 +250,14 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   const handleRestartSession = async () => {
     setLoadingStates((prev) => ({ ...prev, restart: true }))
     try {
-      await wahaService.stopSession()
+      await wahaService.stopSession(selectedAppkey || undefined)
     } catch (_) {
-      // ignore stop errors — session may already be stopped
+      // ignore
     }
     const started = await handleApiAction({
       key: 'restart',
-      request: () => wahaService.startSession(),
-      successMessage: 'Sesi WAHA berhasil direstart.',
+      request: () => wahaService.startSession(selectedAppkey || undefined),
+      successMessage: 'Saung WA device berhasil direstart.',
     })
 
     if (started) {
@@ -329,12 +340,12 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
             <MessageCircle size={16} />
-            WhatsApp Gateway via WAHA
+            WhatsApp Gateway via Saung WA
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Modul WhatsApp</h1>
             <p className="mt-1 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
-              Kelola status sesi WAHA, QR autentikasi, kirim pesan manual, dan notifikasi SPP, PPDB, serta EWS dari satu halaman.
+              Kelola device Saung WA (multi-number / unlimited), QR autentikasi, kirim pesan manual, dan notifikasi SPP, PPDB, serta EWS dari satu halaman.
             </p>
           </div>
         </div>
@@ -369,24 +380,39 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
       {activeTab === 'session' && (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <Card
-            title="Status Sesi WAHA"
+            title="Status Device Saung WA"
             actions={(
               <div className="flex flex-wrap gap-2">
+                {devices.length > 0 && (
+                  <select
+                    value={selectedAppkey}
+                    onChange={(e) => setSelectedAppkey(e.target.value)}
+                    className="input-field min-w-[200px]"
+                    title="Pilih device / nomor WhatsApp"
+                  >
+                    <option value="">— Semua device —</option>
+                    {devices.map((d) => (
+                      <option key={d.appkey} value={d.appkey}>
+                        {d.appkey}{d.default ? ' (default)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <Button variant="secondary" onClick={() => loadSessionStatus({ notify: true })} loading={loadingStates.session}>
                   <RefreshCw size={18} className="mr-2" />
                   Refresh Status
                 </Button>
                 <Button variant="danger" onClick={handleStopSession} loading={loadingStates.stop}>
                   <PowerOff size={18} className="mr-2" />
-                  Stop Session
+                  Stop Device
                 </Button>
                 <Button onClick={handleStartSession} loading={loadingStates.start}>
                   <Smartphone size={18} className="mr-2" />
-                  Start Session
+                  Start Device
                 </Button>
                 <Button variant="secondary" onClick={handleRestartSession} loading={loadingStates.restart}>
                   <RefreshCw size={18} className="mr-2" />
-                  Restart Session
+                  Restart Device
                 </Button>
               </div>
             )}
