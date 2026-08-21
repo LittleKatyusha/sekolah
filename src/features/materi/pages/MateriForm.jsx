@@ -9,6 +9,8 @@ import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { materiService } from '../services/materiService'
+import { guruMapelService } from '../../guru-mapel/services/guruMapelService'
+import useAuthStore from '../../../store/useAuthStore'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const STATUS_OPTIONS = [
@@ -20,6 +22,8 @@ const MateriForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const user = useAuthStore((state) => state.user)
+  const isGuru = user?.role?.toLowerCase?.() === 'guru'
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -60,31 +64,22 @@ const MateriForm = () => {
   const searchGuruMapelOptions = useCallback(async (keyword = '') => {
     const normalizedKeyword = keyword.trim()
 
-    const { data, error } = await materiService.getAll({
-      search: normalizedKeyword || undefined,
-      per_page: 20
-    })
+    const { data, error } = isGuru
+      ? await guruMapelService.getMine()
+      : await guruMapelService.getGuruMapel({
+          search: normalizedKeyword || undefined,
+          per_page: 20
+        })
 
     if (data?.data) {
-      const seenIds = new Set()
-      return data.data.reduce((options, materi) => {
-        const option = buildGuruMapelOption(materi.guru_mapel)
-        if (!option || seenIds.has(option.value)) return options
-
-        const label = option.label.toLowerCase()
-        if (normalizedKeyword && !label.includes(normalizedKeyword.toLowerCase())) {
-          return options
-        }
-
-        seenIds.add(option.value)
-        options.push(option)
-        return options
-      }, [])
+      return data.data
+        .map(buildGuruMapelOption)
+        .filter((option) => option && (!normalizedKeyword || option.label.toLowerCase().includes(normalizedKeyword.toLowerCase())))
     }
 
     console.error('Failed to fetch guru mapel options:', error)
     return []
-  }, [buildGuruMapelOption])
+  }, [buildGuruMapelOption, isGuru])
 
   const hydrateSelectedGuruMapelOption = useCallback(async (guruMapelId) => {
     if (!guruMapelId) {
@@ -92,13 +87,13 @@ const MateriForm = () => {
       return
     }
 
-    const { data } = await materiService.getAll({ per_page: 20 })
-    const materiList = data?.data || []
-    const matchedMateri = materiList.find(
-      (materi) => String(materi.guru_mapel?.id) === String(guruMapelId)
-    )
-
-    const option = buildGuruMapelOption(matchedMateri?.guru_mapel)
+    const { data } = isGuru
+      ? await guruMapelService.getMine()
+      : await guruMapelService.getGuruMapelById(guruMapelId)
+    const guruMapel = isGuru
+      ? data?.data?.find((item) => String(item.id) === String(guruMapelId))
+      : data?.data
+    const option = buildGuruMapelOption(guruMapel)
 
     if (option) {
       setSelectedGuruMapelOption(option)
@@ -109,7 +104,7 @@ const MateriForm = () => {
       value: String(guruMapelId),
       label: `Guru Mapel #${guruMapelId}`
     })
-  }, [buildGuruMapelOption])
+  }, [buildGuruMapelOption, isGuru])
 
   const fetchMateri = async () => {
     setFetchingData(true)

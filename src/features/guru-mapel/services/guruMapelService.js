@@ -11,6 +11,10 @@ export const guruMapelService = {
     return await apiService.get(`${BASE_URL}/${id}`)
   },
 
+  getMine: async () => {
+    return await apiService.get(`${BASE_URL}/saya`)
+  },
+
   createGuruMapel: async (data) => {
     return await apiService.post(BASE_URL, data)
   },

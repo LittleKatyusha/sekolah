@@ -9,6 +9,8 @@ import { tugasService } from '../services/tugasService'
 import { guruMapelService } from '../../guru-mapel/services/guruMapelService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
+import useAuthStore from '../../../store/useAuthStore'
 
 const STATUS_OPTIONS = [
   { value: '1', label: 'Aktif' },
@@ -19,6 +21,8 @@ const TugasForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const user = useAuthStore((state) => state.user)
+  const isGuru = user?.role?.toLowerCase?.() === 'guru'
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -29,7 +33,7 @@ const TugasForm = () => {
     judul: '',
     deskripsi: '',
     tenggat_waktu: '',
-    file_path: '',
+    file_lampiran: '',
     status: '1'
   })
 
@@ -59,20 +63,23 @@ const TugasForm = () => {
   }), [])
 
   const searchGuruMapelOptions = useCallback(async (keyword = '') => {
-    const { data, error } = await guruMapelService.getGuruMapel({
-      search: keyword.trim() || undefined,
-      per_page: 20
-    })
+    const normalizedKeyword = keyword.trim().toLowerCase()
+    const { data, error } = isGuru
+      ? await guruMapelService.getMine()
+      : await guruMapelService.getGuruMapel({
+          search: keyword.trim() || undefined,
+          per_page: 20
+        })
 
     if (data?.data) {
       return data.data
         .map(buildGuruMapelOption)
-        .filter(Boolean)
+        .filter((option) => option && (!normalizedKeyword || option.label.toLowerCase().includes(normalizedKeyword)))
     }
 
     console.error('Failed to fetch guru mapel options:', error)
     return []
-  }, [buildGuruMapelOption])
+  }, [buildGuruMapelOption, isGuru])
 
   const hydrateSelectedGuruMapelOption = useCallback(async (guruMapelId) => {
     if (!guruMapelId) {
@@ -80,8 +87,13 @@ const TugasForm = () => {
       return
     }
 
-    const { data } = await guruMapelService.getGuruMapelById(guruMapelId)
-    const option = buildGuruMapelOption(data?.data)
+    const { data } = isGuru
+      ? await guruMapelService.getMine()
+      : await guruMapelService.getGuruMapelById(guruMapelId)
+    const guruMapel = isGuru
+      ? data?.data?.find((item) => String(item.id) === String(guruMapelId))
+      : data?.data
+    const option = buildGuruMapelOption(guruMapel)
 
     if (option) {
       setSelectedGuruMapelOption(option)
@@ -92,7 +104,7 @@ const TugasForm = () => {
       value: String(guruMapelId),
       label: `Guru Mapel #${guruMapelId}`
     })
-  }, [buildGuruMapelOption])
+  }, [buildGuruMapelOption, isGuru])
 
   const searchKelasOptions = useCallback(async (keyword = '') => {
     const { data } = await kelasService.getAll({
@@ -142,7 +154,7 @@ const TugasForm = () => {
         judul: tugas.judul || '',
         deskripsi: tugas.deskripsi || '',
         tenggat_waktu: tenggatWaktu,
-        file_path: tugas.file_path || '',
+      file_lampiran: tugas.file_lampiran || '',
         status: tugas.status !== null && tugas.status !== undefined ? String(tugas.status) : '1'
       })
 
@@ -217,7 +229,7 @@ const TugasForm = () => {
       judul: formData.judul,
       deskripsi: formData.deskripsi || null,
       tenggat_waktu: formData.tenggat_waktu || null,
-      file_path: formData.file_path || null,
+      file_lampiran: formData.file_lampiran || null,
       status: formData.status !== '' ? parseInt(formData.status) : null
     }
 
@@ -358,11 +370,11 @@ const TugasForm = () => {
                 </label>
                 <Input
                   type="text"
-                  name="file_path"
-                  value={formData.file_path}
+                  name="file_lampiran"
+                  value={formData.file_lampiran}
                   onChange={handleChange}
                   placeholder="Path file (opsional)"
-                  error={errors.file_path}
+                  error={errors.file_lampiran}
                 />
               </div>
 
@@ -386,10 +398,12 @@ const TugasForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/akademik/tugas')}>
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                <Save size={18} className="mr-2" />
-                {loading ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <PermissionGuard permission={isEditMode ? 'tugas.update' : 'tugas.create'}>
+                <Button type="submit" disabled={loading}>
+                  <Save size={18} className="mr-2" />
+                  {loading ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}
