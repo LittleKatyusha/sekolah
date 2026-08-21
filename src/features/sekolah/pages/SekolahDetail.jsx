@@ -15,7 +15,17 @@ const SekolahDetail = () => {
   const [settings, setSettings] = useState([])
   const [loadingSettings, setLoadingSettings] = useState(false)
   const [savingAi, setSavingAi] = useState(false)
-  const [aiSettings, setAiSettings] = useState({ base_url: '', model_id: '' })
+  const [aiSettings, setAiSettings] = useState({ provider: 'openai', base_url: '', model_id: '', api_key: '' })
+
+  const AI_PROVIDERS = [
+    { id: 'openai', label: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini' },
+    { id: 'openrouter', label: 'OpenRouter', defaultBaseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'google/gemini-2.0-flash-001' },
+    { id: 'deepseek', label: 'DeepSeek', defaultBaseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat' },
+    { id: 'groq', label: 'Groq', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultModel: 'llama-3.3-70b-versatile' },
+    { id: 'anthropic', label: 'Anthropic (via Proxy)', defaultBaseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-3-5-sonnet-20241022' },
+    { id: 'gemini', label: 'Google Gemini (OpenAI Compat)', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-2.0-flash' },
+    { id: 'custom', label: 'Custom / Local LLM (Ollama, vLLM)', defaultBaseUrl: 'http://localhost:11434/v1', defaultModel: 'llama3' },
+  ]
 
   useEffect(() => {
     fetchSekolah()
@@ -43,12 +53,25 @@ const SekolahDetail = () => {
     if (data) {
       const values = data.data || []
       setSettings(values)
+      const provider = values.find(({ key }) => key === 'ai_provider')?.value || 'openai'
       setAiSettings({
+        provider,
         base_url: values.find(({ key }) => key === 'ai_base_url')?.value || '',
         model_id: values.find(({ key }) => key === 'ai_model_id')?.value || '',
+        api_key: values.find(({ key }) => key === 'ai_api_key')?.value || '',
       })
     }
     setLoadingSettings(false)
+  }
+
+  const handleProviderChange = (providerId) => {
+    const selected = AI_PROVIDERS.find(p => p.id === providerId)
+    setAiSettings(prev => ({
+      ...prev,
+      provider: providerId,
+      base_url: selected?.defaultBaseUrl || prev.base_url,
+      model_id: selected?.defaultModel || prev.model_id,
+    }))
   }
 
   const handleSaveAi = async (event) => {
@@ -243,19 +266,81 @@ const SekolahDetail = () => {
       <PermissionGuard permission="sekolah.settings.update">
         <Card>
           <form onSubmit={handleSaveAi} className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Integrasi AI</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Base URL
-                <input type="url" required placeholder="https://api.openai.com/v1" className="input-field mt-2" value={aiSettings.base_url} onChange={(event) => setAiSettings({ ...aiSettings, base_url: event.target.value })} />
-              </label>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Model ID
-                <input required placeholder="gpt-4o-mini" className="input-field mt-2" value={aiSettings.model_id} onChange={(event) => setAiSettings({ ...aiSettings, model_id: event.target.value })} />
-              </label>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pengaturan Provider AI</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                Konfigurasi provider LLM dan API Key langsung dari database tanpa perlu ubah file .env di production.
+              </p>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">API key tetap dikelola server. HTTPS wajib di production.</p>
-            <Button type="submit" disabled={savingAi}><Save size={18} className="mr-2" />{savingAi ? 'Menyimpan...' : 'Simpan Konfigurasi AI'}</Button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Provider AI
+                </label>
+                <select
+                  className="input-field mt-2 w-full"
+                  value={aiSettings.provider}
+                  onChange={(e) => handleProviderChange(e.target.value)}
+                >
+                  {AI_PROVIDERS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Model ID
+                </label>
+                <input
+                  required
+                  placeholder="gpt-4o-mini / deepseek-chat / dll"
+                  className="input-field mt-2 w-full"
+                  value={aiSettings.model_id}
+                  onChange={(event) => setAiSettings({ ...aiSettings, model_id: event.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Base URL API
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://api.openai.com/v1"
+                  className="input-field mt-2 w-full"
+                  value={aiSettings.base_url}
+                  onChange={(event) => setAiSettings({ ...aiSettings, base_url: event.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  API Key AI
+                </label>
+                <input
+                  type="password"
+                  placeholder="sk-... (kosongkan jika pakai default server)"
+                  className="input-field mt-2 w-full"
+                  value={aiSettings.api_key}
+                  onChange={(event) => setAiSettings({ ...aiSettings, api_key: event.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                API Key disimpan terenkripsi di database pengaturan sekolah.
+              </p>
+              <Button type="submit" disabled={savingAi}>
+                <Save size={18} className="mr-2" />
+                {savingAi ? 'Menyimpan...' : 'Simpan Pengaturan AI'}
+              </Button>
+            </div>
           </form>
         </Card>
       </PermissionGuard>
