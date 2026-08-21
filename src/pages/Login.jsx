@@ -52,13 +52,13 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: savedCredentials?.email || '',
-      password: savedCredentials?.password || '',
+      password: '',
     },
   })
 
   const onSubmit = async (data) => {
     setLoading(true)
-    setError('')
+      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email: data.email }))
 
     if (rememberMe) {
       localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email: data.email, password: data.password }))
