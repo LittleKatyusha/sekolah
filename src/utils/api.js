@@ -163,8 +163,10 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     // Handle 401 - Unauthorized (try to refresh token)
-    const isRefreshRequest = originalRequest?.url === '/auth/refresh'
-    if (error.response?.status === 401 && originalRequest && !isRefreshRequest && !originalRequest._retry) {
+    const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh')
+    const isLoginRequest = originalRequest?.url?.includes('/auth/login')
+
+    if (error.response?.status === 401 && originalRequest && !isRefreshRequest && !isLoginRequest && !originalRequest._retry) {
       if (isRefreshing) {
         // If already refreshing, add to queue
         return new Promise((resolve, reject) => {
