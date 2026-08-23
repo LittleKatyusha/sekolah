@@ -183,7 +183,7 @@ const GelombangDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Tahun Ajaran</p>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {gelombang.tahun_ajaran?.nama || gelombang.tahun_ajaran_id || '-'}
+                      {gelombang.tahunAjaran?.tahun_ajaran || gelombang.tahun_ajaran_id || '-'}
                     </p>
                   </div>
                 </div>
