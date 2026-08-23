@@ -32,9 +32,9 @@ const ForumDetail = () => {
 
   if (loading || !topic) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
 
-  const author = topic.createdBy?.name || 'Unknown'
-  const mapelName = topic.mapel?.nama
-  const kelasName = topic.kelas?.nama
+  const author = topic.is_anonymous ? 'Anonim' : (topic.createdBy?.name || 'Unknown')
+  const mapelName = topic.mapel?.nama_mapel
+  const kelasName = topic.kelas?.nama_kelas
 
   return <div className="space-y-6 max-w-4xl mx-auto">
     <button onClick={() => navigate('/akademik/forum')} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">

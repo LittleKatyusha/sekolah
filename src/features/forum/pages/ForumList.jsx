@@ -125,9 +125,9 @@ const ForumList = () => {
 
   // Topic card component - memoized for performance
   const TopicCard = useCallback(({ topic }) => {
-    const authorName = topic.user?.name || 'Unknown'
-    const mapelName = topic.guru_mapel?.mapel?.nama
-    const replyCount = topic.replies?.length || topic.replies_count || 0
+    const authorName = topic.is_anonymous ? 'Anonim' : (topic.createdBy?.name || 'Unknown')
+    const mapelName = topic.mapel?.nama_mapel
+    const replyCount = topic.reply_count || 0
     const preview = truncateText(stripHtml(topic.konten), 180)
 
     return (
