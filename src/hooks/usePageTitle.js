@@ -83,6 +83,10 @@ const PAGE_TITLES = {
   '/jadwal-pelajaran': 'Jadwal Pelajaran',
   '/files': 'Files Management',
 
+  // Marketing Email
+  '/marketing/email': 'Email Marketing',
+
+
   // WAHA
   '/waha/session': 'WAHA Session',
   '/waha/send': 'WAHA Messaging',

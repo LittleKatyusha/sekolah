@@ -138,6 +138,8 @@ const KalenderTipeList = lazy(() => import('./features/kalender-tipe/pages/Kalen
 const KalenderTipeForm = lazy(() => import('./features/kalender-tipe/pages/KalenderTipeForm'))
 const Files = lazy(() => import('./features/files/pages/FileUploadPage'))
 const Waha = lazy(() => import('./pages/Waha'))
+const MarketingEmail = lazy(() => import('./pages/MarketingEmail'))
+
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
@@ -421,6 +423,10 @@ function App() {
               <Route path="/whatsapp/session" element={<Navigate to="/waha/session" replace />} />
               <Route path="/whatsapp/send" element={<Navigate to="/waha/send" replace />} />
               <Route path="/whatsapp/*" element={<Navigate to="/waha/session" replace />} />
+              {/* Marketing Email */}
+              <Route path="/marketing/email" element={<MarketingEmail />} />
+
+
 
               {/* BK Module */}
               <Route path="/bk" element={<BK />} />

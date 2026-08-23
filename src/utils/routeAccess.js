@@ -77,6 +77,10 @@ const ROUTE_PERMISSIONS = [
   // ── Files ──────────────────────────────────────────────────
   ['/files', 'files.upload'],
 
+  // ── Email Marketing ────────────────────────────────────────
+  ['/marketing/email', 'email.view'],
+
+
   // ── Pengaturan (Admin) ─────────────────────────────────────
   ['/admin/users', 'users.view'],
   // user-devices diproteksi via users.view (route backend pakai permission yang sama)
