@@ -303,9 +303,9 @@ export const ppdbPublicService = {
     }
   },
 
-  cekStatus: async (noPendaftaran) => {
+  cekStatus: async (noPendaftaran, email) => {
     try {
-      const response = await publicApi.get(`${PUBLIC_BASE}/status/${encodeURIComponent(noPendaftaran)}`)
+      const response = await publicApi.post(`${PUBLIC_BASE}/status`, { no_pendaftaran: noPendaftaran, email })
       return { data: response.data, error: null }
     } catch (error) {
       return { data: null, error: error.response?.data || error.message }

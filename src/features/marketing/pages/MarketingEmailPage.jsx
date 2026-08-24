@@ -7,6 +7,7 @@ import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import { showError, showSuccess, showDeleteConfirm } from '../../../utils/sweetalert'
 import { emailService } from '../services/emailService'
+import DOMPurify from 'dompurify'
 
 export default function MarketingEmailPage() {
   const [tab, setTab] = useState('inbox')
@@ -211,7 +212,7 @@ export default function MarketingEmailPage() {
 
                   <div className="prose dark:prose-invert max-w-none text-sm">
                     {selectedInbox.html_body ? (
-                      <div dangerouslySetInnerHTML={{ __html: selectedInbox.html_body }} />
+                      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedInbox.html_body) }} />
                     ) : (
                       <pre className="whitespace-pre-wrap font-sans text-sm">{selectedInbox.text_body}</pre>
                     )}

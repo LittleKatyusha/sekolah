@@ -350,17 +350,18 @@ const DaftarTab = () => {
 
 const CekStatusTab = () => {
   const [noPendaftaran, setNoPendaftaran] = useState('')
+  const [email, setEmail] = useState('')
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleCek = async (e) => {
     e.preventDefault()
-    if (!noPendaftaran.trim()) { setError('Nomor pendaftaran wajib diisi'); return }
+    if (!noPendaftaran.trim() || !email.trim()) { setError('Nomor pendaftaran dan email wajib diisi'); return }
     setLoading(true)
     setError('')
     setStatus(null)
-    const { data, error: apiErr } = await ppdbPublicService.cekStatus(noPendaftaran.trim())
+    const { data, error: apiErr } = await ppdbPublicService.cekStatus(noPendaftaran.trim(), email.trim())
     if (data) setStatus(data.data ?? data)
     else setError(apiErr?.message || 'Nomor pendaftaran tidak ditemukan')
     setLoading(false)
@@ -388,6 +389,14 @@ const CekStatusTab = () => {
             className={`${inputBase} pl-10 text-base font-mono tracking-wider ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'}`}
           />
         </div>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setError('') }}
+          placeholder="Email saat pendaftaran"
+          className={`${inputBase} text-base ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'}`}
+          required
+        />
         {error && (
           <p className="text-sm text-red-500 flex items-center gap-1.5"><AlertCircle size={14} />{error}</p>
         )}

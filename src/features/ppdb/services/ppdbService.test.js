@@ -27,4 +27,13 @@ describe('ppdbPublicService', () => {
     expect(publicClientConfig.headers.Authorization).toBeUndefined()
     expect(get).toHaveBeenCalledWith('/ppdb/public/sekolah')
   })
+
+  it('requires registration number and email for status lookup', async () => {
+    post.mockResolvedValue({ data: { data: {} } })
+    await ppdbPublicService.cekStatus('PPDB-2026-ABC123', 'calon@example.test')
+    expect(post).toHaveBeenCalledWith('/ppdb/public/status', {
+      no_pendaftaran: 'PPDB-2026-ABC123',
+      email: 'calon@example.test',
+    })
+  })
 })
