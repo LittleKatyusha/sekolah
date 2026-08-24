@@ -93,15 +93,6 @@ export const pendaftarService = {
     return await apiService.post(`${PENDAFTAR_BASE}/batch-seleksi`, { ids, status })
   },
 
-  /**
-   * Update nilai rapor for a pendaftar via the new endpoint.
-   * @param {number|string} id - pendaftar ID
-   * @param {Object} nilaiRapor - map of kode_mapel → nilai, e.g. { mtk: 95, ipa: 88 }
-   */
-  updateNilaiRapor: async (id, nilaiRapor) => {
-    return await apiService.put(`${PENDAFTAR_BASE}/${id}/nilai-rapor`, { nilai_rapor: nilaiRapor })
-  },
-
   getStatistics: async (sekolahId, params = {}) => {
     return await apiService.get(`${PENDAFTAR_BASE}/sekolah/${sekolahId}/statistics`, { params })
   },
