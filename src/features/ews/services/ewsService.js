@@ -4,7 +4,7 @@ const BASE_URL = '/ews'
 
 export const ewsService = {
   getAll: async (params = {}) => {
-    return await apiService.get(`${BASE_URL}/alerts`, { params })
+    return await apiService.get(BASE_URL, { params })
   },
 
   getById: async (id) => {
@@ -12,11 +12,11 @@ export const ewsService = {
   },
 
   resolve: async (id) => {
-    return await apiService.patch(`${BASE_URL}/alerts/${id}/resolve`, {})
+    return await apiService.put(`${BASE_URL}/${id}/resolve`, {})
   },
 
   trigger: async (siswaId) => {
-    return await apiService.post(`${BASE_URL}/process-siswa/${siswaId}`, {})
+    return await apiService.post(`${BASE_URL}/${siswaId}/trigger`, {})
   },
 }
 

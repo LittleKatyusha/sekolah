@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../utils/api', () => ({
-  apiService: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
+  apiService: { get: vi.fn(), put: vi.fn(), post: vi.fn() },
 }))
 
 import { apiService } from '../utils/api'
@@ -17,9 +17,9 @@ describe('Go attendance contracts', () => {
     await ewsService.getAll({ page: 2, per_page: 20 })
     await ewsService.resolve(7)
     await ewsService.trigger(9)
-    expect(apiService.get).toHaveBeenCalledWith('/ews/alerts', { params: { page: 2, per_page: 20 } })
-    expect(apiService.patch).toHaveBeenCalledWith('/ews/alerts/7/resolve', {})
-    expect(apiService.post).toHaveBeenCalledWith('/ews/process-siswa/9', {})
+    expect(apiService.get).toHaveBeenCalledWith('/ews', { params: { page: 2, per_page: 20 } })
+    expect(apiService.put).toHaveBeenCalledWith('/ews/7/resolve', {})
+    expect(apiService.post).toHaveBeenCalledWith('/ews/9/trigger', {})
   })
 
   it('normalizes legacy date filters to Go canonical names', async () => {
