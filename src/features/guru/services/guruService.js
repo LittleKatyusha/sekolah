@@ -81,6 +81,22 @@ export const guruService = {
   getAbsensiSummary: async (id, params = {}) => {
     return await apiService.get(`${BASE_URL}/${id}/absensi-summary`, { params })
   },
+
+  /**
+   * Bulk import guru from Excel file (.xlsx)
+   * @param {File} file - Excel workbook containing 'Data' sheet
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  importExcel: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post(`${BASE_URL}/import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
 }
 
 export default guruService

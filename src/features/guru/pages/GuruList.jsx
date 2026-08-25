@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -10,6 +10,7 @@ import usePermission from '../../../hooks/usePermission'
 import { guruService } from '../services/guruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
+import ImportGuruModal from './ImportGuruModal'
 
 // Actions Menu Component
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
@@ -122,6 +123,7 @@ const getLabel = (value, options) => {
 const GuruList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const { options: jkOptions } = useReferenceOptions('jenis_kelamin')
   const { options: pendidikanOptions } = useReferenceOptions('pendidikan_terakhir')
@@ -284,6 +286,10 @@ const GuruList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="guru.create">
+            <Button onClick={() => setShowImportModal(true)} variant="secondary">
+              <Upload size={18} className="mr-2" />
+              Import Excel
+            </Button>
             <Button onClick={() => navigate('/guru/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Guru
@@ -305,6 +311,15 @@ const GuruList = () => {
           height={600}
         />
       </Card>
+
+      {showImportModal && (
+        <ImportGuruModal
+          onClose={() => setShowImportModal(false)}
+          onSuccess={(result) => {
+            if (result.imported > 0) handleRefresh()
+          }}
+        />
+      )}
     </div>
   )
 }
