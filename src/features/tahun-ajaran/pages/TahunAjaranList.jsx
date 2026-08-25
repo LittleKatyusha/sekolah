@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tahunAjaranService } from '../services/tahunAjaranService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import ImportTahunAjaranModal from './ImportTahunAjaranModal'
 
 const STATUS_MAP = {
   1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -112,6 +114,7 @@ const formatDate = (dateString) => {
 const TahunAjaranList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showImport, setShowImport] = useState(false)
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -241,13 +244,21 @@ const TahunAjaranList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tahun Ajaran</h1>
         <div className="flex flex-col sm:flex-row gap-3">
+          <PermissionGuard permission="tahun-ajaran.manage">
+            <Button onClick={() => setShowImport(true)} variant="secondary" title="Import Excel">
+              <Upload size={18} className="mr-2" />
+              Import Excel
+            </Button>
+          </PermissionGuard>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <Button onClick={() => navigate('/admin/tahun-ajaran/create')}>
-            <Plus size={18} className="mr-2" />
-            Tambah Tahun Ajaran
-          </Button>
+          <PermissionGuard permission="tahun-ajaran.manage">
+            <Button onClick={() => navigate('/admin/tahun-ajaran/create')}>
+              <Plus size={18} className="mr-2" />
+              Tambah Tahun Ajaran
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -264,6 +275,15 @@ const TahunAjaranList = () => {
           height={600}
         />
       </Card>
+
+      {showImport && (
+        <ImportTahunAjaranModal
+          onClose={() => setShowImport(false)}
+          onSuccess={() => {
+            handleRefresh()
+          }}
+        />
+      )}
     </div>
   )
 }

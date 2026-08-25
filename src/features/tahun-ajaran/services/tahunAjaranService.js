@@ -3,6 +3,14 @@ import { apiService } from '../../../utils/api'
 const BASE_URL = '/admin/tahun-ajaran'
 const LIST_URL = '/admin/tahun-ajaran/'
 
+const importExcel = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return await apiService.post(`${BASE_URL}/import`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 export const tahunAjaranService = {
   getAll: async (params = {}) => {
     return await apiService.get(LIST_URL, { params })
@@ -31,6 +39,8 @@ export const tahunAjaranService = {
   setActive: async (id) => {
     return await apiService.post(`${BASE_URL}/${id}/set-active`)
   },
+
+  importExcel,
 }
 
 export default tahunAjaranService
