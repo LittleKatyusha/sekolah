@@ -3,6 +3,14 @@ import { apiService } from '../../../utils/api'
 const BASE_URL = '/siswa'
 const LIST_URL = '/siswa/'
 
+const importExcel = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return await apiService.post(`${BASE_URL}/import`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 export const siswaService = {
   /**
    * Get all siswa with pagination and filtering
@@ -120,15 +128,12 @@ export const siswaService = {
   /**
    * Import siswa data from an Excel file (.xlsx / .xls)
    * @param {File} file - Excel file (max 5MB)
-   * @returns {Promise<{data: {imported: number, failed: number, errors: Array}, error: any}>}
+   * @returns {Promise<{data: {imported: number, failed: number, skipped: number, errors: Array, errors_truncated: boolean}, error: any}>}
    */
-  importCsv: async (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return await apiService.post(`${BASE_URL}/import`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-  },
+  importExcel,
+
+  /** @deprecated compatibility alias — use importExcel */
+  importCsv: importExcel,
 }
 
 export default siswaService

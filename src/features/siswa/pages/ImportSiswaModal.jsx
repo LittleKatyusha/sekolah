@@ -8,25 +8,32 @@ import { siswaService } from '../services/siswaService'
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
 /**
- * Download a sample Excel template so users know the expected format.
+ * Download the v2 sample Excel template (natural key `nama_kelas`).
+ * Header row must exactly match the backend allowlist.
  */
 const downloadTemplate = () => {
   const headers = [
     'nis', 'nisn', 'nik', 'nama', 'jenis_kelamin', 'agama',
     'tanggal_lahir', 'tempat_lahir', 'alamat', 'email', 'no_hp',
-    'golongan_darah', 'tinggi_badan', 'berat_badan', 'mst_kelas_id',
+    'golongan_darah', 'tinggi_badan', 'berat_badan', 'nama_kelas',
     'tanggal_masuk', 'asal_sekolah', 'anak_ke',
   ]
   const example = [
     '12345', '1234567890', '1234567890123456', 'Budi Santoso',
     'L', 'Islam', '2010-05-20', 'Jakarta', '', 'budi@mail.com',
-    '081234567890', 'A', 165, 55, 1, '2023-07-17',
+    '081234567890', 'A', 165, 55, 'X MIPA 1', '2023-07-17',
     'SMP Negeri 1 Jakarta', 2,
+  ]
+  const guide = [
+    ['Versi template', 'v1 (nama_kelas natural key)'],
+    ['Sheet wajib', 'Data — row 1 header, row 2 contoh (hapus sebelum import)'],
+    ['Wajib diisi', 'nis, nama, jenis_kelamin (L/P)'],
+    ['Kelas', 'Isi nama_kelas persis sesuai data sekolah, bukan ID'],
+    ['Tanggal', 'Format YYYY-MM-DD'],
+    ['Batas', 'Maksimal 5.000 baris data, 100 kolom, file 5 MB'],
   ]
 
   const ws = XLSX.utils.aoa_to_sheet([headers, example])
-
-  // Set column widths
   ws['!cols'] = headers.map(() => ({ wch: 20 }))
 
   // Bold + background for header row
@@ -39,9 +46,13 @@ const downloadTemplate = () => {
     }
   })
 
+  const wsGuide = XLSX.utils.aoa_to_sheet(guide)
+  wsGuide['!cols'] = [{ wch: 16 }, { wch: 60 }]
+
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Template Siswa')
-  XLSX.writeFile(wb, 'template_import_siswa.xlsx')
+  XLSX.utils.book_append_sheet(wb, ws, 'Data')
+  XLSX.utils.book_append_sheet(wb, wsGuide, 'Petunjuk')
+  XLSX.writeFile(wb, 'template_import_siswa_v1.xlsx')
 }
 
 const ImportSiswaModal = ({ onClose, onSuccess }) => {
@@ -58,7 +69,7 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
       return
     }
     if (selectedFile.size > MAX_SIZE_BYTES) {
-      showError('Ukuran file melebihi batas 2MB.')
+      showError('Ukuran file melebihi batas 5MB.')
       return
     }
     setFile(selectedFile)
@@ -81,7 +92,7 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
     if (!file) return
 
     setLoading(true)
-    const { data, error } = await siswaService.importCsv(file)
+    const { data, error } = await siswaService.importExcel(file)
     setLoading(false)
 
     if (error) {
@@ -192,6 +203,10 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
                   <p className="text-2xl font-bold text-red-500">{result.failed}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Gagal</p>
                 </div>
+                <div className="flex-1 px-4 py-3 text-center">
+                  <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">{result.skipped ?? 0}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Dilewati</p>
+                </div>
               </div>
 
               {result.errors?.length > 0 && (
@@ -200,7 +215,8 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
                     <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                       <tr>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris</th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">NIS</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Identifier</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Kode</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Keterangan</th>
                       </tr>
                     </thead>
@@ -208,12 +224,18 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
                       {result.errors.map((err, i) => (
                         <tr key={i}>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.row}</td>
-                          <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.nis ?? '-'}</td>
-                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400">{err.error}</td>
+                          <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.identifier ?? '-'}</td>
+                          <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.code}</td>
+                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400">{err.message}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  {result.errors_truncated && (
+                    <p className="px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                      Hanya 100 error pertama yang ditampilkan.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
