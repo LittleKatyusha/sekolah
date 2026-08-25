@@ -3,6 +3,14 @@ import { apiService } from '../../../utils/api'
 const BASE_URL = '/mapel'
 const LIST_URL = '/mapel/'
 
+const importExcel = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return await apiService.post(`${BASE_URL}/import`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 export const mapelService = {
   /**
    * Get all mapel with pagination and filtering
@@ -64,6 +72,8 @@ export const mapelService = {
   getGurusByMapel: async (id) => {
     return await apiService.get(`${BASE_URL}/${id}/gurus`)
   },
+
+  importExcel,
 }
 
 export default mapelService
