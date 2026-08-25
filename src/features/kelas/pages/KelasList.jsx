@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, Users, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, Users, MoreVertical, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -8,6 +8,8 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kelasService } from '../services/kelasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import ImportKelasModal from './ImportKelasModal'
+
 
 // Actions Menu Component
 const ActionsMenu = ({ data, onViewSiswa, onDetail, onEdit, onDelete }) => {
@@ -113,6 +115,7 @@ const ActionsMenu = ({ data, onViewSiswa, onDetail, onEdit, onDelete }) => {
 const KelasList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -293,6 +296,10 @@ const KelasList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="kelas.create">
+            <Button onClick={() => setShowImportModal(true)} variant="secondary">
+              <Upload size={18} className="mr-2" />
+              Import Excel
+            </Button>
             <Button onClick={() => navigate('/kelas/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Kelas
@@ -315,6 +322,15 @@ const KelasList = () => {
           height={600}
         />
       </Card>
+
+      {showImportModal && (
+        <ImportKelasModal
+          onClose={() => setShowImportModal(false)}
+          onSuccess={(result) => {
+            if (result?.imported > 0) handleRefresh()
+          }}
+        />
+      )}
     </div>
   )
 }
