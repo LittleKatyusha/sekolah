@@ -1,5 +1,5 @@
-import { useMemo, useCallback, useRef } from 'react'
-import { Plus, RefreshCw } from 'lucide-react'
+import { useMemo, useCallback, useRef, useState } from 'react'
+import { Plus, RefreshCw, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -9,11 +9,13 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { waliService } from '../services/waliService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import ImportWaliModal from './ImportWaliModal'
 
 const WaliList = () => {
   usePageTitle('Data Wali')
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showImportModal, setShowImportModal] = useState(false)
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
@@ -165,6 +167,10 @@ const WaliList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="wali.create">
+            <Button onClick={() => setShowImportModal(true)} variant="secondary">
+              <Upload size={18} className="mr-2" />
+              Import Excel
+            </Button>
             <Button onClick={() => navigate('/wali/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Wali
@@ -186,6 +192,15 @@ const WaliList = () => {
           height={600}
         />
       </Card>
+
+      {showImportModal && (
+        <ImportWaliModal
+          onClose={() => setShowImportModal(false)}
+          onSuccess={(result) => {
+            if (result.imported > 0) handleRefresh()
+          }}
+        />
+      )}
     </div>
   )
 }

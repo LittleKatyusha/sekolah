@@ -57,6 +57,21 @@ export const waliService = {
   getSiswaByWali: async (id) => {
     return await apiService.get(`${BASE_URL}/${id}/siswa`)
   },
+
+  /**
+   * Uploads an Excel workbook (.xlsx/.xls) to bulk import wali records and student relations.
+   * @param {File} file - The .xlsx or .xls file to import.
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  importExcel: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post(`${BASE_URL}/import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
 }
 
 export default waliService
