@@ -59,6 +59,14 @@ export const bukuService = {
     return await apiService.delete(`/perpustakaan/buku/${id}`)
   },
 
+  importExcel: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post('/perpustakaan/buku/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
   /**
    * Get all peminjaman for a specific buku
    * @param {number|string} id - Buku ID
