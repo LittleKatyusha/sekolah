@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -8,6 +8,7 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tarifSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import ImportTarifSppModal from './ImportTarifSppModal'
 
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -102,6 +103,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editP
 const TarifSppList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showImport, setShowImport] = useState(false)
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
@@ -233,6 +235,12 @@ const TarifSppList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tarif SPP</h1>
         <div className="flex flex-col sm:flex-row gap-3">
+          <PermissionGuard permission="tarif-spp.create">
+            <Button onClick={() => setShowImport(true)} variant="secondary" title="Import Excel">
+              <Upload size={18} className="mr-2" />
+              Import Excel
+            </Button>
+          </PermissionGuard>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
@@ -259,6 +267,13 @@ const TarifSppList = () => {
           height={600}
         />
       </Card>
+
+      {showImport && (
+        <ImportTarifSppModal
+          onClose={() => setShowImport(false)}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   )
 }

@@ -32,6 +32,17 @@ export const tarifSppService = {
   getByKelas: async (kelasId, params = {}) => {
     return await apiService.get(`${TARIF_BASE}/kelas/${kelasId}`, { params })
   },
+
+  importExcel: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return await apiService.post(`${TARIF_BASE}/import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
 }
 
 /**
