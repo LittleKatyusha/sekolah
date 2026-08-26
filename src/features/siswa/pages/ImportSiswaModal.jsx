@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
+import { SISWA_TEMPLATE_HEADERS } from '../siswaImportContract'
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
@@ -12,12 +13,7 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
  * Header row must exactly match the backend allowlist.
  */
 const downloadTemplate = () => {
-  const headers = [
-    'nis', 'nisn', 'nik', 'nama', 'jenis_kelamin', 'agama',
-    'tanggal_lahir', 'tempat_lahir', 'alamat', 'email', 'no_hp',
-    'golongan_darah', 'tinggi_badan', 'berat_badan', 'nama_kelas',
-    'tanggal_masuk', 'asal_sekolah', 'anak_ke',
-  ]
+  const headers = SISWA_TEMPLATE_HEADERS
   const example = [
     '12345', '1234567890', '1234567890123456', 'Budi Santoso',
     'L', 'Islam', '2010-05-20', 'Jakarta', '', 'budi@mail.com',
@@ -61,6 +57,37 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null) // import result summary
   const fileInputRef = useRef(null)
+  const dialogRef = useRef(null)
+  const initialFocusRef = useRef(null)
+  const submittingRef = useRef(false)
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement
+    initialFocusRef.current?.focus()
+    return () => previouslyFocused?.focus?.()
+  }, [])
+
+  const handleDialogKeyDown = (event) => {
+    if (event.key === 'Escape' && !loading) {
+      event.preventDefault()
+      onClose()
+      return
+    }
+    if (event.key !== 'Tab') return
+    const focusable = [...dialogRef.current.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+    )]
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
 
   const handleFileChange = useCallback((selectedFile) => {
     if (!selectedFile) return
@@ -89,11 +116,18 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
   }
 
   const handleSubmit = async () => {
-    if (!file) return
+    if (!file || submittingRef.current) return
 
+    submittingRef.current = true
     setLoading(true)
-    const { data, error } = await siswaService.importExcel(file)
-    setLoading(false)
+    let response
+    try {
+      response = await siswaService.importExcel(file)
+    } finally {
+      submittingRef.current = false
+      setLoading(false)
+    }
+    const { data, error } = response
 
     if (error) {
       showError(error?.message || 'Gagal mengimpor data siswa.')
@@ -111,12 +145,15 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
   return (
     /* Backdrop */
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="import-siswa-title" onKeyDown={handleDialogKeyDown} className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Import Data Siswa</h2>
+          <h2 id="import-siswa-title" className="text-lg font-semibold text-gray-900 dark:text-white">Import Data Siswa</h2>
           <button
+            ref={initialFocusRef}
             onClick={onClose}
+            disabled={loading}
+            aria-label="Tutup"
             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -159,6 +196,7 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
               accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               className="hidden"
               onChange={handleInputChange}
+              data-testid="file-input"
             />
             {file ? (
               <div className="flex items-center justify-center gap-3">
