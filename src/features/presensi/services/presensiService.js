@@ -115,6 +115,17 @@ export const presensiService = {
   bulkCreatePresensi: async (data) => {
     return await apiService.post(`${BASE_URL}/bulk`, data)
   },
+
+  openSession: async (trxJadwalPelajaranId, tanggal) => {
+    return await apiService.post(`${BASE_URL}/sessions`, {
+      trx_jadwal_pelajaran_id: Number(trxJadwalPelajaranId),
+      tanggal,
+    })
+  },
+
+  previewSession: async (sessionId) => apiService.get(`${BASE_URL}/sessions/${sessionId}/preview`),
+
+  finalizeSession: async (sessionId) => apiService.post(`${BASE_URL}/sessions/${sessionId}/finalize`, { confirm: true }),
 }
 
 export default presensiService

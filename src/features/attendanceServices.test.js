@@ -30,4 +30,11 @@ describe('Go attendance contracts', () => {
     expect(apiService.get).toHaveBeenCalledWith('/akademik/absensi-guru/guru/5', { params: { tanggal_awal: '2026-01-01', tanggal_akhir: '2026-01-31' } })
     expect(apiService.get).toHaveBeenCalledWith('/akademik/presensi', { params: { tanggal_awal: '2026-01-01', tanggal_akhir: '2026-01-31', per_page: 20 } })
   })
+
+  it('opens and finalizes an explicit subject attendance session', async () => {
+    await presensiService.openSession('12', '2026-08-31')
+    await presensiService.finalizeSession(9)
+    expect(apiService.post).toHaveBeenCalledWith('/akademik/presensi/sessions', { trx_jadwal_pelajaran_id: 12, tanggal: '2026-08-31' })
+    expect(apiService.post).toHaveBeenCalledWith('/akademik/presensi/sessions/9/finalize', { confirm: true })
+  })
 })

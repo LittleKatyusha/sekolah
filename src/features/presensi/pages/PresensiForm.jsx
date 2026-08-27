@@ -33,7 +33,8 @@ const PresensiForm = () => {
     tanggal: '',
     jam_masuk: '',
     status: '',
-    keterangan: ''
+    keterangan: '',
+    correction_reason: ''
   })
   const [errors, setErrors] = useState({})
 
@@ -159,7 +160,8 @@ const PresensiForm = () => {
     const submitData = {
       jam_masuk: formData.jam_masuk || null,
       status: Number(formData.status),
-      keterangan: formData.keterangan || null
+      keterangan: formData.keterangan || null,
+      correction_reason: formData.correction_reason.trim()
     }
 
     const { error } = await presensiService.updatePresensi(id, submitData)
@@ -179,13 +181,13 @@ const PresensiForm = () => {
     label: kelas.nama_kelas || kelas.nama || `Kelas #${kelas.id}`
   }), [])
 
-  const buildGuruMapelOption = useCallback((guruMapel) => {
-    if (!guruMapel?.id) return null
-    const guruNama = guruMapel?.guru?.nama || 'Guru'
-    const mapelNama = guruMapel?.mapel?.nama_mapel || guruMapel?.mapel?.nama || 'Mapel'
+  const buildJadwalOption = useCallback((jadwal) => {
+    if (!jadwal?.id) return null
+    const guruNama = jadwal.guru_mapel?.guru?.nama || 'Guru'
+    const mapelNama = jadwal.guru_mapel?.mapel?.nama_mapel || jadwal.guru_mapel?.mapel?.nama || 'Mapel'
     return {
-      value: String(guruMapel.id),
-      label: `${guruNama} - ${mapelNama}`
+      value: String(jadwal.id),
+      label: `${guruNama} - ${mapelNama} (${jadwal.hari} ${jadwal.jam_mulai}-${jadwal.jam_selesai})`
     }
   }, [])
 
@@ -204,14 +206,14 @@ const PresensiForm = () => {
     const jadwalList = data?.data || []
     const seenIds = new Set()
     return jadwalList.reduce((options, jadwal) => {
-      const option = buildGuruMapelOption(jadwal.guru_mapel)
+      const option = buildJadwalOption(jadwal)
       if (!option || seenIds.has(option.value)) return options
       if (normalizedKeyword && !option.label.toLowerCase().includes(normalizedKeyword)) return options
       seenIds.add(option.value)
       options.push(option)
       return options
     }, [])
-  }, [buildGuruMapelOption])
+  }, [buildJadwalOption])
 
   const handleKelasChange = useCallback(async (e) => {
     const kelasId = e.target.value
@@ -270,10 +272,15 @@ const PresensiForm = () => {
     if (!validateBulk()) return
 
     setLoading(true)
+    const { data: sessionData, error: sessionError } = await presensiService.openSession(selectedGuruMapelId, bulkTanggal)
+    if (sessionError || !sessionData?.data?.id) {
+      showError('Jadwal tidak sesuai dengan tanggal atau tidak dapat dibuka')
+      setLoading(false)
+      return
+    }
     const submitData = {
-      mst_guru_mapel_id: parseInt(selectedGuruMapelId),
-      tanggal: bulkTanggal,
-      presensi: siswaList.map(siswa => ({
+      session_id: sessionData.data.id,
+      items: siswaList.map(siswa => ({
         mst_siswa_id: siswa.id,
         status: parseInt(siswaRows[siswa.id]?.status),
         jam_masuk: siswaRows[siswa.id]?.jam_masuk || bulkJamMasuk || null,
@@ -421,6 +428,10 @@ const PresensiForm = () => {
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   placeholder="Keterangan opsional"
                 />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan koreksi</label>
+                <input name="correction_reason" value={formData.correction_reason} onChange={handleChange} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white" placeholder="Wajib bila sesi sudah final" />
               </div>
             </div>
 
