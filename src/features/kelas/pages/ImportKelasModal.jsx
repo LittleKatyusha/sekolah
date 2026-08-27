@@ -8,24 +8,25 @@ import { kelasService } from '../services/kelasService'
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
 const downloadTemplate = () => {
-  const headers = ['nama_kelas', 'tingkat', 'kode_tahun_ajaran', 'nip_wali_kelas', 'kapasitas']
-  const example = ['X IPA 1', '10', '2026-2027', '198501012010011001', '30']
+  const headers = ['nama_kelas', 'tingkat', 'kode_tahun_ajaran', 'nip_wali_kelas', 'kapasitas', 'kode_shift']
+  const example = ['X IPA 1', '10', '2026-2027', '198501012010011001', '30', 'PAGI']
   const guide = [
     ['Versi template', 'template_import_kelas_v1.xlsx'],
     ['Sheet wajib', 'Data — row 1 header, row 2 contoh (hapus sebelum import)'],
-    ['Wajib diisi', 'nama_kelas, tingkat, kode_tahun_ajaran'],
+    ['Wajib diisi', 'nama_kelas, tingkat, kode_tahun_ajaran, kode_shift'],
     ['nama_kelas', 'Maksimal 50 karakter. Kombinasi (nama_kelas, kode_tahun_ajaran) harus unik.'],
     ['tingkat', 'Bilangan bulat antara 1 sampai 12.'],
     ['kode_tahun_ajaran', 'Kode tahun ajaran yang sudah terdaftar (contoh: 2026-2027).'],
     ['nip_wali_kelas', 'Opsional. NIP guru yang sudah terdaftar sebagai wali kelas.'],
     ['kapasitas', 'Opsional, default 30. Bilangan bulat positif.'],
+    ['kode_shift', 'Kode shift aktif sekolah (contoh: PAGI).'],
     ['Duplicate policy', 'Create-only. Kombinasi nama_kelas dan kode_tahun_ajaran yang sudah terdaftar akan gagal.'],
     ['Batas', 'Maksimal 5.000 baris data, 100 kolom, file 5 MB'],
   ]
 
   const ws = XLSX.utils.aoa_to_sheet([headers, example])
   ws['!cols'] = headers.map(() => ({ wch: 22 }))
-  ws['!autofilter'] = { ref: 'A1:E2' }
+  ws['!autofilter'] = { ref: 'A1:F2' }
 
   headers.forEach((_, colIdx) => {
     const cellAddr = XLSX.utils.encode_cell({ r: 0, c: colIdx })
