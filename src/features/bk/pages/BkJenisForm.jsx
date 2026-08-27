@@ -17,11 +17,7 @@ const BkJenisForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   
-  const [formData, setFormData] = useState({
-    kode: '',
-    nama: '',
-    keterangan: ''
-  })
+  const [formData, setFormData] = useState({ nama: '' })
 
   const [errors, setErrors] = useState({})
 
@@ -38,11 +34,7 @@ const BkJenisForm = () => {
 
         if (data) {
           const jenis = data.data
-          setFormData({
-            kode: jenis.kode || '',
-            nama: jenis.nama || '',
-            keterangan: jenis.keterangan || ''
-          })
+          setFormData({ nama: jenis.nama || '' })
         } else {
           showError('Gagal mengambil data jenis BK')
           navigate('/bk/jenis')
@@ -75,7 +67,6 @@ const BkJenisForm = () => {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.kode) newErrors.kode = 'Kode wajib diisi'
     if (!formData.nama) newErrors.nama = 'Nama jenis wajib diisi'
 
     setErrors(newErrors)
@@ -133,21 +124,6 @@ const BkJenisForm = () => {
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 gap-6">
-              {/* Kode */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Kode <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="kode"
-                  value={formData.kode}
-                  onChange={handleChange}
-                  placeholder="Kode jenis BK"
-                  maxLength={50}
-                  error={errors.kode}
-                />
-              </div>
-
               {/* Nama */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -163,21 +139,6 @@ const BkJenisForm = () => {
                 />
               </div>
 
-              {/* Keterangan */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Keterangan
-                </label>
-                <textarea
-                  name="keterangan"
-                  value={formData.keterangan}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                  placeholder="Keterangan (opsional)"
-                />
-                {errors.keterangan && <p className="mt-1 text-sm text-red-500">{errors.keterangan}</p>}
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

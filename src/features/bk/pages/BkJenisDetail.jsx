@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, Hash, Tag, FileText, Calendar } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Tag, Calendar } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -90,16 +90,6 @@ const BkJenisDetail = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Hash size={20} className="text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Kode</p>
-                <p className="font-medium text-gray-900 dark:text-white">{jenis.kode || '-'}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Tag size={20} className="text-green-600" />
               </div>
@@ -109,15 +99,6 @@ const BkJenisDetail = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 md:col-span-2">
-              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FileText size={20} className="text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Keterangan</p>
-                <p className="font-medium text-gray-900 dark:text-white">{jenis.keterangan || '-'}</p>
-              </div>
-            </div>
           </div>
 
           {/* Timestamps */}
