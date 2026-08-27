@@ -52,27 +52,11 @@ const BkJenisList = () => {
       filter: false
     },
     {
-      field: 'kode',
-      headerName: 'Kode',
-      sortable: true,
-      filter: true,
-      flex: 1,
-      cellRenderer: (params) => params.value || '-'
-    },
-    {
       field: 'nama',
       headerName: 'Nama Jenis',
       sortable: true,
       filter: true,
-      flex: 2
-    },
-    {
-      field: 'keterangan',
-      headerName: 'Keterangan',
-      sortable: true,
-      filter: true,
-      flex: 2,
-      cellRenderer: (params) => params.value || '-'
+      flex: 1
     },
     {
       headerName: 'Aksi',
