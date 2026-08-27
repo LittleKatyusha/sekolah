@@ -236,6 +236,16 @@ const REPORT_MODULES = [
           { key: 'tahun_ajaran_id', label: 'Tahun Ajaran', type: 'entity', entity: 'tahun_ajaran', required: true },
         ],
       },
+      {
+        path: '/reports/absensi/anomali_mapel',
+        name: 'Anomali Absensi Harian & Presensi Mapel',
+        formats: ['pdf', 'xlsx', 'csv'],
+        params: [
+          { key: 'tanggal_awal', label: 'Tanggal Awal', type: 'date', required: true },
+          { key: 'tanggal_akhir', label: 'Tanggal Akhir', type: 'date', required: true },
+          { key: 'kelas_id', label: 'Kelas (opsional)', type: 'entity', entity: 'kelas', required: false },
+        ],
+      },
     ],
   },
   {
@@ -420,7 +430,7 @@ const buildDefaults = (report) => {
     } else if (p.type === 'number' && p.key === 'tahun') {
       defaults[p.key] = new Date().getFullYear()
     } else if (p.type === 'date') {
-      defaults[p.key] = new Date().toISOString().split('T')[0]
+      defaults[p.key] = ''
     } else {
       defaults[p.key] = ''
     }

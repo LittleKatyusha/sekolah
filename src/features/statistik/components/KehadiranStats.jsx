@@ -133,6 +133,7 @@ const KehadiranStats = () => {
   }
 
   const summary = data?.summary || {}
+  const indicators = data?.indicators || {}
   const ensureArray = (val) => Array.isArray(val) ? val : []
   const trenKehadiran = ensureArray(data?.tren_kehadiran)
   const distribusiStatus = ensureArray(data?.distribusi_status)
@@ -214,6 +215,13 @@ const KehadiranStats = () => {
               value={formatPercent(summary.tingkat_kehadiran_guru)}
               color="yellow"
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Indikator presensi terpisah">
+            <SummaryCard icon={UserX} label="Ketidakhadiran Mapel" value={formatNumber(indicators.ketidakhadiran_mapel ?? 0)} color="red" />
+            <SummaryCard icon={Clock} label="Terlambat Datang" value={formatNumber(indicators.terlambat_datang ?? 0)} color="yellow" />
+            <SummaryCard icon={AlertCircle} label="Hadir Mapel Tanpa Check-in" value={formatNumber(indicators.hadir_mapel_tanpa_check_in ?? 0)} color="red" />
+            <SummaryCard icon={AlertCircle} label="Hadir Mapel Setelah Check-out" value={formatNumber(indicators.hadir_mapel_setelah_check_out ?? 0)} color="red" />
           </div>
 
           {/* Row 1: Tren Kehadiran + Distribusi Status */}

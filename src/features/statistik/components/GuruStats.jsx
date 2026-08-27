@@ -75,21 +75,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-const getDefaultDates = () => {
-  const end = new Date()
-  const start = new Date()
-  start.setDate(start.getDate() - 30)
-  return {
-    start_date: start.toISOString().split('T')[0],
-    end_date: end.toISOString().split('T')[0],
-  }
-}
-
 const GuruStats = () => {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
-  const [filters, setFilters] = useState(getDefaultDates)
+  const [filters, setFilters] = useState({ start_date: '', end_date: '' })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
