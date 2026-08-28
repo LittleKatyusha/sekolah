@@ -6,14 +6,14 @@ const BASE_URL = '/auth'
 
 export const authService = {
   /**
-   * Login with email and password
-   * @param {string} email - User email
+   * Login with username and password
+   * @param {string} username - Globally unique username
    * @param {string} password - User password
    * @returns {Promise<{data: any, error: any}>}
    */
-  login: async (email, password) => {
+  login: async (username, password) => {
     const response = await apiService.post(`${BASE_URL}/login`, {
-      email,
+      username,
       password,
     })
 

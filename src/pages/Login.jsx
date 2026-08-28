@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, Mail, Lock, Eye, EyeOff, BookOpen, Users, Award, TrendingUp, AlertCircle } from 'lucide-react'
+import { LogIn, User, Lock, Eye, EyeOff, BookOpen, Users, Award, TrendingUp, AlertCircle } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
 import logoVertical from '../assets/logo akademihub-01-04.png'
@@ -21,7 +21,7 @@ const getSavedCredentials = () => {
 }
 
 const loginSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
+  username: z.string().trim().min(1, 'Username wajib diisi').max(100, 'Username maksimal 100 karakter').regex(/^[A-Za-z0-9._-]+$/, 'Format username tidak valid'),
   password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
 })
 
@@ -51,35 +51,33 @@ const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: savedCredentials?.email || '',
+      username: savedCredentials?.username || '',
       password: '',
     },
   })
 
   const onSubmit = async (data) => {
     setLoading(true)
-      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email: data.email }))
-
     if (rememberMe) {
-      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ email: data.email, password: data.password }))
+      localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify({ username: data.username }))
     } else {
       localStorage.removeItem(REMEMBER_ME_KEY)
     }
 
     try {
       const { data: response, error: apiError } = await apiService.post('/auth/login', {
-        email: data.email,
+        username: data.username,
         password: data.password,
       })
 
       if (apiError) {
-        setError(apiError.message || apiError.error || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.')
+        setError(apiError.message || apiError.error || 'Gagal masuk. Periksa kembali username dan kata sandi Anda.')
         setLoading(false)
         return
       }
 
       if (!response?.success) {
-        setError(response?.message || 'Gagal masuk. Periksa kembali email dan kata sandi Anda.')
+        setError(response?.message || 'Gagal masuk. Periksa kembali username dan kata sandi Anda.')
         setLoading(false)
         return
       }
@@ -205,24 +203,24 @@ const Login = () => {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
-                Alamat Email
+              <label htmlFor="username" className="block text-sm font-semibold text-slate-700">
+                Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
+                  id="username"
+                  type="text"
+                  autoComplete="username"
                   placeholder="nama@sekolah.id"
-                  {...register('email')}
-                  className={inputClass(!!errors.email)}
+                  {...register('username')}
+                  className={inputClass(!!errors.username)}
                 />
               </div>
-              {errors.email && (
+              {errors.username && (
                 <p role="alert" className="flex items-center gap-1 text-xs text-red-600">
                   <AlertCircle size={12} />
-                  {errors.email.message}
+                  {errors.username.message}
                 </p>
               )}
             </div>
