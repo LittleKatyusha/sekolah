@@ -95,6 +95,11 @@ export default defineConfig(({ mode }) => {
         clientPort: 5173,
       },
       proxy: {
+        '/api/v1/dashboard': {
+          target: env.VITE_DASHBOARD_PROXY_TARGET || apiProxyTarget,
+          changeOrigin: true,
+          secure: false,
+        },
         '/api': {
           target: apiProxyTarget,
           changeOrigin: true,
