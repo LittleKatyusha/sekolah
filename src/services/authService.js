@@ -84,9 +84,10 @@ export const authService = {
     if (response.data?.success) {
       const { data } = response.data
       useAuthStore.getState().updateUser(data)
+      return response
     }
 
-    return response
+    throw response.error || new Error('Failed to get user data')
   },
 }
 

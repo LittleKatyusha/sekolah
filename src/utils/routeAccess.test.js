@@ -7,10 +7,11 @@ describe('route access', () => {
     expect(permissionForPath('/dashboard')).toBe('dashboard.view')
   })
 
-  it('denies direct routes without permission while preserving legacy auth payloads', () => {
+  it('denies direct routes without permission in fail-closed mode', () => {
     expect(canAccessPath({ permissions: [{ code: 'siswa.view' }] }, '/admin/users')).toBe(false)
     expect(canAccessPath({ permissions: [{ code: 'users.view' }] }, '/admin/users')).toBe(true)
-    expect(canAccessPath({ role: 'admin' }, '/admin/users')).toBe(true)
+    expect(canAccessPath({ role: 'admin' }, '/admin/users')).toBe(false)
+    expect(canAccessPath(null, '/admin/users')).toBe(false)
   })
 
   it('marks routes without active backend APIs as unavailable', () => {

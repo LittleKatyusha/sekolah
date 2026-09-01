@@ -17,6 +17,10 @@ const clearSessionCaches = () => {
   }
 }
 
+const isPayloadReady = (user) => {
+  return Boolean(user && Array.isArray(user.permissions) && Array.isArray(user.roles))
+}
+
 const useAuthStore = create(
   persist(
     (set) => ({
@@ -26,16 +30,20 @@ const useAuthStore = create(
       tokenType: 'bearer',
       expiresIn: null,
       isAuthenticated: false,
+      authorizationStatus: 'unknown', // 'unknown' | 'loading' | 'ready' | 'error'
 
       login: (loginData) => {
         clearSessionCaches()
+        const user = loginData.user
+        const ready = isPayloadReady(user)
         set({
-          user: loginData.user,
+          user: user,
           token: loginData.access_token,
           refreshToken: loginData.refresh_token,
           tokenType: loginData.token_type || 'bearer',
           expiresIn: loginData.expires_in,
           isAuthenticated: true,
+          authorizationStatus: ready ? 'ready' : 'loading',
         })
       },
 
@@ -48,13 +56,19 @@ const useAuthStore = create(
           tokenType: 'bearer',
           expiresIn: null,
           isAuthenticated: false,
+          authorizationStatus: 'unknown',
         })
       },
 
       updateUser: (userData) => {
-        set((state) => ({
-          user: { ...state.user, ...userData },
-        }))
+        set((state) => {
+          const nextUser = { ...state.user, ...userData }
+          const ready = isPayloadReady(nextUser)
+          return {
+            user: nextUser,
+            authorizationStatus: ready ? 'ready' : state.authorizationStatus,
+          }
+        })
       },
 
       setToken: (accessToken, refreshToken) => {
@@ -64,6 +78,9 @@ const useAuthStore = create(
         })
       },
 
+      setAuthorizationStatus: (status) => {
+        set({ authorizationStatus: status })
+      },
     }),
     {
       name: 'auth-storage',
