@@ -141,7 +141,7 @@ const BkWaliList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="bk.create">
+          <PermissionGuard permission="bk-wali.manage">
             <Button onClick={() => navigate('/bk/wali/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Wali

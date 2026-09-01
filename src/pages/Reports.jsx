@@ -862,7 +862,13 @@ const Reports = () => {
                             </button>
                             {job.status === 'ready' && job.downloadUrl && (
                               <button
-                                onClick={() => reportService.triggerBrowserDownload(job.downloadUrl, job.fileName)}
+                                onClick={async () => {
+                                  try {
+                                    await reportService.triggerBrowserDownload(job.downloadUrl, job.fileName)
+                                  } catch (error) {
+                                    showError(error.response?.data?.message || 'Unduhan laporan gagal.')
+                                  }
+                                }}
                                 className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-primary-600"
                                 title="Unduh file"
                               >

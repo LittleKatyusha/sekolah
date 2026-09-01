@@ -5,9 +5,11 @@ import NavigationCard from '../components/bk/NavigationCard'
 import StatCard from '../components/bk/StatCard'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { showError } from '../utils/sweetalert'
+import usePermission from '../hooks/usePermission'
 
 const Perpustakaan = () => {
   usePageTitle('Perpustakaan')
+  const { hasAnyPermission } = usePermission()
 
   const [stats, setStats] = useState({
     totalBuku: '-',
@@ -61,6 +63,7 @@ const Perpustakaan = () => {
       description: 'Kelola data buku perpustakaan',
       path: '/perpustakaan/buku',
       color: 'blue',
+      permissions: ['buku.view', 'buku.create', 'buku.update', 'buku.delete'],
     },
     {
       icon: BookCopy,
@@ -68,8 +71,9 @@ const Perpustakaan = () => {
       description: 'Kelola peminjaman dan pengembalian buku',
       path: '/perpustakaan/peminjaman',
       color: 'indigo',
+      permissions: ['peminjaman.view', 'peminjaman.create', 'peminjaman.update', 'peminjaman.delete'],
     },
-  ]
+  ].filter(({ permissions }) => hasAnyPermission(permissions))
 
   return (
     <div className="space-y-6">

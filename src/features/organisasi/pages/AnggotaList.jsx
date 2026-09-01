@@ -140,8 +140,8 @@ const AnggotaList = () => {
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
             detailPermission="anggota.view"
-            editPermission="anggota.edit"
-            deletePermission="anggota.delete"
+            editPermission="organisasi.anggota.manage"
+            deletePermission="organisasi.anggota.manage"
           />
         </div>
       )
@@ -162,7 +162,7 @@ const AnggotaList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="anggota.create">
+          <PermissionGuard permission="organisasi.anggota.manage">
             <Button onClick={() => navigate('/organisasi/anggota/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Anggota

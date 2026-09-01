@@ -108,7 +108,7 @@ const BkKategoriList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="bk.create">
+          <PermissionGuard permission="bk-kategori.manage">
             <Button onClick={() => navigate('/bk/kategori/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Kategori

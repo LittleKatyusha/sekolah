@@ -341,7 +341,7 @@ const WaliForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/wali')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'wali.edit' : 'wali.create'}>
+              <PermissionGuard permission={isEditMode ? 'wali.update' : 'wali.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

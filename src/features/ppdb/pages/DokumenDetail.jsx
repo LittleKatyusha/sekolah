@@ -54,7 +54,9 @@ const DokumenDetail = () => {
   }
 
   const handleReject = async () => {
-    const { error } = await dokumenService.reject(dokumen.id, '')
+    const catatan = window.prompt('Alasan penolakan wajib diisi:')?.trim()
+    if (!catatan) return
+    const { error } = await dokumenService.reject(dokumen.id, catatan)
     if (!error) {
       showSuccess('Dokumen berhasil ditolak!')
       fetchDokumen()
@@ -105,19 +107,19 @@ const DokumenDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Dokumen</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <PermissionGuard permission="ppdb.dokumen.edit">
+          <PermissionGuard permission="ppdb.dokumen.verify">
             <Button variant="primary" onClick={handleVerify}>
               <CheckCircle size={18} className="mr-2" />
               Verifikasi
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="ppdb.dokumen.edit">
+          <PermissionGuard permission="ppdb.dokumen.reject">
             <Button variant="danger" onClick={handleReject}>
               <XCircle size={18} className="mr-2" />
               Tolak
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="ppdb.dokumen.edit">
+          <PermissionGuard permission="ppdb.dokumen.update">
             <Button variant="warning" onClick={() => navigate(`/ppdb/dokumen/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit

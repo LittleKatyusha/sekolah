@@ -30,8 +30,8 @@ export const wahaService = {
     }
   },
 
-  getQrCode: async () => {
-    const response = await apiService.get(`${BASE_URL}/qr`)
+  getQrCode: async (appkey) => {
+    const response = await apiService.get(`${BASE_URL}/qr`, { params: appkey ? { appkey } : {} })
     return {
       ...response,
       payload: unwrapResponse(response),

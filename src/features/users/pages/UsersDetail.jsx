@@ -105,7 +105,7 @@ const UsersDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail User</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="users.edit">
+          <PermissionGuard permission="users.update">
             <Button variant="warning" onClick={() => navigate(`/admin/users/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit

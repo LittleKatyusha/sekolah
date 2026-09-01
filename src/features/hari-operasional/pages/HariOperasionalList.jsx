@@ -77,7 +77,7 @@ const HariOperasionalList = () => {
 
         return (
           <div className="h-full flex items-center">
-            <PermissionGuard permission="hari-operasional.edit">
+            <PermissionGuard permission="hari-operasional.manage">
               <button
                 onClick={() => !isDisabled && handleToggle(row)}
                 disabled={isDisabled}

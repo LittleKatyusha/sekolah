@@ -119,7 +119,7 @@ const SiswaList = () => {
               onEdit={() => navigate(`/siswa/${params.data.id}/edit`)}
               onDelete={() => handleDelete(params.data)}
               detailPermission="siswa.view"
-              editPermission="siswa.edit"
+              editPermission="siswa.update"
               deletePermission="siswa.delete"
             />
           </div>

@@ -69,24 +69,28 @@ export const pendaftarService = {
     return await apiService.put(`${PENDAFTAR_BASE}/${id}`, data)
   },
 
-  updateStatus: async (id, status) => {
-    return await apiService.put(`${PENDAFTAR_BASE}/${id}/status`, { status })
+  updateStatus: async (id, status, reason) => {
+    return await apiService.put(`${PENDAFTAR_BASE}/${id}/status`, { status, ...(reason ? { reason } : {}) })
   },
 
   delete: async (id) => {
     return await apiService.delete(`${PENDAFTAR_BASE}/${id}`)
   },
 
-  verify: async (id) => {
-    return await apiService.post(`${PENDAFTAR_BASE}/${id}/verify`)
+  verify: async (id, reason) => {
+    return await apiService.post(`${PENDAFTAR_BASE}/${id}/verify`, reason ? { reason } : {})
   },
 
   accept: async (id) => {
     return await apiService.post(`${PENDAFTAR_BASE}/${id}/accept`)
   },
 
-  reject: async (id) => {
-    return await apiService.post(`${PENDAFTAR_BASE}/${id}/reject`)
+  enroll: async (id) => {
+    return await apiService.post(`${PENDAFTAR_BASE}/${id}/enroll`)
+  },
+
+  reject: async (id, reason) => {
+    return await apiService.post(`${PENDAFTAR_BASE}/${id}/reject`, { reason })
   },
 
   batchSeleksi: async (ids, status) => {

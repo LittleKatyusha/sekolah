@@ -225,7 +225,7 @@ const SemesterForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/admin/semester')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'semester.edit' : 'semester.create'}>
+              <PermissionGuard permission="semester.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

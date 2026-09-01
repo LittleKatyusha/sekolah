@@ -101,7 +101,7 @@ const SiswaDetail = () => {
             <Activity size={16} className="mr-2" />
             Insight 360°
           </Button>
-          <PermissionGuard permission="siswa.edit">
+          <PermissionGuard permission="siswa.update">
             <Button variant="warning" onClick={() => navigate(`/siswa/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit

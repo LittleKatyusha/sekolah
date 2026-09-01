@@ -120,9 +120,9 @@ const EksSiswaList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
-            detailPermission="ekskul-siswa.view"
-            editPermission="ekskul-siswa.edit"
-            deletePermission="ekskul-siswa.delete"
+            detailPermission="ekstrakurikuler.pendaftaran.view"
+            editPermission="ekstrakurikuler.pendaftaran.manage"
+            deletePermission="ekstrakurikuler.pendaftaran.manage"
           />
         </div>
       )
@@ -143,7 +143,7 @@ const EksSiswaList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="ekskul-siswa.create">
+          <PermissionGuard permission="ekstrakurikuler.pendaftaran.manage">
             <Button onClick={() => navigate('/ekstrakurikuler/pendaftaran/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Pendaftaran

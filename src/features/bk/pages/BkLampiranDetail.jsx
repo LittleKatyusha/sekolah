@@ -65,7 +65,7 @@ const BkLampiranDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Lampiran BK</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="bk.delete">
+          <PermissionGuard permission="bk-lampiran.manage">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

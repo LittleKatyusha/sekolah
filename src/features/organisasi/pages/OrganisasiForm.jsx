@@ -6,13 +6,11 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { organisasiService } from '../services/organisasiService'
 import { guruService } from '../../guru/services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const OrganisasiForm = () => {
-  const { options: statusOptions } = useReferenceOptions('status_organisasi')
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
@@ -214,7 +212,7 @@ const OrganisasiForm = () => {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  options={statusOptions}
+                  options={[{ value: 'aktif', label: 'Aktif' }, { value: 'nonaktif', label: 'Tidak Aktif' }]}
                   placeholder="Pilih status"
                   error={errors.status}
                 />
@@ -253,7 +251,7 @@ const OrganisasiForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/organisasi')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'organisasi.edit' : 'organisasi.create'}>
+              <PermissionGuard permission="organisasi.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

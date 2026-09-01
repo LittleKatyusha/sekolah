@@ -124,7 +124,7 @@ const BkTindakanList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="bk.create">
+          <PermissionGuard permission="bk-tindakan.manage">
             <Button onClick={() => navigate('/bk/tindakan/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Tindakan

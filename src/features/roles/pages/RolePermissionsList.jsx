@@ -66,9 +66,9 @@ const RolePermissionsList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
-            detailPermission="role-permissions.view"
-            editPermission="role-permissions.edit"
-            deletePermission="role-permissions.delete"
+            detailPermission="role_permissions.view"
+            editPermission="role_permissions.update"
+            deletePermission="role_permissions.delete"
           />
         </div>
       ),
@@ -83,7 +83,7 @@ const RolePermissionsList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="role-permissions.create">
+          <PermissionGuard permission="role_permissions.create">
             <Button onClick={() => navigate('/admin/role-permissions/create')}>
               <Plus size={18} className="mr-2" />
               Assign Permissions

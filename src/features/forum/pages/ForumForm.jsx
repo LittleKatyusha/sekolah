@@ -9,39 +9,40 @@ import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import { forumService } from '../services/forumService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import useAuthStore from '../../../store/useAuthStore'
 
 const ForumForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
+  const isEditMode = Boolean(id)
 
   const [loading, setLoading] = useState(false)
-  const [fetchingData, setFetchingData] = useState(true)
-  const [tipe, setTipe] = useState(1)
+  const [fetchingData, setFetchingData] = useState(isEditMode)
 
   const [formData, setFormData] = useState({
     judul: '',
-    konten: ''
+    konten: '',
+    mst_guru_mapel_id: '',
+    file_lampiran: '',
   })
 
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    if (!id) {
-      navigate('/akademik/forum')
-      return
-    }
-    fetchForum()
-  }, [id])
+    if (isEditMode) fetchForum()
+  }, [isEditMode])
 
   const fetchForum = async () => {
     setFetchingData(true)
     const { data, error } = await forumService.getById(id)
     if (data) {
       const forum = data
-      setTipe(forum.tipe || 1)
       setFormData({
         judul: forum.judul || '',
-        konten: forum.konten || ''
+        konten: forum.konten || forum.pesan || '',
+        mst_guru_mapel_id: String(forum.mst_guru_mapel_id || forum.guru_mapel?.id || ''),
+        file_lampiran: forum.file_lampiran || '',
       })
     } else {
       showError('Gagal mengambil data forum')
@@ -60,9 +61,10 @@ const ForumForm = () => {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.konten.trim() && !formData.konten.replace(/<[^>]*>/g, '').trim()) {
+    if (!formData.konten.replace(/<[^>]*>/g, '').trim()) {
       newErrors.konten = 'Konten wajib diisi'
     }
+    if (!isEditMode && !formData.mst_guru_mapel_id) newErrors.mst_guru_mapel_id = 'Guru mapel wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -73,21 +75,26 @@ const ForumForm = () => {
 
     setLoading(true)
 
-    const submitData = {
-      konten: formData.konten,
-      judul: formData.judul || null
-    }
+    const submitData = isEditMode
+      ? { judul: formData.judul || null, pesan: formData.konten, file_lampiran: formData.file_lampiran || null }
+      : {
+          mst_guru_mapel_id: Number(formData.mst_guru_mapel_id),
+          sys_user_id: user?.id,
+          judul: formData.judul || null,
+          pesan: formData.konten,
+          file_lampiran: formData.file_lampiran || null,
+        }
 
-    const { error } = await forumService.update(id, submitData)
+    const { error } = isEditMode ? await forumService.update(id, submitData) : await forumService.create(submitData)
 
     if (!error) {
-      showSuccess('Berhasil diperbarui!')
-      navigate(-1)
+      showSuccess(`Forum berhasil ${isEditMode ? 'diperbarui' : 'dibuat'}!`)
+      navigate('/akademik/forum')
     } else {
       if (error.errors) {
         setErrors(error.errors)
       } else {
-        showError('Gagal memperbarui')
+        showError(`Gagal ${isEditMode ? 'memperbarui' : 'membuat'} forum`)
       }
     }
     setLoading(false)
@@ -101,7 +108,7 @@ const ForumForm = () => {
           Kembali
         </Button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Edit {tipe === 2 ? 'Pengumuman' : tipe === 3 ? 'Q&A' : 'Diskusi'}
+          {isEditMode ? 'Edit Forum' : 'Buat Forum'}
         </h1>
       </div>
 
@@ -126,6 +133,13 @@ const ForumForm = () => {
               />
             </div>
 
+            {!isEditMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Guru & Mata Pelajaran <span className="text-red-500">*</span></label>
+                <Input type="number" name="mst_guru_mapel_id" value={formData.mst_guru_mapel_id} onChange={handleChange} placeholder="Masukkan ID guru mapel" error={errors.mst_guru_mapel_id} />
+              </div>
+            )}
+
             <div>
               <LexicalEditor
                 label="Konten"
@@ -144,7 +158,7 @@ const ForumForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
                 Batal
               </Button>
-              <PermissionGuard permission="forum.edit">
+              <PermissionGuard permission={isEditMode ? 'forum.update' : 'forum.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

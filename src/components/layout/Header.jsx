@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun, Bell, Wifi, WifiOff, CheckCheck, Trash2 } from 'lucide-react'
+import { Menu, Moon, Sun, Bell, Wifi, WifiOff, CheckCheck } from 'lucide-react'
 import useThemeStore from '../../store/useThemeStore'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
@@ -35,7 +35,7 @@ const WsIndicator = ({ status }) => {
 
 // ── Notification dropdown ─────────────────────────────────────────────────────
 const NotificationPanel = ({ onClose }) => {
-  const { notifications, unreadCount, markAllRead, markRead, clearAll, loadFromApi, setUnreadCount } = useNotificationStore()
+  const { notifications, unreadCount, markAllReadApi, markReadApi, loadFromApi } = useNotificationStore()
 
   // Load persisted notifications from API on first open
   useEffect(() => {
@@ -47,6 +47,16 @@ const NotificationPanel = ({ onClose }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleMarkRead = async (id) => {
+    const response = await notifikasiService.markRead(id)
+    if (response?.success) markReadApi(id)
+  }
+
+  const handleMarkAllRead = async () => {
+    const response = await notifikasiService.markAllRead()
+    if (response?.success) markAllReadApi()
+  }
+
   return (
     <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
       {/* Header */}
@@ -56,13 +66,8 @@ const NotificationPanel = ({ onClose }) => {
         </span>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <button onClick={markAllRead} title="Tandai semua dibaca" className="text-gray-400 hover:text-blue-500 transition-colors">
+            <button onClick={handleMarkAllRead} title="Tandai semua dibaca" className="text-gray-400 hover:text-blue-500 transition-colors">
               <CheckCheck size={15} />
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button onClick={clearAll} title="Hapus semua" className="text-gray-400 hover:text-red-500 transition-colors">
-              <Trash2 size={14} />
             </button>
           )}
         </div>
@@ -76,7 +81,7 @@ const NotificationPanel = ({ onClose }) => {
         {notifications.map(n => (
           <li
             key={n.id}
-            onClick={() => markRead(n.id)}
+            onClick={() => handleMarkRead(n.id)}
             className={`flex gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${n.read ? 'opacity-60' : ''}`}
           >
             {/* Colour dot */}

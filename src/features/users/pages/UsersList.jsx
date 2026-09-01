@@ -316,7 +316,7 @@ const UsersList = () => {
               onDelete={() => handleDelete(row)}
               onToggleStatus={() => handleToggleStatus(row)}
               detailPermission="users.view"
-              editPermission="users.edit"
+              editPermission="users.update"
               deletePermission="users.delete"
             />
           </div>

@@ -154,7 +154,7 @@ const TugasForm = () => {
         judul: tugas.judul || '',
         deskripsi: tugas.deskripsi || '',
         tenggat_waktu: tenggatWaktu,
-      file_lampiran: tugas.file_lampiran || '',
+        file_lampiran: tugas.file_lampiran || tugas.file_path || '',
         status: tugas.status !== null && tugas.status !== undefined ? String(tugas.status) : '1'
       })
 

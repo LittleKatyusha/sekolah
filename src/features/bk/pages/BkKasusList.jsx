@@ -149,7 +149,7 @@ const BkKasusList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="bk.create">
+          <PermissionGuard permission="bk-kasus.create">
             <Button onClick={() => navigate('/bk/kasus/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Kasus

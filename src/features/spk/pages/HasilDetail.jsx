@@ -73,7 +73,7 @@ const HasilDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Hasil SPK</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="spk.delete">
+          <PermissionGuard permission="spk-hasil.delete">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

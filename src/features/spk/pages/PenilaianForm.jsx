@@ -268,7 +268,7 @@ const PenilaianForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/spk/penilaian')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'spk.edit' : 'spk.create'}>
+              <PermissionGuard permission={isEditMode ? 'spk-penilaian.update' : 'spk-penilaian.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

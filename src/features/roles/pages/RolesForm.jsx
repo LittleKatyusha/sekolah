@@ -406,7 +406,7 @@ const RolesForm = () => {
             <Button type="button" variant="secondary" onClick={() => navigate('/admin/roles')}>
               Batal
             </Button>
-            <PermissionGuard permission={isEditMode ? 'roles.edit' : 'roles.create'}>
+            <PermissionGuard permission={isEditMode ? 'roles.update' : 'roles.create'}>
               <Button type="submit" disabled={loading} loading={loading}>
                 {!loading && <Save size={16} className="mr-1.5" />}
                 {loading ? 'Menyimpan...' : isEditMode ? 'Perbarui Role' : 'Simpan Role'}

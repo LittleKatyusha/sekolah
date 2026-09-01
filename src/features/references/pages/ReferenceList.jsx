@@ -49,17 +49,17 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <PermissionGuard permission="references.view">
+            <PermissionGuard permission="sys-reference.view">
               <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
                 <Eye size={16} className="text-blue-600" /> Detail
               </button>
             </PermissionGuard>
-            <PermissionGuard permission="references.edit">
+            <PermissionGuard permission="sys-reference.manage">
               <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
                 <Edit size={16} className="text-yellow-600" /> Edit
               </button>
             </PermissionGuard>
-            <PermissionGuard permission="references.delete">
+            <PermissionGuard permission="sys-reference.manage">
               <>
                 <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                 <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
@@ -138,7 +138,7 @@ const ReferenceList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="references.create">
+          <PermissionGuard permission="sys-reference.manage">
             <Button onClick={() => navigate('/admin/references/create')}>
               <Plus size={18} className="mr-2" /> Tambah Referensi
             </Button>

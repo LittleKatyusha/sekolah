@@ -83,7 +83,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
                 Detail
               </button>
             </PermissionGuard>
-            <PermissionGuard permission="semester.edit">
+            <PermissionGuard permission="semester.manage">
               <button
                 onClick={() => handleAction(onEdit)}
                 className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
@@ -92,7 +92,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
                 Edit
               </button>
             </PermissionGuard>
-            <PermissionGuard permission="semester.delete">
+            <PermissionGuard permission="semester.manage">
               <>
                 <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                 <button
@@ -266,7 +266,7 @@ const SemesterList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="semester.create">
+          <PermissionGuard permission="semester.manage">
             <Button onClick={() => navigate('/admin/semester/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Semester

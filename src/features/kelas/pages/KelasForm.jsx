@@ -22,6 +22,7 @@ const KelasForm = () => {
     nama_kelas: '',
     tingkat: '',
     tahun_ajaran_id: '',
+    mst_shift_sekolah_id: '',
     kapasitas: '',
     wali_guru_id: ''
   })
@@ -50,6 +51,7 @@ const KelasForm = () => {
   // Options for tahun ajaran - fetched from API
   const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
   const [tahunAjaranLoading, setTahunAjaranLoading] = useState(false)
+  const [shiftOptions, setShiftOptions] = useState([])
 
   useEffect(() => {
     if (isEditMode) {
@@ -58,6 +60,7 @@ const KelasForm = () => {
     // Fetch guru list and tahun ajaran on mount
     fetchGuruList()
     fetchTahunAjaranList()
+    fetchShiftList()
   }, [id])
 
   // Close dropdown when clicking outside
@@ -133,6 +136,20 @@ const KelasForm = () => {
     }
   }
 
+  const fetchShiftList = async () => {
+    try {
+      const response = await api.get('/shift/')
+      if (response.data?.success) {
+        setShiftOptions((response.data.data || []).map((shift) => ({
+          value: String(shift.id),
+          label: shift.nama_shift || shift.nama || `Shift #${shift.id}`,
+        })))
+      }
+    } catch {
+      showError('Gagal mengambil data shift sekolah')
+    }
+  }
+
   const fetchKelas = async () => {
     setFetchingData(true)
     const { data, error } = await kelasService.getById(id)
@@ -143,6 +160,7 @@ const KelasForm = () => {
         nama_kelas: kelas.nama_kelas || '',
         tingkat: kelas.tingkat || '',
         tahun_ajaran_id: kelas.tahun_ajaran_id ? String(kelas.tahun_ajaran_id) : '',
+        mst_shift_sekolah_id: kelas.mst_shift_sekolah_id ? String(kelas.mst_shift_sekolah_id) : '',
         kapasitas: kelas.kapasitas || '',
         wali_guru_id: waliGuruId
       })
@@ -190,6 +208,7 @@ const KelasForm = () => {
     if (!formData.nama_kelas) newErrors.nama_kelas = 'Nama kelas wajib diisi'
     if (!formData.tingkat) newErrors.tingkat = 'Tingkat wajib dipilih'
     if (!formData.tahun_ajaran_id) newErrors.tahun_ajaran_id = 'Tahun ajaran wajib dipilih'
+    if (!formData.mst_shift_sekolah_id) newErrors.mst_shift_sekolah_id = 'Shift sekolah wajib dipilih'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -207,6 +226,7 @@ const KelasForm = () => {
       nama_kelas: formData.nama_kelas,
       tingkat: parseInt(formData.tingkat),
       tahun_ajaran_id: formData.tahun_ajaran_id ? parseInt(formData.tahun_ajaran_id) : null,
+      mst_shift_sekolah_id: parseInt(formData.mst_shift_sekolah_id),
       kapasitas: formData.kapasitas ? parseInt(formData.kapasitas) : null,
       wali_guru_id: formData.wali_guru_id ? parseInt(formData.wali_guru_id) : null
     }
@@ -311,6 +331,22 @@ const KelasForm = () => {
                 ))}
               </select>
               {errors.tahun_ajaran_id && <p className="mt-1 text-sm text-red-500">{errors.tahun_ajaran_id}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Shift Sekolah <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="mst_shift_sekolah_id"
+                value={formData.mst_shift_sekolah_id}
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              >
+                <option value="">Pilih Shift</option>
+                {shiftOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+              {errors.mst_shift_sekolah_id && <p className="mt-1 text-sm text-red-500">{errors.mst_shift_sekolah_id}</p>}
             </div>
 
             {/* Kapasitas */}

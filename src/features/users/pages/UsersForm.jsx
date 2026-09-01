@@ -6,14 +6,8 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { usersService } from '../services/usersService'
+import { roleService } from '../../roles/services/rolesService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-
-// Role options based on API response
-const ROLE_OPTIONS = [
-  { value: 1, label: 'Administrator', code: 'admin' },
-  { value: 2, label: 'Guru', code: 'guru' },
-  { value: 3, label: 'Staff', code: 'staff' },
-]
 
 const UsersForm = () => {
   const { id } = useParams()
@@ -25,19 +19,29 @@ const UsersForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     password: '',
-    role: 2, // Default to Guru (ID: 2)
+    role: '',
     is_active: true,
   })
 
   const [errors, setErrors] = useState({})
+  const [roles, setRoles] = useState([])
 
   useEffect(() => {
+    fetchRoles()
     if (isEditMode) {
       fetchUser()
     }
   }, [id])
+
+  const fetchRoles = async () => {
+    const { data, error } = await roleService.getAll({ per_page: 100 })
+    if (error) {
+      showError('Gagal mengambil daftar role')
+      return
+    }
+    setRoles(data?.data || [])
+  }
 
   const fetchUser = async () => {
     setLoading(true)
@@ -48,7 +52,7 @@ const UsersForm = () => {
         name: user.name || '',
         email: user.email || '',
         password: '', // Don't show password
-        role: user.role || 2,
+        role: String(user.role_id || user.role?.id || user.role || ''),
         is_active: user.is_active ?? true
       })
     } else {
@@ -83,6 +87,7 @@ const UsersForm = () => {
     } else if (formData.password && formData.password.length < 8) {
       newErrors.password = 'Password minimal 8 karakter'
     }
+    if (!formData.role) newErrors.role = 'Role wajib dipilih'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -97,7 +102,7 @@ const UsersForm = () => {
     let result
     
     // Prepare data - exclude password if empty during edit
-    const dataToSubmit = { ...formData }
+    const dataToSubmit = { ...formData, role: Number(formData.role) }
     if (isEditMode && !dataToSubmit.password) {
       delete dataToSubmit.password
     }
@@ -198,7 +203,8 @@ const UsersForm = () => {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
-                {ROLE_OPTIONS.map(role => (
+                <option value="">Pilih role</option>
+                {roles.map(role => (
                   <option key={role.value} value={role.value}>
                     {role.label}
                   </option>
@@ -229,7 +235,7 @@ const UsersForm = () => {
             <Button type="button" variant="secondary" onClick={() => navigate('/admin/users')}>
               Batal
             </Button>
-            <PermissionGuard permission={isEditMode ? 'users.edit' : 'users.create'}>
+              <PermissionGuard permission={isEditMode ? 'users.update' : 'users.create'}>
               <Button type="submit" disabled={loading}>
                 <Save size={18} className="mr-2" />
                 {loading ? 'Menyimpan...' : 'Simpan'}

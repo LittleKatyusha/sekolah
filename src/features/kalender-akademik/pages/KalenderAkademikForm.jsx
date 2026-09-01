@@ -154,15 +154,10 @@ const KalenderAkademikForm = () => {
       waktu_selesai: formData.waktu_selesai || null,
       is_all_day: formData.is_all_day,
       is_recurring: formData.is_recurring,
-      recurring_rule: formData.recurring_rule || null,
+      recurring_rule: null,
       lokasi: formData.lokasi || null,
       status: parseInt(formData.status),
       prioritas: parseInt(formData.prioritas),
-    }
-
-    // Include status only on update
-    if (isEditMode) {
-      submitData.status = parseInt(formData.status)
     }
 
     let result
@@ -326,34 +321,20 @@ const KalenderAkademikForm = () => {
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">Sepanjang Hari</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-not-allowed">
                   <input
                     type="checkbox"
-                    name="is_recurring"
-                    checked={formData.is_recurring}
-                    onChange={handleChange}
+                    checked={false}
+                    disabled
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Berulang</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Berulang belum tersedia</span>
                 </label>
               </div>
 
-              {/* Recurring Rule (shown only if is_recurring) */}
-              {formData.is_recurring && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Aturan Pengulangan
-                  </label>
-                  <Input
-                    type="text"
-                    name="recurring_rule"
-                    value={formData.recurring_rule}
-                    onChange={handleChange}
-                    placeholder="Contoh: FREQ=WEEKLY;BYDAY=MO"
-                    error={errors.recurring_rule}
-                  />
-                </div>
-              )}
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                Pola pengulangan belum tersedia karena backend memerlukan struktur aturan JSON.
+              </p>
 
               {/* Deskripsi */}
               <div className="md:col-span-2">
@@ -378,7 +359,7 @@ const KalenderAkademikForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/admin/kalender-akademik')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'kalender-akademik.edit' : 'kalender-akademik.create'}>
+              <PermissionGuard permission="kalender-akademik.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

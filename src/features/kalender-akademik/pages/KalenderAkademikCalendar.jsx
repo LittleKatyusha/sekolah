@@ -242,7 +242,7 @@ const KalenderAkademikCalendar = () => {
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
-          <PermissionGuard permission="kalender-akademik.create">
+          <PermissionGuard permission="kalender-akademik.manage">
             <Button
               variant="primary"
               size="sm"

@@ -40,12 +40,12 @@ const ActionsMenu = ({ data, onEdit, onDelete }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <PermissionGuard permission="kalender-tipe.edit">
+            <PermissionGuard permission="kalender-tipe.manage">
               <button onClick={() => handleAction(onEdit)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
                 <Edit size={16} className="text-yellow-600" /> Edit
               </button>
             </PermissionGuard>
-            <PermissionGuard permission="kalender-tipe.delete">
+            <PermissionGuard permission="kalender-tipe.manage">
               <>
                 <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                 <button onClick={() => handleAction(onDelete)} className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
@@ -136,7 +136,7 @@ const KalenderTipeList = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kalender Akademik Tipe</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button onClick={handleRefresh} variant="secondary"><RefreshCw size={18} /></Button>
-          <PermissionGuard permission="kalender-tipe.create">
+          <PermissionGuard permission="kalender-tipe.manage">
             <Button onClick={() => navigate('/admin/kalender-tipe/create')}><Plus size={18} className="mr-2" /> Tambah Tipe</Button>
           </PermissionGuard>
         </div>

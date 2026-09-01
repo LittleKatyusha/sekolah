@@ -84,7 +84,7 @@ const JadwalPelajaranDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Jadwal Pelajaran</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="jadwal-pelajaran.edit">
+          <PermissionGuard permission="jadwal-pelajaran.update">
             <Button variant="warning" onClick={() => navigate(`/jadwal-pelajaran/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit

@@ -143,7 +143,7 @@ const WaliList = () => {
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
               detailPermission="wali.view"
-              editPermission="wali.edit"
+              editPermission="wali.update"
               deletePermission="wali.delete"
             />
           </div>

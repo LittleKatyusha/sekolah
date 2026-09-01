@@ -261,7 +261,7 @@ const EksSiswaForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/ekstrakurikuler/pendaftaran')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'ekskul-siswa.edit' : 'ekskul-siswa.create'}>
+              <PermissionGuard permission="ekstrakurikuler.pendaftaran.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

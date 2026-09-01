@@ -13,7 +13,13 @@ const create = vi.fn(() => ({
 
 vi.mock('axios', () => ({ default: { create } }))
 
-const { ppdbPublicService } = await import('./ppdbService')
+vi.mock('../../../utils/api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, apiService: { post: vi.fn() } }
+})
+
+const { pendaftarService, ppdbPublicService } = await import('./ppdbService')
+const { apiService } = await import('../../../utils/api')
 
 describe('ppdbPublicService', () => {
   it('uses resolved API base with no authorization header', async () => {
@@ -35,5 +41,10 @@ describe('ppdbPublicService', () => {
       no_pendaftaran: 'PPDB-2026-ABC123',
       email: 'calon@example.test',
     })
+  })
+
+  it('enrolls an accepted applicant through the active backend action', async () => {
+    await pendaftarService.enroll(42)
+    expect(apiService.post).toHaveBeenCalledWith('/ppdb/pendaftaran/42/enroll')
   })
 })

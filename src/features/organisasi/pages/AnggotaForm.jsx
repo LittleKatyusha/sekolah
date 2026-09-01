@@ -6,13 +6,11 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { anggotaService, organisasiService, jabatanService } from '../services/organisasiService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const AnggotaForm = () => {
-  const { options: statusOptions } = useReferenceOptions('status_organisasi')
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
@@ -24,9 +22,9 @@ const AnggotaForm = () => {
     organisasi_id: '',
     siswa_id: '',
     jabatan_id: '',
-    tanggal_mulai: '',
-    tanggal_selesai: '',
-    status: 'aktif',
+    tanggal_masuk: '',
+    tanggal_keluar: '',
+    status: '1',
   })
 
   const [errors, setErrors] = useState({})
@@ -93,9 +91,9 @@ const AnggotaForm = () => {
         organisasi_id: organisasiId,
         siswa_id: siswaId,
         jabatan_id: jabatanId,
-        tanggal_mulai: anggota.tanggal_mulai || '',
-        tanggal_selesai: anggota.tanggal_selesai || '',
-        status: anggota.status || 'aktif',
+        tanggal_masuk: anggota.tanggal_masuk || '',
+        tanggal_keluar: anggota.tanggal_keluar || '',
+        status: anggota.status != null ? String(anggota.status) : '1',
       })
 
       if (anggota.organisasi?.id) {
@@ -157,7 +155,7 @@ const AnggotaForm = () => {
     if (!formData.organisasi_id) newErrors.organisasi_id = 'Organisasi wajib dipilih'
     if (!formData.siswa_id) newErrors.siswa_id = 'Siswa wajib dipilih'
     if (!formData.jabatan_id) newErrors.jabatan_id = 'Jabatan wajib dipilih'
-    if (!formData.tanggal_mulai) newErrors.tanggal_mulai = 'Tanggal mulai wajib diisi'
+    if (!formData.tanggal_masuk) newErrors.tanggal_masuk = 'Tanggal masuk wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -173,9 +171,9 @@ const AnggotaForm = () => {
     if (isEditMode) {
       const updateData = {
         jabatan_id: parseInt(formData.jabatan_id),
-        tanggal_mulai: formData.tanggal_mulai,
-        tanggal_selesai: formData.tanggal_selesai || null,
-        status: formData.status || 'aktif',
+        tanggal_masuk: formData.tanggal_masuk,
+        tanggal_keluar: formData.tanggal_keluar || null,
+        status: Number(formData.status),
       }
       result = await anggotaService.update(id, updateData)
     } else {
@@ -183,9 +181,9 @@ const AnggotaForm = () => {
         organisasi_id: parseInt(formData.organisasi_id),
         siswa_id: parseInt(formData.siswa_id),
         jabatan_id: parseInt(formData.jabatan_id),
-        tanggal_mulai: formData.tanggal_mulai,
-        tanggal_selesai: formData.tanggal_selesai || null,
-        status: formData.status || 'aktif',
+        tanggal_masuk: formData.tanggal_masuk,
+        tanggal_keluar: formData.tanggal_keluar || null,
+        status: Number(formData.status),
       }
       result = await anggotaService.create(submitData)
     }
@@ -281,7 +279,7 @@ const AnggotaForm = () => {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  options={statusOptions}
+                  options={[{ value: '0', label: 'Tidak Aktif' }, { value: '1', label: 'Aktif' }, { value: '2', label: 'Selesai' }]}
                   placeholder="Pilih status"
                   error={errors.status}
                 />
@@ -289,27 +287,27 @@ const AnggotaForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tanggal Mulai <span className="text-red-500">*</span>
+                  Tanggal Masuk <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="date"
-                  name="tanggal_mulai"
-                  value={formData.tanggal_mulai}
+                  name="tanggal_masuk"
+                  value={formData.tanggal_masuk}
                   onChange={handleChange}
-                  error={errors.tanggal_mulai}
+                  error={errors.tanggal_masuk}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tanggal Selesai
+                  Tanggal Keluar
                 </label>
                 <Input
                   type="date"
-                  name="tanggal_selesai"
-                  value={formData.tanggal_selesai}
+                  name="tanggal_keluar"
+                  value={formData.tanggal_keluar}
                   onChange={handleChange}
-                  error={errors.tanggal_selesai}
+                  error={errors.tanggal_keluar}
                 />
               </div>
             </div>
@@ -318,7 +316,7 @@ const AnggotaForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/organisasi/anggota')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'anggota.edit' : 'anggota.create'}>
+              <PermissionGuard permission="organisasi.anggota.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

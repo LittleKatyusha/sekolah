@@ -877,7 +877,7 @@ const RolePermissionsForm = () => {
                       <Button type="button" variant="secondary" onClick={() => navigate('/admin/role-permissions')}>
                         Batal
                       </Button>
-                      <PermissionGuard permission={isEditMode ? 'role-permissions.edit' : 'role-permissions.create'}>
+                      <PermissionGuard permission={isEditMode ? 'role_permissions.update' : 'role_permissions.create'}>
                         <Button type="submit" disabled={submitting} loading={submitting}>
                           {submitting ? 'Menyimpan konfigurasi...' : isEditMode ? 'Simpan perubahan' : 'Simpan assignment'}
                         </Button>

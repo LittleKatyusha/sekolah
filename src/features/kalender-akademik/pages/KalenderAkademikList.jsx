@@ -158,8 +158,8 @@ const KalenderAkademikList = () => {
                 onEdit={() => handleEdit(params.data)}
                 onDelete={() => handleDelete(params.data)}
                 detailPermission="kalender-akademik.view"
-                editPermission="kalender-akademik.edit"
-                deletePermission="kalender-akademik.delete"
+                editPermission="kalender-akademik.manage"
+                deletePermission="kalender-akademik.manage"
               />
             </div>
           )
@@ -181,7 +181,7 @@ const KalenderAkademikList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="kalender-akademik.create">
+          <PermissionGuard permission="kalender-akademik.manage">
             <Button onClick={() => navigate('/admin/kalender-akademik/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Event

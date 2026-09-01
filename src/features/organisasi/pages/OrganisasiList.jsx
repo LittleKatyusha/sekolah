@@ -161,7 +161,7 @@ const OrganisasiList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="organisasi.create">
+          <PermissionGuard permission="organisasi.manage">
             <Button onClick={() => navigate('/organisasi/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Organisasi

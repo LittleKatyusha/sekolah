@@ -241,7 +241,7 @@ const SekolahForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/sekolah')}>
                 Batal
               </Button>
-              <PermissionGuard permission={sekolahId ? 'sekolah.edit' : 'sekolah.create'}>
+              <PermissionGuard permission={sekolahId ? 'sekolah.update' : 'sekolah.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

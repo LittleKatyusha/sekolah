@@ -71,13 +71,13 @@ const BkKasusDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Kasus BK</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="bk.edit">
+          <PermissionGuard permission="bk-kasus.update">
             <Button variant="warning" onClick={() => navigate(`/bk/kasus/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="bk.delete">
+          <PermissionGuard permission="bk-kasus.delete">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

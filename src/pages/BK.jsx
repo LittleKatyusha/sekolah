@@ -7,8 +7,10 @@ import {
 import { bkKasusService, bkJenisService, bkKategoriService, bkSesiService } from '../features/bk/services/bkService'
 import StatCard from '../components/bk/StatCard'
 import NavigationCard from '../components/bk/NavigationCard'
+import usePermission from '../hooks/usePermission'
 
 const BK = () => {
+  const { hasAnyPermission } = usePermission()
   const [stats, setStats] = useState({ kasus: '-', sesi: '-', jenis: '-', kategori: '-' })
   const [loadingStats, setLoadingStats] = useState(true)
 
@@ -43,15 +45,15 @@ const BK = () => {
   }, [])
 
   const navigationItems = [
-    { icon: FolderOpen, title: 'Kasus BK', description: 'Kelola data kasus bimbingan konseling', path: '/bk/kasus', color: 'indigo' },
-    { icon: Calendar, title: 'Sesi Konseling', description: 'Kelola sesi konseling dengan siswa', path: '/bk/sesi', color: 'blue' },
-    { icon: CheckCircle, title: 'Hasil Konseling', description: 'Catat hasil dari proses konseling', path: '/bk/hasil', color: 'green' },
-    { icon: ClipboardList, title: 'Tindakan', description: 'Tindak lanjut dari kasus BK', path: '/bk/tindakan', color: 'orange' },
-    { icon: Tag, title: 'Jenis BK', description: 'Kelola jenis bimbingan konseling', path: '/bk/jenis', color: 'purple' },
-    { icon: BarChart3, title: 'Kategori BK', description: 'Kelola kategori bimbingan konseling', path: '/bk/kategori', color: 'teal' },
-    { icon: Paperclip, title: 'Lampiran', description: 'Kelola file lampiran kasus BK', path: '/bk/lampiran', color: 'pink' },
-    { icon: Users, title: 'Wali BK', description: 'Kelola keterlibatan wali murid', path: '/bk/wali', color: 'amber' },
-  ]
+    { icon: FolderOpen, title: 'Kasus BK', description: 'Kelola data kasus bimbingan konseling', path: '/bk/kasus', color: 'indigo', permissions: ['bk-kasus.view', 'bk-kasus.create', 'bk-kasus.update', 'bk-kasus.delete'] },
+    { icon: Calendar, title: 'Sesi Konseling', description: 'Kelola sesi konseling dengan siswa', path: '/bk/sesi', color: 'blue', permissions: ['bk-sesi.manage', 'bk-sesi.create', 'bk-sesi.update', 'bk-sesi.delete'] },
+    { icon: CheckCircle, title: 'Hasil Konseling', description: 'Catat hasil dari proses konseling', path: '/bk/hasil', color: 'green', permissions: ['bk-hasil.manage', 'bk-hasil.create', 'bk-hasil.update', 'bk-hasil.delete'] },
+    { icon: ClipboardList, title: 'Tindakan', description: 'Tindak lanjut dari kasus BK', path: '/bk/tindakan', color: 'orange', permissions: ['bk-tindakan.manage', 'bk-tindakan.create', 'bk-tindakan.update', 'bk-tindakan.delete'] },
+    { icon: Tag, title: 'Jenis BK', description: 'Kelola jenis bimbingan konseling', path: '/bk/jenis', color: 'purple', permissions: ['bk-jenis.view', 'bk-jenis.create', 'bk-jenis.update', 'bk-jenis.delete'] },
+    { icon: BarChart3, title: 'Kategori BK', description: 'Kelola kategori bimbingan konseling', path: '/bk/kategori', color: 'teal', permissions: ['bk-kategori.manage', 'bk-kategori.create', 'bk-kategori.update', 'bk-kategori.delete'] },
+    { icon: Paperclip, title: 'Lampiran', description: 'Kelola file lampiran kasus BK', path: '/bk/lampiran', color: 'pink', permissions: ['bk-lampiran.manage', 'bk-lampiran.create', 'bk-lampiran.update', 'bk-lampiran.delete'] },
+    { icon: Users, title: 'Wali BK', description: 'Kelola keterlibatan wali murid', path: '/bk/wali', color: 'amber', permissions: ['bk-wali.manage', 'bk-wali.create', 'bk-wali.update', 'bk-wali.delete'] },
+  ].filter(({ permissions }) => hasAnyPermission(permissions))
 
   return (
     <div className="space-y-6">

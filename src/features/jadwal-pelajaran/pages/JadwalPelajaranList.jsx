@@ -159,7 +159,7 @@ const JadwalPelajaranList = () => {
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
               detailPermission="jadwal-pelajaran.view"
-              editPermission="jadwal-pelajaran.edit"
+                editPermission="jadwal-pelajaran.update"
               deletePermission="jadwal-pelajaran.delete"
             />
           </div>

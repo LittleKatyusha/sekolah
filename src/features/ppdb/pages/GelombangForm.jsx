@@ -350,7 +350,7 @@ const GelombangForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/ppdb/gelombang')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'ppdb.gelombang.edit' : 'ppdb.gelombang.create'}>
+              <PermissionGuard permission={isEditMode ? 'ppdb.gelombang.update' : 'ppdb.gelombang.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

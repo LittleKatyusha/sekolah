@@ -73,13 +73,13 @@ const RolePermissionsDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Role Permission</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="role-permissions.edit">
+          <PermissionGuard permission="role_permissions.update">
             <Button variant="warning" onClick={() => navigate(`/admin/role-permissions/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="role-permissions.delete">
+          <PermissionGuard permission="role_permissions.delete">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

@@ -136,7 +136,7 @@ const KalenderTipeForm = () => {
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="button" variant="secondary" onClick={() => navigate('/admin/kalender-tipe')}>Batal</Button>
-            <PermissionGuard permission={isEdit ? 'kalender-tipe.edit' : 'kalender-tipe.create'}>
+            <PermissionGuard permission="kalender-tipe.manage">
               <Button type="submit" disabled={saving}><Save size={18} className="mr-2" />{saving ? 'Menyimpan...' : 'Simpan'}</Button>
             </PermissionGuard>
           </div>

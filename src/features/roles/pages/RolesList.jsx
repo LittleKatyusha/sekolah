@@ -79,7 +79,7 @@ const RolesList = () => {
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
             detailPermission="roles.view"
-            editPermission="roles.edit"
+            editPermission="roles.update"
             deletePermission="roles.delete"
           />
         </div>

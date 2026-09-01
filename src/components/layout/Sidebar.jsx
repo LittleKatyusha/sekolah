@@ -26,10 +26,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import useAuthStore from '../../store/useAuthStore'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
+import { authService } from '../../services/authService'
 import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 import { getTheme } from '../../constants/roleThemes'
-import { canAccessPath } from '../../utils/routeAccess'
+import { canAccessPath, isBackendAvailablePath } from '../../utils/routeAccess'
 
 library.add(fas, far, fab)
 
@@ -287,7 +288,7 @@ const MenuItem = memo(({ item, onClose, onNavigate }) => {
 })
 
 const Sidebar = ({ isOpen, onClose }) => {
-  const { logout, user } = useAuthStore()
+  const { user } = useAuthStore()
   const theme = getTheme(user?.role)
   const startNavigation = useNavigationProgressStore((state) => state.startNavigation)
   const [navigation, setNavigation] = useState([])
@@ -371,7 +372,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             menuItem.children = item.sub_menus
               .filter(subMenu => subMenu.is_active)
               .map(mapMenuItem)
-              .filter((child) => !child.to || canAccessPath(user, child.to) || child.children.length > 0)
+              .filter((child) => !child.to || (isBackendAvailablePath(child.to) && canAccessPath(user, child.to)) || child.children.length > 0)
           }
 
           return menuItem
@@ -381,7 +382,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         const mappedMenus = menuData
           .filter(item => item.is_active)
           .map(mapMenuItem)
-          .filter((item) => !item.to || canAccessPath(user, item.to) || item.children.length > 0)
+          .filter((item) => !item.to || (isBackendAvailablePath(item.to) && canAccessPath(user, item.to)) || item.children.length > 0)
 
         writeSidebarMenuCache(user.id, mappedMenus)
         setNavigation(mappedMenus)
@@ -400,7 +401,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await authService.logout()
     } finally {
       window.location.href = '/login'
     }

@@ -82,7 +82,7 @@ export const raporService = {
   /**
    * Generate rapor dari nilai for a single siswa
    * POST /akademik/rapor/generate-dari-nilai
-   * @param {Object} data - { mst_siswa_id, semester, tahun_ajaran_id }
+   * @param {Object} data - { siswa_id, semester }
    * @returns {Promise<{data: any, error: any}>}
    */
   generateDariNilai: async (data) => {
@@ -92,7 +92,7 @@ export const raporService = {
   /**
    * Generate rapor dari nilai for an entire kelas
    * POST /akademik/rapor/generate-kelas
-   * @param {Object} data - { mst_kelas_id, semester, tahun_ajaran_id }
+   * @param {Object} data - { kelas_id, semester }
    * @returns {Promise<{data: any, error: any}>}
    */
   generateKelas: async (data) => {

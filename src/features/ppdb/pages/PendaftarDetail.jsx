@@ -10,11 +10,15 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const STATUS_MAP = {
   draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+  submitted: { label: 'Diajukan', bg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  needs_revision: { label: 'Perlu Revisi', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
   terverifikasi: { label: 'Terverifikasi', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   seleksi: { label: 'Seleksi', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
   diterima: { label: 'Diterima', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   cadangan: { label: 'Cadangan', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   ditolak: { label: 'Ditolak', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  enrolled: { label: 'Terdaftar', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  cancelled: { label: 'Dibatalkan', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
 }
 
 const PendaftarDetail = () => {
@@ -80,7 +84,9 @@ const PendaftarDetail = () => {
   }
 
   const handleReject = async () => {
-    const { error } = await pendaftarService.reject(pendaftar.id)
+    const reason = window.prompt('Alasan penolakan wajib diisi:')?.trim()
+    if (!reason) return
+    const { error } = await pendaftarService.reject(pendaftar.id, reason)
     if (!error) {
       showSuccess('Pendaftar berhasil ditolak!')
       fetchPendaftar()
@@ -99,6 +105,8 @@ const PendaftarDetail = () => {
     const info = STATUS_MAP[status] || { label: status, bg: 'bg-gray-100 text-gray-800' }
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${info.bg}`}>{info.label}</span>
   }
+
+  const status = pendaftar.status_pendaftaran
 
   if (loading || !pendaftar) {
     return (
@@ -119,31 +127,31 @@ const PendaftarDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Pendaftar</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <PermissionGuard permission="ppdb.pendaftar.edit">
+          {status === 'submitted' && <PermissionGuard permission="ppdb.pendaftaran.verify">
             <Button variant="secondary" onClick={handleVerify}>
               <ShieldCheck size={18} className="mr-2" />
               Verifikasi
             </Button>
-          </PermissionGuard>
-          <PermissionGuard permission="ppdb.pendaftar.edit">
+          </PermissionGuard>}
+          {['seleksi', 'cadangan'].includes(status) && <PermissionGuard permission="ppdb.pendaftaran.accept">
             <Button variant="primary" onClick={handleAccept}>
               <CheckCircle size={18} className="mr-2" />
               Terima
             </Button>
-          </PermissionGuard>
-          <PermissionGuard permission="ppdb.pendaftar.edit">
+          </PermissionGuard>}
+          {['seleksi', 'cadangan'].includes(status) && <PermissionGuard permission="ppdb.pendaftaran.reject">
             <Button variant="danger" onClick={handleReject}>
               <XCircle size={18} className="mr-2" />
               Tolak
             </Button>
-          </PermissionGuard>
-          <PermissionGuard permission="ppdb.pendaftar.edit">
+          </PermissionGuard>}
+          <PermissionGuard permission="ppdb.pendaftaran.update">
             <Button variant="warning" onClick={() => navigate(`/ppdb/pendaftaran/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="ppdb.pendaftar.delete">
+          <PermissionGuard permission="ppdb.pendaftaran.delete">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

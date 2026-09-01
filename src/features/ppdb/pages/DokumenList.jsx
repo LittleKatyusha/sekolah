@@ -42,7 +42,7 @@ const ActionsMenu = ({ data, onView, onEdit, onDelete }) => {
               <Eye size={14} /> Lihat
             </button>
           </PermissionGuard>
-          <PermissionGuard permission="ppdb.dokumen.edit">
+          <PermissionGuard permission="ppdb.dokumen.update">
             <button onClick={() => { onEdit(data); setOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
               <Edit size={14} /> Edit
             </button>

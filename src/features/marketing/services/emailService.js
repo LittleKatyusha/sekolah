@@ -2,7 +2,12 @@ import { apiService } from '../../../utils/api'
 
 const BASE_URL = '/email'
 
-const unwrapResponse = (response) => response?.data?.data ?? response?.data ?? null
+const unwrapResponse = (response) => {
+  if (response?.error) {
+    throw new Error(typeof response.error === 'string' ? response.error : response.error.message || 'Permintaan email gagal diproses')
+  }
+  return response?.data?.data ?? response?.data ?? null
+}
 
 export const emailService = {
   /**

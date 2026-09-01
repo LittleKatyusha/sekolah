@@ -110,9 +110,9 @@ const EkstrakurikulerList = () => {
             onDetail={() => handleDetail(params.data)}
             onEdit={() => handleEdit(params.data)}
             onDelete={() => handleDelete(params.data)}
-            detailPermission="ekskul.view"
-            editPermission="ekskul.edit"
-            deletePermission="ekskul.delete"
+            detailPermission="ekstrakurikuler.view"
+            editPermission="ekstrakurikuler.manage"
+            deletePermission="ekstrakurikuler.manage"
           />
         </div>
       )
@@ -133,7 +133,7 @@ const EkstrakurikulerList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="ekskul.create">
+          <PermissionGuard permission="ekstrakurikuler.manage">
             <Button onClick={() => navigate('/ekstrakurikuler/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Ekskul

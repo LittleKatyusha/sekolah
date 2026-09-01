@@ -365,7 +365,7 @@ const PembayaranSppTunggakan = () => {
               </h3>
               {tunggakan.length > 0 && selectedBulan.length > 0 && (
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <PermissionGuard permission="pembayaran-spp.create">
+                  <PermissionGuard permission="pembayaran-spp.bayar">
                     <Button
                       onClick={handleBayarMultiple}
                       disabled={loadingBayar || loadingBayarOnline}
@@ -384,7 +384,7 @@ const PembayaranSppTunggakan = () => {
                       )}
                     </Button>
                   </PermissionGuard>
-                  <PermissionGuard permission="pembayaran-spp.create">
+                  <PermissionGuard permission="pembayaran-spp.bayar">
                     <Button
                       onClick={handleBayarOnline}
                       disabled={loadingBayarOnline || loadingBayar || selectedBulan.length !== 1}

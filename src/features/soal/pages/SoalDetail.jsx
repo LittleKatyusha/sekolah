@@ -4,7 +4,7 @@ import { ArrowLeft, Edit, Trash2, BookOpen, HelpCircle, List, Star, CheckCircle 
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import PermissionGuard from '../../../components/guards/PermissionGuard';
-import { showSoal } from '../services/soalService';
+import { deleteSoal, showSoal } from '../services/soalService';
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert';
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions';
 
@@ -53,9 +53,13 @@ const SoalDetail = () => {
   const handleDelete = async () => {
     const result = await showDeleteConfirm(`Soal ID: ${soal.id}`);
     if (result.isConfirmed) {
-      // Implement delete functionality if needed
-      showSuccess('Soal berhasil dihapus!');
-      navigate('/akademik/soals');
+      const { error } = await deleteSoal(soal.id)
+      if (error) {
+        showError(error.message || 'Gagal menghapus soal')
+        return
+      }
+      showSuccess('Soal berhasil dihapus!')
+      navigate('/akademik/soals')
     }
   };
 
@@ -105,13 +109,13 @@ const SoalDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Soal</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="soal.edit">
+          <PermissionGuard permission="soals.update">
             <Button variant="warning" onClick={() => navigate(`/akademik/soals/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit Soal
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="soal.delete">
+          <PermissionGuard permission="soals.delete">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus Soal

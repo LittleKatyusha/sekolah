@@ -342,7 +342,7 @@ const JadwalPelajaranForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/jadwal-pelajaran')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'jadwal-pelajaran.edit' : 'jadwal-pelajaran.create'}>
+              <PermissionGuard permission={isEditMode ? 'jadwal-pelajaran.update' : 'jadwal-pelajaran.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

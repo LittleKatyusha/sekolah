@@ -246,7 +246,7 @@ const MenuForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/admin/menus')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'menus.edit' : 'menus.create'}>
+              <PermissionGuard permission={isEditMode ? 'menus.update' : 'menus.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

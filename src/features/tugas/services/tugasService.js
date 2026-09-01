@@ -4,6 +4,10 @@ const BASE_URL = '/akademik/tugas'
 const LIST_URL = '/akademik/tugas/'
 
 export const tugasService = {
+  normalizePayload: (data = {}) => ({
+    ...data,
+    file_lampiran: data.file_lampiran ?? data.file_path ?? null,
+  }),
   /**
    * Get all tugas with pagination and filtering
    * @param {Object} params - Query parameters
@@ -38,7 +42,7 @@ export const tugasService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   create: async (data) => {
-    return await apiService.post(BASE_URL, data)
+    return await apiService.post(BASE_URL, tugasService.normalizePayload(data))
   },
 
   /**
@@ -48,7 +52,7 @@ export const tugasService = {
    * @returns {Promise<{data: any, error: any}>}
    */
   update: async (id, data) => {
-    return await apiService.put(`${BASE_URL}/${id}`, data)
+    return await apiService.put(`${BASE_URL}/${id}`, tugasService.normalizePayload(data))
   },
 
   /**

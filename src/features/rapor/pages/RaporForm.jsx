@@ -11,7 +11,6 @@ import { siswaService } from '../../siswa/services/siswaService'
 import { mapelService } from '../../mapel/services/mapelService'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-import { apiService } from '../../../utils/api'
 
 const RaporForm = () => {
   const { id } = useParams()
@@ -26,7 +25,6 @@ const RaporForm = () => {
   const [formData, setFormData] = useState({
     mst_siswa_id: '',
     semester: '',
-    tahun_ajaran_id: '',
     catatan_wali: '',
     sakit: '',
     izin: '',
@@ -36,11 +34,9 @@ const RaporForm = () => {
   const [details, setDetails] = useState([])
   const [errors, setErrors] = useState({})
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
-  const [tahunAjaranOptions, setTahunAjaranOptions] = useState([])
   const [selectedMapelOptions, setSelectedMapelOptions] = useState([])
 
   useEffect(() => {
-    fetchDropdownOptions()
     if (isEditMode) {
       fetchRapor()
     }
@@ -55,15 +51,6 @@ const RaporForm = () => {
     value: String(mapel.id),
     label: `${mapel.kode || '-'} - ${mapel.nama || mapel.nama_mapel || `Mapel #${mapel.id}`}`
   }), [])
-
-  const fetchDropdownOptions = async () => {
-    const tahunResult = await apiService.get('/admin/tahun-ajaran/')
-    const tahunList = tahunResult.data?.data || []
-    setTahunAjaranOptions(tahunList.map(t => ({
-      value: String(t.id),
-      label: t.nama || t.tahun_ajaran || `${t.id}`
-    })))
-  }
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {
     const { data, error } = await siswaService.getAll({
@@ -123,7 +110,6 @@ const RaporForm = () => {
       setFormData({
         mst_siswa_id: siswaId,
         semester: rapor.semester_kode ? String(rapor.semester_kode) : '',
-        tahun_ajaran_id: rapor.tahun_ajaran_id ? String(rapor.tahun_ajaran_id) : '',
         catatan_wali: rapor.catatan_wali || '',
         sakit: rapor.kehadiran?.sakit !== null && rapor.kehadiran?.sakit !== undefined ? String(rapor.kehadiran.sakit) : '',
         izin: rapor.kehadiran?.izin !== null && rapor.kehadiran?.izin !== undefined ? String(rapor.kehadiran.izin) : '',
@@ -212,7 +198,6 @@ const RaporForm = () => {
     const newErrors = {}
     if (!formData.mst_siswa_id) newErrors.mst_siswa_id = 'Siswa wajib dipilih'
     if (!formData.semester) newErrors.semester = 'Semester wajib dipilih'
-    if (!formData.tahun_ajaran_id) newErrors.tahun_ajaran_id = 'Tahun ajaran wajib dipilih'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -227,7 +212,6 @@ const RaporForm = () => {
     const submitData = {
       mst_siswa_id: parseInt(formData.mst_siswa_id),
       semester: parseInt(formData.semester),
-      tahun_ajaran_id: parseInt(formData.tahun_ajaran_id),
       catatan_wali: formData.catatan_wali || null,
       sakit: formData.sakit !== '' ? parseInt(formData.sakit) : null,
       izin: formData.izin !== '' ? parseInt(formData.izin) : null,
@@ -321,21 +305,6 @@ const RaporForm = () => {
                   options={semesterOptions}
                   placeholder="Pilih semester"
                   error={errors.semester}
-                />
-              </div>
-
-              {/* Tahun Ajaran */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tahun Ajaran <span className="text-red-500">*</span>
-                </label>
-                <SearchableSelect
-                  name="tahun_ajaran_id"
-                  value={formData.tahun_ajaran_id}
-                  onChange={handleChange}
-                  options={tahunAjaranOptions}
-                  placeholder="Pilih tahun ajaran"
-                  error={errors.tahun_ajaran_id}
                 />
               </div>
 

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CheckCircle, Clock, AlertTriangle, FileText, DollarSign,
-  TrendingUp, BookOpen, Calendar, ClipboardCheck, GraduationCap,
+  TrendingUp, BookOpen, Calendar, GraduationCap,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import DashboardAttendanceCard from './DashboardAttendanceCard'
@@ -29,10 +29,9 @@ const STATUS_LABELS = {
 
 const SISWA_QUICK_ACTIONS = [
   { label: 'Jadwal', icon: Calendar, path: '/jadwal-pelajaran', from: 'from-blue-500', to: 'to-indigo-600' },
-  { label: 'Nilai', icon: FileText, path: '/nilai', from: 'from-emerald-500', to: 'to-teal-600' },
-  { label: 'Absensi', icon: ClipboardCheck, path: '/absensi-siswa', from: 'from-violet-500', to: 'to-purple-600' },
-  { label: 'Tugas', icon: BookOpen, path: '/tugas', from: 'from-pink-500', to: 'to-rose-600' },
-  { label: 'SPP', icon: DollarSign, path: '/pembayaran-spp', from: 'from-amber-500', to: 'to-orange-600' },
+  { label: 'Nilai', icon: FileText, path: '/akademik/nilai', from: 'from-emerald-500', to: 'to-teal-600' },
+  { label: 'Tugas', icon: BookOpen, path: '/akademik/tugas', from: 'from-pink-500', to: 'to-rose-600' },
+  { label: 'SPP', icon: DollarSign, path: '/keuangan/pembayaran-spp', from: 'from-amber-500', to: 'to-orange-600' },
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -63,6 +63,9 @@ const DokumenForm = () => {
     if (!formData.ppdb_pendaftar_id) newErrors.ppdb_pendaftar_id = 'ID Pendaftar wajib diisi'
     if (!formData.jenis_dokumen) newErrors.jenis_dokumen = 'Jenis dokumen wajib diisi'
     if (!formData.file_name) newErrors.file_name = 'Nama file wajib diisi'
+    if (!isEdit && !formData.mime_type) newErrors.mime_type = 'MIME type wajib diisi'
+    if (!isEdit && !formData.file_size) newErrors.file_size = 'Ukuran file wajib diisi'
+    if (!isEdit && !formData.file_path) newErrors.file_path = 'Path file wajib diisi'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -72,7 +75,13 @@ const DokumenForm = () => {
     if (!validate()) return
 
     setSaving(true)
-    const payload = { ...formData }
+    const payload = isEdit
+      ? {
+          jenis_dokumen: formData.jenis_dokumen,
+          file_path: formData.file_path,
+          catatan_admin: formData.catatan_admin || null,
+        }
+      : { ...formData }
     if (payload.file_size) payload.file_size = Number(payload.file_size)
     if (payload.verifikasi_status !== null && payload.verifikasi_status !== '') {
       payload.verifikasi_status = payload.verifikasi_status === '1' || payload.verifikasi_status === true
@@ -146,7 +155,7 @@ const DokumenForm = () => {
               placeholder="Masukkan nama file"
             />
             <Input
-              label="MIME Type"
+              label={`MIME Type${isEdit ? '' : ' *'}`}
               name="mime_type"
               value={formData.mime_type}
               onChange={handleChange}
@@ -154,7 +163,7 @@ const DokumenForm = () => {
               placeholder="cth: application/pdf"
             />
             <Input
-              label="Ukuran File (bytes)"
+              label={`Ukuran File (bytes)${isEdit ? '' : ' *'}`}
               name="file_size"
               type="number"
               value={formData.file_size}
@@ -163,7 +172,7 @@ const DokumenForm = () => {
               placeholder="Masukkan ukuran file"
             />
             <Input
-              label="Path File"
+              label={`Path File${isEdit ? '' : ' *'}`}
               name="file_path"
               value={formData.file_path}
               onChange={handleChange}
@@ -201,7 +210,7 @@ const DokumenForm = () => {
             <Button variant="secondary" type="button" onClick={() => navigate('/ppdb/dokumen')}>
               Batal
             </Button>
-            <PermissionGuard permission={isEdit ? 'ppdb.dokumen.edit' : 'ppdb.dokumen.create'}>
+            <PermissionGuard permission={isEdit ? 'ppdb.dokumen.update' : 'ppdb.dokumen.create'}>
               <Button type="submit" disabled={saving}>
                 <Save size={18} className="mr-2" />
                 {saving ? 'Menyimpan...' : 'Simpan'}

@@ -113,13 +113,13 @@ const GelombangDetail = () => {
 
           <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1" />
 
-          <PermissionGuard permission="ppdb.gelombang.edit">
+          <PermissionGuard permission="ppdb.gelombang.update">
             <Button variant="secondary" onClick={handleToggleActive}>
               <ToggleLeft size={18} className="mr-2" />
               {gelombang.is_active ? 'Nonaktifkan' : 'Aktifkan'}
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="ppdb.gelombang.edit">
+          <PermissionGuard permission="ppdb.gelombang.update">
             <Button variant="warning" onClick={() => navigate(`/ppdb/gelombang/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit

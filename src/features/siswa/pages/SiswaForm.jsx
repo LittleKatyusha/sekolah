@@ -589,7 +589,7 @@ const SiswaForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/siswa')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'siswa.edit' : 'siswa.create'}>
+              <PermissionGuard permission={isEditMode ? 'siswa.update' : 'siswa.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

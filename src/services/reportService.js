@@ -1,13 +1,11 @@
-import { apiService } from '../utils/api'
+import api, { apiService } from '../utils/api'
 
 /**
  * Report service — membungkus endpoint mesin laporan lokal (/api/v1/reports/*).
  *
  * Catatan arsitektur:
- * - `generate` mengembalikan JSON berisi `download_url` (URL lengkap ke
- *   `/reports/download/{filename}` yang berada di luar grup /api/v1 dan bersifat
- *   publik). Karena backend mengirim header Content-Disposition: attachment,
- *   unduhan cukup dipicu lewat navigasi anchor — tanpa blob/auth header.
+ * - `generate` mengembalikan `download_url` ke endpoint API terproteksi.
+ *   Unduhan harus menggunakan klien API agar bearer token tetap terkirim.
  * - Semua method mengikuti konvensi codebase: mengembalikan `{ data, error }`.
  */
 
@@ -122,13 +120,15 @@ export const reportService = {
   },
 
   /**
-   * Picu unduhan file di browser via anchor (top-level navigation).
-   * @param {string} downloadUrl - URL lengkap ke file laporan.
+   * Unduh file laporan dengan kredensial API lalu picu browser download.
+   * @param {string} downloadUrl - URL endpoint laporan dari backend.
    * @param {string|null} [filename] - Nama file yang disarankan.
    */
-  triggerBrowserDownload: (downloadUrl, filename = null) => {
+  triggerBrowserDownload: async (downloadUrl, filename = null) => {
+    const response = await api.get(downloadUrl, { responseType: 'blob' })
+    const objectUrl = URL.createObjectURL(response.data)
     const link = document.createElement('a')
-    link.href = downloadUrl
+    link.href = objectUrl
     link.rel = 'noopener'
     if (filename) {
       link.setAttribute('download', filename)
@@ -136,6 +136,7 @@ export const reportService = {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(objectUrl)
   },
 
   /**
@@ -158,7 +159,11 @@ export const reportService = {
 
     const filename =
       payload.file_name || downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1)
-    reportService.triggerBrowserDownload(downloadUrl, filename)
+    try {
+      await reportService.triggerBrowserDownload(downloadUrl, filename)
+    } catch (downloadError) {
+      return { data: null, error: { message: downloadError.response?.data?.message || 'Unduhan laporan gagal.' } }
+    }
 
     return { data: payload, error: null }
   },

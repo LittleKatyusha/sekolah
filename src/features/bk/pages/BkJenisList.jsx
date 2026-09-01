@@ -108,7 +108,7 @@ const BkJenisList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="bk.create">
+          <PermissionGuard permission="bk-jenis.create">
             <Button onClick={() => navigate('/bk/jenis/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Jenis

@@ -61,6 +61,8 @@ const PendaftarForm = () => {
   })
 
   const [errors, setErrors] = useState({})
+  const [documents, setDocuments] = useState({ kartukeluarga: null, akte: null, rapor: null, ijazah: null })
+  const [initialStatus, setInitialStatus] = useState(null)
 
   useEffect(() => {
     fetchGelombangOptions()
@@ -84,6 +86,7 @@ const PendaftarForm = () => {
     const { data, error } = await pendaftarService.getById(id)
     if (data) {
       const p = data.data
+      setInitialStatus(p.status_pendaftaran || null)
       setFormData({
         // Identitas
         mst_sekolah_id: p.mst_sekolah_id ? String(p.mst_sekolah_id) : '',
@@ -126,6 +129,9 @@ const PendaftarForm = () => {
     if (!isEditMode) {
       if (!formData.ppdb_gelombang_id) newErrors.ppdb_gelombang_id = 'Gelombang wajib dipilih'
       if (!formData.mst_sekolah_id) newErrors.mst_sekolah_id = 'Sekolah ID wajib diisi'
+      for (const field of Object.keys(documents)) {
+        if (!documents[field]) newErrors[field] = 'Dokumen wajib diunggah'
+      }
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -153,20 +159,25 @@ const PendaftarForm = () => {
       juz_hafalan: parseInt(formData.juz_hafalan) || 0,
     }
 
-    if (!isEditMode) {
-      submitData.mst_sekolah_id = parseInt(formData.mst_sekolah_id)
-      submitData.ppdb_gelombang_id = parseInt(formData.ppdb_gelombang_id)
-      if (formData.password) submitData.password = formData.password
-    } else {
-      if (formData.status_pendaftaran) submitData.status_pendaftaran = formData.status_pendaftaran
-      if (formData.password) submitData.password = formData.password
-    }
+    if (formData.password) submitData.password = formData.password
 
     let result
     if (isEditMode) {
       result = await pendaftarService.update(id, submitData)
+      if (!result.error && formData.status_pendaftaran !== initialStatus) {
+        result = await pendaftarService.updateStatus(id, formData.status_pendaftaran)
+      }
     } else {
-      result = await pendaftarService.create(submitData)
+      const payload = new FormData()
+      Object.entries({
+        ...submitData,
+        mst_sekolah_id: parseInt(formData.mst_sekolah_id),
+        ppdb_gelombang_id: parseInt(formData.ppdb_gelombang_id),
+      }).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) payload.append(key, value)
+      })
+      Object.entries(documents).forEach(([key, file]) => payload.append(key, file))
+      result = await pendaftarService.create(payload)
     }
 
     const { error } = result
@@ -259,6 +270,23 @@ const PendaftarForm = () => {
                     </div>
                   </>
                 )}
+
+                {!isEditMode && Object.entries({ kartukeluarga: 'Kartu Keluarga', akte: 'Akte Kelahiran', rapor: 'Rapor', ijazah: 'Ijazah' }).map(([name, label]) => (
+                  <div key={name}>
+                    <LabelField required>{label}</LabelField>
+                    <Input
+                      type="file"
+                      name={name}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] || null
+                        setDocuments((current) => ({ ...current, [name]: file }))
+                        if (errors[name]) setErrors((current) => ({ ...current, [name]: null }))
+                      }}
+                      error={errors[name]}
+                    />
+                  </div>
+                ))}
 
                 <div>
                   <LabelField required>Jenis Kelamin</LabelField>
@@ -410,7 +438,7 @@ const PendaftarForm = () => {
               </div>
               <div className="flex gap-3">
                 <Button type="button" variant="secondary" onClick={() => navigate('/ppdb/pendaftaran')}>Batal</Button>
-                <PermissionGuard permission={isEditMode ? 'ppdb.pendaftar.edit' : 'ppdb.pendaftar.create'}>
+                <PermissionGuard permission={isEditMode ? 'ppdb.pendaftaran.update' : 'ppdb.pendaftaran.create'}>
                   <Button type="submit" disabled={loading}>
                     <Save size={18} className="mr-2" />
                     {loading ? 'Menyimpan...' : 'Simpan'}

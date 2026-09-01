@@ -125,7 +125,7 @@ const ReferenceForm = () => {
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button type="button" variant="secondary" onClick={() => navigate('/admin/references')}>Batal</Button>
-              <PermissionGuard permission={isEditMode ? 'references.edit' : 'references.create'}>
+              <PermissionGuard permission="sys-reference.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" /> {loading ? 'Menyimpan...' : 'Simpan'}
                 </Button>

@@ -94,7 +94,7 @@ const FileUploadPage = () => {
       <Card>
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upload File</h2>
-          <PermissionGuard permission="files.create">
+          <PermissionGuard permission="files.upload">
             <div
               onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
               onClick={() => fileInputRef.current?.click()}

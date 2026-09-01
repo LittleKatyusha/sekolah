@@ -252,7 +252,7 @@ const GuruList = () => {
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
               detailPermission="guru.view"
-              editPermission="guru.edit"
+              editPermission="guru.update"
               deletePermission="guru.delete"
             />
           </div>

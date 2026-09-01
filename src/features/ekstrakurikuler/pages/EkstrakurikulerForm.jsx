@@ -311,7 +311,7 @@ const EkstrakurikulerForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/ekstrakurikuler')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'ekskul.edit' : 'ekskul.create'}>
+              <PermissionGuard permission="ekstrakurikuler.manage">
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

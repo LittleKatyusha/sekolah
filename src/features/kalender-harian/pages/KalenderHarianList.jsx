@@ -5,7 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderHarianService } from '../services/kalenderHarianService'
-import { semesterService } from '../../semester/services/semesterService'
+import { kalenderAkademikService } from '../../kalender-akademik/services/kalenderAkademikService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 // ── Indonesian locale constants ──────────────────────────────────────────────
@@ -132,7 +132,7 @@ const DayPopover = ({ data, position, onClose, onToggle }) => {
               }`} />
               <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
             </div>
-            <PermissionGuard permission="kalender-harian.edit">
+                <PermissionGuard permission="kalender-harian.manage">
               <button
                 onClick={() => onToggle(data, value)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
@@ -180,20 +180,20 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
     tanggal_mulai: '',
     tanggal_selesai: '',
-    semester_id: '',
+    kalender_id: '',
   })
-  const [semesterList, setSemesterList] = useState([])
+  const [kalenderList, setKalenderList] = useState([])
   const [loadingOptions, setLoadingOptions] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
       setLoadingOptions(true)
       Promise.all([
-        semesterService.getAll({ per_page: 100 }),
+        kalenderAkademikService.getAll({ per_page: 100 }),
       ])
-        .then(([semesterRes]) => {
-          if (semesterRes.data) {
-            setSemesterList(semesterRes.data.data || [])
+        .then(([kalenderRes]) => {
+          if (kalenderRes.data) {
+            setKalenderList(kalenderRes.data.data || [])
           }
         })
         .catch(() => {
@@ -212,7 +212,7 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!formData.tanggal_mulai || !formData.tanggal_selesai || !formData.semester_id) {
+    if (!formData.tanggal_mulai || !formData.tanggal_selesai || !formData.kalender_id) {
       showError('Semua field wajib diisi')
       return
     }
@@ -222,7 +222,7 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
     }
     onSubmit({
       ...formData,
-      semester_id: parseInt(formData.semester_id),
+      kalender_id: parseInt(formData.kalender_id),
     })
   }
 
@@ -273,20 +273,20 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Semester <span className="text-red-500">*</span>
+              Kalender Akademik <span className="text-red-500">*</span>
             </label>
             <select
-              name="semester_id"
-              value={formData.semester_id}
+              name="kalender_id"
+              value={formData.kalender_id}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
               required
               disabled={loadingOptions}
             >
-              <option value="">-- Pilih Semester --</option>
-              {semesterList.map((sem) => (
-                <option key={sem.id} value={sem.id}>
-                  {sem.nama || sem.kode || `Semester ${sem.id}`}
+              <option value="">-- Pilih Kalender --</option>
+              {kalenderList.map((kalender) => (
+                <option key={kalender.id} value={kalender.id}>
+                  {kalender.nama_kegiatan || kalender.judul || `Kalender ${kalender.id}`}
                 </option>
               ))}
             </select>
@@ -296,7 +296,7 @@ const GenerateModal = ({ isOpen, onClose, onSubmit, loading }) => {
             <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
               Batal
             </Button>
-            <PermissionGuard permission="kalender-harian.create">
+            <PermissionGuard permission="kalender-harian.manage">
               <Button type="submit" disabled={loading}>
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -494,7 +494,7 @@ const KalenderHarianList = () => {
           <Button onClick={fetchData} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </Button>
-          <PermissionGuard permission="kalender-harian.create">
+          <PermissionGuard permission="kalender-harian.manage">
             <Button onClick={() => setShowGenerateModal(true)}>
               <Calendar size={18} className="mr-2" />
               Generate Kalender

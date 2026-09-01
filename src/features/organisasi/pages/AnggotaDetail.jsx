@@ -96,13 +96,13 @@ const AnggotaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Anggota Organisasi</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="anggota.edit">
+          <PermissionGuard permission="organisasi.anggota.manage">
             <Button variant="warning" onClick={() => navigate(`/organisasi/anggota/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="anggota.delete">
+          <PermissionGuard permission="organisasi.anggota.manage">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

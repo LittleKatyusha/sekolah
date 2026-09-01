@@ -197,11 +197,11 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   const loadQrCode = useCallback(async ({ notify = false } = {}) => {
     return handleApiAction({
       key: 'qr',
-      request: () => wahaService.getQrCode(),
+      request: () => wahaService.getQrCode(selectedAppkey || undefined),
       successMessage: notify ? 'QR Saung WA berhasil dimuat.' : '',
       onSuccess: (payload) => setQrPayload(payload),
     })
-  }, [handleApiAction])
+  }, [handleApiAction, selectedAppkey])
 
   const loadDevices = useCallback(async () => {
     const response = await wahaService.listDevices()
@@ -250,21 +250,26 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
   const handleRestartSession = async () => {
     setLoadingStates((prev) => ({ ...prev, restart: true }))
     try {
-      await wahaService.stopSession(selectedAppkey || undefined)
-    } catch (_) {
-      // ignore
-    }
-    const started = await handleApiAction({
-      key: 'restart',
-      request: () => wahaService.startSession(selectedAppkey || undefined),
-      successMessage: 'Saung WA device berhasil direstart.',
-    })
+      const stopped = await wahaService.stopSession(selectedAppkey || undefined)
+      if (stopped.error || stopped.payload?.success === false) {
+        showError(stopped.error?.message || stopped.payload?.message || 'Device tidak dapat dihentikan; restart dibatalkan.')
+        return
+      }
+      const started = await handleApiAction({
+        key: 'restart',
+        request: () => wahaService.startSession(selectedAppkey || undefined),
+        successMessage: 'Saung WA device berhasil direstart.',
+      })
 
-    if (started) {
-      await loadSessionStatus()
-      await loadQrCode()
+      if (started) {
+        await loadSessionStatus()
+        await loadQrCode()
+      }
+    } catch (error) {
+      showError(error.message || 'Restart device gagal diproses.')
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, restart: false }))
     }
-    setLoadingStates((prev) => ({ ...prev, restart: false }))
   }
 
   const handleTabChange = (tab) => {
@@ -402,18 +407,24 @@ const WahaDashboard = ({ defaultTab = 'session' }) => {
                   <RefreshCw size={18} className="mr-2" />
                   Refresh Status
                 </Button>
-                <Button variant="danger" onClick={handleStopSession} loading={loadingStates.stop}>
-                  <PowerOff size={18} className="mr-2" />
-                  Stop Device
-                </Button>
-                <Button onClick={handleStartSession} loading={loadingStates.start}>
-                  <Smartphone size={18} className="mr-2" />
-                  Start Device
-                </Button>
-                <Button variant="secondary" onClick={handleRestartSession} loading={loadingStates.restart}>
-                  <RefreshCw size={18} className="mr-2" />
-                  Restart Device
-                </Button>
+                <PermissionGuard permission="waha.manage">
+                  <Button variant="danger" onClick={handleStopSession} loading={loadingStates.stop}>
+                    <PowerOff size={18} className="mr-2" />
+                    Stop Device
+                  </Button>
+                </PermissionGuard>
+                <PermissionGuard permission="waha.manage">
+                  <Button onClick={handleStartSession} loading={loadingStates.start}>
+                    <Smartphone size={18} className="mr-2" />
+                    Start Device
+                  </Button>
+                </PermissionGuard>
+                <PermissionGuard permission="waha.manage">
+                  <Button variant="secondary" onClick={handleRestartSession} loading={loadingStates.restart}>
+                    <RefreshCw size={18} className="mr-2" />
+                    Restart Device
+                  </Button>
+                </PermissionGuard>
               </div>
             )}
           >

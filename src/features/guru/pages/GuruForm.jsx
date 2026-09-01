@@ -301,7 +301,7 @@ const GuruForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/guru')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'guru.edit' : 'guru.create'}>
+              <PermissionGuard permission={isEditMode ? 'guru.update' : 'guru.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

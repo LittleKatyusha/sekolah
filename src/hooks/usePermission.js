@@ -23,6 +23,21 @@ export const resolvePermissions = (user) => {
  */
 const permissionAliases = (code) => {
   if (!code || typeof code !== 'string') return [code]
+  const legacyPrefixes = {
+    'kalender-harian': 'kalender-harian.manage',
+    'kalender-akademik': 'kalender-akademik.manage',
+    'kalender-tipe': 'kalender-tipe.manage',
+    'hari-operasional': 'hari-operasional.manage',
+    semester: 'semester.manage',
+    references: 'sys-reference.manage',
+    organisasi: 'organisasi.manage',
+    anggota: 'organisasi.anggota.manage',
+    ekskul: 'ekstrakurikuler.manage',
+    'ekskul-siswa': 'ekstrakurikuler.pendaftaran.manage',
+  }
+  const [prefix] = code.split('.')
+  if (legacyPrefixes[prefix]) return [code, legacyPrefixes[prefix]]
+  if (code.startsWith('role-permissions.')) return [code, code.replace('role-permissions.', 'role_permissions.')]
   if (code.endsWith('.edit')) return [code, `${code.slice(0, -5)}.update`]
   if (code.endsWith('.update')) return [code, `${code.slice(0, -7)}.edit`]
   return [code]

@@ -1,5 +1,20 @@
 import { checkPermission } from '../hooks/usePermission'
 
+// Routes with no active API contract in routes/api.php. Keep them inaccessible
+// until the backend publishes the corresponding staff-facing endpoints.
+const BACKEND_UNAVAILABLE_PATHS = [
+  '/absensi-siswa',
+  '/absensi-guru',
+  '/akademik/presensi',
+  '/akademik/ujian',
+  '/akademik/ujian-user',
+  '/akademik/ujian-jawaban',
+  '/statistik',
+  '/analytics',
+  '/data-grid',
+  '/settings',
+]
+
 const ROUTE_PERMISSIONS = [
   // ── Dashboard ──────────────────────────────────────────────
   ['/dashboard', 'dashboard.view'],
@@ -103,3 +118,6 @@ export const permissionForPath = (pathname) => ROUTE_PERMISSIONS
   .find(([path]) => pathname === path || pathname.startsWith(`${path}/`))?.[1]
 
 export const canAccessPath = (user, pathname) => checkPermission(user, permissionForPath(pathname))
+
+export const isBackendAvailablePath = (pathname) => !BACKEND_UNAVAILABLE_PATHS
+  .some((path) => pathname === path || pathname.startsWith(`${path}/`))

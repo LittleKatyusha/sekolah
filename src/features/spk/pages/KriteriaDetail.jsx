@@ -83,13 +83,13 @@ const KriteriaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Kriteria</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="spk.edit">
+          <PermissionGuard permission="spk-kriteria.update">
             <Button variant="warning" onClick={() => navigate(`/spk/kriteria/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="spk.delete">
+          <PermissionGuard permission="spk-kriteria.delete">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus

@@ -140,7 +140,7 @@ const BkHasilList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="bk.create">
+          <PermissionGuard permission="bk-hasil.manage">
             <Button onClick={() => navigate('/bk/hasil/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Hasil

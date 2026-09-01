@@ -146,7 +146,7 @@ const MapelForm = () => {
               <Button type="button" variant="secondary" onClick={() => navigate('/mapel')}>
                 Batal
               </Button>
-              <PermissionGuard permission={isEditMode ? 'mapel.edit' : 'mapel.create'}>
+              <PermissionGuard permission={isEditMode ? 'mapel.update' : 'mapel.create'}>
                 <Button type="submit" disabled={loading}>
                   <Save size={18} className="mr-2" />
                   {loading ? 'Menyimpan...' : 'Simpan'}

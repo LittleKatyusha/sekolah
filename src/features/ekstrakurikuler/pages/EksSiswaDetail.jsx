@@ -89,13 +89,13 @@ const EksSiswaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Pendaftaran Ekskul</h1>
         </div>
         <div className="flex gap-3">
-          <PermissionGuard permission="ekskul-siswa.edit">
+          <PermissionGuard permission="ekstrakurikuler.pendaftaran.manage">
             <Button variant="warning" onClick={() => navigate(`/ekstrakurikuler/pendaftaran/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
             </Button>
           </PermissionGuard>
-          <PermissionGuard permission="ekskul-siswa.delete">
+          <PermissionGuard permission="ekstrakurikuler.pendaftaran.manage">
             <Button variant="danger" onClick={handleDelete}>
               <Trash2 size={18} className="mr-2" />
               Hapus
