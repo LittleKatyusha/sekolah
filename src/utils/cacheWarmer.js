@@ -107,8 +107,6 @@ export const warmReferenceCache = async () => {
 
 // ── Sidebar menu cache ────────────────────────────────────────────────────────
 
-const SIDEBAR_TTL_MS = 30 * 60 * 1000 // 30 minutes
-
 const toFrontendRoute = (url) => {
   if (!url || url === '#') return null
   return url.replace(/^\/api\/v[0-9]+/, '') || '/'

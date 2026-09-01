@@ -8,6 +8,7 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { menuService } from '../services/menuService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -101,6 +102,7 @@ const MenuList = () => {
     if (result.isConfirmed) {
       const { error } = await menuService.deleteById(data.id)
       if (!error) {
+        clearSessionCaches()
         showSuccess(`Menu "${data.nama_menu}" berhasil dihapus!`)
         if (gridRef.current?.refreshGrid) {
           gridRef.current.refreshGrid()

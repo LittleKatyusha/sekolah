@@ -5,8 +5,11 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Input from '../../../components/ui/Input'
+import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { menuService } from '../services/menuService'
-import { showSuccess, showError } from '../../../utils/sweetalert'
+import { permissionService } from '../../roles/services/rolesService'
+import { showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
+import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const MenuForm = () => {
   const { id } = useParams()
@@ -16,6 +19,7 @@ const MenuForm = () => {
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   const [parentMenus, setParentMenus] = useState([])
+  const [permissionOptions, setPermissionOptions] = useState([])
 
   const [formData, setFormData] = useState({
     parent_id: '',
@@ -31,6 +35,7 @@ const MenuForm = () => {
 
   useEffect(() => {
     fetchParentMenus()
+    fetchPermissions()
     if (isEditMode) fetchMenu()
   }, [id])
 
@@ -40,6 +45,23 @@ const MenuForm = () => {
       const menus = (data.data || []).filter(m => String(m.id) !== String(id))
       setParentMenus(menus)
     }
+  }
+
+  const fetchPermissions = async () => {
+    const { data, error } = await permissionService.getAll({ per_page: 500 })
+    if (error) {
+      showError('Gagal mengambil daftar permission')
+      return
+    }
+
+    const permissions = data?.data || []
+    setPermissionOptions([
+      { value: '', label: 'Public untuk semua user terautentikasi' },
+      ...permissions.map((permission) => ({
+        value: permission.id,
+        label: `${permission.code} — ${permission.name} — ${permission.module || '-'}`,
+      })),
+    ])
   }
 
   const fetchMenu = async () => {
@@ -81,6 +103,14 @@ const MenuForm = () => {
     e.preventDefault()
     if (!validate()) return
 
+    if (!formData.sys_permission_id && formData.url && formData.url !== '#') {
+      const confirmation = await showConfirm(
+        'Route ini akan dapat dilihat semua user terautentikasi karena tidak memiliki permission. Lanjutkan?',
+        'Simpan route protected tanpa permission?'
+      )
+      if (!confirmation.isConfirmed) return
+    }
+
     setLoading(true)
 
     const submitData = {
@@ -100,6 +130,7 @@ const MenuForm = () => {
 
     const { error } = result
     if (!error) {
+      clearSessionCaches()
       showSuccess(`Menu berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
       navigate('/admin/menus')
     } else {
@@ -169,14 +200,15 @@ const MenuForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Permission ID
+                  Permission
                 </label>
-                <Input
+                <SearchableSelect
                   name="sys_permission_id"
-                  type="number"
                   value={formData.sys_permission_id}
                   onChange={handleChange}
-                  placeholder="ID Permission (opsional)"
+                  options={permissionOptions}
+                  placeholder="Public untuk semua user terautentikasi"
+                  searchPlaceholder="Cari code, name, atau module..."
                   error={errors.sys_permission_id}
                 />
               </div>

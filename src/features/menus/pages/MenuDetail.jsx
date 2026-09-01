@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { menuService } from '../services/menuService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const MenuDetail = () => {
   const { id } = useParams()
@@ -32,6 +33,7 @@ const MenuDetail = () => {
     if (result.isConfirmed) {
       const { error } = await menuService.deleteById(menu.id)
       if (!error) {
+        clearSessionCaches()
         showSuccess(`Menu "${menu.nama_menu}" berhasil dihapus!`)
         navigate('/admin/menus')
       } else {
