@@ -73,9 +73,6 @@ const permissionAliases = (code) => {
  */
 export const checkPermission = (user, code) => {
   if (!code) return true
-  const role = user?.role?.toUpperCase?.() || user?.role
-  if (role === 'SUPER_ADMIN') return true
-
   const perms = resolvePermissions(user)
   if (perms.length === 0) return false
 

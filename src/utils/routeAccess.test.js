@@ -340,10 +340,11 @@ describe('route access', () => {
     expect(canAccessPath(updaterOnly, '/admin/users/create')).toBe(false)
   })
 
-  it('allows access for SUPER_ADMIN regardless of individual permissions', () => {
+  it('requires explicit route permissions for SUPER_ADMIN', () => {
     const superAdmin = { role: 'SUPER_ADMIN' }
-    expect(canAccessPath(superAdmin, '/admin/users/create')).toBe(true)
-    expect(canAccessPath(superAdmin, '/admin/users/42/edit')).toBe(true)
+    expect(canAccessPath(superAdmin, '/admin/users/create')).toBe(false)
+    expect(canAccessPath(superAdmin, '/admin/users/42/edit')).toBe(false)
+    expect(canAccessPath({ ...superAdmin, permissions: [{ code: 'users.create' }] }, '/admin/users/create')).toBe(true)
   })
 
   it('denies direct routes without permission in fail-closed mode', () => {

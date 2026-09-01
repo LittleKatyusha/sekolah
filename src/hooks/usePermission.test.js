@@ -15,9 +15,9 @@ describe('usePermission / checkPermission', () => {
     expect(checkPermission({}, '')).toBe(true)
   })
 
-  it('allows superadmin bypass', () => {
-    expect(checkPermission({ role: 'SUPER_ADMIN' }, 'any.permission')).toBe(true)
-    expect(checkPermission({ role: 'super_admin' }, 'any.permission')).toBe(true)
+  it('requires explicit permissions for superadmin', () => {
+    expect(checkPermission({ role: 'SUPER_ADMIN' }, 'any.permission')).toBe(false)
+    expect(checkPermission({ role: 'superadmin', permissions: [{ code: 'any.permission' }] }, 'any.permission')).toBe(true)
   })
 
   it('resolves flat permissions correctly', () => {
