@@ -6,6 +6,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Input from '../../../components/ui/Input'
 import { roleService, permissionService } from '../services/rolesService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const RolesForm = () => {
   const { id } = useParams()
@@ -116,6 +117,7 @@ const RolesForm = () => {
       if (roleId) {
         await roleService.assignPermissions(roleId, selectedPermissions)
       }
+      clearSessionCaches()
       showSuccess(`Role berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
       navigate('/admin/roles')
     } else {

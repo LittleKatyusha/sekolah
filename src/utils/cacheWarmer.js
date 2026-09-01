@@ -13,11 +13,12 @@
 
 import { referenceService } from '../services/referenceService'
 import { menuService } from '../features/menus/services/menuService'
+import { getSidebarMenuCacheKey } from '../components/layout/Sidebar'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const REFERENCE_CACHE_PREFIX = 'reference-options-cache:v2:'
-const SIDEBAR_CACHE_PREFIX = 'sidebar-menu-cache:'
+const SIDEBAR_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
 /**
  * All reference categories used across the application.
@@ -132,12 +133,12 @@ const serializeMenuItem = (item) => ({
 
 /**
  * Pre-warms the sidebar menu cache for the given user. Skips if fresh.
- * @param {string|number} userId
+ * @param {object} user - The authenticated user object
  */
-export const warmSidebarMenuCache = async (userId) => {
-  if (!userId) return
+export const warmSidebarMenuCache = async (user) => {
+  if (!user?.id) return
 
-  const key = `${SIDEBAR_CACHE_PREFIX}${userId}`
+  const key = getSidebarMenuCacheKey(user)
   if (isCacheValid(key, SIDEBAR_TTL_MS)) return
 
   const { data, error } = await menuService.getTree()
@@ -172,7 +173,7 @@ export const runCacheWarming = (user) => {
   const canAccessAdminRoutes = ADMIN_REFERENCE_ROLES.has(user?.role?.toUpperCase())
 
   schedule(async () => {
-    const tasks = [warmSidebarMenuCache(user?.id)]
+    const tasks = [warmSidebarMenuCache(user)]
 
     // /admin/references/* is restricted — skip for non-admin roles
     // to avoid 403 Forbidden errors on login

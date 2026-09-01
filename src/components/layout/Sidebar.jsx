@@ -31,6 +31,7 @@ import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 import { getTheme } from '../../constants/roleThemes'
 import { canAccessPath, isBackendAvailablePath } from '../../utils/routeAccess'
+import { getPermissionFingerprint } from '../../hooks/usePermission'
 
 library.add(fas, far, fab)
 
@@ -38,7 +39,13 @@ const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
 const SIDEBAR_MENU_CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const sidebarMenuRequestCache = new Map()
 
-const getSidebarMenuCacheKey = (userId) => `${SIDEBAR_MENU_CACHE_PREFIX}${window.location.hostname}:${userId}`
+export const getSidebarMenuCacheKey = (user) => {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+  const tenantId = user?.mst_sekolah_id ?? user?.sekolah_id ?? 'global'
+  const userId = user?.id ?? 'anon'
+  const fingerprint = getPermissionFingerprint(user)
+  return `${SIDEBAR_MENU_CACHE_PREFIX}${hostname}:${tenantId}:${userId}:${fingerprint}`
+}
 
 // Parse FontAwesome icon class strings into [prefix, iconName] tuples
 // Supports FA5 format: "fas fa-home", "far fa-check", "fab fa-whatsapp"
@@ -113,11 +120,12 @@ const hydrateCachedMenuItem = (item) => {
   }
 }
 
-const readSidebarMenuCache = (userId) => {
-  if (!userId || typeof window === 'undefined') return null
+export const readSidebarMenuCache = (user) => {
+  if (!user?.id || typeof window === 'undefined') return null
 
   try {
-    const cached = window.sessionStorage.getItem(getSidebarMenuCacheKey(userId))
+    const key = getSidebarMenuCacheKey(user)
+    const cached = window.sessionStorage.getItem(key)
     if (!cached) return null
 
     const parsed = JSON.parse(cached)
@@ -137,25 +145,34 @@ const readSidebarMenuCache = (userId) => {
   }
 }
 
-const writeSidebarMenuCache = (userId, menus) => {
-  if (!userId || typeof window === 'undefined') return
+export const writeSidebarMenuCache = (user, menus) => {
+  if (!user?.id || typeof window === 'undefined') return
 
   try {
     const serializedMenus = Array.isArray(menus) ? menus.map(serializeMenuItem) : []
     const cacheEntry = { data: serializedMenus, cachedAt: Date.now() }
-    window.sessionStorage.setItem(getSidebarMenuCacheKey(userId), JSON.stringify(cacheEntry))
+    window.sessionStorage.setItem(getSidebarMenuCacheKey(user), JSON.stringify(cacheEntry))
   } catch {
     // Ignore sessionStorage write failures and fall back to in-memory state only.
   }
 }
 
-const clearSidebarMenuCache = (userId) => {
-  if (!userId || typeof window === 'undefined') return
+export const clearSidebarMenuCache = (user) => {
+  if (typeof window === 'undefined') return
 
-  sidebarMenuRequestCache.delete(userId)
+  if (user?.id) {
+    sidebarMenuRequestCache.delete(user.id)
+  } else {
+    sidebarMenuRequestCache.clear()
+  }
 
   try {
-    window.sessionStorage.removeItem(getSidebarMenuCacheKey(userId))
+    const prefix = SIDEBAR_MENU_CACHE_PREFIX
+    Object.keys(window.sessionStorage).forEach((key) => {
+      if (key.startsWith(prefix)) {
+        window.sessionStorage.removeItem(key)
+      }
+    })
   } catch {
     // Ignore sessionStorage cleanup failures.
   }
@@ -303,11 +320,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       if (!user?.id) {
         setNavigation([])
         setLoading(false)
-        clearSidebarMenuCache(user?.id)
+        clearSidebarMenuCache(user)
         return
       }
 
-      const cachedMenus = readSidebarMenuCache(user.id)
+      const cachedMenus = readSidebarMenuCache(user)
       if (cachedMenus) {
         setNavigation(cachedMenus)
         setError(null)
@@ -315,7 +332,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         return
       }
 
-      clearSidebarMenuCache(user.id)
+      clearSidebarMenuCache(user)
 
       try {
         setLoading(true)
@@ -333,7 +350,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         if (apiError) {
           setError(apiError?.message || 'Menu tidak dapat dimuat.')
           setNavigation([])
-          clearSidebarMenuCache(user.id)
+          clearSidebarMenuCache(user)
           return
         }
 
@@ -342,7 +359,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         if (!menuData || !Array.isArray(menuData)) {
           setNavigation([])
-          writeSidebarMenuCache(user.id, [])
+          writeSidebarMenuCache(user, [])
           return
         }
 
@@ -372,7 +389,11 @@ const Sidebar = ({ isOpen, onClose }) => {
             menuItem.children = item.sub_menus
               .filter(subMenu => subMenu.is_active)
               .map(mapMenuItem)
-              .filter((child) => !child.to || (isBackendAvailablePath(child.to) && canAccessPath(user, child.to)) || child.children.length > 0)
+              .filter((child) => {
+                const hasValidRoute = child.to && isBackendAvailablePath(child.to) && canAccessPath(user, child.to)
+                const hasVisibleChildren = child.children && child.children.length > 0
+                return hasValidRoute || hasVisibleChildren
+              })
           }
 
           return menuItem
@@ -382,14 +403,18 @@ const Sidebar = ({ isOpen, onClose }) => {
         const mappedMenus = menuData
           .filter(item => item.is_active)
           .map(mapMenuItem)
-          .filter((item) => !item.to || (isBackendAvailablePath(item.to) && canAccessPath(user, item.to)) || item.children.length > 0)
+          .filter((item) => {
+            const hasValidRoute = item.to && isBackendAvailablePath(item.to) && canAccessPath(user, item.to)
+            const hasVisibleChildren = item.children && item.children.length > 0
+            return hasValidRoute || hasVisibleChildren
+          })
 
-        writeSidebarMenuCache(user.id, mappedMenus)
+        writeSidebarMenuCache(user, mappedMenus)
         setNavigation(mappedMenus)
       } catch {
         setError('Menu tidak dapat dimuat.')
         setNavigation([])
-        clearSidebarMenuCache(user.id)
+        clearSidebarMenuCache(user)
       } finally {
         sidebarMenuRequestCache.delete(user.id)
         setLoading(false)

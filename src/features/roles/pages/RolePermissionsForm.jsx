@@ -16,6 +16,7 @@ import Card from '../../../components/ui/Card'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { rolePermissionService, roleService, permissionService } from '../services/rolesService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const normalizePermissionIds = (rolePermission) => {
   if (Array.isArray(rolePermission?.permission_ids)) {
@@ -462,6 +463,7 @@ const RolePermissionsForm = () => {
     setSubmitting(false)
 
     if (!error) {
+      clearSessionCaches()
       showSuccess(`Role permission berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
       navigate('/admin/role-permissions')
     } else {

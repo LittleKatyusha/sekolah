@@ -8,6 +8,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { usersService } from '../services/usersService'
 import { roleService } from '../../roles/services/rolesService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const UsersForm = () => {
   const { id } = useParams()
@@ -116,6 +117,7 @@ const UsersForm = () => {
     const { error } = result
 
     if (!error) {
+      clearSessionCaches()
       showSuccess(`User berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
       navigate('/admin/users')
     } else {

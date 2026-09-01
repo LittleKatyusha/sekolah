@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-const clearSessionCaches = () => {
+export const clearSessionCaches = () => {
   if (typeof window === 'undefined') return
 
   const cachePrefixes = ['sidebar-menu-cache:', 'reference-options-cache:']
@@ -64,6 +64,15 @@ const useAuthStore = create(
         set((state) => {
           const nextUser = { ...state.user, ...userData }
           const ready = isPayloadReady(nextUser)
+          // Invalidate cached menus if permissions, roles, or school tenant context mutated
+          if (
+            userData.permissions !== undefined ||
+            userData.roles !== undefined ||
+            userData.role !== undefined ||
+            userData.mst_sekolah_id !== undefined
+          ) {
+            clearSessionCaches()
+          }
           return {
             user: nextUser,
             authorizationStatus: ready ? 'ready' : state.authorizationStatus,

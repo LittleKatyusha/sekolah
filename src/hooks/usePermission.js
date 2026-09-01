@@ -17,6 +17,29 @@ export const resolvePermissions = (user) => {
 
   return []
 }
+/**
+ * Flatten and extract sorted permission codes from user object.
+ */
+export const getSortedPermissionCodes = (user) => {
+  if (!user) return []
+  const perms = resolvePermissions(user)
+  const codes = perms
+    .map((p) => (typeof p === 'string' ? p : p?.code))
+    .filter(Boolean)
+  return Array.from(new Set(codes)).sort()
+}
+
+/**
+ * Generate a deterministic permission fingerprint string.
+ * Used for cache keys and invalidation when permissions change.
+ */
+export const getPermissionFingerprint = (user) => {
+  if (!user) return 'anon'
+  const role = user?.role?.toUpperCase?.() || user?.role || ''
+  const codes = getSortedPermissionCodes(user)
+  return `${role}:${codes.join(',')}`
+}
+
 
 /**
  * Backend seeds *.update while many UI guards still check *.edit.
