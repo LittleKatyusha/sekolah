@@ -87,7 +87,7 @@ const TahunAjaranForm = () => {
       nama: formData.nama,
       tanggal_mulai: formData.tanggal_mulai,
       tanggal_selesai: formData.tanggal_selesai,
-      is_active: parseInt(formData.is_active) === 1,
+      is_active: formData.is_active === '1',
     }
 
     let result
