@@ -5,6 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { ujianUserService } from '../services/ujianUserService'
 import { showConfirm, showError, showSuccess, showWarning } from '../../../utils/sweetalert'
+import { useExamAntiCheat } from '../hooks/useExamAntiCheat'
+import ExamViolationModal from '../components/ExamViolationModal'
 
 const isEssay = (soal) => soal.tipe === 2 || soal.tipe === 'essay'
 const hasAnswer = (answer) => Boolean(answer?.mst_soal_opsi_id || answer?.jawaban_teks?.trim())
@@ -22,6 +24,26 @@ const UjianUserMulai = () => {
   const [index, setIndex] = useState(0)
   const [seconds, setSeconds] = useState(0)
   const [isExpired, setIsExpired] = useState(false)
+
+  const isExamActive = Boolean(ujianUser && !isExpired && !loading && (ujianUser.status === 2 || ujianUser.status_code === 'in_progress'))
+
+  const {
+    isFullscreen,
+    violationCount,
+    lastViolationReason,
+    showWarningModal,
+    requestFullscreen,
+    exitFullscreen,
+    acknowledgeWarning,
+  } = useExamAntiCheat({
+    ujianUserId: Number(id),
+    isActive: isExamActive,
+    maxViolations: 3,
+    onAutoSubmitted: () => {
+      showError('Ujian dihentikan dan diselesaikan otomatis karena melanggar batas pengawasan.', 'Ujian Dihentikan')
+      navigate(`/akademik/ujian-user/${id}`)
+    },
+  })
 
   const endExpired = useCallback(() => {
     setIsExpired(true)
@@ -87,6 +109,7 @@ const UjianUserMulai = () => {
       if (!result.isConfirmed) return
     }
     setFinishing(true)
+    await exitFullscreen()
     const { error } = await ujianUserService.selesaikanUjian(id)
     if (error) {
       if (expired(error)) endExpired()
@@ -106,9 +129,22 @@ const UjianUserMulai = () => {
   const answer = answers[soal.id] || {}
   const answered = soalList.filter((item) => hasAnswer(answers[item.id])).length
   return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    {!isFullscreen && isExamActive && (
+      <div className="bg-amber-500 text-white text-xs px-4 py-2 flex justify-between items-center">
+        <span>Ujian mewajibkan mode Fullscreen untuk mencegah pelanggaran.</span>
+        <button type="button" onClick={requestFullscreen} className="underline font-bold">Aktifkan Fullscreen</button>
+      </div>
+    )}
     <header className="sticky top-0 z-50 border-b bg-white shadow-sm dark:bg-gray-800"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4"><div className="flex items-center gap-3"><BookOpen className="text-primary-600" /><div><h1 className="font-semibold">{ujianUser.ujian?.nama || 'Ujian'}</h1><p className="flex items-center gap-1 text-sm text-gray-500"><User size={14} />{ujianUser.siswa?.nama || 'Siswa'}</p></div></div><div className={`flex items-center gap-2 font-mono font-bold ${seconds != null && seconds < 300 ? 'text-red-600' : 'text-green-600'}`}><Clock size={20} />{formatTime(seconds)}</div></div></header>
     <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-4"><Card className="order-2 lg:order-1"><div className="p-4"><p className="mb-3 font-semibold">Soal ({answered}/{soalList.length})</p><div className="grid grid-cols-5 gap-2">{soalList.map((item, itemIndex) => <button key={item.id} type="button" onClick={() => setIndex(itemIndex)} className={`h-10 rounded ${itemIndex === index ? 'bg-primary-600 text-white' : hasAnswer(answers[item.id]) ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{itemIndex + 1}</button>)}</div></div></Card>
       <Card className="order-1 lg:col-span-3"><div className="p-6"><div className="mb-6 flex justify-between text-sm text-gray-500"><span>Soal {index + 1} dari {soalList.length}</span>{pending[soal.id] && <span>Menyimpan...</span>}</div><h2 className="mb-8 text-lg font-medium whitespace-pre-wrap">{soal.pertanyaan}</h2>{isEssay(soal) ? <textarea aria-label="Jawaban essay" defaultValue={answer.jawaban_teks || ''} disabled={isExpired || pending[soal.id]} onBlur={(event) => save(soal, event.target.value)} className="min-h-40 w-full rounded border p-3" placeholder="Tulis jawaban Anda" /> : <div className="space-y-3">{soal.opsi.map((opsi) => <label key={opsi.id} className={`flex cursor-pointer gap-3 rounded border-2 p-4 ${answer.mst_soal_opsi_id === opsi.id ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}><input type="radio" name={`soal-${soal.id}`} checked={answer.mst_soal_opsi_id === opsi.id} disabled={isExpired || pending[soal.id]} onChange={() => save(soal, opsi.id)} /><span>{opsi.teks_opsi}</span></label>)}</div>}<div className="mt-8 flex justify-between border-t pt-6"><Button variant="secondary" disabled={index === 0} onClick={() => setIndex(index - 1)}><ChevronLeft size={18} />Sebelumnya</Button>{index === soalList.length - 1 ? <Button disabled={finishing} onClick={() => finish(false)}><Send size={18} />{finishing ? 'Mengirim...' : 'Kirim Jawaban'}</Button> : <Button onClick={() => setIndex(index + 1)}>Selanjutnya<ChevronRight size={18} /></Button>}</div></div></Card></main>
+    <ExamViolationModal
+      isOpen={showWarningModal}
+      violationCount={violationCount}
+      maxViolations={3}
+      reason={lastViolationReason}
+      onAcknowledge={acknowledgeWarning}
+    />
   </div>
 }
 

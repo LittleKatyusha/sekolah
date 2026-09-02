@@ -25,4 +25,16 @@ describe('ujianUserService exam engine contracts', () => {
     await ujianUserService.selesaikanUjian(9)
     expect(apiService.post).toHaveBeenCalledWith('/akademik/ujian-user/9/selesaikan')
   })
+
+  it('calls reportViolation endpoint with correct payload', async () => {
+    const mockResponse = { data: { success: true, data: { violation_count: 1, auto_submitted: false } } }
+    apiService.post.mockResolvedValueOnce(mockResponse)
+
+    const result = await ujianUserService.reportViolation(10, 'TAB_SWITCH')
+
+    expect(apiService.post).toHaveBeenCalledWith('/akademik/ujian-user/10/pelanggaran', {
+      type: 'TAB_SWITCH',
+    })
+    expect(result).toEqual(mockResponse)
+  })
 })

@@ -87,6 +87,16 @@ export const ujianUserService = {
   selesaikanUjian: async (id) => {
     return await apiService.post(`${BASE_URL}/${id}/selesaikan`)
   },
+
+  /**
+   * Report exam violation (Lightweight telemetry)
+   * @param {number|string} id - Ujian User ID
+   * @param {string} type - Violation type (e.g. TAB_SWITCH, EXIT_FULLSCREEN)
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  reportViolation: async (id, type) => {
+    return await apiService.post(`${BASE_URL}/${id}/pelanggaran`, { type })
+  },
 }
 
 export default ujianUserService
