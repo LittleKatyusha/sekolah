@@ -4,6 +4,7 @@ import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -153,18 +154,24 @@ const TugasSiswaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tugas Siswa</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="primary" onClick={() => setShowGradeForm(!showGradeForm)}>
-            <Star size={18} className="mr-2" />
-            {showGradeForm ? 'Tutup Penilaian' : 'Beri Nilai'}
-          </Button>
-          <Button variant="warning" onClick={() => navigate(`/akademik/tugas-siswa/${id}/edit`)}>
-            <Edit size={18} className="mr-2" />
-            Edit
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            <Trash2 size={18} className="mr-2" />
-            Hapus
-          </Button>
+          <PermissionGuard permission="tugas-siswa.nilai">
+            <Button variant="primary" onClick={() => setShowGradeForm(!showGradeForm)}>
+              <Star size={18} className="mr-2" />
+              {showGradeForm ? 'Tutup Penilaian' : 'Beri Nilai'}
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="tugas-siswa.update">
+            <Button variant="warning" onClick={() => navigate(`/akademik/tugas-siswa/${id}/edit`)}>
+              <Edit size={18} className="mr-2" />
+              Edit
+            </Button>
+          </PermissionGuard>
+          <PermissionGuard permission="tugas-siswa.delete">
+            <Button variant="danger" onClick={handleDelete}>
+              <Trash2 size={18} className="mr-2" />
+              Hapus
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

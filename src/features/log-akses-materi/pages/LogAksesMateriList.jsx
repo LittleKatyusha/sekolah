@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 
 const ActionsMenu = ({ onDetail }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -37,9 +38,11 @@ const ActionsMenu = ({ onDetail }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Eye size={16} className="text-blue-600" /> Detail
-            </button>
+            <PermissionGuard permission="log-akses-materi.view">
+              <button onClick={() => handleAction(onDetail)} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Eye size={16} className="text-blue-600" /> Detail
+              </button>
+            </PermissionGuard>
           </div>
         </div>, document.body
       )}

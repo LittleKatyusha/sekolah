@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { jabatanService } from '../services/organisasiService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -166,14 +167,16 @@ const JabatanForm = () => {
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                ) : (
-                  <Save size={18} className="mr-2" />
-                )}
-                {isEditMode ? 'Simpan Perubahan' : 'Tambah Jabatan'}
-              </Button>
+              <PermissionGuard permission="organisasi.jabatan.manage">
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  ) : (
+                    <Save size={18} className="mr-2" />
+                  )}
+                  {isEditMode ? 'Simpan Perubahan' : 'Tambah Jabatan'}
+                </Button>
+              </PermissionGuard>
             </div>
           </form>
         )}

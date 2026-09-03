@@ -4,6 +4,7 @@ import { Save, ArrowLeft } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianJawabanService } from '../services/ujianJawabanService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -106,7 +107,9 @@ const UjianJawabanForm = () => {
           </label>
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="button" variant="secondary" onClick={() => navigate('/akademik/ujian-jawaban')}>Batal</Button>
-            <Button type="submit" disabled={saving}><Save size={18} className="mr-2" />{saving ? 'Menyimpan...' : 'Simpan'}</Button>
+            <PermissionGuard permission={isEdit ? 'ujian-jawaban.update' : 'ujian-jawaban.create'}>
+              <Button type="submit" disabled={saving}><Save size={18} className="mr-2" />{saving ? 'Menyimpan...' : 'Simpan'}</Button>
+            </PermissionGuard>
           </div>
         </form>
       </Card>

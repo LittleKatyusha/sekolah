@@ -5,6 +5,7 @@ import { RefreshCw, Eye, MoreVertical } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import ActionBadge from '../components/ActionBadge'
 
 // Module-level pure function — no re-creation per render
@@ -50,10 +51,12 @@ const ActionsMenu = memo(({ onDetail }) => {
       {isOpen && createPortal(
         <div ref={menuRef} className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[10000]" style={{ top: `${position.top}px`, left: `${position.left}px` }}>
           <div className="py-1">
-            <button onClick={() => { setIsOpen(false); onDetail() }} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Eye size={16} className="text-blue-600" />
-              Detail
-            </button>
+            <PermissionGuard permission="activity-logs.view">
+              <button onClick={() => { setIsOpen(false); onDetail() }} className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                <Eye size={16} className="text-blue-600" />
+                Detail
+              </button>
+            </PermissionGuard>
           </div>
         </div>,
         document.body
