@@ -15,27 +15,27 @@ const Attendance7DaysChart = lazy(() => import('../features/dashboard/components
 const NilaiDistributionChart = lazy(() => import('../features/dashboard/components/NilaiDistributionChart'))
 const TopKategoriKasusChart = lazy(() =>
   import('../features/dashboard/components/CounselingCharts').then((module) => ({
-    default: module.TopKategoriKasusChart,
+    default: module?.TopKategoriKasusChart || (() => null),
   }))
 )
 const StatusPenyelesaianChart = lazy(() =>
   import('../features/dashboard/components/CounselingCharts').then((module) => ({
-    default: module.StatusPenyelesaianChart,
+    default: module?.StatusPenyelesaianChart || (() => null),
   }))
 )
 const KasusPerBulanChart = lazy(() =>
   import('../features/dashboard/components/CounselingCharts').then((module) => ({
-    default: module.KasusPerBulanChart,
+    default: module?.KasusPerBulanChart || (() => null),
   }))
 )
 const PpdbStatusChart = lazy(() =>
   import('../features/dashboard/components/PpdbCharts').then((module) => ({
-    default: module.PpdbStatusChart,
+    default: module?.PpdbStatusChart || (() => null),
   }))
 )
 const PpdbMonthlyChart = lazy(() =>
   import('../features/dashboard/components/PpdbCharts').then((module) => ({
-    default: module.PpdbMonthlyChart,
+    default: module?.PpdbMonthlyChart || (() => null),
   }))
 )
 const QuickActions = lazy(() => import('../features/dashboard/components/QuickActions'))

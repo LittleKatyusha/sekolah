@@ -12,14 +12,17 @@ const firebaseConfig = {
 }
 
 // Initialise once; avoid duplicate app errors during HMR.
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+const app =
+  firebaseConfig.apiKey && getApps().length === 0
+    ? initializeApp(firebaseConfig)
+    : getApps()[0] || null
 
 /**
  * Returns the Firebase Messaging instance, or null when FCM is not available
  * (e.g. config missing, browser doesn't support service workers, HTTP context).
  */
 export async function getFirebaseMessaging() {
-  if (!import.meta.env.VITE_FIREBASE_API_KEY) return null
+  if (!import.meta.env.VITE_FIREBASE_API_KEY || !app) return null
 
   try {
     const supported = await isSupported()
