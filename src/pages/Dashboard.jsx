@@ -43,6 +43,26 @@ const GuruDashboard = lazy(() => import('../features/dashboard/components/GuruDa
 const SiswaDashboard = lazy(() => import('../features/dashboard/components/SiswaDashboard'))
 const WaliDashboard = lazy(() => import('../features/dashboard/components/WaliDashboard'))
 
+class DashboardChartBoundary extends React.Component {
+  state = { hasError: false }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="card flex h-[300px] items-center justify-center p-6 text-sm text-gray-500 dark:text-gray-400">
+          Visualisasi tidak dapat ditampilkan.
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
 const LoadingSkeleton = () => (
   <div className="space-y-8 animate-pulse">
     <div>
@@ -277,8 +297,12 @@ const AdminDashboard = ({ data }) => {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <SPPTrendChart data={financial?.spp_trend} />
-            <PaymentStatusChart data={financial?.payment_status_distribution} />
+            <DashboardChartBoundary>
+              <SPPTrendChart data={financial?.spp_trend} />
+            </DashboardChartBoundary>
+            <DashboardChartBoundary>
+              <PaymentStatusChart data={financial?.payment_status_distribution} />
+            </DashboardChartBoundary>
           </div>
         </Suspense>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -318,8 +342,12 @@ const AdminDashboard = ({ data }) => {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <Attendance7DaysChart data={academic_attendance?.attendance_7_days} />
-            <NilaiDistributionChart data={academic_attendance?.nilai_distribution} />
+            <DashboardChartBoundary>
+              <Attendance7DaysChart data={academic_attendance?.attendance_7_days} />
+            </DashboardChartBoundary>
+            <DashboardChartBoundary>
+              <NilaiDistributionChart data={academic_attendance?.nilai_distribution} />
+            </DashboardChartBoundary>
           </div>
         </Suspense>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -369,11 +397,17 @@ const AdminDashboard = ({ data }) => {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <TopKategoriKasusChart data={counseling?.top_kategori_kasus} />
-            <StatusPenyelesaianChart data={counseling?.status_penyelesaian} />
+            <DashboardChartBoundary>
+              <TopKategoriKasusChart data={counseling?.top_kategori_kasus} />
+            </DashboardChartBoundary>
+            <DashboardChartBoundary>
+              <StatusPenyelesaianChart data={counseling?.status_penyelesaian} />
+            </DashboardChartBoundary>
           </div>
           <div className="mb-6">
-            <KasusPerBulanChart data={counseling?.kasus_per_bulan} />
+            <DashboardChartBoundary>
+              <KasusPerBulanChart data={counseling?.kasus_per_bulan} />
+            </DashboardChartBoundary>
           </div>
         </Suspense>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -413,8 +447,12 @@ const AdminDashboard = ({ data }) => {
             }
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PpdbStatusChart data={ppdb?.status_distribution} />
-              <PpdbMonthlyChart data={ppdb?.registrations_per_month} />
+              <DashboardChartBoundary>
+                <PpdbStatusChart data={ppdb?.status_distribution} />
+              </DashboardChartBoundary>
+              <DashboardChartBoundary>
+                <PpdbMonthlyChart data={ppdb?.registrations_per_month} />
+              </DashboardChartBoundary>
             </div>
           </Suspense>
         </div>

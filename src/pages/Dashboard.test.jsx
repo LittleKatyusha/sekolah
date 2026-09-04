@@ -15,6 +15,10 @@ vi.mock('../features/dashboard/components/QuickActions', () => ({
   default: () => <div>Quick Actions</div>,
 }))
 
+vi.mock('../features/dashboard/components/SPPTrendChart', () => ({
+  default: () => { throw new Error('chart render failed') },
+}))
+
 const dashboardData = {
   role: 'admin',
   summary_cards: {
@@ -39,6 +43,7 @@ describe('Dashboard', () => {
   })
 
   it('loads and renders the admin summary for superadmin', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     render(
       <MemoryRouter>
         <Dashboard />
@@ -49,6 +54,8 @@ describe('Dashboard', () => {
 
     expect(dashboardService.getDashboardData).toHaveBeenCalledTimes(1)
     expect(screen.getByText('Total Siswa Aktif')).toBeInTheDocument()
+    expect(await screen.findByText('Visualisasi tidak dapat ditampilkan.')).toBeInTheDocument()
     expect(screen.queryByText(/Ringkasan dashboard dinonaktifkan/i)).not.toBeInTheDocument()
+    consoleError.mockRestore()
   })
 })
