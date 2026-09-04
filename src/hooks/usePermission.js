@@ -2,6 +2,24 @@ import { useCallback, useMemo } from 'react'
 import useAuthStore from '../store/useAuthStore'
 
 /**
+ * Check if a user is superadmin (either role string, role object, or in roles array)
+ */
+export const isSuperAdminUser = (user) => {
+  if (!user) return false
+  const roleStr = typeof user.role === 'string' ? user.role : user.role?.code || user.role?.name
+  if (roleStr && ['superadmin', 'super_admin', 'super_administrator'].includes(roleStr.toLowerCase())) {
+    return true
+  }
+  if (Array.isArray(user.roles)) {
+    return user.roles.some((r) => {
+      const code = typeof r === 'string' ? r : r?.code || r?.name
+      return code && ['superadmin', 'super_admin', 'super_administrator'].includes(String(code).toLowerCase())
+    })
+  }
+  return false
+}
+
+/**
  * Flatten permissions from top-level user.permissions or nested roles[].permissions.
  */
 export const resolvePermissions = (user) => {
@@ -72,6 +90,8 @@ const permissionAliases = (code) => {
  * Pure function — no `this` dependency.
  */
 export const checkPermission = (user, code) => {
+  if (!user) return false
+  if (isSuperAdminUser(user)) return true
   if (!code) return true
   const perms = resolvePermissions(user)
   if (perms.length === 0) return false

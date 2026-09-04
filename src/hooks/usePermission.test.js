@@ -10,14 +10,16 @@ describe('usePermission / checkPermission', () => {
     expect(checkPermission({ roles: [{ permissions: [] }] }, 'siswa.view')).toBe(false)
   })
 
-  it('allows access without code argument', () => {
-    expect(checkPermission(null, null)).toBe(true)
+  it('allows access without code argument for existing user', () => {
+    expect(checkPermission(null, null)).toBe(false)
     expect(checkPermission({}, '')).toBe(true)
   })
 
-  it('requires explicit permissions for superadmin', () => {
-    expect(checkPermission({ role: 'SUPER_ADMIN' }, 'any.permission')).toBe(false)
-    expect(checkPermission({ role: 'superadmin', permissions: [{ code: 'any.permission' }] }, 'any.permission')).toBe(true)
+  it('bypasses permission checks for superadmin', () => {
+    expect(checkPermission({ role: 'SUPER_ADMIN' }, 'any.permission')).toBe(true)
+    expect(checkPermission({ role: 'superadmin' }, 'any.permission')).toBe(true)
+    expect(checkPermission({ role: 'super_admin' }, 'siswa.view')).toBe(true)
+    expect(checkPermission({ roles: [{ code: 'superadmin' }] }, 'anything')).toBe(true)
   })
 
   it('resolves flat permissions correctly', () => {

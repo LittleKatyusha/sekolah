@@ -1,4 +1,4 @@
-import { checkPermission } from '../hooks/usePermission'
+import { checkPermission, isSuperAdminUser } from '../hooks/usePermission'
 
 // Routes with no active API contract in routes/api.php. Keep them inaccessible
 // until the backend publishes the corresponding staff-facing endpoints.
@@ -9,7 +9,6 @@ const BACKEND_UNAVAILABLE_PATHS = [
   '/akademik/ujian',
   '/akademik/ujian-user',
   '/akademik/ujian-jawaban',
-  '/statistik',
   '/analytics',
   '/data-grid',
   '/settings',
@@ -443,9 +442,12 @@ export const permissionForPath = (pathname) => {
 }
 
 export const canAccessPath = (user, pathname) => {
+  if (!user) return false
+  if (isSuperAdminUser(user)) return true
+
   const normalized = (pathname || '').replace(/\/+$/, '') || '/'
   if (ALLOWLIST_PRIVATE_PATHS.some((path) => normalized === path || normalized.startsWith(`${path}/`))) {
-    return Boolean(user)
+    return true
   }
 
   const permission = permissionForPath(normalized)

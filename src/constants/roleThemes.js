@@ -6,6 +6,44 @@
 
 export const ROLE_THEMES = {
   // ── Administrative authority ──────────────────────────────────────────────
+  SUPER_ADMIN: {
+    label: 'Super Admin',
+    vars: {
+      '--sb-from':         '#0f172a',
+      '--sb-to':           '#1e1b4b',
+      '--sb-border':       'rgba(99,102,241,0.30)',
+      '--sb-text':         '#c7d2fe',
+      '--sb-text-muted':   '#818cf8',
+      '--sb-hover':        'rgba(99,102,241,0.20)',
+      '--sb-active':       'rgba(99,102,241,0.50)',
+      '--sb-active-text':  '#ffffff',
+      '--sb-avatar':       '#4338ca',
+      '--sb-avatar-text':  '#ffffff',
+      '--sb-child-border': 'rgba(99,102,241,0.30)',
+      '--sb-accent':       '#818cf8',
+      '--sb-logout-hover': 'rgba(239,68,68,0.20)',
+    },
+  },
+
+  SUPERADMIN: {
+    label: 'Super Admin',
+    vars: {
+      '--sb-from':         '#0f172a',
+      '--sb-to':           '#1e1b4b',
+      '--sb-border':       'rgba(99,102,241,0.30)',
+      '--sb-text':         '#c7d2fe',
+      '--sb-text-muted':   '#818cf8',
+      '--sb-hover':        'rgba(99,102,241,0.20)',
+      '--sb-active':       'rgba(99,102,241,0.50)',
+      '--sb-active-text':  '#ffffff',
+      '--sb-avatar':       '#4338ca',
+      '--sb-avatar-text':  '#ffffff',
+      '--sb-child-border': 'rgba(99,102,241,0.30)',
+      '--sb-accent':       '#818cf8',
+      '--sb-logout-hover': 'rgba(239,68,68,0.20)',
+    },
+  },
+
   ADMIN_SEKOLAH: {
     label: 'Admin Sekolah',
     vars: {
