@@ -385,7 +385,11 @@ describe('route access', () => {
 
   it('marks routes without active backend APIs as unavailable', () => {
     expect(isBackendAvailablePath('/dashboard')).toBe(true)
-    expect(isBackendAvailablePath('/akademik/ujian/1')).toBe(false)
+    expect(isBackendAvailablePath('/analytics')).toBe(false)
+    expect(isBackendAvailablePath('/akademik/ujian/1')).toBe(true)
     expect(isBackendAvailablePath('/akademik/nilai')).toBe(true)
+    expect(isBackendAvailablePath('/absensi-siswa')).toBe(true)
+    expect(isBackendAvailablePath('/absensi-guru')).toBe(true)
+    expect(isBackendAvailablePath('/akademik/presensi')).toBe(true)
   })
 })

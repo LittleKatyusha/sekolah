@@ -1,14 +1,8 @@
 import { checkPermission, isSuperAdminUser } from '../hooks/usePermission'
 
-// Routes with no active API contract in routes/api.php. Keep them inaccessible
+// Routes with no active API contract in routes/api.php or microservices. Keep them inaccessible
 // until the backend publishes the corresponding staff-facing endpoints.
 const BACKEND_UNAVAILABLE_PATHS = [
-  '/absensi-siswa',
-  '/absensi-guru',
-  '/akademik/presensi',
-  '/akademik/ujian',
-  '/akademik/ujian-user',
-  '/akademik/ujian-jawaban',
   '/analytics',
   '/data-grid',
   '/settings',
