@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save } from 'lucide-react'
+import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -14,6 +14,9 @@ const SekolahDetail = () => {
   const [sekolah, setSekolah] = useState(null)
   const [settings, setSettings] = useState([])
   const [loadingSettings, setLoadingSettings] = useState(false)
+  const [editingSettingId, setEditingSettingId] = useState(null)
+  const [editingSettingValue, setEditingSettingValue] = useState('')
+  const [savingSetting, setSavingSetting] = useState(false)
   const [savingAi, setSavingAi] = useState(false)
   const [aiSettings, setAiSettings] = useState({ provider: 'openai', base_url: '', model_id: '', api_key: '' })
 
@@ -97,6 +100,36 @@ const SekolahDetail = () => {
     }
   }
 
+  const handleEditSetting = (setting) => {
+    if (!setting?.id) return
+    setEditingSettingId(setting.id)
+    setEditingSettingValue(setting.value ?? '')
+  }
+
+  const handleCancelEditSetting = () => {
+    setEditingSettingId(null)
+    setEditingSettingValue('')
+  }
+
+  const handleUpdateSetting = async (setting) => {
+    if (!sekolah?.id || !setting?.id || savingSetting) return
+
+    setSavingSetting(true)
+    const { error } = await sekolahService.updateSetting(sekolah.id, setting.id, {
+      value: editingSettingValue,
+    })
+    setSavingSetting(false)
+
+    if (error) {
+      showError(error?.message || 'Gagal memperbarui setting')
+      return
+    }
+
+    handleCancelEditSetting()
+    showSuccess(`Setting "${setting.key}" berhasil diperbarui!`)
+    fetchSettings(sekolah.id)
+  }
+
   const formatDate = (dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
@@ -134,7 +167,7 @@ const SekolahDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profil Sekolah</h1>
-        <PermissionGuard permission="sekolah.update">
+        <PermissionGuard permission="sekolah.update" denySuperAdmin>
           <Button variant="warning" onClick={() => navigate(`/sekolah/edit`)}>
             <Edit size={18} className="mr-2" />
             Edit Profil
@@ -263,7 +296,7 @@ const SekolahDetail = () => {
       </div>
 
       {/* Settings Section */}
-      <PermissionGuard permission="sekolah.settings.update">
+      <PermissionGuard permission="sekolah.settings.update" denySuperAdmin>
         <Card>
           <form onSubmit={handleSaveAi} className="p-6 space-y-4">
             <div>
@@ -374,22 +407,84 @@ const SekolahDetail = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {settings.map((setting) => (
-                    <tr key={setting.id || setting.key} className="border-b dark:border-gray-700">
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{setting.key}</td>
-                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{setting.value || '-'}</td>
-                      <td className="px-4 py-3 text-right">
-                        <PermissionGuard permission="sekolah.delete">
-                          <button
-                            onClick={() => handleDeleteSetting(setting.id, setting.key)}
-                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </PermissionGuard>
-                      </td>
-                    </tr>
-                  ))}
+                  {settings.map((setting) => {
+                    const isEditing = editingSettingId === setting.id
+
+                    return (
+                      <tr key={setting.id || setting.key} className="border-b dark:border-gray-700">
+                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{setting.key}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                          {isEditing ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              aria-label={`Nilai setting ${setting.key}`}
+                              className="input-field w-full"
+                              value={editingSettingValue}
+                              maxLength={10000}
+                              disabled={savingSetting}
+                              onChange={(event) => setEditingSettingValue(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter') handleUpdateSetting(setting)
+                                if (event.key === 'Escape') handleCancelEditSetting()
+                              }}
+                            />
+                          ) : (
+                            setting.value || '-'
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <PermissionGuard permission="sekolah.settings.update" denySuperAdmin>
+                            {isEditing ? (
+                              <span className="inline-flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  aria-label={`Simpan setting ${setting.key}`}
+                                  title="Simpan"
+                                  disabled={savingSetting}
+                                  onClick={() => handleUpdateSetting(setting)}
+                                  className="text-green-600 hover:text-green-800 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
+                                >
+                                  <Save size={16} />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label={`Batal edit setting ${setting.key}`}
+                                  title="Batal"
+                                  disabled={savingSetting}
+                                  onClick={handleCancelEditSetting}
+                                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                aria-label={`Edit setting ${setting.key}`}
+                                title="Edit"
+                                onClick={() => handleEditSetting(setting)}
+                                className="mr-4 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
+                              >
+                                <Edit size={16} />
+                              </button>
+                            )}
+                          </PermissionGuard>
+                          <PermissionGuard permission="sekolah.settings.delete" denySuperAdmin>
+                            <button
+                              type="button"
+                              aria-label={`Hapus setting ${setting.key}`}
+                              title="Hapus"
+                              onClick={() => handleDeleteSetting(setting.id, setting.key)}
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </PermissionGuard>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
