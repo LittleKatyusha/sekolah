@@ -167,7 +167,7 @@ const SekolahDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profil Sekolah</h1>
-        <PermissionGuard permission="sekolah.update" denySuperAdmin>
+        <PermissionGuard permission="sekolah.update">
           <Button variant="warning" onClick={() => navigate(`/sekolah/edit`)}>
             <Edit size={18} className="mr-2" />
             Edit Profil

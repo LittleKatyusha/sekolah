@@ -69,6 +69,7 @@ describe('SekolahDetail settings', () => {
     showDeleteConfirm.mockResolvedValue({ isConfirmed: true })
     await renderPage({ role: 'superadmin', roles: [], permissions: [] })
 
+    expect(screen.getByRole('button', { name: 'Edit Profil' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Edit setting radius_absensi_meter' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Nilai setting radius_absensi_meter' }), {
       target: { value: '250' },
