@@ -434,7 +434,7 @@ const SekolahDetail = () => {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <PermissionGuard permission="sekolah.settings.update" denySuperAdmin>
+                          <PermissionGuard permission="sekolah.settings.update">
                             {isEditing ? (
                               <span className="inline-flex items-center gap-3">
                                 <button
@@ -470,7 +470,7 @@ const SekolahDetail = () => {
                               </button>
                             )}
                           </PermissionGuard>
-                          <PermissionGuard permission="sekolah.settings.delete" denySuperAdmin>
+                          <PermissionGuard permission="sekolah.settings.delete">
                             <button
                               type="button"
                               aria-label={`Hapus setting ${setting.key}`}

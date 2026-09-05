@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import useAuthStore from '../../../store/useAuthStore'
 import SekolahDetail from './SekolahDetail'
 import { sekolahService } from '../services/sekolahService'
-import { showSuccess } from '../../../utils/sweetalert'
+import { showDeleteConfirm, showSuccess } from '../../../utils/sweetalert'
 
 vi.mock('../services/sekolahService', () => ({
   sekolahService: {
@@ -63,11 +63,27 @@ describe('SekolahDetail settings', () => {
     })
   })
 
-  it('keeps settings mutations hidden for superadmin', async () => {
+  it('allows superadmin to edit and delete individual settings', async () => {
+    sekolahService.updateSetting.mockResolvedValue({ data: {}, error: null })
+    sekolahService.deleteSetting.mockResolvedValue({ data: {}, error: null })
+    showDeleteConfirm.mockResolvedValue({ isConfirmed: true })
     await renderPage({ role: 'superadmin', roles: [], permissions: [] })
 
-    expect(screen.queryByRole('button', { name: 'Edit setting radius_absensi_meter' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Hapus setting radius_absensi_meter' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit setting radius_absensi_meter' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Nilai setting radius_absensi_meter' }), {
+      target: { value: '250' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Simpan setting radius_absensi_meter' }))
+
+    await waitFor(() => {
+      expect(sekolahService.updateSetting).toHaveBeenCalledWith(1, 9, { value: '250' })
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus setting radius_absensi_meter' }))
+    await waitFor(() => {
+      expect(sekolahService.deleteSetting).toHaveBeenCalledWith(1, 9)
+    })
+
     expect(screen.queryByText('Simpan Pengaturan AI')).not.toBeInTheDocument()
   })
 })
