@@ -206,11 +206,15 @@ const UsersForm = () => {
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 <option value="">Pilih role</option>
-                {roles.map(role => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
+                {roles.map(role => {
+                  const roleValue = role.value ?? role.id
+                  const roleLabel = role.label ?? role.name ?? role.code
+                  return (
+                    <option key={roleValue} value={roleValue}>
+                      {roleLabel}
+                    </option>
+                  )
+                })}
               </select>
               {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role}</p>}
             </div>
