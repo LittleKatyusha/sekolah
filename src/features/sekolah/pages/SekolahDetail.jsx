@@ -19,6 +19,7 @@ const SekolahDetail = () => {
   const [savingSetting, setSavingSetting] = useState(false)
   const [savingAi, setSavingAi] = useState(false)
   const [aiSettings, setAiSettings] = useState({ provider: 'openai', base_url: '', model_id: '', api_key: '' })
+  const visibleSettings = settings.filter(({ key }) => !key.startsWith('ai_'))
 
   const AI_PROVIDERS = [
     { id: 'openai', label: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini' },
@@ -57,11 +58,12 @@ const SekolahDetail = () => {
       const values = data.data || []
       setSettings(values)
       const provider = values.find(({ key }) => key === 'ai_provider')?.value || 'openai'
+      const providerDefaults = AI_PROVIDERS.find(({ id }) => id === provider)
       setAiSettings({
         provider,
-        base_url: values.find(({ key }) => key === 'ai_base_url')?.value || '',
-        model_id: values.find(({ key }) => key === 'ai_model_id')?.value || '',
-        api_key: values.find(({ key }) => key === 'ai_api_key')?.value || '',
+        base_url: values.find(({ key }) => key === 'ai_base_url')?.value || providerDefaults?.defaultBaseUrl || '',
+        model_id: values.find(({ key }) => key === 'ai_model_id')?.value || providerDefaults?.defaultModel || '',
+        api_key: '',
       })
     }
     setLoadingSettings(false)
@@ -296,7 +298,7 @@ const SekolahDetail = () => {
       </div>
 
       {/* Settings Section */}
-      <PermissionGuard permission="sekolah.settings.update" denySuperAdmin>
+      <PermissionGuard permission="sekolah.settings.update">
         <Card>
           <form onSubmit={handleSaveAi} className="p-6 space-y-4">
             <div>
@@ -312,6 +314,7 @@ const SekolahDetail = () => {
                   Provider AI
                 </label>
                 <select
+                  aria-label="Provider AI"
                   className="input-field mt-2 w-full"
                   value={aiSettings.provider}
                   onChange={(e) => handleProviderChange(e.target.value)}
@@ -329,6 +332,7 @@ const SekolahDetail = () => {
                   Model ID
                 </label>
                 <input
+                  aria-label="Model ID AI"
                   required
                   placeholder="gpt-4o-mini / deepseek-chat / dll"
                   className="input-field mt-2 w-full"
@@ -342,6 +346,7 @@ const SekolahDetail = () => {
                   Base URL API
                 </label>
                 <input
+                  aria-label="Base URL API AI"
                   type="url"
                   required
                   placeholder="https://api.openai.com/v1"
@@ -356,6 +361,7 @@ const SekolahDetail = () => {
                   API Key AI
                 </label>
                 <input
+                  aria-label="API Key AI"
                   type="password"
                   placeholder="sk-... (kosongkan jika pakai default server)"
                   className="input-field mt-2 w-full"
@@ -391,7 +397,7 @@ const SekolahDetail = () => {
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
             </div>
-          ) : settings.length === 0 ? (
+          ) : visibleSettings.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Settings size={48} className="mx-auto mb-3 opacity-50" />
               <p>Belum ada pengaturan</p>
@@ -407,7 +413,7 @@ const SekolahDetail = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {settings.map((setting) => {
+                  {visibleSettings.map((setting) => {
                     const isEditing = editingSettingId === setting.id
 
                     return (

@@ -63,8 +63,9 @@ describe('SekolahDetail settings', () => {
     })
   })
 
-  it('allows superadmin to edit and delete individual settings', async () => {
+  it('allows superadmin to edit individual settings and AI configuration', async () => {
     sekolahService.updateSetting.mockResolvedValue({ data: {}, error: null })
+    sekolahService.updateAiSettings.mockResolvedValue({ data: {}, error: null })
     sekolahService.deleteSetting.mockResolvedValue({ data: {}, error: null })
     showDeleteConfirm.mockResolvedValue({ isConfirmed: true })
     await renderPage({ role: 'superadmin', roles: [], permissions: [] })
@@ -85,6 +86,22 @@ describe('SekolahDetail settings', () => {
       expect(sekolahService.deleteSetting).toHaveBeenCalledWith(1, 9)
     })
 
-    expect(screen.queryByText('Simpan Pengaturan AI')).not.toBeInTheDocument()
+    expect(screen.getByText('Simpan Pengaturan AI')).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('textbox', { name: 'Model ID AI' }), {
+      target: { value: 'gpt-4.1-mini' },
+    })
+    fireEvent.change(screen.getByLabelText('API Key AI'), {
+      target: { value: 'test-api-key' },
+    })
+    fireEvent.click(screen.getByText('Simpan Pengaturan AI'))
+
+    await waitFor(() => {
+      expect(sekolahService.updateAiSettings).toHaveBeenCalledWith(1, {
+        provider: 'openai',
+        base_url: 'https://api.openai.com/v1',
+        model_id: 'gpt-4.1-mini',
+        api_key: 'test-api-key',
+      })
+    })
   })
 })
