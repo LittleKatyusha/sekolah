@@ -67,8 +67,8 @@ describe('PortalPpdb Subdomain Resolution', () => {
     expect(schoolInput).toBeInTheDocument()
     expect(schoolInput).toHaveAttribute('readonly')
 
-    // Should indicate automatic selection from subdomain
-    expect(screen.getByText(/Otomatis berdasarkan subdomain:/i)).toBeInTheDocument()
+    // Keep technical subdomain details hidden from users
+    expect(screen.queryByText(/Otomatis berdasarkan subdomain:/i)).not.toBeInTheDocument()
 
     // Should have automatically fetched active waves for SMADA (id 3)
     await waitFor(() => {

@@ -305,12 +305,6 @@ const DaftarTab = ({ autoSekolah, subdomain, sekolahOptions, sekolahLoading }) =
                     className={`${inputBase} pl-9 bg-gray-100/80 dark:bg-gray-800 text-gray-900 dark:text-white font-medium cursor-not-allowed border-gray-200 dark:border-gray-700`}
                   />
                 </div>
-                {subdomain && (
-                  <p className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                    Otomatis berdasarkan subdomain: <span className="font-semibold text-gray-700 dark:text-gray-300">{subdomain}</span>
-                  </p>
-                )}
               </div>
             ) : (
               <select
