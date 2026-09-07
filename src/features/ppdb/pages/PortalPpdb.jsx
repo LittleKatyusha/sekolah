@@ -5,6 +5,21 @@ import {
   Lock, CreditCard, Upload, ChevronRight, AlertCircle,
 } from 'lucide-react'
 import { ppdbPublicService } from '../services/ppdbService'
+import { getTenantFromHostname } from '../../../utils/api'
+
+export const getSubdomain = () => {
+  if (typeof window === 'undefined') return null
+  const searchParams = new URLSearchParams(window.location.search)
+  const param = searchParams.get('subdomain') || searchParams.get('tenant')
+  if (param) return param.toLowerCase().trim()
+
+  const tenant = getTenantFromHostname(window.location.hostname)
+  if (tenant && tenant !== 'app' && tenant !== 'www') {
+    return tenant.toLowerCase().trim()
+  }
+
+  return import.meta.env.VITE_DEV_SUBDOMAIN || null
+}
 
 const TABS = [
   { id: 'daftar', label: 'Pendaftaran Mandiri', icon: FileText },
@@ -64,24 +79,27 @@ const DOC_LIST = [
   { name: 'ijazah',        label: 'Ijazah' },
 ]
 
-const DaftarTab = () => {
-  const [formData, setFormData] = useState(INITIAL_FORM)
+const DaftarTab = ({ autoSekolah, subdomain, sekolahOptions, sekolahLoading }) => {
+  const [formData, setFormData] = useState(() => ({
+    ...INITIAL_FORM,
+    mst_sekolah_id: autoSekolah ? String(autoSekolah.id) : '',
+  }))
   const [files, setFiles] = useState(INITIAL_FILES)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [sekolahOptions, setSekolahOptions] = useState([])
-  const [sekolahLoading, setSekolahLoading] = useState(true)
   const [gelombangOptions, setGelombangOptions] = useState([])
   const [gelombangLoading, setGelombangLoading] = useState(false)
 
+  // Sync autoSekolah when it resolves asynchronously
   useEffect(() => {
-    ppdbPublicService.getSekolahList().then(({ data }) => {
-      const list = data?.data ?? data
-      setSekolahOptions(Array.isArray(list) ? list : [])
-      setSekolahLoading(false)
-    }).catch(() => setSekolahLoading(false))
-  }, [])
+    if (autoSekolah?.id) {
+      setFormData((prev) => {
+        if (prev.mst_sekolah_id === String(autoSekolah.id)) return prev
+        return { ...prev, mst_sekolah_id: String(autoSekolah.id) }
+      })
+    }
+  }, [autoSekolah])
 
   useEffect(() => {
     const sekolahId = formData.mst_sekolah_id
@@ -97,7 +115,11 @@ const DaftarTab = () => {
     ppdbPublicService.getActiveGelombang(sekolahId).then(({ data }) => {
       if (cancelled) return
       const list = data?.data ?? data
-      setGelombangOptions(Array.isArray(list) ? list : [])
+      const arr = Array.isArray(list) ? list : []
+      setGelombangOptions(arr)
+      if (arr.length === 1) {
+        setFormData((prev) => ({ ...prev, ppdb_gelombang_id: String(arr[0].id) }))
+      }
       setGelombangLoading(false)
     }).catch(() => { if (!cancelled) setGelombangLoading(false) })
     return () => { cancelled = true }
@@ -141,7 +163,10 @@ const DaftarTab = () => {
     const { data, error } = await ppdbPublicService.daftar(fd)
     if (data) {
       setResult(data.data ?? data)
-      setFormData(INITIAL_FORM)
+      setFormData({
+        ...INITIAL_FORM,
+        mst_sekolah_id: autoSekolah ? String(autoSekolah.id) : '',
+      })
       setFiles(INITIAL_FILES)
       setErrors({})
     } else {
@@ -149,6 +174,16 @@ const DaftarTab = () => {
       else setErrors({ _global: error?.message || 'Pendaftaran gagal, silakan coba lagi' })
     }
     setLoading(false)
+  }
+
+  const handleReset = () => {
+    setResult(null)
+    setFormData({
+      ...INITIAL_FORM,
+      mst_sekolah_id: autoSekolah ? String(autoSekolah.id) : '',
+    })
+    setFiles(INITIAL_FILES)
+    setErrors({})
   }
 
   if (result) {
@@ -189,7 +224,7 @@ const DaftarTab = () => {
         </div>
         <p className="text-xs text-gray-400">Screenshot atau catat nomor pendaftaran Anda, lalu gunakan menu <strong>Cek Status</strong> untuk memantau perkembangan.</p>
         <button
-          onClick={() => setResult(null)}
+          onClick={handleReset}
           className="px-6 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
         >
           Daftar Lagi
@@ -216,17 +251,61 @@ const DaftarTab = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
           <div>
             <Label required>Sekolah Tujuan</Label>
-            <select name="mst_sekolah_id" value={formData.mst_sekolah_id} onChange={handleChange} disabled={sekolahLoading} className={fieldClass(errors, 'mst_sekolah_id')}>
-              <option value="">{sekolahLoading ? 'Memuat...' : '— Pilih Sekolah —'}</option>
-              {sekolahOptions.map((s) => <option key={s.id} value={s.id}>{s.nama_sekolah}</option>)}
-            </select>
+            {autoSekolah ? (
+              <div>
+                <div className="relative">
+                  <School size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-600 dark:text-primary-400" />
+                  <input
+                    type="text"
+                    readOnly
+                    value={autoSekolah.nama_sekolah}
+                    className={`${inputBase} pl-9 bg-gray-100/80 dark:bg-gray-800 text-gray-900 dark:text-white font-medium cursor-not-allowed border-gray-200 dark:border-gray-700`}
+                  />
+                </div>
+                {subdomain && (
+                  <p className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Otomatis berdasarkan subdomain: <span className="font-semibold text-gray-700 dark:text-gray-300">{subdomain}</span>
+                  </p>
+                )}
+              </div>
+            ) : (
+              <select
+                name="mst_sekolah_id"
+                value={formData.mst_sekolah_id}
+                onChange={handleChange}
+                disabled={sekolahLoading}
+                className={fieldClass(errors, 'mst_sekolah_id')}
+              >
+                <option value="">{sekolahLoading ? 'Memuat sekolah...' : '— Pilih Sekolah —'}</option>
+                {sekolahOptions.map((s) => (
+                  <option key={s.id} value={s.id}>{s.nama_sekolah}</option>
+                ))}
+              </select>
+            )}
             <FieldError msg={errors.mst_sekolah_id} />
           </div>
           <div>
             <Label required>Gelombang</Label>
-            <select name="ppdb_gelombang_id" value={formData.ppdb_gelombang_id} onChange={handleChange} disabled={gelombangLoading || gelombangOptions.length === 0} className={fieldClass(errors, 'ppdb_gelombang_id')}>
-              <option value="">{gelombangLoading ? 'Memuat...' : gelombangOptions.length === 0 ? '— Pilih sekolah dahulu —' : '— Pilih Gelombang —'}</option>
-              {gelombangOptions.map((g) => <option key={g.id} value={g.id}>{g.nama_gelombang}</option>)}
+            <select
+              name="ppdb_gelombang_id"
+              value={formData.ppdb_gelombang_id}
+              onChange={handleChange}
+              disabled={gelombangLoading || gelombangOptions.length === 0}
+              className={fieldClass(errors, 'ppdb_gelombang_id')}
+            >
+              <option value="">
+                {gelombangLoading
+                  ? 'Memuat gelombang...'
+                  : gelombangOptions.length === 0
+                    ? (formData.mst_sekolah_id ? '— Belum ada gelombang aktif —' : '— Pilih sekolah dahulu —')
+                    : '— Pilih Gelombang —'}
+              </option>
+              {gelombangOptions.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nama_gelombang} {g.biaya_pendaftaran > 0 ? `(Rp ${Number(g.biaya_pendaftaran).toLocaleString('id-ID')})` : '(Gratis)'}
+                </option>
+              ))}
             </select>
             <FieldError msg={errors.ppdb_gelombang_id} />
           </div>
@@ -348,7 +427,7 @@ const DaftarTab = () => {
 
 // ─── Tab: Cek Status ──────────────────────────────────────────────────────────
 
-const CekStatusTab = () => {
+const CekStatusTab = ({ autoSekolah }) => {
   const [noPendaftaran, setNoPendaftaran] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState(null)
@@ -361,7 +440,11 @@ const CekStatusTab = () => {
     setLoading(true)
     setError('')
     setStatus(null)
-    const { data, error: apiErr } = await ppdbPublicService.cekStatus(noPendaftaran.trim(), email.trim())
+    const { data, error: apiErr } = await ppdbPublicService.cekStatus(
+      noPendaftaran.trim(),
+      email.trim(),
+      autoSekolah?.id || null
+    )
     if (data) setStatus(data.data ?? data)
     else setError(apiErr?.message || 'Nomor pendaftaran tidak ditemukan')
     setLoading(false)
@@ -460,6 +543,40 @@ const CekStatusTab = () => {
 
 const PortalPpdb = () => {
   const [activeTab, setActiveTab] = useState('daftar')
+  const [sekolahOptions, setSekolahOptions] = useState([])
+  const [sekolahLoading, setSekolahLoading] = useState(true)
+  const [autoSekolah, setAutoSekolah] = useState(null)
+  const [subdomain, setSubdomain] = useState(null)
+
+  useEffect(() => {
+    const sub = getSubdomain()
+    setSubdomain(sub)
+
+    ppdbPublicService.getSekolahList().then(({ data }) => {
+      const list = data?.data ?? data
+      const arr = Array.isArray(list) ? list : (list ? [list] : [])
+      setSekolahOptions(arr)
+      setSekolahLoading(false)
+
+      if (sub && arr.length > 0) {
+        const matched = arr.find((s) => {
+          const sSub = (s.subdomain || s.slug || s.identifier || '').toLowerCase()
+          return sSub === sub
+        })
+        if (matched) {
+          setAutoSekolah(matched)
+        }
+      } else if (arr.length === 1) {
+        setAutoSekolah(arr[0])
+      }
+    }).catch(() => setSekolahLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (autoSekolah?.nama_sekolah) {
+      document.title = `Portal PPDB — ${autoSekolah.nama_sekolah} | AkademiHub`
+    }
+  }, [autoSekolah])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex flex-col items-center">
@@ -469,8 +586,14 @@ const PortalPpdb = () => {
           <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto mb-4">
             <GraduationCap size={32} className="text-white" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Portal PPDB</h1>
-          <p className="mt-2 text-primary-200 text-sm sm:text-base">Penerimaan Peserta Didik Baru — Daftar sekarang dan raih masa depan terbaik</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Portal PPDB {autoSekolah ? `— ${autoSekolah.nama_sekolah}` : ''}
+          </h1>
+          <p className="mt-2 text-primary-200 text-sm sm:text-base">
+            {autoSekolah
+              ? `Penerimaan Peserta Didik Baru ${autoSekolah.nama_sekolah} — Daftar sekarang dan raih masa depan terbaik`
+              : 'Penerimaan Peserta Didik Baru — Daftar sekarang dan raih masa depan terbaik'}
+          </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-xs">
             {[
               { icon: FileText, text: 'Pendaftaran Online' },
@@ -508,8 +631,20 @@ const PortalPpdb = () => {
 
         {/* Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 sm:p-7">
-          {activeTab === 'daftar' && <DaftarTab />}
-          {activeTab === 'status' && <CekStatusTab />}
+          {activeTab === 'daftar' && (
+            <DaftarTab
+              autoSekolah={autoSekolah}
+              subdomain={subdomain}
+              sekolahOptions={sekolahOptions}
+              sekolahLoading={sekolahLoading}
+            />
+          )}
+          {activeTab === 'status' && (
+            <CekStatusTab
+              autoSekolah={autoSekolah}
+              subdomain={subdomain}
+            />
+          )}
         </div>
 
         {/* Note */}

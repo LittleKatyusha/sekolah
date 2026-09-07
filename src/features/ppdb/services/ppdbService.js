@@ -298,9 +298,11 @@ export const ppdbPublicService = {
     }
   },
 
-  cekStatus: async (noPendaftaran, email) => {
+  cekStatus: async (noPendaftaran, email, sekolahId = null) => {
     try {
-      const response = await publicApi.post(`${PUBLIC_BASE}/status`, { no_pendaftaran: noPendaftaran, email })
+      const payload = { no_pendaftaran: noPendaftaran, email }
+      if (sekolahId) payload.mst_sekolah_id = sekolahId
+      const response = await publicApi.post(`${PUBLIC_BASE}/status`, payload)
       return { data: response.data, error: null }
     } catch (error) {
       return { data: null, error: error.response?.data || error.message }
