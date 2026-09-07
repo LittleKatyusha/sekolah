@@ -19,6 +19,7 @@ const UsersForm = () => {
   
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
     role: '',
@@ -77,6 +78,7 @@ const UsersForm = () => {
 
       setFormData({
         name: user.name || '',
+        username: user.username || '',
         email: user.email || '',
         password: '', // Don't show password
         role: resolvedRoleId,
@@ -91,10 +93,14 @@ const UsersForm = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }))
+    setFormData(prev => {
+      const next = { ...prev, [name]: type === 'checkbox' ? checked : value }
+      if (name === 'email' && !isEditMode) {
+        const previousSuggestion = prev.email.split('@')[0]
+        if (!prev.username || prev.username === previousSuggestion) next.username = value.split('@')[0]
+      }
+      return next
+    })
     // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
@@ -104,6 +110,11 @@ const UsersForm = () => {
   const validate = () => {
     const newErrors = {}
     if (!formData.name) newErrors.name = 'Nama wajib diisi'
+    if (!formData.username) {
+      newErrors.username = 'Username wajib diisi'
+    } else if (!/^[A-Za-z0-9._-]+$/.test(formData.username)) {
+      newErrors.username = 'Username hanya boleh berisi huruf, angka, titik, garis bawah, atau tanda hubung'
+    }
     if (!formData.email) {
       newErrors.email = 'Email wajib diisi'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -153,7 +164,9 @@ const UsersForm = () => {
       console.error(error)
       // Handle server-side validation errors
       if (error.errors) {
-        setErrors(error.errors)
+        setErrors(Object.fromEntries(
+          Object.entries(error.errors).map(([field, messages]) => [field, Array.isArray(messages) ? messages[0] : messages])
+        ))
       } else {
         showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} user`)
       }
@@ -188,6 +201,21 @@ const UsersForm = () => {
                 placeholder="Nama Lengkap User"
                 error={errors.name}
               />
+            </div>
+
+            {/* Username */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Username <span className="text-red-500">*</span>
+              </label>
+              <Input
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Username"
+                error={errors.username}
+              />
+              <p className="mt-1 text-xs text-gray-500">Otomatis diambil dari email dan dapat diubah</p>
             </div>
 
             {/* Email */}
