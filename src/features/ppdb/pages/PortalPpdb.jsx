@@ -51,6 +51,48 @@ const Label = ({ children, required }) => (
   </label>
 )
 
+const DownloadBuktiButton = ({ noPendaftaran, email, sekolahId }) => {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    setError('')
+    try {
+      const { data, error: apiError } = await ppdbPublicService.downloadBukti(noPendaftaran, email, sekolahId)
+      if (apiError) throw new Error(apiError.message)
+      if (!(data instanceof Blob) || data.type !== 'application/pdf') {
+        throw new Error('Respons bukan PDF. Silakan coba lagi.')
+      }
+      const url = URL.createObjectURL(data)
+      const link = document.createElement('a')
+      try {
+        link.href = url
+        link.download = `Bukti-Pendaftaran-${noPendaftaran.replace(/[^A-Za-z0-9_-]/g, '-')}.pdf`
+        document.body.appendChild(link)
+        link.click()
+      } finally {
+        link.remove()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+      }
+    } catch (err) {
+      setError(err.message || 'Gagal mengunduh bukti pendaftaran')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="p-4">
+      <button type="button" onClick={handleDownload} disabled={downloading} aria-busy={downloading}
+        className="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold disabled:opacity-50">
+        {downloading ? 'Menyiapkan PDF...' : 'Unduh Bukti Pendaftaran (PDF)'}
+      </button>
+      {error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
+    </div>
+  )
+}
+
 // ─── Tab: Form Pendaftaran ────────────────────────────────────────────────────
 
 const INITIAL_FORM = {
@@ -222,7 +264,8 @@ const DaftarTab = ({ autoSekolah, subdomain, sekolahOptions, sekolahLoading }) =
             </span>
           </div>
         </div>
-        <p className="text-xs text-gray-400">Screenshot atau catat nomor pendaftaran Anda, lalu gunakan menu <strong>Cek Status</strong> untuk memantau perkembangan.</p>
+        <DownloadBuktiButton noPendaftaran={result.no_pendaftaran} email={formData.email} sekolahId={formData.mst_sekolah_id} />
+        <p className="text-xs text-gray-400">Simpan bukti pendaftaran, lalu gunakan menu <strong>Cek Status</strong> untuk memantau perkembangan atau mengunduh ulang.</p>
         <button
           onClick={handleReset}
           className="px-6 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -445,7 +488,7 @@ const CekStatusTab = ({ autoSekolah }) => {
       email.trim(),
       autoSekolah?.id || null
     )
-    if (data) setStatus(data.data ?? data)
+    if (data) setStatus({ ...(data.data ?? data), lookupEmail: email.trim() })
     else setError(apiErr?.message || 'Nomor pendaftaran tidak ditemukan')
     setLoading(false)
   }
@@ -498,6 +541,7 @@ const CekStatusTab = ({ autoSekolah }) => {
 
       {status && statusInfo && (
         <div className={`rounded-2xl border ${statusInfo.border} ${statusInfo.bg} overflow-hidden`}>
+          <DownloadBuktiButton noPendaftaran={status.no_pendaftaran} email={status.lookupEmail} sekolahId={autoSekolah?.id} />
           {/* Status Header */}
           <div className={`px-5 py-4 flex items-center gap-3 border-b ${statusInfo.border}`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${statusInfo.bg}`}>

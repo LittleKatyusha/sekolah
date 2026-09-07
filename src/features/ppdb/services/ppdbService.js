@@ -298,6 +298,26 @@ export const ppdbPublicService = {
     }
   },
 
+  downloadBukti: async (noPendaftaran, email, sekolahId = null) => {
+    try {
+      const payload = { no_pendaftaran: noPendaftaran.trim(), email: email.trim() }
+      if (sekolahId) payload.mst_sekolah_id = sekolahId
+      const response = await publicApi.post(`${PUBLIC_BASE}/bukti-daftar`, payload, {
+        responseType: 'blob',
+        headers: { Accept: 'application/pdf, application/json' },
+      })
+      return { data: response.data, error: null }
+    } catch (error) {
+      let message = 'Gagal mengunduh bukti pendaftaran. Silakan coba lagi.'
+      try {
+        const body = error.response?.data
+        const detail = body instanceof Blob ? JSON.parse(await body.text()) : body
+        message = detail?.message || message
+      } catch { /* Non-JSON errors retain the fallback message. */ }
+      return { data: null, error: { message } }
+    }
+  },
+
   cekStatus: async (noPendaftaran, email, sekolahId = null) => {
     try {
       const payload = { no_pendaftaran: noPendaftaran, email }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import PortalPpdb, { getSubdomain } from './PortalPpdb'
 import { ppdbPublicService } from '../services/ppdbService'
@@ -10,6 +10,7 @@ vi.mock('../services/ppdbService', () => ({
     getActiveGelombang: vi.fn(),
     daftar: vi.fn(),
     cekStatus: vi.fn(),
+    downloadBukti: vi.fn(),
   },
 }))
 
@@ -80,6 +81,39 @@ describe('PortalPpdb Subdomain Resolution', () => {
       expect(select).toBeInTheDocument()
       expect(select.value).toBe('10')
     })
+  })
+
+  it('downloads the receipt using the matched lookup and shows API errors', async () => {
+    window.location = new URL('https://smada.akademihub.id/ppdb/portal')
+    ppdbPublicService.cekStatus.mockResolvedValue({ data: { data: {
+      no_pendaftaran: 'PPDB-001', nama_lengkap: 'B***', status_pendaftaran: 'submitted',
+    } } })
+    ppdbPublicService.downloadBukti.mockResolvedValue({ data: new Blob(['%PDF-1.4'], { type: 'application/pdf' }), error: null })
+    const createURL = vi.fn(() => 'blob:receipt')
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: createURL, revokeObjectURL: vi.fn() }))
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    try {
+      render(<MemoryRouter><PortalPpdb /></MemoryRouter>)
+      await screen.findByDisplayValue('SMA Darussalam')
+      fireEvent.click(screen.getByRole('button', { name: 'Cek Status' }))
+      fireEvent.change(screen.getByPlaceholderText('Contoh: PPDB-2026-001234'), { target: { value: 'PPDB-001' } })
+      const email = screen.getByPlaceholderText('Email saat pendaftaran')
+      fireEvent.change(email, { target: { value: 'peserta@example.com' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Cek Status Pendaftaran' }))
+      const download = await screen.findByRole('button', { name: 'Unduh Bukti Pendaftaran (PDF)' })
+      fireEvent.change(email, { target: { value: 'other@example.com' } })
+      fireEvent.click(download)
+      await waitFor(() => expect(click).toHaveBeenCalledOnce())
+      expect(ppdbPublicService.downloadBukti).toHaveBeenCalledWith('PPDB-001', 'peserta@example.com', 3)
+      expect(createURL).toHaveBeenCalledOnce()
+      await waitFor(() => expect(download).not.toBeDisabled())
+      ppdbPublicService.downloadBukti.mockResolvedValue({ data: null, error: { message: 'Gagal membuat PDF' } })
+      fireEvent.click(download)
+      expect(await screen.findByRole('alert')).toHaveTextContent('Gagal membuat PDF')
+    } finally {
+      click.mockRestore()
+      vi.unstubAllGlobals()
+    }
   })
 
   it('renders selectable dropdown when no subdomain matches', async () => {
