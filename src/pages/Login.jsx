@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogIn, User, Lock, Eye, EyeOff, BookOpen, Users, Award, TrendingUp, AlertCircle } from 'lucide-react'
+import { LogIn, Lock, Eye, EyeOff, BookOpen, Users, Award, TrendingUp, AlertCircle } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
 import logoVertical from '../assets/logo akademihub-01-04.png'
+import logoHorizontal from '../assets/logo akademihub-01-03.png'
 
 const REMEMBER_ME_KEY = 'login_remember_me'
 
@@ -30,12 +31,6 @@ const FEATURES = [
   { icon: Users,      text: 'Data siswa, guru, dan staf terpusat' },
   { icon: Award,      text: 'Pelaporan nilai & rapor otomatis' },
   { icon: TrendingUp, text: 'Analitik performa sekolah real-time' },
-]
-
-const STATS = [
-  { label: 'Siswa Aktif',     value: '2.400+' },
-  { label: 'Tenaga Pengajar', value: '120+' },
-  { label: 'Mata Pelajaran',  value: '48' },
 ]
 
 const Login = () => {
@@ -128,7 +123,7 @@ const Login = () => {
         </div>
 
         {/* Hero text + features */}
-        <div className="relative z-10 px-12 py-8">
+        <div className="relative z-10 px-12 py-12 my-auto">
           <h2 className="text-white text-[2.75rem] font-black leading-[1.15] tracking-tight mb-4">
             Platform Pendidikan<br />
             <span className="text-amber-400">Terpadu &amp; Modern</span>
@@ -151,38 +146,18 @@ const Login = () => {
             ))}
           </ul>
         </div>
-
-        {/* Stats */}
-        <div className="relative z-10 px-12 pb-12">
-          <div className="flex gap-10 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            {STATS.map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-amber-400 text-2xl font-extrabold tracking-tight">{value}</p>
-                <p className="text-blue-300/60 text-[0.7rem] mt-0.5 font-semibold uppercase tracking-widest">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ── RIGHT PANEL ────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col justify-center items-center px-6 py-12 bg-gradient-to-br from-slate-50 to-blue-50/50">
-
-        {/* Mobile logo */}
-        <div className="flex lg:hidden mb-10">
-          <img src={logoVertical} alt="Akademihub Logo" className="h-12 w-auto" />
-        </div>
 
         {/* Card */}
         <div className="w-full max-w-[420px] bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/60 px-8 py-10 animate-fade-in">
 
           {/* Heading */}
           <div className="mb-8">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
-              style={{ background: 'rgba(15,45,90,0.07)' }}
-            >
-              <LogIn className="text-[#0f2d5a]" size={20} />
+            <div className="mb-6 flex items-center justify-start">
+              <img src={logoHorizontal} alt="Akademihub Logo" className="h-10 w-auto" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Selamat Datang</h2>
             <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">

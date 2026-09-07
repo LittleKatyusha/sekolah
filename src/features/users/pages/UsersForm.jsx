@@ -29,31 +29,57 @@ const UsersForm = () => {
   const [roles, setRoles] = useState([])
 
   useEffect(() => {
-    fetchRoles()
-    if (isEditMode) {
-      fetchUser()
+    const init = async () => {
+      const rolesList = await fetchRoles()
+      if (isEditMode) {
+        await fetchUser(rolesList)
+      }
     }
+    init()
   }, [id])
 
   const fetchRoles = async () => {
     const { data, error } = await roleService.getAll({ per_page: 100 })
     if (error) {
       showError('Gagal mengambil daftar role')
-      return
+      return []
     }
-    setRoles(data?.data || [])
+    const roleList = data?.data || []
+    setRoles(roleList)
+    return roleList
   }
 
-  const fetchUser = async () => {
+  const fetchUser = async (roleList = roles) => {
     setLoading(true)
     const { data, error } = await usersService.getById(id)
     if (data) {
       const user = data.data
+      let resolvedRoleId = ''
+      if (user.roles && user.roles.length > 0) {
+        resolvedRoleId = String(user.roles[0].id || user.roles[0].value || '')
+      } else if (user.role_id) {
+        resolvedRoleId = String(user.role_id)
+      } else if (user.role) {
+        if (typeof user.role === 'object') {
+          resolvedRoleId = String(user.role.id || user.role.value || '')
+        } else if (!isNaN(Number(user.role))) {
+          resolvedRoleId = String(user.role)
+        } else if (typeof user.role === 'string' && roleList.length > 0) {
+          const matched = roleList.find(r => 
+            String(r.code).toLowerCase() === user.role.toLowerCase() ||
+            String(r.name).toLowerCase() === user.role.toLowerCase()
+          )
+          if (matched) {
+            resolvedRoleId = String(matched.id ?? matched.value)
+          }
+        }
+      }
+
       setFormData({
         name: user.name || '',
         email: user.email || '',
         password: '', // Don't show password
-        role: String(user.role_id || user.role?.id || user.role || ''),
+        role: resolvedRoleId,
         is_active: user.is_active ?? true
       })
     } else {
@@ -110,6 +136,9 @@ const UsersForm = () => {
     
     if (isEditMode) {
       result = await usersService.update(id, dataToSubmit)
+      if (!result.error && formData.role) {
+        await usersService.assignRoles(id, { roles: [Number(formData.role)] })
+      }
     } else {
       result = await usersService.create(dataToSubmit)
     }
