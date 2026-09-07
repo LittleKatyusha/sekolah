@@ -85,8 +85,8 @@ export const pendaftarService = {
     return await apiService.post(`${PENDAFTAR_BASE}/${id}/accept`)
   },
 
-  enroll: async (id) => {
-    return await apiService.post(`${PENDAFTAR_BASE}/${id}/enroll`)
+  enroll: async (id, data) => {
+    return await apiService.post(`${PENDAFTAR_BASE}/${id}/enroll`, data)
   },
 
   reject: async (id, reason) => {

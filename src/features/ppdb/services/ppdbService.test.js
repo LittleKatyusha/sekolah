@@ -43,8 +43,9 @@ describe('ppdbPublicService', () => {
     })
   })
 
-  it('enrolls an accepted applicant through the active backend action', async () => {
-    await pendaftarService.enroll(42)
-    expect(apiService.post).toHaveBeenCalledWith('/ppdb/pendaftaran/42/enroll')
+  it('enrolls an accepted applicant with payload through the active backend action', async () => {
+    const payload = { mst_kelas_id: 10, nis: '2026001' }
+    await pendaftarService.enroll(42, payload)
+    expect(apiService.post).toHaveBeenCalledWith('/ppdb/pendaftaran/42/enroll', payload)
   })
 })
