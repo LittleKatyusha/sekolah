@@ -15,16 +15,17 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 const downloadTemplate = () => {
   const headers = SISWA_TEMPLATE_HEADERS
   const example = [
-    '12345', '1234567890', '1234567890123456', 'Budi Santoso',
+    '12345', '1234567890', 'A1B2C3D4', '1234567890123456', 'Budi Santoso',
     'L', 'Islam', '2010-05-20', 'Jakarta', '', 'budi@mail.com',
     '081234567890', 'A', 165, 55, 'X MIPA 1', '2023-07-17',
     'SMP Negeri 1 Jakarta', 2,
   ]
   const guide = [
-    ['Versi template', 'v1 (nama_kelas natural key)'],
+    ['Versi template', 'v2 (nama_kelas natural key + UID RFID)'],
     ['Sheet wajib', 'Data — row 1 header, row 2 contoh (hapus sebelum import)'],
     ['Wajib diisi', 'nis, nama, jenis_kelamin (L/P)'],
     ['Kelas', 'Isi nama_kelas persis sesuai data sekolah, bukan ID'],
+    ['UID RFID', 'Opsional. Isi UID kartu heksadesimal, contoh A1B2C3D4. Harus unik.'],
     ['Tanggal', 'Format YYYY-MM-DD'],
     ['Batas', 'Maksimal 5.000 baris data, 100 kolom, file 5 MB'],
   ]
@@ -48,7 +49,7 @@ const downloadTemplate = () => {
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'Data')
   XLSX.utils.book_append_sheet(wb, wsGuide, 'Petunjuk')
-  XLSX.writeFile(wb, 'template_import_siswa_v1.xlsx')
+  XLSX.writeFile(wb, 'template_import_siswa_v2.xlsx')
 }
 
 const ImportSiswaModal = ({ onClose, onSuccess }) => {

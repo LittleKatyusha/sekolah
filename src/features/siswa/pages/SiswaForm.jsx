@@ -40,6 +40,7 @@ const SiswaForm = () => {
   const [formData, setFormData] = useState({
     nis: '',
     nisn: '',
+    rfid_uid: '',
     nik: '',
     nama: '',
     jenis_kelamin: '1',
@@ -78,7 +79,8 @@ const SiswaForm = () => {
         const siswa = data.data
         setFormData({
           nis: siswa.nis || '',
-          nisn: siswa.nisn || '',
+            nisn: siswa.nisn || '',
+            rfid_uid: siswa.rfid_uid || '',
           nik: siswa.nik || '',
           nama: siswa.nama || '',
           // API kadang mengembalikan label; select memakai kode dari sys_references.
@@ -158,6 +160,7 @@ const SiswaForm = () => {
       status: formData.status ? safeParseInt(formData.status) : null,
     
       nisn: formData.nisn || null,
+      rfid_uid: formData.rfid_uid || null,
       nik: formData.nik || null,
       tempat_lahir: formData.tempat_lahir || null,
       alamat: formData.alamat || null,
@@ -275,6 +278,19 @@ const SiswaForm = () => {
                     onChange={handleChange}
                     placeholder="Nomor Induk Kependudukan"
                     error={errors.nik}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    UID RFID
+                  </label>
+                  <Input
+                    name="rfid_uid"
+                    value={formData.rfid_uid}
+                    onChange={(event) => handleChange({ target: { ...event.target, value: event.target.value.toUpperCase() } })}
+                    placeholder="Contoh: A1B2C3D4"
+                    error={errors.rfid_uid}
                   />
                 </div>
               </div>
