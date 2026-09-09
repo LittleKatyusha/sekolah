@@ -90,6 +90,10 @@ const PAGE_TITLES = {
   '/support/tickets': 'Tiket Bantuan',
   '/tickets': 'Tiket Bantuan',
 
+  // Petunjuk Penggunaan
+  '/panduan': 'Petunjuk Penggunaan',
+  '/petunjuk-penggunaan': 'Petunjuk Penggunaan',
+
 
   // WAHA
   '/waha/session': 'WAHA Session',

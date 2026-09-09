@@ -13,6 +13,8 @@ const ALLOWLIST_PRIVATE_PATHS = [
   '/notifikasi',
   '/support/tickets',
   '/tickets',
+  '/panduan',
+  '/petunjuk-penggunaan',
 ]
 
 export const ROUTE_RULES = [

@@ -11,6 +11,7 @@ import {
   Award,
   MessageSquare,
   HelpCircle,
+  BookOpen,
   ChevronDown,
   ChevronRight,
   Clock,
@@ -239,6 +240,7 @@ const ICON_MAP = {
   MessageSquare,
   MessageCircle,
   HelpCircle,
+  BookOpen,
   Clock,
   QrCode,
   Send
@@ -523,8 +525,23 @@ const Sidebar = ({ isOpen, onClose }) => {
             )}
           </nav>
 
-          {/* Logout button */}
-          <div className="p-4 border-t" style={{ borderColor: 'var(--sb-border)' }}>
+          {/* Footer actions */}
+          <div className="p-4 border-t space-y-1" style={{ borderColor: 'var(--sb-border)' }}>
+            {!navigation.some((item) => item.to === '/panduan') && (
+              <NavLink
+                to="/panduan"
+                className={({ isActive }) =>
+                  isActive ? 'sidebar-link active w-full' : 'sidebar-link w-full'
+                }
+                onClick={() => {
+                  handleMenuNavigate?.()
+                  onClose?.()
+                }}
+              >
+                <BookOpen size={20} />
+                <span>Petunjuk Penggunaan</span>
+              </NavLink>
+            )}
             <button
               onClick={handleLogout}
               className="sidebar-link logout-action w-full"

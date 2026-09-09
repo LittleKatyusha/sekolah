@@ -120,6 +120,7 @@ const Reports = lazy(() => import('./pages/Reports'))
 const SiswaInsightPage = lazy(() => import('./features/siswa/pages/SiswaInsightPage'))
 const NotifikasiPage = lazy(() => import('./features/notifikasi/pages/NotifikasiPage'))
 const TicketListPage = lazy(() => import('./features/tickets/pages/TicketListPage'))
+const PanduanPage = lazy(() => import('./features/panduan/pages/PanduanPage'))
 const EWS = lazy(() => import('./pages/EWS'))
 const JadwalPelajaran = lazy(() => import('./pages/JadwalPelajaran'))
 const HariOperasional = lazy(() => import('./features/hari-operasional/pages/HariOperasionalList'))
@@ -410,6 +411,10 @@ function App() {
               {/* Tiket Kendala & Bantuan */}
               <Route path="/support/tickets" element={<TicketListPage />} />
               <Route path="/tickets" element={<Navigate to="/support/tickets" replace />} />
+
+              {/* Petunjuk Penggunaan / Panduan Aplikasi */}
+              <Route path="/panduan" element={<PanduanPage />} />
+              <Route path="/petunjuk-penggunaan" element={<Navigate to="/panduan" replace />} />
 
               {/* EWS */}
               <Route path="/ews/*" element={<EWS />} />

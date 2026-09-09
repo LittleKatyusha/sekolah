@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun, Bell, Wifi, WifiOff, CheckCheck } from 'lucide-react'
+import { Menu, Moon, Sun, Bell, Wifi, WifiOff, CheckCheck, BookOpen } from 'lucide-react'
 import useThemeStore from '../../store/useThemeStore'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
@@ -178,6 +178,16 @@ const Header = ({ onMenuClick }) => {
             </button>
             {panelOpen && <NotificationPanel onClose={() => setPanelOpen(false)} />}
           </div>
+
+          {/* Petunjuk Penggunaan */}
+          <Link
+            to="/panduan"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            title="Petunjuk Penggunaan"
+            aria-label="Petunjuk Penggunaan"
+          >
+            <BookOpen size={20} />
+          </Link>
 
           {/* Theme toggle */}
           <button
