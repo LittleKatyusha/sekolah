@@ -14,6 +14,22 @@ export const ticketService = {
   },
 
   create: async (data) => {
+    if (data instanceof FormData) {
+      return await apiService.post(`${BASE_URL}/`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    }
+    if (data?.file) {
+      const formData = new FormData()
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value)
+        }
+      })
+      return await apiService.post(`${BASE_URL}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    }
     return await apiService.post(`${BASE_URL}/`, data)
   },
 

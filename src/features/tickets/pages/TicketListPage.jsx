@@ -12,6 +12,10 @@ import {
   Send,
   User,
   Check,
+  Paperclip,
+  FileText,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react'
 import { ticketService } from '../services/ticketService'
 import { showError, showSuccess } from '../../../utils/sweetalert'
@@ -56,6 +60,40 @@ export default function TicketListPage() {
     judul: '',
     deskripsi: '',
   })
+  const [evidenceFile, setEvidenceFile] = useState(null)
+  const [evidencePreview, setEvidencePreview] = useState(null)
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files?.[0]
+    if (!selected) return
+
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (selected.size > maxSize) {
+      showError('Ukuran file bukti melebihi batas 10MB')
+      return
+    }
+
+    setEvidenceFile(selected)
+    if (selected.type.startsWith('image/')) {
+      const preview = URL.createObjectURL(selected)
+      setEvidencePreview(preview)
+    } else {
+      setEvidencePreview(null)
+    }
+  }
+
+  const handleRemoveFile = () => {
+    if (evidencePreview) {
+      URL.revokeObjectURL(evidencePreview)
+    }
+    setEvidenceFile(null)
+    setEvidencePreview(null)
+  }
+
+  const resetForm = () => {
+    setFormData({ kategori: 'umum', judul: '', deskripsi: '' })
+    handleRemoveFile()
+  }
 
   const loadTickets = useCallback(async (filter) => {
     setLoading(true)
@@ -86,7 +124,11 @@ export default function TicketListPage() {
 
     setSubmitting(true)
     try {
-      const res = await ticketService.create(formData)
+      const payload = {
+        ...formData,
+        ...(evidenceFile ? { file: evidenceFile } : {}),
+      }
+      const res = await ticketService.create(payload)
       if (res.error) {
         showError(res.error?.message || 'Gagal membuat tiket kendala')
       } else {
@@ -97,7 +139,7 @@ export default function TicketListPage() {
             : 'Tiket berhasil dibuat dan dianalisis oleh AI Agent.'
         )
         setIsModalOpen(false)
-        setFormData({ kategori: 'umum', judul: '', deskripsi: '' })
+        resetForm()
         loadTickets(statusFilter)
       }
     } catch {
@@ -246,6 +288,22 @@ export default function TicketListPage() {
                   {ticket.deskripsi}
                 </p>
 
+                {ticket.file_url && (
+                  <div className="flex items-center gap-2 text-xs flex-wrap">
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">Bukti Kendala:</span>
+                    <a
+                      href={ticket.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors font-medium"
+                    >
+                      <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate max-w-[220px]">{ticket.file_name || 'Lihat Bukti Evidence'}</span>
+                      <ExternalLink className="w-3 h-3 ml-0.5 opacity-70 shrink-0" />
+                    </a>
+                  </div>
+                )}
+
                 {ticket.solusi_ai && (
                   <div className="rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 p-4 space-y-2">
                     <div className="flex items-center gap-2 text-xs font-semibold text-indigo-900 dark:text-indigo-300">
@@ -369,6 +427,63 @@ export default function TicketListPage() {
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Bukti Kendala / Evidence <span className="text-gray-400 font-normal">(Opsional)</span>
+                </label>
+                {!evidenceFile ? (
+                  <label className="border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400 rounded-lg p-3.5 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50/50 dark:bg-gray-800/50 group">
+                    <input
+                      type="file"
+                      data-testid="evidence-file-input"
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                      onChange={handleFileChange}
+                      disabled={submitting}
+                    />
+                    <Paperclip className="w-5 h-5 text-gray-400 group-hover:text-primary-500 transition-colors mb-1" />
+                    <p className="text-xs text-gray-600 dark:text-gray-300 font-medium text-center">
+                      Unggah screenshot atau dokumen bukti kendala
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG, PDF, atau Dokumen (Maks. 10MB)</p>
+                  </label>
+                ) : (
+                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {evidencePreview ? (
+                        <img
+                          src={evidencePreview}
+                          alt="Preview Evidence"
+                          className="w-10 h-10 object-cover rounded border border-gray-200 dark:border-gray-700 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate max-w-[240px]">
+                          {evidenceFile.name}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          {(evidenceFile.size / 1024).toFixed(0)} KB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      disabled={submitting}
+                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      title="Hapus file"
+                      aria-label="Hapus file bukti"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">

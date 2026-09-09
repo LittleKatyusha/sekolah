@@ -18,6 +18,7 @@ vi.mock('../../../utils/sweetalert', () => ({
 }))
 
 import { ticketService } from '../services/ticketService'
+import { showError } from '../../../utils/sweetalert'
 
 const mockTickets = [
   {
@@ -28,6 +29,8 @@ const mockTickets = [
     deskripsi: 'Saya ingin mereset password akun siswa.',
     status: 'open',
     solusi_ai: 'Buka menu profil lalu klik Lupa Password.',
+    file_url: 'https://cdn.akademihub.id/support-tickets/evidence1.png',
+    file_name: 'evidence1.png',
     created_at: '2026-09-09T10:00:00Z',
     user: { id: 1, name: 'Budi' },
   },
@@ -55,6 +58,8 @@ describe('TicketListPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ticketService.getAll.mockResolvedValue({ data: mockTickets })
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-preview')
+    globalThis.URL.revokeObjectURL = vi.fn()
   })
 
   it('renders ticket list and AI recommendations', async () => {
@@ -64,6 +69,7 @@ describe('TicketListPage', () => {
       expect(screen.getByText('TCK-20260909-001')).toBeInTheDocument()
       expect(screen.getByText('Lupa cara reset password')).toBeInTheDocument()
       expect(screen.getByText('Buka menu profil lalu klik Lupa Password.')).toBeInTheDocument()
+      expect(screen.getByText('evidence1.png')).toBeInTheDocument()
       expect(screen.getAllByText('Ditangani AI').length).toBeGreaterThanOrEqual(1)
       expect(screen.getAllByText('Dialihkan ke Tim').length).toBeGreaterThanOrEqual(1)
     })
@@ -99,7 +105,7 @@ describe('TicketListPage', () => {
     })
   })
 
-  it('creates new ticket through modal', async () => {
+  it('creates new ticket with evidence upload through modal', async () => {
     ticketService.create.mockResolvedValue({
       data: {
         data: {
@@ -126,6 +132,12 @@ describe('TicketListPage', () => {
       target: { value: 'Deskripsi kendala yang sangat rinci' },
     })
 
+    const testFile = new File(['dummy-content'], 'bukti-transfer.png', { type: 'image/png' })
+    const fileInput = screen.getByTestId('evidence-file-input')
+    fireEvent.change(fileInput, { target: { files: [testFile] } })
+
+    expect(screen.getByText('bukti-transfer.png')).toBeInTheDocument()
+
     fireEvent.click(screen.getByText('Kirim & Analisis AI'))
 
     await waitFor(() => {
@@ -133,7 +145,27 @@ describe('TicketListPage', () => {
         kategori: 'umum',
         judul: 'Kendala baru saya',
         deskripsi: 'Deskripsi kendala yang sangat rinci',
+        file: testFile,
       })
     })
+  })
+
+  it('rejects evidence file exceeding 10MB limit', async () => {
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Buat Tiket Kendala')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Buat Tiket Kendala'))
+
+    const oversizedFile = new File([''], 'huge-video.mp4', { type: 'video/mp4' })
+    Object.defineProperty(oversizedFile, 'size', { value: 11 * 1024 * 1024 })
+
+    const fileInput = screen.getByTestId('evidence-file-input')
+    fireEvent.change(fileInput, { target: { files: [oversizedFile] } })
+
+    expect(showError).toHaveBeenCalledWith('Ukuran file bukti melebihi batas 10MB')
+    expect(screen.queryByText('huge-video.mp4')).not.toBeInTheDocument()
   })
 })
