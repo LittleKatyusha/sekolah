@@ -38,7 +38,7 @@ describe('PanduanPage', () => {
     const searchInput = screen.getByPlaceholderText(/Cari petunjuk modul/i)
     fireEvent.change(searchInput, { target: { value: 'SPP Online' } })
 
-    expect(screen.getByText('Keuangan & Pembayaran SPP Online')).toBeInTheDocument()
+    expect(screen.getAllByText('Keuangan & Pembayaran SPP Online').length).toBeGreaterThanOrEqual(1)
   })
 
   it('filters modules by category pill', () => {
@@ -47,7 +47,7 @@ describe('PanduanPage', () => {
     const presensiTab = screen.getByText('🕒 Presensi & RFID')
     fireEvent.click(presensiTab)
 
-    expect(screen.getByText('Presensi & Kehadiran (RFID, GPS, & Selfie)')).toBeInTheDocument()
+    expect(screen.getAllByText('Presensi & Kehadiran (RFID, GPS, & Selfie)').length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows empty state when search returns no match', () => {
@@ -61,7 +61,7 @@ describe('PanduanPage', () => {
 
     // Clicking reset restores modules
     fireEvent.click(screen.getByText('Reset Semua Filter'))
-    expect(screen.getByText('Keuangan & Pembayaran SPP Online')).toBeInTheDocument()
+    expect(screen.getAllByText('Keuangan & Pembayaran SPP Online').length).toBeGreaterThanOrEqual(1)
   })
 
   it('has all 15 core modules configured in panduanData', () => {

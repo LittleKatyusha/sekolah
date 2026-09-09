@@ -7,6 +7,7 @@ import PanduanHeader from '../components/PanduanHeader'
 import MobileInstallGuide from '../components/MobileInstallGuide'
 import PanduanFilter from '../components/PanduanFilter'
 import ModuleCard from '../components/ModuleCard'
+import ManualBookPrintView from '../components/ManualBookPrintView'
 import { PANDUAN_MODULES } from '../data/panduanData'
 
 export default function PanduanPage() {
@@ -44,61 +45,68 @@ export default function PanduanPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
-      <PanduanHeader />
-      <MobileInstallGuide />
+    <>
+      {/* Screen Interactive View */}
+      <div className="space-y-6 pb-12 print:hidden">
+        <PanduanHeader />
+        <MobileInstallGuide />
 
-      <PanduanFilter
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        selectedPlatform={selectedPlatform}
-        setSelectedPlatform={setSelectedPlatform}
-        selectedRole={selectedRole}
-        setSelectedRole={setSelectedRole}
-      />
+        <PanduanFilter
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedPlatform={selectedPlatform}
+          setSelectedPlatform={setSelectedPlatform}
+          selectedRole={selectedRole}
+          setSelectedRole={setSelectedRole}
+        />
 
-      <div className="space-y-6">
-        {filteredModules.length === 0 ? (
-          <Card className="text-center py-12">
-            <HelpCircle className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-              Tidak ada petunjuk yang sesuai
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
-              Tidak ditemukan petunjuk untuk "{searchTerm}". Coba kata kunci lain atau reset filter.
-            </p>
-            <Button variant="secondary" onClick={handleReset} className="mt-4 text-xs font-medium">
-              Reset Semua Filter
-            </Button>
-          </Card>
-        ) : (
-          filteredModules.map((item) => (
-            <ModuleCard key={item.id} item={item} />
-          ))
-        )}
-      </div>
-
-      <div className="mt-10 rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
-        <div className="space-y-1 text-center sm:text-left">
-          <h3 className="text-lg font-bold flex items-center justify-center sm:justify-start gap-2">
-            <LifeBuoy className="w-5 h-5 text-amber-400" />
-            Masih Menemukan Kendala atau Butuh Bantuan Lanjutan?
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-300 max-w-xl">
-            Asisten AI AkademiHub dan Tim Dukungan Teknis Sekolah siap mendampingi Anda 24/7.
-            Kirim tiket kendala dengan screenshot untuk penyelesaian cepat.
-          </p>
+        <div className="space-y-6">
+          {filteredModules.length === 0 ? (
+            <Card className="text-center py-12">
+              <HelpCircle className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                Tidak ada petunjuk yang sesuai
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+                Tidak ditemukan petunjuk untuk "{searchTerm}". Coba kata kunci lain atau reset filter.
+              </p>
+              <Button variant="secondary" onClick={handleReset} className="mt-4 text-xs font-medium">
+                Reset Semua Filter
+              </Button>
+            </Card>
+          ) : (
+            filteredModules.map((item) => (
+              <ModuleCard key={item.id} item={item} />
+            ))
+          )}
         </div>
 
-        <Link to="/support/tickets" className="shrink-0">
-          <Button className="bg-primary-600 hover:bg-primary-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg inline-flex items-center gap-2 text-sm">
-            <span>Buka Tiket Kendala</span>
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-        </Link>
+        <div className="mt-10 rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-1 text-center sm:text-left">
+            <h3 className="text-lg font-bold flex items-center justify-center sm:justify-start gap-2">
+              <LifeBuoy className="w-5 h-5 text-amber-400" />
+              Masih Menemukan Kendala atau Butuh Bantuan Lanjutan?
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-300 max-w-xl">
+              Asisten AI AkademiHub dan Tim Dukungan Teknis Sekolah siap mendampingi Anda 24/7.
+              Kirim tiket kendala dengan screenshot untuk penyelesaian cepat.
+            </p>
+          </div>
+
+          <Link to="/support/tickets" className="shrink-0">
+            <Button className="bg-primary-600 hover:bg-primary-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg inline-flex items-center gap-2 text-sm">
+              <span>Buka Tiket Kendala</span>
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
+
+      {/* Printable Manual Book View */}
+      <ManualBookPrintView modules={PANDUAN_MODULES} />
+    </>
   )
 }
+

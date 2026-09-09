@@ -461,3 +461,35 @@
   background-color: var(--sb-logout-hover) !important;
   color: #f87171 !important;
 }
+
+/* ── Print / Manual Book Layout Overrides ────────────────────────────────── */
+@media print {
+  aside,
+  header,
+  nav,
+  #chat-widget,
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  .min-h-screen,
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+}
+
