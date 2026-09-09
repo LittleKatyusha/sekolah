@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X } from 'lucide-react'
+import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -18,11 +18,14 @@ const SekolahDetail = () => {
   const [editingSettingValue, setEditingSettingValue] = useState('')
   const [savingSetting, setSavingSetting] = useState(false)
   const [savingAi, setSavingAi] = useState(false)
+  const [testingAi, setTestingAi] = useState(false)
+  const [aiTestResult, setAiTestResult] = useState(null)
   const [aiSettings, setAiSettings] = useState({ provider: 'openai', base_url: '', model_id: '', api_key: '' })
   const visibleSettings = settings.filter(({ key }) => !key.startsWith('ai_'))
 
   const AI_PROVIDERS = [
     { id: 'openai', label: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini' },
+    { id: 'cloudflare', label: 'Cloudflare AI Gateway', defaultBaseUrl: 'https://gateway.ai.cloudflare.com/v1', defaultModel: 'gpt-4o-mini' },
     { id: 'openrouter', label: 'OpenRouter', defaultBaseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'google/gemini-2.0-flash-001' },
     { id: 'deepseek', label: 'DeepSeek', defaultBaseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat' },
     { id: 'groq', label: 'Groq', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultModel: 'llama-3.3-70b-versatile' },
@@ -87,6 +90,29 @@ const SekolahDetail = () => {
     if (error) return showError(error?.message || 'Gagal menyimpan konfigurasi AI')
     showSuccess('Konfigurasi AI berhasil disimpan!')
     fetchSettings(sekolah.id)
+  }
+
+  const handleTestAiConnection = async () => {
+    if (!aiSettings.base_url) {
+      return showError('Base URL API harus diisi untuk menguji koneksi.')
+    }
+    if (!aiSettings.model_id) {
+      return showError('Model ID harus diisi untuk menguji koneksi.')
+    }
+    setTestingAi(true)
+    setAiTestResult(null)
+    const { data, error } = await sekolahService.testAiConnection(sekolah.id, aiSettings)
+    setTestingAi(false)
+    if (error) {
+      const errMsg = error?.message || 'Gagal terhubung ke AI Gateway.'
+      setAiTestResult({ success: false, message: errMsg })
+      showError(errMsg, 'Test Koneksi Gagal')
+      return
+    }
+    const msg = data?.message || 'Koneksi ke AI Gateway berhasil!'
+    const latency = data?.data?.latency_ms
+    setAiTestResult({ success: true, message: msg, latency_ms: latency })
+    showSuccess(msg, 'Test Koneksi Berhasil')
   }
 
   const handleDeleteSetting = async (settingId, key) => {
@@ -371,14 +397,60 @@ const SekolahDetail = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            {aiTestResult && (
+              <div
+                role="alert"
+                className={`p-3 rounded-lg text-sm flex items-start gap-2.5 ${
+                  aiTestResult.success
+                    ? 'bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300 border border-green-200 dark:border-green-800'
+                    : 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800'
+                }`}
+              >
+                {aiTestResult.success ? (
+                  <CheckCircle2 size={18} className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" />
+                ) : (
+                  <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium">{aiTestResult.success ? 'Koneksi AI Gateway Berhasil' : 'Koneksi AI Gateway Gagal'}</p>
+                  <p className="text-xs mt-0.5">{aiTestResult.message}</p>
+                  {aiTestResult.latency_ms !== undefined && (
+                    <p className="text-xs mt-1 text-green-700 dark:text-green-400 font-mono">
+                      Waktu respon: {aiTestResult.latency_ms} ms
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 API Key disimpan terenkripsi di database pengaturan sekolah.
               </p>
-              <Button type="submit" disabled={savingAi}>
-                <Save size={18} className="mr-2" />
-                {savingAi ? 'Menyimpan...' : 'Simpan Pengaturan AI'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleTestAiConnection}
+                  disabled={testingAi || savingAi}
+                >
+                  {testingAi ? (
+                    <>
+                      <Loader2 size={18} className="mr-2 animate-spin" />
+                      Menguji...
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={18} className="mr-2" />
+                      Test Koneksi AI Gateway
+                    </>
+                  )}
+                </Button>
+                <Button type="submit" disabled={savingAi || testingAi}>
+                  <Save size={18} className="mr-2" />
+                  {savingAi ? 'Menyimpan...' : 'Simpan Pengaturan AI'}
+                </Button>
+              </div>
             </div>
           </form>
         </Card>

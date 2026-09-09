@@ -12,6 +12,7 @@ vi.mock('../services/sekolahService', () => ({
     getSettings: vi.fn(),
     updateSetting: vi.fn(),
     updateAiSettings: vi.fn(),
+    testAiConnection: vi.fn(),
     deleteSetting: vi.fn(),
   },
 }))
@@ -102,6 +103,53 @@ describe('SekolahDetail settings', () => {
         model_id: 'gpt-4.1-mini',
         api_key: 'test-api-key',
       })
+    })
+  })
+
+  it('allows user to test AI Gateway connection', async () => {
+    sekolahService.testAiConnection.mockResolvedValue({
+      data: {
+        success: true,
+        message: 'Koneksi AI Gateway berhasil! Respon diterima dalam 120ms.',
+        data: {
+          connected: true,
+          provider: 'cloudflare',
+          model: 'gpt-4o-mini',
+          latency_ms: 120,
+          sample_response: 'Pong',
+        },
+      },
+      error: null,
+    })
+
+    await renderPage({ role: 'superadmin', roles: [], permissions: [] })
+
+    fireEvent.change(screen.getByLabelText('Provider AI'), {
+      target: { value: 'cloudflare' },
+    })
+    fireEvent.change(screen.getByLabelText('Base URL API AI'), {
+      target: { value: 'https://gateway.ai.cloudflare.com/v1/test/openai' },
+    })
+    fireEvent.change(screen.getByLabelText('Model ID AI'), {
+      target: { value: 'gpt-4o-mini' },
+    })
+
+    const testBtn = screen.getByRole('button', { name: /Test Koneksi AI Gateway/i })
+    expect(testBtn).toBeInTheDocument()
+    fireEvent.click(testBtn)
+
+    await waitFor(() => {
+      expect(sekolahService.testAiConnection).toHaveBeenCalledWith(1, expect.objectContaining({
+        provider: 'cloudflare',
+        base_url: 'https://gateway.ai.cloudflare.com/v1/test/openai',
+        model_id: 'gpt-4o-mini',
+      }))
+      expect(showSuccess).toHaveBeenCalledWith(
+        'Koneksi AI Gateway berhasil! Respon diterima dalam 120ms.',
+        'Test Koneksi Berhasil'
+      )
+      expect(screen.getByText('Koneksi AI Gateway Berhasil')).toBeInTheDocument()
+      expect(screen.getByText('Waktu respon: 120 ms')).toBeInTheDocument()
     })
   })
 })

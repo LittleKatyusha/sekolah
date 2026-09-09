@@ -77,6 +77,10 @@ export const sekolahService = {
     return await apiService.put(`${BASE_URL}/${sekolahId}/settings/ai`, data)
   },
 
+  testAiConnection: async (sekolahId, data) => {
+    return await apiService.post(`${BASE_URL}/${sekolahId}/settings/ai/test`, data)
+  },
+
   /**
    * Get a specific setting by ID for a sekolah
    * Endpoint: GET /sekolah/{sekolahId}/settings/{id}
