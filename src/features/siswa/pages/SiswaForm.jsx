@@ -58,7 +58,8 @@ const SiswaForm = () => {
     anak_ke: '',
     mst_kelas_id: '',
     status: '1',
-    foto: ''
+    foto_profil: '',
+    file_ijazah: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -99,7 +100,8 @@ const SiswaForm = () => {
           anak_ke: siswa.anak_ke || '',
           mst_kelas_id: siswa.kelas?.id || '',
           status: normalizeReferenceCode(siswa.status, statusSiswaOptions) || '1',
-          foto: siswa.foto || ''
+          foto_profil: siswa.foto_profil || siswa.foto || '',
+          file_ijazah: siswa.file_ijazah || ''
         })
       } else {
         showError('Gagal mengambil data siswa')
@@ -174,9 +176,11 @@ const SiswaForm = () => {
       anak_ke: formData.anak_ke ? Number(formData.anak_ke) : null,
     }
 
-    // Remove foto if empty
-    if (!submitData.foto) {
-      delete submitData.foto
+    if (formData.foto_profil) {
+      submitData.foto_profil = formData.foto_profil
+    }
+    if (formData.file_ijazah) {
+      submitData.file_ijazah = formData.file_ijazah
     }
 
     let result
@@ -223,14 +227,24 @@ const SiswaForm = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
-            {/* Foto Profil */}
-            <div>
-              <FileUpload
-                label="Foto Profil"
-                onUpload={(path) => setFormData(prev => ({ ...prev, foto: path }))}
-                accept="image/*"
-                previewUrl={formData.foto}
-              />
+            {/* Foto Profil & Dokumen Ijazah */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <FileUpload
+                  label="Foto Profil Siswa"
+                  onUpload={(path) => setFormData(prev => ({ ...prev, foto_profil: path }))}
+                  accept="image/*"
+                  previewUrl={formData.foto_profil}
+                />
+              </div>
+              <div>
+                <FileUpload
+                  label="Scan Berkas Ijazah / SKL (PDF / Gambar)"
+                  onUpload={(path) => setFormData(prev => ({ ...prev, file_ijazah: path }))}
+                  accept="application/pdf,image/*"
+                  previewUrl={formData.file_ijazah}
+                />
+              </div>
             </div>
 
             {/* Identitas */}

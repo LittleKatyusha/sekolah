@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History, GraduationCap, FileText, ExternalLink, Eye } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import FileUpload from '../../../components/ui/FileUpload'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../services/siswaService'
+import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
+import IjazahPreviewModal from '../components/IjazahPreviewModal'
 
 const SiswaDetail = () => {
   const { id } = useParams()
@@ -16,6 +19,8 @@ const SiswaDetail = () => {
   const [siswa, setSiswa] = useState(null)
   const [activeTab, setActiveTab] = useState('profile')
   const [absensiSummary, setAbsensiSummary] = useState(null)
+  const [printingIjazah, setPrintingIjazah] = useState(false)
+  const [showIjazahModal, setShowIjazahModal] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -58,6 +63,26 @@ const SiswaDetail = () => {
     }
   }
 
+  const handlePrintIjazah = async () => {
+    setPrintingIjazah(true)
+    try {
+      const { error } = await reportService.generateAndDownload({
+        report_path: '/reports/akademik/ijazah_siswa',
+        parameters: { siswa_id: id },
+        format: 'pdf',
+      })
+      if (error) {
+        showError(error.message || 'Gagal mencetak Ijazah / SKL')
+      } else {
+        showSuccess('Ijazah / SKL berhasil diunduh!')
+      }
+    } catch (err) {
+      showError('Gagal mencetak Ijazah / SKL')
+    } finally {
+      setPrintingIjazah(false)
+    }
+  }
+
   const formatDate = (dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
@@ -96,7 +121,15 @@ const SiswaDetail = () => {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Siswa</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Button variant="secondary" onClick={() => setShowIjazahModal(true)}>
+            <Eye size={16} className="mr-2 text-indigo-600 dark:text-indigo-400" />
+            Preview Ijazah
+          </Button>
+          <Button variant="secondary" onClick={handlePrintIjazah} loading={printingIjazah}>
+            <GraduationCap size={16} className="mr-2 text-indigo-600 dark:text-indigo-400" />
+            Cetak Ijazah / SKL
+          </Button>
           <Button variant="primary" onClick={() => navigate(`/siswa/${id}/insight`)}>
             <Activity size={16} className="mr-2" />
             Insight 360°
@@ -121,8 +154,22 @@ const SiswaDetail = () => {
         <div className="md:col-span-1">
           <Card>
             <div className="p-6 text-center">
-              <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <User size={48} className="text-gray-400" />
+              <div className="w-28 h-28 rounded-full mx-auto mb-4 overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-sm relative">
+                {siswa.foto_profil ? (
+                  <img
+                    src={siswa.foto_profil}
+                    alt={siswa.nama}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback')
+                      if (fallback) fallback.classList.remove('hidden')
+                    }}
+                  />
+                ) : null}
+                <div className={`avatar-fallback w-full h-full flex items-center justify-center ${siswa.foto_profil ? 'hidden' : ''}`}>
+                  <User size={48} className="text-gray-400" />
+                </div>
               </div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{siswa.nama}</h2>
               <p className="text-gray-500 dark:text-gray-400 mb-2">NIS: {siswa.nis}</p>
@@ -412,6 +459,72 @@ const SiswaDetail = () => {
                     </div>
                   )}
 
+                  {/* Dokumen Ijazah */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <FileText size={20} className="text-primary-600" />
+                        Dokumen Ijazah & Kelulusan
+                      </h3>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {siswa.file_ijazah ? 'Berkas Scan Ijazah Siswa Tersedia' : 'Belum Ada Berkas Scan Ijazah'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {siswa.file_ijazah 
+                              ? 'Scan dokumen ijazah / SKL fisik yang diunggah sekolah.' 
+                              : 'Unggah hasil scan ijazah fisik atau cetak langsung Surat Keterangan Lulus resmi.'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {siswa.file_ijazah && (
+                            <a
+                              href={siswa.file_ijazah}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-300 transition-colors"
+                            >
+                              <ExternalLink size={14} className="mr-1.5" />
+                              Buka Dokumen
+                            </a>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => setShowIjazahModal(true)}>
+                            <Eye size={14} className="mr-1.5 text-indigo-600" />
+                            Preview Tampilan HTML
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={handlePrintIjazah} loading={printingIjazah}>
+                            <GraduationCap size={14} className="mr-1.5 text-indigo-600" />
+                            Cetak SKL Resmi
+                          </Button>
+                        </div>
+                      </div>
+
+                      <PermissionGuard permission="siswa.update">
+                        <div className="pt-3 border-t border-gray-200/70 dark:border-gray-700/70">
+                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                            {siswa.file_ijazah ? 'Perbarui / Ganti Berkas Scan Ijazah:' : 'Unggah Scan Berkas Ijazah:'}
+                          </label>
+                          <FileUpload
+                            accept="application/pdf,image/*"
+                            onUpload={async (path) => {
+                              const { error } = await siswaService.update(siswa.id, { file_ijazah: path })
+                              if (!error) {
+                                setSiswa(prev => ({ ...prev, file_ijazah: path, file_ijazah_path: path }))
+                                showSuccess('Berkas ijazah berhasil diunggah!')
+                              } else {
+                                showError('Gagal memperbarui berkas ijazah')
+                              }
+                            }}
+                          />
+                        </div>
+                      </PermissionGuard>
+                    </div>
+                  </div>
+
                   {/* Timestamps */}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -470,6 +583,14 @@ const SiswaDetail = () => {
           </Card>
         </div>
       </div>
+
+      {/* Modal Preview Ijazah / SKL */}
+      <IjazahPreviewModal
+        isOpen={showIjazahModal}
+        onClose={() => setShowIjazahModal(false)}
+        siswaId={id}
+        siswaNama={siswa?.nama}
+      />
     </div>
   )
 }

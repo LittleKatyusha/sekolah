@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import FileUpload from '../../../components/ui/FileUpload'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { guruService } from '../services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -31,7 +32,8 @@ const GuruForm = () => {
     alamat: '',
     no_hp: '',
     email: '',
-    pendidikan_terakhir: ''
+    pendidikan_terakhir: '',
+    foto_profil: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -59,6 +61,7 @@ const GuruForm = () => {
         no_hp: guru.no_hp || '',
         email: guru.email || '',
         pendidikan_terakhir: normalizeReferenceCode(guru.pendidikan_terakhir, pendidikanOptions),
+        foto_profil: guru.foto_profil || '',
       })
     } else {
       showError('Gagal mengambil data guru')
@@ -106,6 +109,10 @@ const GuruForm = () => {
       pendidikan_terakhir: pendidikanTerakhir,
     }
 
+    if (!submitData.foto_profil) {
+      delete submitData.foto_profil
+    }
+
     let result
     
     if (isEditMode) {
@@ -149,6 +156,16 @@ const GuruForm = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Foto Profil */}
+            <div className="max-w-md">
+              <FileUpload
+                label="Foto Profil Guru"
+                onUpload={(path) => setFormData(prev => ({ ...prev, foto_profil: path }))}
+                accept="image/*"
+                previewUrl={formData.foto_profil}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* NIP */}
               <div>

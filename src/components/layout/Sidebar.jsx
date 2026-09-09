@@ -469,12 +469,21 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div className="p-4 border-b" style={{ borderColor: 'var(--sb-border)' }}>
             <div className="flex items-center justify-start gap-3 text-left">
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
                 style={{ backgroundColor: 'var(--sb-avatar)' }}
               >
-                <span className="text-sm font-bold" style={{ color: 'var(--sb-avatar-text)' }}>
-                  {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-                </span>
+                {user?.avatar || user?.foto_profil ? (
+                  <img
+                    src={user.avatar || user.foto_profil}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                ) : (
+                  <span className="text-sm font-bold" style={{ color: 'var(--sb-avatar-text)' }}>
+                    {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--sb-active-text)' }}>

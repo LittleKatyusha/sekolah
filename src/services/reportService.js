@@ -120,6 +120,25 @@ export const reportService = {
   },
 
   /**
+   * Preview laporan dalam format HTML langsung tanpa proses unduh.
+   * @param {Object} params
+   * @param {string} params.report_path - Path template pada registry laporan.
+   * @param {Object} [params.parameters] - Parameter/filter laporan (mis. siswa_id).
+   * @returns {Promise<{data: {html: string}|null, error: any}>}
+   */
+  preview: async (params) => {
+    try {
+      const response = await api.post(`${BASE_URL}/preview`, params, {
+        headers: { Accept: 'application/json' },
+      })
+      return { data: response.data?.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || { message: error.message } }
+    }
+  },
+
+
+  /**
    * Unduh file laporan dengan kredensial API lalu picu browser download.
    * @param {string} downloadUrl - URL endpoint laporan dari backend.
    * @param {string|null} [filename] - Nama file yang disarankan.

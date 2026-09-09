@@ -106,8 +106,22 @@ const GuruDetail = () => {
         <div className="md:col-span-1">
           <Card>
             <div className="p-6 text-center">
-              <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <User size={48} className="text-gray-400" />
+              <div className="w-28 h-28 rounded-full mx-auto mb-4 overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-sm relative">
+                {guru.foto_profil ? (
+                  <img
+                    src={guru.foto_profil}
+                    alt={guru.nama}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback')
+                      if (fallback) fallback.classList.remove('hidden')
+                    }}
+                  />
+                ) : null}
+                <div className={`avatar-fallback w-full h-full flex items-center justify-center ${guru.foto_profil ? 'hidden' : ''}`}>
+                  <User size={48} className="text-gray-400" />
+                </div>
               </div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{guru.nama}</h2>
               <p className="text-gray-500 dark:text-gray-400 mb-2">NIP: {guru.nip}</p>

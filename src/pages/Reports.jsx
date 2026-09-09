@@ -12,7 +12,7 @@ import { bkKategoriService, bkKasusService } from '../features/bk/services/bkSer
 import { pembayaranSppService } from '../features/spp/services/sppService'
 import { ujianService } from '../features/ujian/services/ujianService'
 import { showSuccess, showError, showToast } from '../utils/sweetalert'
-import { FileText, Download, Play, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react'
+import { FileText, Download, Play, RefreshCw, CheckCircle, AlertTriangle, Eye, X } from 'lucide-react'
 
 // ── Static option sets ────────────────────────────────────────────────────────
 const BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
@@ -43,6 +43,14 @@ const REPORT_MODULES = [
     id: 'akademik',
     name: 'Rapor & Nilai',
     reports: [
+      {
+        path: '/reports/akademik/ijazah_siswa',
+        name: 'Ijazah / Surat Keterangan Lulus (SKL)',
+        formats: ['pdf', 'html'],
+        params: [
+          { key: 'siswa_id', label: 'Siswa', type: 'entity', entity: 'siswa', required: true },
+        ],
+      },
       {
         path: '/reports/akademik/rapor_siswa',
         name: 'Rapor Siswa per Semester',
@@ -450,6 +458,9 @@ const Reports = () => {
   const [generating, setGenerating] = useState(false)
   const [jobs, setJobs] = useState([])
 
+  const [previewHtml, setPreviewHtml] = useState(null)
+  const [previewing, setPreviewing] = useState(false)
+
   // Load only the entity dropdowns the selected report actually needs.
   useEffect(() => {
     const needed = selectedReport.params
@@ -558,6 +569,23 @@ const Reports = () => {
       showSuccess('Laporan berhasil diunduh.')
     }
   }
+
+  const handlePreviewHtml = async () => {
+    const payload = buildPayload()
+    if (!payload) return
+
+    setPreviewing(true)
+    showToast('Memuat preview laporan...', 'info')
+    const { data, error } = await reportService.preview(payload)
+    setPreviewing(false)
+
+    if (error || !data?.html) {
+      showError(error?.message || 'Gagal memuat preview laporan.')
+    } else {
+      setPreviewHtml(data.html)
+    }
+  }
+
 
   const handleGenerateAsync = async () => {
     const payload = buildPayload()
@@ -803,6 +831,12 @@ const Reports = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-end pt-2">
+                  {selectedReport.formats.includes('html') && (
+                    <Button variant="secondary" onClick={handlePreviewHtml} loading={previewing} disabled={generating || previewing || loadingEntities}>
+                      <Eye size={16} className="mr-2 text-indigo-600 dark:text-indigo-400" />
+                      Preview HTML
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={handleGenerateAsync} disabled={generating || loadingEntities}>
                     <Play size={16} className="mr-2" />
                     Kirim ke Antrian
@@ -886,6 +920,60 @@ const Reports = () => {
           )}
         </div>
       </div>
+
+      {/* HTML Preview Modal */}
+      {previewHtml && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                  <FileText size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
+                    Preview: {selectedReport.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    Tampilan Langsung HTML (A4 Portrait)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const iframe = document.getElementById('report-preview-iframe')
+                    if (iframe?.contentWindow) {
+                      iframe.contentWindow.focus()
+                      iframe.contentWindow.print()
+                    }
+                  }}
+                >
+                  Cetak
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewHtml(null)}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  aria-label="Tutup Preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 bg-slate-100 dark:bg-gray-950 p-2 sm:p-4 overflow-hidden relative">
+              <iframe
+                id="report-preview-iframe"
+                srcDoc={previewHtml}
+                title="Preview Laporan"
+                className="w-full h-full border-0 rounded-lg shadow-inner bg-white"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
