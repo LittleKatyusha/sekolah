@@ -11,6 +11,8 @@ const BACKEND_UNAVAILABLE_PATHS = [
 // Allowlist for authenticated / general private routes that require no specific granular permission
 const ALLOWLIST_PRIVATE_PATHS = [
   '/notifikasi',
+  '/support/tickets',
+  '/tickets',
 ]
 
 export const ROUTE_RULES = [

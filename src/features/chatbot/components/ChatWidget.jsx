@@ -205,9 +205,15 @@ const ChatWidget = () => {
                 )}
               </button>
             </div>
-            <p className="mt-1.5 text-center text-xs text-gray-400">
-              Shift+Enter untuk baris baru
-            </p>
+            <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+              <span>Shift+Enter untuk baris baru</span>
+              <a
+                href="/support/tickets"
+                className="text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1 font-medium"
+              >
+                Tiket Kendala &rarr;
+              </a>
+            </div>
           </div>
         </div>
       )}
