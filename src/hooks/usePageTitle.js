@@ -86,6 +86,10 @@ const PAGE_TITLES = {
   // Marketing Email
   '/marketing/email': 'Email Marketing',
 
+  // Support Tickets
+  '/support/tickets': 'Tiket Bantuan',
+  '/tickets': 'Tiket Bantuan',
+
 
   // WAHA
   '/waha/session': 'WAHA Session',

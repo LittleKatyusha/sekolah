@@ -35,7 +35,7 @@ import { getPermissionFingerprint } from '../../hooks/usePermission'
 
 library.add(fas, far, fab)
 
-const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache:'
+const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache-v2:'
 const SIDEBAR_MENU_CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const sidebarMenuRequestCache = new Map()
 
