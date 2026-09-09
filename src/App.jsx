@@ -344,6 +344,8 @@ function App() {
               <Route path="/akademik/ujian-jawaban/:id" element={<UjianJawabanDetail />} />
               <Route path="/akademik/ujian-jawaban/:id/edit" element={<UjianJawabanForm />} />
               <Route path="/akademik/tes-minat-bakat/*" element={<TesMinatBakat />} />
+              <Route path="/tes-minat-bakat/*" element={<Navigate to="/akademik/tes-minat-bakat" replace />} />
+              <Route path="/tes-minat-bakat" element={<Navigate to="/akademik/tes-minat-bakat" replace />} />
               <Route path="/akademik/log-akses-materi" element={<LogAksesMateriList />} />
               <Route path="/akademik/log-akses-materi/:id" element={<LogAksesMateriDetail />} />
 

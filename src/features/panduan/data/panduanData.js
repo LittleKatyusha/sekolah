@@ -49,10 +49,10 @@ export const PANDUAN_MODULES = [
       'Aplikasi PWA mendukung notifikasi push instan, akses offline cache, dan kinerja super cepat tanpa memakan memori internal besar.',
     ],
     mobileGuide: [
-      'Login menggunakan NISN (untuk Siswa), NIP (untuk Guru), atau Nomor WhatsApp/Email terdaftar (untuk Orang Tua).',
-      'Izinkan izin Akses Kamera (untuk scan QR/barcode dan selfie absensi) serta izin Lokasi GPS jika sekolah memberlakukan presensi geofencing.',
-      'Aktifkan notifikasi aplikasi agar Anda langsung menerima pesan pengingat SPP, jadwal ujian, dan status tiba/pulang anak di sekolah.',
-      'Gunakan menu "Kartu Pelajar Digital" di navigasi bawah untuk menampilkan barcode NISN saat meminjam buku perpustakaan atau tapping alternatif.',
+      'Login menggunakan Username/Email akun terdaftar dan kata sandi yang telah diterbitkan sekolah.',
+      'Izinkan izin Lokasi GPS jika sekolah memberlakukan presensi geofencing radius area sekolah.',
+      'Aktifkan notifikasi aplikasi agar Anda langsung menerima pesan pengingat SPP, jadwal ujian, dan status presensi anak di sekolah.',
+      'Gunakan navigasi utama (Beranda, Absensi, Jadwal, Tugas, Profil) untuk mengakses seluruh layanan sekolah.',
     ],
     troubleshooting: [
       {
@@ -65,7 +65,7 @@ export const PANDUAN_MODULES = [
       },
     ],
     proTips: [
-      'Gunakan fitur Kartu Pelajar Virtual di mobile saat kartu RFID fisik siswa tertinggal di rumah.',
+      'Pastikan akun selalu menggunakan username dan kata sandi terverifikasi dari pihak sekolah.',
       'Orang tua dengan beberapa anak di sekolah yang sama cukup login satu akun untuk memantau semua anaknya via fitur "Ganti Profil Anak".',
     ],
   },
@@ -109,7 +109,7 @@ export const PANDUAN_MODULES = [
   },
   {
     id: 'presensi_rfid_gps',
-    title: 'Presensi & Kehadiran (RFID, GPS, & Selfie)',
+    title: 'Presensi & Kehadiran (RFID & Geofencing GPS)',
     category: 'presensi',
     platforms: ['iot', 'mobile', 'web', 'tv'],
     roles: ['siswa', 'guru', 'admin', 'wali'],
@@ -123,8 +123,8 @@ export const PANDUAN_MODULES = [
     ],
     mobileGuide: [
       'Presensi RFID Gerbang: Tempelkan kartu pelajar RFID pada kotak reader ESP32 di gerbang sekolah saat datang dan pulang. Bunyi "Beep" menandakan presensi sukses tercatat.',
-      'Presensi Mobile Geofencing: Buka menu "Presensi" di HP, pastikan Anda berada di dalam radius lingkungan sekolah (<50 meter), ambil foto selfie, lalu klik "Kirim Absensi".',
-      'Wali Murid akan langsung menerima notifikasi WhatsApp / Push Notif: "Ananda [Nama] telah tiba di sekolah pada pukul 06.45 WIB".',
+      'Presensi Mobile Geofencing: Buka menu "Absensi" di HP, pastikan Anda berada di dalam radius lingkungan sekolah, lalu konfirmasi kehadiran.',
+      'Wali Murid akan langsung menerima notifikasi WhatsApp / Push Notif status kehadiran anak di sekolah.',
     ],
     troubleshooting: [
       {
@@ -137,8 +137,8 @@ export const PANDUAN_MODULES = [
       },
     ],
     proTips: [
-      'Android TV di lobi sekolah otomatis menampilkan foto dan ucapan selamat datang secara realtime begitu siswa melakukan tap RFID.',
-      'Siswa yang lupa membawa kartu fisik dapat meminta guru piket melakukan presensi manual melalui menu Absensi Cepat.',
+      'Data presensi di Android TV ditampilkan dalam format agregat persentase kehadiran sekolah untuk menjaga privasi.',
+      'Siswa yang lupa membawa kartu fisik dapat meminta guru piket melakukan presensi manual melalui menu Absensi Siswa.',
     ],
   },
   {
@@ -152,9 +152,9 @@ export const PANDUAN_MODULES = [
     webGuide: [
       'Guru/Admin membuat paket soal di menu "Bank Soal" (/akademik/soal) dengan tipe Pilihan Ganda atau Esai, lengkap dengan kunci jawaban dan pembahasan.',
       'Atur jadwal pelaksanaan di menu "Ujian" (/akademik/ujian), tentukan durasi pengerjaan (misal 90 menit), acak urutan soal & opsi, serta rilis 6 digit Token Ujian.',
-      'Selama ujian berlangsung, pengawas membuka menu "Pantau Ujian" (/cbt/pantau-ujian) untuk melihat sisa waktu, progress pengerjaan tiap siswa, dan status koneksi.',
+      'Selama ujian berlangsung, pengawas membuka menu "Peserta Ujian" (/akademik/ujian-user) untuk melihat status pengerjaan tiap siswa dan status koneksi.',
       'Jika siswa terkena kunci Anti-Cheat karena membuka tab lain, guru dapat mengklik tombol "Buka Kunci" untuk mengizinkan siswa melanjutkan ujian.',
-      'Setelah ujian selesai, klik "Kalkulasi Nilai" untuk menghasilkan rekapitulasi nilai otomatis dan ekspor ke format Excel.',
+      'Setelah ujian selesai, guru dapat melihat penilaian di menu Nilai Ujian (/akademik/ujian/:id/nilai) dan mengekspor ke format Excel.',
     ],
     mobileGuide: [
       'Siswa membuka menu "CBT Ujian" di laptop atau smartphone.',
@@ -287,8 +287,8 @@ export const PANDUAN_MODULES = [
     ],
     mobileGuide: [
       'Siswa dapat mencari ketersediaan stok buku secara online sebelum datang ke ruang perpustakaan sekolah.',
-      'Cek masa pinjam buku yang sedang dibawa langsung dari tab "Perpustakaan" di aplikasi mobile agar terhindar dari denda keterlambatan.',
-      'Membaca koleksi e-book sekolah secara streaming di HP kapan saja.',
+      'Cek masa pinjam dan tanggal jatuh tempo buku yang sedang dipinjam langsung dari menu Perpustakaan di HP.',
+      'Pantau riwayat peminjaman buku untuk menghindari keterlambatan pengembalian.',
     ],
     troubleshooting: [
       {
@@ -370,10 +370,10 @@ export const PANDUAN_MODULES = [
     category: 'minat-bakat',
     platforms: ['web', 'mobile'],
     roles: ['siswa', 'guru'],
-    route: '/tes-minat-bakat',
+    route: '/akademik/tes-minat-bakat',
     description: 'Asesmen psikologi terstandarisasi untuk memetakan potensi diri siswa ke dalam 6 tipe kepribadian karir serta rekomendasi jurusan studi.',
     webGuide: [
-      'Guru BK membuka menu "Tes Minat Bakat" (/tes-minat-bakat) untuk melihat bank instrumen kuesioner dan mengatur jadwal pengerjaan tes untuk jenjang kelas.',
+      'Guru BK membuka menu "Akademik" > "Tes Minat Bakat" (/akademik/tes-minat-bakat) untuk melihat bank instrumen kuesioner dan mengatur jadwal pengerjaan tes untuk jenjang kelas.',
       'Setelah siswa menyelesaikan tes, sistem mengkalkulasikan skor pada 6 dimensi Holland RIASEC:',
       '• R - Realistic (Praktikal, Teknik, Mekanik, Fisik)',
       '• I - Investigative (Peneliti, Analitis, Sains, Matematika)',
@@ -463,29 +463,27 @@ export const PANDUAN_MODULES = [
     id: 'smart_tv_signage',
     title: 'Smart TV Digital Signage (Android TV)',
     category: 'tv',
-    platforms: ['tv', 'web'],
+    platforms: ['tv'],
     roles: ['admin'],
-    route: '/admin/tv-devices',
-    description: 'Display informasi digital dinamis untuk layar TV lobi sekolah, pengumuman running text, slide prestasi, dan live feed kehadiran siswa realtime.',
+    route: null,
+    description: 'Display informasi digital dinamis untuk layar TV lobi sekolah, pengumuman agenda, slide kegiatan, dan ringkasan kehadiran siswa realtime.',
     webGuide: [
-      'Admin membuka menu "Pengaturan" > "Smart TV" (/admin/tv-devices).',
-      'Di layar Android TV sekolah, buka aplikasi AkademiHub TV atau buka URL signage sekolah di browser TV.',
-      'Layar TV akan menampilkan 6 digit Kode Pairing unik (contoh: "TV-8912").',
-      'Masukkan kode tersebut di dashboard admin untuk menghubungkan perangkat TV ke server sekolah.',
-      'Atur konten slide: pengumuman agenda ujian, slideshow dokumentasi kegiatan, video profil sekolah, dan running text sambutan.',
-      'Aktifkan mode "Live Attendance Feed" jika TV diletakkan di dekat lobi gerbang sekolah agar foto siswa yang tap RFID langsung muncul menyambut kedatangan.',
+      'Smart TV beroperasi menggunakan aplikasi native Android TV AkademiHub.',
+      'Di layar Android TV sekolah, nyalakan aplikasi AkademiHub TV. Layar akan menampilkan 6 digit Kode Pairing unik.',
+      'Admin mengotorisasi kode pairing perangkat melalui backend pairing API untuk menghubungkan TV ke sekolah.',
+      'Setelah terhubung, layar TV otomatis menjalankan mode carousel informasi sekolah: identitas sekolah, jadwal pelajaran aktif, agenda kalender, pengumuman resmi, dan ringkasan presensi.',
     ],
     mobileGuide: [
-      'Tidak berlaku untuk smartphone siswa/wali; khusus dioperasikan melalui perangkat Android TV, Android Box, atau Smart TV Display sekolah.',
+      'Aplikasi TV dioperasikan khusus melalui perangkat Android TV, Smart TV Display sekolah, atau TV Box berbasis Android.',
     ],
     troubleshooting: [
       {
-        issue: 'Tampilan TV tidak berganti konten setelah diedit di dashboard',
-        solution: 'TV otomatis menyinkronkan konten via WebSocket. Jika koneksi TV sempat drop, gunakan remote TV untuk reload browser atau matikan dan hidupkan kembali perangkat TV.',
+        issue: 'Tampilan TV tidak memperbarui data terbaru',
+        solution: 'TV menyinkronkan data via HTTP snapshot polling berkala. Jika koneksi TV terputus, TV tetap menampilkan snapshot terakhir dari cache lokal hingga koneksi pulih.',
       },
     ],
     proTips: [
-      'Anda dapat memasang reader RFID USB langsung ke port USB Android TV di lobi untuk presensi mandiri tanpa memerlukan perangkat komputer tambahan.',
+      'Ringkasan presensi di TV hanya menampilkan data agregat sekolah (total hadir, izin, sakit, persentase) demi menjaga privasi dan keamanan data siswa.',
     ],
   },
   {

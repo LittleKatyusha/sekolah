@@ -97,16 +97,6 @@ export default function ManualBookPrintView({ modules = PANDUAN_MODULES }) {
                 </td>
               </tr>
             ))}
-            <tr className="border-b border-gray-200 bg-gray-50 font-medium">
-              <td className="p-2 border border-gray-300 text-center font-bold">
-                {String(modules.length + 1).padStart(2, '0')}
-              </td>
-              <td className="p-2 border border-gray-300 font-semibold text-indigo-900">
-                Pusat Bantuan &amp; Alur Pengajuan Tiket Kendala
-              </td>
-              <td className="p-2 border border-gray-300">Web &amp; Mobile</td>
-              <td className="p-2 border border-gray-300">Semua Pengguna</td>
-            </tr>
           </tbody>
         </table>
       </section>
@@ -260,10 +250,10 @@ export default function ManualBookPrintView({ modules = PANDUAN_MODULES }) {
         <div>
           <div className="border-b-2 border-indigo-900 pb-3 mb-6">
             <div className="text-xs font-bold text-indigo-900 uppercase">
-              BAB {String(modules.length + 1).padStart(2, '0')}
+              LAMPIRAN PROSEDUR
             </div>
             <h2 className="text-xl font-bold uppercase text-gray-900 tracking-wide">
-              Pusat Bantuan &amp; Alur Tiket Kendala Teknis
+              Eskalasi Kendala &amp; Tiket Dukungan Teknis
             </h2>
             <p className="text-xs text-gray-600">
               Layanan eskalasi resmi jika Anda membutuhkan bantuan langsung dari Tim Pengembang AkademiHub.

@@ -47,7 +47,7 @@ describe('PanduanPage', () => {
     const presensiTab = screen.getByText('🕒 Presensi & RFID')
     fireEvent.click(presensiTab)
 
-    expect(screen.getAllByText('Presensi & Kehadiran (RFID, GPS, & Selfie)').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Presensi & Kehadiran (RFID & Geofencing GPS)').length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows empty state when search returns no match', () => {
