@@ -9,7 +9,7 @@ import { siswaService } from '../services/siswaService'
 import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
-import IjazahPreviewModal from '../components/IjazahPreviewModal'
+import SklPreviewModal from '../components/SklPreviewModal'
 
 const SiswaDetail = () => {
   const { id } = useParams()
@@ -19,8 +19,8 @@ const SiswaDetail = () => {
   const [siswa, setSiswa] = useState(null)
   const [activeTab, setActiveTab] = useState('profile')
   const [absensiSummary, setAbsensiSummary] = useState(null)
-  const [printingIjazah, setPrintingIjazah] = useState(false)
-  const [showIjazahModal, setShowIjazahModal] = useState(false)
+  const [printingSkl, setPrintingSkl] = useState(false)
+  const [showSklModal, setShowSklModal] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -63,23 +63,23 @@ const SiswaDetail = () => {
     }
   }
 
-  const handlePrintIjazah = async () => {
-    setPrintingIjazah(true)
+  const handlePrintSkl = async () => {
+    setPrintingSkl(true)
     try {
       const { error } = await reportService.generateAndDownload({
-        report_path: '/reports/akademik/ijazah_siswa',
+        report_path: '/reports/akademik/skl_siswa',
         parameters: { siswa_id: id },
         format: 'pdf',
       })
       if (error) {
-        showError(error.message || 'Gagal mencetak Ijazah / SKL')
+        showError(error.message || 'Gagal mencetak Surat Keterangan Lulus (SKL)')
       } else {
-        showSuccess('Ijazah / SKL berhasil diunduh!')
+        showSuccess('Surat Keterangan Lulus (SKL) berhasil diunduh!')
       }
     } catch (err) {
-      showError('Gagal mencetak Ijazah / SKL')
+      showError('Gagal mencetak Surat Keterangan Lulus (SKL)')
     } finally {
-      setPrintingIjazah(false)
+      setPrintingSkl(false)
     }
   }
 
@@ -122,13 +122,13 @@ const SiswaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Siswa</h1>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Button variant="secondary" onClick={() => setShowIjazahModal(true)}>
+          <Button variant="secondary" onClick={() => setShowSklModal(true)}>
             <Eye size={16} className="mr-2 text-indigo-600 dark:text-indigo-400" />
-            Preview Ijazah
+            Preview SKL
           </Button>
-          <Button variant="secondary" onClick={handlePrintIjazah} loading={printingIjazah}>
+          <Button variant="secondary" onClick={handlePrintSkl} loading={printingSkl}>
             <GraduationCap size={16} className="mr-2 text-indigo-600 dark:text-indigo-400" />
-            Cetak Ijazah / SKL
+            Unduh SKL (PDF)
           </Button>
           <Button variant="primary" onClick={() => navigate(`/siswa/${id}/insight`)}>
             <Activity size={16} className="mr-2" />
@@ -492,11 +492,11 @@ const SiswaDetail = () => {
                               Buka Dokumen
                             </a>
                           )}
-                          <Button size="sm" variant="outline" onClick={() => setShowIjazahModal(true)}>
+                          <Button size="sm" variant="outline" onClick={() => setShowSklModal(true)}>
                             <Eye size={14} className="mr-1.5 text-indigo-600" />
                             Preview Tampilan HTML
                           </Button>
-                          <Button size="sm" variant="outline" onClick={handlePrintIjazah} loading={printingIjazah}>
+                          <Button size="sm" variant="outline" onClick={handlePrintSkl} loading={printingSkl}>
                             <GraduationCap size={14} className="mr-1.5 text-indigo-600" />
                             Cetak SKL Resmi
                           </Button>
@@ -584,10 +584,10 @@ const SiswaDetail = () => {
         </div>
       </div>
 
-      {/* Modal Preview Ijazah / SKL */}
-      <IjazahPreviewModal
-        isOpen={showIjazahModal}
-        onClose={() => setShowIjazahModal(false)}
+      {/* Modal Preview SKL */}
+      <SklPreviewModal
+        isOpen={showSklModal}
+        onClose={() => setShowSklModal(false)}
         siswaId={id}
         siswaNama={siswa?.nama}
       />

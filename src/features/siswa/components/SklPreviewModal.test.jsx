@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import IjazahPreviewModal from './IjazahPreviewModal'
+import SklPreviewModal from './SklPreviewModal'
 import { reportService } from '../../../services/reportService'
 
 vi.mock('../../../services/reportService', () => ({
@@ -15,14 +15,14 @@ vi.mock('../../../utils/sweetalert', () => ({
   showSuccess: vi.fn(),
 }))
 
-describe('IjazahPreviewModal', () => {
+describe('SklPreviewModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('renders nothing when isOpen is false', () => {
     const { container } = render(
-      <IjazahPreviewModal isOpen={false} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />
+      <SklPreviewModal isOpen={false} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />
     )
     expect(container.firstChild).toBeNull()
   })
@@ -33,18 +33,18 @@ describe('IjazahPreviewModal', () => {
       error: null,
     })
 
-    render(<IjazahPreviewModal isOpen={true} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />)
+    render(<SklPreviewModal isOpen={true} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />)
 
-    expect(screen.getByText(/Memuat tampilan ijazah/i)).toBeDefined()
+    expect(screen.getByText(/Memuat tampilan SKL/i)).toBeDefined()
 
     await waitFor(() => {
-      const iframe = screen.getByTitle('Ijazah - Budi')
+      const iframe = screen.getByTitle('Preview SKL Siswa')
       expect(iframe).toBeDefined()
       expect(iframe.getAttribute('srcDoc')).toContain('SURAT KETERANGAN LULUS BUDI')
     })
 
     expect(reportService.preview).toHaveBeenCalledWith({
-      report_path: '/reports/akademik/ijazah_siswa',
+      report_path: '/reports/akademik/skl_siswa',
       parameters: { siswa_id: 1 },
     })
   })
@@ -52,13 +52,13 @@ describe('IjazahPreviewModal', () => {
   it('handles error state and provides retry button', async () => {
     reportService.preview.mockResolvedValueOnce({
       data: null,
-      error: { message: 'Gagal merender ijazah' },
+      error: { message: 'Gagal merender SKL' },
     })
 
-    render(<IjazahPreviewModal isOpen={true} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />)
+    render(<SklPreviewModal isOpen={true} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />)
 
     await waitFor(() => {
-      expect(screen.getByText('Gagal merender ijazah')).toBeDefined()
+      expect(screen.getByText('Gagal merender SKL')).toBeDefined()
       expect(screen.getByRole('button', { name: /Coba Lagi/i })).toBeDefined()
     })
 
@@ -70,7 +70,7 @@ describe('IjazahPreviewModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /Coba Lagi/i }))
 
     await waitFor(() => {
-      expect(screen.getByTitle('Ijazah - Budi')).toBeDefined()
+      expect(screen.getByTitle('Preview SKL Siswa')).toBeDefined()
     })
   })
 
@@ -81,10 +81,10 @@ describe('IjazahPreviewModal', () => {
     })
     reportService.generateAndDownload.mockResolvedValueOnce({ error: null })
 
-    render(<IjazahPreviewModal isOpen={true} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />)
+    render(<SklPreviewModal isOpen={true} onClose={vi.fn()} siswaId={1} siswaNama="Budi" />)
 
     await waitFor(() => {
-      expect(screen.getByTitle('Ijazah - Budi')).toBeDefined()
+      expect(screen.getByTitle('Preview SKL Siswa')).toBeDefined()
     })
 
     const downloadBtn = screen.getByRole('button', { name: /Unduh PDF/i })
@@ -92,7 +92,7 @@ describe('IjazahPreviewModal', () => {
 
     await waitFor(() => {
       expect(reportService.generateAndDownload).toHaveBeenCalledWith({
-        report_path: '/reports/akademik/ijazah_siswa',
+        report_path: '/reports/akademik/skl_siswa',
         parameters: { siswa_id: 1 },
         format: 'pdf',
       })

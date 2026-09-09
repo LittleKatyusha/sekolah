@@ -44,8 +44,8 @@ const REPORT_MODULES = [
     name: 'Rapor & Nilai',
     reports: [
       {
-        path: '/reports/akademik/ijazah_siswa',
-        name: 'Ijazah / Surat Keterangan Lulus (SKL)',
+        path: '/reports/akademik/skl_siswa',
+        name: 'Surat Keterangan Lulus (SKL)',
         formats: ['pdf', 'html'],
         params: [
           { key: 'siswa_id', label: 'Siswa', type: 'entity', entity: 'siswa', required: true },
