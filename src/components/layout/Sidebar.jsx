@@ -504,6 +504,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
+            {canAccessPath(user, '/tv-pair') && <NavLink to="/tv-pair" className="sidebar-link">Kelola TV</NavLink>}
             {loading ? (
               <ul className="space-y-2">
                 {[...Array(5)].map((_, i) => (

@@ -39,6 +39,7 @@ const KalenderAkademikForm = () => {
     lokasi: '',
     status: '1',
     prioritas: '2',
+    metadata: {},
   })
 
   const [errors, setErrors] = useState({})
@@ -102,6 +103,7 @@ const KalenderAkademikForm = () => {
         lokasi: kalender.lokasi || '',
         status: String(kalender.status ?? 1),
         prioritas: String(kalender.prioritas ?? 2),
+        metadata: kalender.metadata || {},
       })
     } else {
       showError('Gagal mengambil data kalender akademik')
@@ -158,6 +160,7 @@ const KalenderAkademikForm = () => {
       lokasi: formData.lokasi || null,
       status: parseInt(formData.status),
       prioritas: parseInt(formData.prioritas),
+      metadata: formData.metadata,
     }
 
     let result
@@ -203,6 +206,7 @@ const KalenderAkademikForm = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <label className="flex gap-2"><input type="checkbox" checked={formData.metadata.is_public_display === true} onChange={e => setFormData({ ...formData, metadata: { ...formData.metadata, is_public_display: e.target.checked } })} />Layak tayang publik di TV. Hanya agenda aktif tanpa target role/kelas/jurusan yang ditampilkan.</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Judul */}
               <div className="md:col-span-2">

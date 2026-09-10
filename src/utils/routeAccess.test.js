@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { canAccessPath, isBackendAvailablePath, permissionForPath } from './routeAccess'
 
 const ALL_PROTECTED_LEAF_ROUTES = [
+  "/tv-pair",
   "/absensi-guru",
   "/absensi-guru/:id",
   "/absensi-guru/edit/:id",

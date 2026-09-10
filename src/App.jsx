@@ -19,6 +19,7 @@ import { useFcmToken } from './hooks/useFcmToken'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
+const TvPair = lazy(() => import('./pages/TvPair'))
 const UsersList = lazy(() => import('./features/users/pages/UsersList'))
 const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
 const UsersDetail = lazy(() => import('./features/users/pages/UsersDetail'))
@@ -285,6 +286,7 @@ function App() {
             <Route element={<ProtectedRoute><RouteAccessGuard><MainLayout /></RouteAccessGuard></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/tv-pair" element={<TvPair />} />
 
               {/* Siswa — insight route must be before the wildcard */}
               <Route path="/siswa/:id/insight" element={<SiswaInsightPage />} />
