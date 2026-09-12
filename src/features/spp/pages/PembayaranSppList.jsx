@@ -187,8 +187,8 @@ const PembayaranSppList = () => {
     })
     if (!result.isConfirmed) return
     const { data: res, error } = await pembayaranSppService.bayarOnline({
-      mst_siswa_id: data.mst_siswa_id,
-      mst_tarif_spp_id: data.mst_tarif_spp_id,
+      mst_siswa_id: data.mst_siswa_id || data.siswa?.id,
+      mst_tarif_spp_id: data.mst_tarif_spp_id || data.tarif_spp?.id,
       bulan: data.bulan,
       tahun: data.tahun,
     })
