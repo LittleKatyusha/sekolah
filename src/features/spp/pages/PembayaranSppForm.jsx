@@ -53,10 +53,22 @@ const PembayaranSppForm = () => {
   const { options: statusBayarOptions } = useReferenceOptions('status_bayar')
   const { options: metodePembayaranOptions } = useReferenceOptions('metode_pembayaran')
 
-  const buildSiswaOption = useCallback((siswa) => ({
-    value: String(siswa.id),
-    label: siswa.nis ? `${siswa.nama} (${siswa.nis})` : siswa.nama || `Siswa #${siswa.id}`
-  }), [])
+  const formatSiswaKelas = (kelas) => {
+    if (!kelas?.nama_kelas) return ''
+    const nama = String(kelas.nama_kelas).trim()
+    return /^kelas/i.test(nama) ? nama : `Kelas ${nama}`
+  }
+
+  const buildSiswaOption = useCallback((siswa) => {
+    const nama = siswa.nama || `Siswa #${siswa.id}`
+    const nis = siswa.nis ? ` (${siswa.nis})` : ''
+    const kelasLabel = formatSiswaKelas(siswa.kelas)
+    const kelas = kelasLabel ? ` - ${kelasLabel}` : ''
+    return {
+      value: String(siswa.id),
+      label: `${nama}${nis}${kelas}`
+    }
+  }, [])
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {
     const { data, error } = await siswaService.getAll({
@@ -238,7 +250,7 @@ const PembayaranSppForm = () => {
                       options={selectedSiswaOption ? [selectedSiswaOption] : []}
                       loadOptions={searchSiswaOptions}
                       placeholder="Pilih siswa"
-                      searchPlaceholder="Cari siswa berdasarkan nama atau NIS..."
+                      searchPlaceholder="Cari siswa berdasarkan nama, NIS, atau kelas..."
                       noOptionsText="Tidak ada siswa yang cocok"
                       error={errors.mst_siswa_id}
                     />

@@ -75,11 +75,23 @@ const PembayaranSppTunggakan = () => {
   }, []) // run once on mount
 
   // Siswa searchable select helpers
+  const formatSiswaKelas = (kelas) => {
+    if (!kelas?.nama_kelas) return ''
+    const nama = String(kelas.nama_kelas).trim()
+    return /^kelas/i.test(nama) ? nama : `Kelas ${nama}`
+  }
+
   const buildSiswaOption = useCallback(
-    (siswa) => ({
-      value: String(siswa.id),
-      label: siswa.nis ? `${siswa.nama} (${siswa.nis})` : siswa.nama || `Siswa #${siswa.id}`,
-    }),
+    (siswa) => {
+      const nama = siswa.nama || `Siswa #${siswa.id}`
+      const nis = siswa.nis ? ` (${siswa.nis})` : ''
+      const kelasLabel = formatSiswaKelas(siswa.kelas)
+      const kelas = kelasLabel ? ` - ${kelasLabel}` : ''
+      return {
+        value: String(siswa.id),
+        label: `${nama}${nis}${kelas}`,
+      }
+    },
     []
   )
 
@@ -284,7 +296,7 @@ const PembayaranSppTunggakan = () => {
                 options={selectedSiswaOption ? [selectedSiswaOption] : []}
                 loadOptions={searchSiswaOptions}
                 placeholder="Pilih Siswa..."
-                searchPlaceholder="Cari nama atau NIS..."
+                searchPlaceholder="Cari nama, NIS, atau kelas..."
                 noOptionsText="Siswa tidak ditemukan"
               />
             </div>

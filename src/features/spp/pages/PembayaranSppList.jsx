@@ -233,7 +233,14 @@ const PembayaranSppList = () => {
       valueGetter: (params) => {
         const siswa = params.data?.siswa
         if (!siswa) return '-'
-        return siswa.nis ? `${siswa.nama} (${siswa.nis})` : siswa.nama || '-'
+        const nama = siswa.nama || '-'
+        const nis = siswa.nis ? ` (${siswa.nis})` : ''
+        const kelasName = siswa.kelas?.nama_kelas
+        const kelasLabel = kelasName
+          ? (/^kelas/i.test(String(kelasName).trim()) ? String(kelasName).trim() : `Kelas ${String(kelasName).trim()}`)
+          : ''
+        const kelas = kelasLabel ? ` - ${kelasLabel}` : ''
+        return `${nama}${nis}${kelas}`
       }
     },
     {

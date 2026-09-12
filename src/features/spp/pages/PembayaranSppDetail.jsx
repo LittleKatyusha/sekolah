@@ -130,7 +130,10 @@ const PembayaranSppDetail = () => {
                 {pembayaran.siswa?.nama || '-'}
               </h2>
               {pembayaran.siswa?.nis && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">NIS: {pembayaran.siswa.nis}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">NIS: {pembayaran.siswa.nis}</p>
+              )}
+              {pembayaran.siswa?.kelas?.nama_kelas && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Kelas: {pembayaran.siswa.kelas.nama_kelas}</p>
               )}
               <p className="text-2xl font-bold text-primary-600 mb-2">
                 {formatCurrency(pembayaran.jumlah_bayar)}
@@ -168,6 +171,9 @@ const PembayaranSppDetail = () => {
                     <p className="font-medium text-gray-900 dark:text-white">{pembayaran.siswa?.nama || '-'}</p>
                     {pembayaran.siswa?.nis && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">NIS: {pembayaran.siswa.nis}</p>
+                    )}
+                    {pembayaran.siswa?.kelas?.nama_kelas && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Kelas: {pembayaran.siswa.kelas.nama_kelas}</p>
                     )}
                   </div>
                 </div>
