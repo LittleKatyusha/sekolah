@@ -223,7 +223,7 @@ const PembayaranSppTunggakan = () => {
     const nominal = tunggakan.find((t) => t.bulan === bulanDipilih)?.nominal ?? totalTerpilih
 
     const result = await Swal.fire({
-      title: 'Bayar Online via Midtrans',
+      title: 'Bayar Online',
       html: `Buat link pembayaran untuk <strong>${BULAN_MAP[bulanDipilih]} ${tahun}</strong>?<br/>Nominal: <strong>${formatCurrency(nominal)}</strong>`,
       icon: 'question',
       showCancelButton: true,
@@ -401,7 +401,7 @@ const PembayaranSppTunggakan = () => {
                       onClick={handleBayarOnline}
                       disabled={loadingBayarOnline || loadingBayar || selectedBulan.length !== 1}
                       variant="secondary"
-                      title={selectedBulan.length !== 1 ? 'Pilih tepat 1 bulan untuk bayar online' : 'Buat link pembayaran online via Midtrans'}
+                      title={selectedBulan.length !== 1 ? 'Pilih tepat 1 bulan untuk bayar online' : 'Buat link pembayaran online'}
                     >
                       {loadingBayarOnline ? (
                         <span className="flex items-center gap-2">
