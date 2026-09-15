@@ -25,6 +25,8 @@ const STATUS_COLOR = {
   kritis:           'text-red-600 dark:text-red-400',
   aman:             'text-green-600 dark:text-green-400',
   lunas:            'text-green-600 dark:text-green-400',
+  no_data:          'text-gray-500 dark:text-gray-400',
+  belum_jatuh_tempo: 'text-gray-500 dark:text-gray-400',
 }
 
 const TREND_ICON = {
@@ -35,7 +37,8 @@ const TREND_ICON = {
 
 const riskStyle = (cat) => RISK_COLOR[cat] ?? RISK_COLOR.low
 
-const pct = (val) => `${val ?? 0}%`
+const pct = (val) => val == null ? '—' : `${val}%`
+const statusLabel = (status) => status === 'no_data' ? 'Belum ada data' : status?.replaceAll('_', ' ')
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -47,7 +50,7 @@ function RiskGauge({ score, category }) {
       <div className="relative w-32 h-16 overflow-hidden">
         <div className="absolute inset-0 rounded-t-full border-8 border-gray-200 dark:border-gray-700" style={{ borderBottomColor: 'transparent' }} />
         <div
-          className={`absolute inset-0 rounded-t-full border-8 ${style.text.replace('text-', 'border-')} transition-all duration-700`}
+          className={`absolute inset-0 rounded-t-full border-8 border-current ${style.text} transition-all duration-700`}
           style={{
             borderBottomColor: 'transparent',
             transform: `rotate(${deg - 90}deg)`,
@@ -67,13 +70,13 @@ function RiskGauge({ score, category }) {
 }
 
 function DimensionBar({ label, score, max = 100 }) {
-  const pctVal = Math.round((score / max) * 100)
-  const color = pctVal >= 70 ? 'bg-green-500' : pctVal >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+  const pctVal = Math.max(0, Math.min(100, Math.round(((score ?? 0) / max) * 100)))
+  const color = pctVal >= 75 ? 'bg-red-500' : pctVal >= 55 ? 'bg-orange-500' : pctVal >= 35 ? 'bg-yellow-500' : 'bg-green-500'
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
         <span>{label}</span>
-        <span className="font-medium">{score}/{max}</span>
+        <span className="font-medium">{score == null ? 'Belum ada data' : `${score}/${max}`}</span>
       </div>
       <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all duration-700`} style={{ width: `${pctVal}%` }} />
@@ -146,16 +149,20 @@ const SiswaInsightPage = () => {
     if (forceRefresh) setRefreshing(true)
     else setLoading(true)
 
-    const { data, error } = await siswaInsightService.getInsight(id, forceRefresh)
-
-    if (data?.data) {
+    try {
+      const { data, error } = await siswaInsightService.getInsight(id, forceRefresh)
+      if (error || !data?.data) {
+        throw new Error(error?.message ?? 'Gagal mengambil insight siswa')
+      }
       setInsight(data.data)
-    } else {
+      return true
+    } catch (error) {
       showError(error?.message ?? 'Gagal mengambil insight siswa')
+      return false
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
     }
-
-    setLoading(false)
-    setRefreshing(false)
   }, [id])
 
   useEffect(() => {
@@ -163,8 +170,7 @@ const SiswaInsightPage = () => {
   }, [fetchInsight])
 
   const handleRefresh = async () => {
-    await fetchInsight(true)
-    showSuccess('Insight berhasil diperbarui')
+    if (await fetchInsight(true)) showSuccess('Insight berhasil diperbarui')
   }
 
   if (loading) {
@@ -175,12 +181,29 @@ const SiswaInsightPage = () => {
     )
   }
 
-  if (!insight) return null
+  if (!insight) return (
+    <div role="alert" className="p-4 space-y-3">
+      <p>Insight siswa belum dapat dimuat.</p>
+      <Button onClick={() => fetchInsight()}>Coba lagi</Button>
+    </div>
+  )
 
   const { siswa, risk_profile, academic_progress, kehadiran_summary, tugas_summary, spp_summary, ews_summary, activity_heatmap } = insight
   const rp = risk_profile ?? {}
   const ap = academic_progress ?? {}
   const dims = rp.dimensions ?? {}
+  const incomplete = Object.values(dims).some((dim) => dim.detail?.status === 'no_data')
+  const mapel = Object.values(ap.tren_nilai ?? {})
+  const nilai = mapel.flatMap((info) => info.data_points ?? []).map((point) => point.nilai)
+  const rataRata = nilai.length ? (nilai.reduce((sum, value) => sum + Number(value), 0) / nilai.length).toFixed(2) : '—'
+  const ranking = ap.riwayat_ranking?.[0]?.peringkat
+  const sppMessage = spp_summary?.status === 'no_data'
+    ? 'Tanggal masuk belum tersedia; kewajiban SPP belum dapat dihitung.'
+    : spp_summary?.tunggakan > 0
+      ? `Masih ada tunggakan ${spp_summary.tunggakan} bulan`
+      : spp_summary?.status === 'belum_jatuh_tempo'
+        ? 'Tidak ada tunggakan; pembayaran bulan berjalan belum jatuh tempo.'
+        : 'Tidak ada tunggakan sampai bulan berjalan.'
 
   const tabs = [
     { key: 'overview',  label: 'Overview',       icon: <Activity size={15} /> },
@@ -223,6 +246,7 @@ const SiswaInsightPage = () => {
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Skor risiko holistik berdasarkan 5 dimensi: akademik, kehadiran, perilaku, keuangan, dan sosial.
           </p>
+          {incomplete && <p className="text-sm font-medium" role="status">Data belum lengkap. Skor sementara, bukan kesimpulan kondisi siswa.</p>}
           {rp.recommendations?.length > 0 && (
             <ul className="mt-2 space-y-1">
               {rp.recommendations.slice(0, 3).map((r, i) => (
@@ -267,7 +291,7 @@ const SiswaInsightPage = () => {
               <div className="flex items-center justify-between">
                 <span className="text-3xl font-bold text-gray-900 dark:text-white">{pct(kehadiran_summary?.pct_hadir)}</span>
                 <span className={`text-sm font-medium ${STATUS_COLOR[kehadiran_summary?.status] ?? ''}`}>
-                  {kehadiran_summary?.status?.replace('_', ' ')}
+                  {statusLabel(kehadiran_summary?.status)}
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-2 text-center text-xs">
@@ -295,7 +319,7 @@ const SiswaInsightPage = () => {
               <div className="flex items-center justify-between">
                 <span className="text-3xl font-bold text-gray-900 dark:text-white">{pct(tugas_summary?.pct_kumpul)}</span>
                 <span className={`text-sm font-medium ${STATUS_COLOR[tugas_summary?.status] ?? ''}`}>
-                  {tugas_summary?.status?.replace('_', ' ')}
+                  {statusLabel(tugas_summary?.status)}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -323,9 +347,9 @@ const SiswaInsightPage = () => {
                 <CreditCard size={16} className="text-green-500" /> SPP {spp_summary?.tahun}
               </h3>
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">{spp_summary?.lunas ?? 0}/{spp_summary?.bulan_berjalan ?? 0}</span>
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">{spp_summary?.lunas ?? '—'}/{spp_summary?.total_bulan_wajib ?? '—'}</span>
                 <span className={`text-sm font-medium ${STATUS_COLOR[spp_summary?.status] ?? ''}`}>
-                  {spp_summary?.status}
+                  {statusLabel(spp_summary?.status)}
                 </span>
               </div>
               {spp_summary?.tunggakan > 0 && (
@@ -356,8 +380,8 @@ const SiswaInsightPage = () => {
                 <ul className="space-y-1">
                   {ews_summary.aktif.map((a, i) => (
                     <li key={i} className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${riskStyle(a.level).dot}`} />
-                      {a.jenis} ({a.count}x)
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${riskStyle({ 1: 'medium', 2: 'high', 3: 'critical' }[a.level]).dot}`} />
+                      {a.jenis} ({a.count}x) · Level {a.level}
                     </li>
                   ))}
                 </ul>
@@ -389,11 +413,10 @@ const SiswaInsightPage = () => {
           <Card>
             <div className="p-4 space-y-4">
               <h3 className="font-semibold text-gray-800 dark:text-white">Skor per Dimensi</h3>
-              <DimensionBar label="Akademik"   score={dims.akademik?.score ?? 0} />
-              <DimensionBar label="Kehadiran"  score={dims.kehadiran?.score ?? 0} />
-              <DimensionBar label="Perilaku"   score={dims.perilaku?.score ?? 0} />
-              <DimensionBar label="Keuangan"   score={dims.keuangan?.score ?? 0} />
-              <DimensionBar label="Sosial"     score={dims.sosial?.score ?? 0} />
+              <p className="text-xs text-gray-500">Semakin tinggi skor, semakin tinggi risiko.</p>
+              {Object.entries(dims).map(([key, dim]) => (
+                <DimensionBar key={key} label={key} score={dim.detail?.status === 'no_data' ? null : dim.risk_score} />
+              ))}
             </div>
           </Card>
 
@@ -421,10 +444,8 @@ const SiswaInsightPage = () => {
                   <div key={key} className="flex items-center justify-between text-xs">
                     <span className="capitalize text-gray-600 dark:text-gray-400">{key}</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-800 dark:text-white">{dim.score}</span>
-                      {dim.issues?.length > 0 && (
-                        <span className="text-red-500">({dim.issues.length} isu)</span>
-                      )}
+                      <span className="font-medium text-gray-800 dark:text-white">{dim.detail?.status === 'no_data' ? '—' : dim.risk_score}</span>
+                      <span>{statusLabel(dim.detail?.status)}</span>
                     </div>
                   </div>
                 ))}
@@ -439,21 +460,21 @@ const SiswaInsightPage = () => {
         <div className="space-y-4">
           {/* Summary cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard icon={<BarChart2 size={18} />} label="Rata-rata Nilai" value={ap.rata_rata_keseluruhan ?? '-'} color="blue" />
-            <StatCard icon={<TrendingUp size={18} />} label="Ranking Kelas" value={ap.ranking_kelas ? `#${ap.ranking_kelas}` : '-'} color="purple" />
-            <StatCard icon={<BookOpen size={18} />} label="Mapel Dipantau" value={Object.keys(ap.per_mapel ?? {}).length} color="green" />
+            <StatCard icon={<BarChart2 size={18} />} label="Rata-rata Nilai (90 hari)" value={rataRata} color="blue" />
+            <StatCard icon={<TrendingUp size={18} />} label="Ranking Terakhir" value={ranking ? `#${ranking}` : '—'} color="purple" />
+            <StatCard icon={<BookOpen size={18} />} label="Mapel Dipantau" value={mapel.length} color="green" />
             <StatCard icon={<AlertTriangle size={18} />} label="Anomali Terdeteksi" value={ap.anomali?.length ?? 0} color="red" />
           </div>
 
           {/* Per mapel trends */}
-          {Object.keys(ap.per_mapel ?? {}).length > 0 ? (
+          {mapel.length > 0 ? (
             <Card>
               <div className="p-4">
                 <h3 className="font-semibold text-gray-800 dark:text-white mb-3">Tren Nilai per Mapel</h3>
                 <div className="space-y-3">
-                  {Object.entries(ap.per_mapel).map(([mapel, info]) => (
-                    <div key={mapel} className="flex items-center gap-3">
-                      <div className="w-32 text-sm text-gray-700 dark:text-gray-300 truncate">{mapel}</div>
+                  {mapel.map((info) => (
+                    <div key={info.mapel_id} className="flex items-center gap-3">
+                      <div className="w-32 text-sm text-gray-700 dark:text-gray-300 truncate">{info.mapel_nama}</div>
                       <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-primary-500 rounded-full transition-all duration-700"
@@ -489,7 +510,7 @@ const SiswaInsightPage = () => {
                   {ap.anomali.map((a, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-50 dark:bg-red-900/20">
                       <XCircle size={14} className="mt-0.5 text-red-500 flex-shrink-0" />
-                      <span className="text-red-700 dark:text-red-300">{a.deskripsi ?? JSON.stringify(a)}</span>
+                      <span className="text-red-700 dark:text-red-300">{a.mapel_nama}: nilai turun {a.penurunan} poin ({a.nilai_sebelumnya} menjadi {a.nilai_terbaru}) · {a.tanggal}</span>
                     </li>
                   ))}
                 </ul>
@@ -533,19 +554,17 @@ const SiswaInsightPage = () => {
             <div className="p-4 space-y-4">
               <h3 className="font-semibold text-gray-800 dark:text-white">Status SPP {spp_summary?.tahun}</h3>
               <div className="grid grid-cols-2 gap-3">
-                <StatCard icon={<CheckCircle size={16} />} label="Bulan Lunas"    value={spp_summary?.lunas ?? 0}      color="green" />
-                <StatCard icon={<XCircle size={16} />}     label="Tunggakan"      value={spp_summary?.tunggakan ?? 0}  color="red" />
+                <StatCard icon={<CheckCircle size={16} />} label="Bulan Lunas"    value={spp_summary?.lunas ?? '—'}      color="green" />
+                <StatCard icon={<XCircle size={16} />}     label="Tunggakan"      value={spp_summary?.tunggakan ?? '—'}  color="red" />
                 <StatCard icon={<CreditCard size={16} />}  label="Total Dibayar"
                   value={`Rp ${(spp_summary?.total_dibayar ?? 0).toLocaleString('id-ID')}`}
                   color="blue"
                 />
-                <StatCard icon={<Calendar size={16} />}    label="Bulan Berjalan" value={spp_summary?.bulan_berjalan ?? 0} color="purple" />
+                <StatCard icon={<Calendar size={16} />}    label="Bulan Wajib sampai Sekarang" value={spp_summary?.total_bulan_wajib ?? '—'} color="purple" />
               </div>
-              <div className={`p-3 rounded-lg ${spp_summary?.status === 'lunas' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                 <p className={`text-sm font-medium ${STATUS_COLOR[spp_summary?.status] ?? ''}`}>
-                  {spp_summary?.status === 'lunas'
-                    ? '✅ SPP tahun ini sudah lunas'
-                    : `⚠️ Masih ada tunggakan ${spp_summary?.tunggakan} bulan`}
+                  {sppMessage}
                 </p>
               </div>
             </div>
@@ -553,16 +572,8 @@ const SiswaInsightPage = () => {
           <Card>
             <div className="p-4 space-y-3">
               <h3 className="font-semibold text-gray-800 dark:text-white">Dimensi Keuangan (Risk)</h3>
-              <DimensionBar label="Skor Keuangan" score={dims.keuangan?.score ?? 0} />
-              {dims.keuangan?.issues?.length > 0 && (
-                <ul className="space-y-1 mt-2">
-                  {dims.keuangan.issues.map((isu, i) => (
-                    <li key={i} className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle size={11} /> {isu}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <DimensionBar label="Skor Keuangan" score={dims.keuangan?.detail?.status === 'no_data' ? null : dims.keuangan?.risk_score} />
+              <p className="text-sm text-gray-500">{statusLabel(dims.keuangan?.detail?.status)}</p>
             </div>
           </Card>
         </div>

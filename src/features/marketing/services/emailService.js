@@ -10,6 +10,8 @@ const unwrapResponse = (response) => {
 }
 
 export const emailService = {
+  getSenders: async () => unwrapResponse(await apiService.get(`${BASE_URL}/senders`)),
+
   /**
    * Kirim email penawaran produk ke sekolah.
    * @param {{ email: string, school_name: string, cta_url?: string }} data
@@ -24,7 +26,7 @@ export const emailService = {
 
   /**
    * Kirim email custom beserta file lampiran opsional.
-   * @param {{ email: string, subject: string, content: string, attachments?: File[] }} data
+   * @param {{ from?: string, email: string, subject: string, content: string, attachments?: File[] }} data
    */
   sendCustom: async (data) => {
     let payload = data
@@ -35,6 +37,7 @@ export const emailService = {
       formData.append('email', data.email)
       formData.append('subject', data.subject)
       formData.append('content', data.content)
+      if (data.from) formData.append('from', data.from)
       data.attachments.forEach((file) => {
         formData.append('attachments[]', file)
       })

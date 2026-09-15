@@ -10,6 +10,7 @@ import { pembayaranSppService, tarifSppService } from '../services/sppService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import Swal from 'sweetalert2'
+import { openOnlinePayment } from '../utils/onlinePayment'
 
 const BULAN_MAP = {
   1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
@@ -75,11 +76,23 @@ const PembayaranSppTunggakan = () => {
   }, []) // run once on mount
 
   // Siswa searchable select helpers
+  const formatSiswaKelas = (kelas) => {
+    if (!kelas?.nama_kelas) return ''
+    const nama = String(kelas.nama_kelas).trim()
+    return /^kelas/i.test(nama) ? nama : `Kelas ${nama}`
+  }
+
   const buildSiswaOption = useCallback(
-    (siswa) => ({
-      value: String(siswa.id),
-      label: siswa.nis ? `${siswa.nama} (${siswa.nis})` : siswa.nama || `Siswa #${siswa.id}`,
-    }),
+    (siswa) => {
+      const nama = siswa.nama || `Siswa #${siswa.id}`
+      const nis = siswa.nis ? ` (${siswa.nis})` : ''
+      const kelasLabel = formatSiswaKelas(siswa.kelas)
+      const kelas = kelasLabel ? ` - ${kelasLabel}` : ''
+      return {
+        value: String(siswa.id),
+        label: `${nama}${nis}${kelas}`,
+      }
+    },
     []
   )
 
@@ -210,48 +223,23 @@ const PembayaranSppTunggakan = () => {
     const bulanDipilih = selectedBulan[0]
     const nominal = tunggakan.find((t) => t.bulan === bulanDipilih)?.nominal ?? totalTerpilih
 
-    const result = await Swal.fire({
-      title: 'Bayar Online via Midtrans',
-      html: `Buat link pembayaran untuk <strong>${BULAN_MAP[bulanDipilih]} ${tahun}</strong>?<br/>Nominal: <strong>${formatCurrency(nominal)}</strong>`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Buat Link',
-      cancelButtonText: 'Batal',
-      confirmButtonColor: '#2563eb',
-    })
-
-    if (!result.isConfirmed) return
-
-    setLoadingBayarOnline(true)
-    const { data, error } = await pembayaranSppService.bayarOnline({
-      mst_siswa_id: parseInt(siswaId),
-      mst_tarif_spp_id: parseInt(tarifSppId),
-      tahun: parseInt(tahun),
-      bulan: bulanDipilih,
-    })
-    setLoadingBayarOnline(false)
-
-    if (error) {
-      const msg = (typeof error === 'object' ? error?.message : error) || 'Gagal membuat link pembayaran online'
-      showError(msg)
-      return
-    }
-
-    const checkoutUrl = data?.data?.checkout_url
-    if (checkoutUrl) {
-      await Swal.fire({
-        title: 'Link Pembayaran Siap',
-        html: `Link pembayaran berhasil dibuat.<br/><br/>
-          <a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer"
-             class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-            Buka Halaman Pembayaran
-          </a>
-          <div class="mt-3 text-xs text-gray-500 break-all">${checkoutUrl}</div>`,
-        icon: 'success',
-        confirmButtonText: 'Tutup',
-      })
-      handleSearch()
-    }
+    const success = await openOnlinePayment(
+      `Bayar SPP untuk ${BULAN_MAP[bulanDipilih]} ${tahun}? Nominal: ${formatCurrency(nominal)}.`,
+      async () => {
+        setLoadingBayarOnline(true)
+        try {
+          return await pembayaranSppService.bayarOnline({
+            mst_siswa_id: parseInt(siswaId),
+            mst_tarif_spp_id: parseInt(tarifSppId),
+            tahun: parseInt(tahun),
+            bulan: bulanDipilih,
+          })
+        } finally {
+          setLoadingBayarOnline(false)
+        }
+      }
+    )
+    if (success) handleSearch()
   }
 
   return (
@@ -284,7 +272,7 @@ const PembayaranSppTunggakan = () => {
                 options={selectedSiswaOption ? [selectedSiswaOption] : []}
                 loadOptions={searchSiswaOptions}
                 placeholder="Pilih Siswa..."
-                searchPlaceholder="Cari nama atau NIS..."
+                searchPlaceholder="Cari nama, NIS, atau kelas..."
                 noOptionsText="Siswa tidak ditemukan"
               />
             </div>
@@ -389,7 +377,7 @@ const PembayaranSppTunggakan = () => {
                       onClick={handleBayarOnline}
                       disabled={loadingBayarOnline || loadingBayar || selectedBulan.length !== 1}
                       variant="secondary"
-                      title={selectedBulan.length !== 1 ? 'Pilih tepat 1 bulan untuk bayar online' : 'Buat link pembayaran online via Midtrans'}
+                      title={selectedBulan.length !== 1 ? 'Pilih tepat 1 bulan untuk bayar online' : 'Buat link pembayaran online'}
                     >
                       {loadingBayarOnline ? (
                         <span className="flex items-center gap-2">

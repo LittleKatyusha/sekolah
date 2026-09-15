@@ -18,6 +18,7 @@ const ALLOWLIST_PRIVATE_PATHS = [
 ]
 
 export const ROUTE_RULES = [
+  ['/tv-pair', 'tv-device.manage'],
   // ── Dashboard, Reports, Files, Email ────────────────────────
   ['/dashboard', 'dashboard.view'],
   ['/laporan', 'reports.view'],

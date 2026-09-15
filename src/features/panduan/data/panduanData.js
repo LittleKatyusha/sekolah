@@ -95,7 +95,7 @@ export const PANDUAN_MODULES = [
     troubleshooting: [
       {
         issue: 'Saldo sudah terpotong di m-Banking namun status masih "Pending" atau "Belum Lunas"',
-        solution: 'Tunggu 1–3 menit untuk webhook sinkronisasi Midtrans. Jika belum berubah, klik tombol "Cek Status Pembayaran" atau refresh halaman. Jika >15 menit belum berubah, buat Tiket Bantuan dengan melampirkan screenshot bukti mutasi.',
+        solution: 'Tunggu 1–3 menit untuk sinkronisasi pembayaran otomatis. Jika belum berubah, klik tombol "Cek Status Pembayaran" atau refresh halaman. Jika >15 menit belum berubah, buat Tiket Bantuan dengan melampirkan screenshot bukti mutasi.',
       },
       {
         issue: 'Nomor Virtual Account kadaluwarsa (Expired)',

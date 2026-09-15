@@ -9,7 +9,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
-import Swal from 'sweetalert2'
+import { openOnlinePayment } from '../utils/onlinePayment'
 
 const getLabel = (value, options) => {
   if (!value || !options?.length) return value ?? '-'
@@ -176,36 +176,16 @@ const PembayaranSppList = () => {
 
   const handleBayarOnline = useCallback(async (data) => {
     const namaBulan = data.nama_bulan || `Bulan ${data.bulan}`
-    const result = await Swal.fire({
-      title: 'Bayar Online via Midtrans',
-      html: `Buat link pembayaran untuk <strong>${namaBulan} ${data.tahun}</strong>?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Buat Link',
-      cancelButtonText: 'Batal',
-      confirmButtonColor: '#2563eb',
-    })
-    if (!result.isConfirmed) return
-    const { data: res, error } = await pembayaranSppService.bayarOnline({
-      mst_siswa_id: data.mst_siswa_id,
-      mst_tarif_spp_id: data.mst_tarif_spp_id,
-      bulan: data.bulan,
-      tahun: data.tahun,
-    })
-    if (error) {
-      showError((typeof error === 'object' ? error?.message : error) || 'Gagal membuat link pembayaran')
-      return
-    }
-    const url = res?.data?.checkout_url
-    if (url) {
-      await Swal.fire({
-        title: 'Link Pembayaran Siap',
-        html: `<a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 underline font-medium">Buka Halaman Pembayaran</a><div class="text-xs mt-2 text-gray-500 break-all">${url}</div>`,
-        icon: 'success',
-        confirmButtonText: 'Tutup',
+    const success = await openOnlinePayment(
+      `Bayar SPP untuk ${namaBulan} ${data.tahun}?`,
+      () => pembayaranSppService.bayarOnline({
+        mst_siswa_id: data.mst_siswa_id || data.siswa?.id,
+        mst_tarif_spp_id: data.mst_tarif_spp_id || data.tarif_spp?.id,
+        bulan: data.bulan,
+        tahun: data.tahun,
       })
-      handleRefresh()
-    }
+    )
+    if (success) handleRefresh()
   }, [handleRefresh])
 
   const formatCurrency = (value) => {
@@ -233,7 +213,14 @@ const PembayaranSppList = () => {
       valueGetter: (params) => {
         const siswa = params.data?.siswa
         if (!siswa) return '-'
-        return siswa.nis ? `${siswa.nama} (${siswa.nis})` : siswa.nama || '-'
+        const nama = siswa.nama || '-'
+        const nis = siswa.nis ? ` (${siswa.nis})` : ''
+        const kelasName = siswa.kelas?.nama_kelas
+        const kelasLabel = kelasName
+          ? (/^kelas/i.test(String(kelasName).trim()) ? String(kelasName).trim() : `Kelas ${String(kelasName).trim()}`)
+          : ''
+        const kelas = kelasLabel ? ` - ${kelasLabel}` : ''
+        return `${nama}${nis}${kelas}`
       }
     },
     {

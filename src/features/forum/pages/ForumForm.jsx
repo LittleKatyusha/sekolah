@@ -10,12 +10,15 @@ import '../../../components/ui/LexicalEditor.css'
 import { forumService } from '../services/forumService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import useAuthStore from '../../../store/useAuthStore'
+import { checkPermission } from '../../../hooks/usePermission'
 
 const ForumForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const isEditMode = Boolean(id)
+  const canPublish = checkPermission(user, 'forum.moderate')
+  const localDate = value => value ? new Date(new Date(value).getTime() - new Date(value).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(isEditMode)
@@ -23,8 +26,9 @@ const ForumForm = () => {
   const [formData, setFormData] = useState({
     judul: '',
     konten: '',
-    mst_guru_mapel_id: '',
-    file_lampiran: '',
+    is_public_display: false,
+    display_start_at: '',
+    display_end_at: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -41,8 +45,9 @@ const ForumForm = () => {
       setFormData({
         judul: forum.judul || '',
         konten: forum.konten || forum.pesan || '',
-        mst_guru_mapel_id: String(forum.mst_guru_mapel_id || forum.guru_mapel?.id || ''),
-        file_lampiran: forum.file_lampiran || '',
+        is_public_display: Boolean(forum.is_public_display),
+        display_start_at: localDate(forum.display_start_at),
+        display_end_at: localDate(forum.display_end_at),
       })
     } else {
       showError('Gagal mengambil data forum')
@@ -64,7 +69,8 @@ const ForumForm = () => {
     if (!formData.konten.replace(/<[^>]*>/g, '').trim()) {
       newErrors.konten = 'Konten wajib diisi'
     }
-    if (!isEditMode && !formData.mst_guru_mapel_id) newErrors.mst_guru_mapel_id = 'Guru mapel wajib diisi'
+    if (!formData.judul.trim()) newErrors.judul = 'Judul wajib diisi'
+    if (formData.display_start_at && formData.display_end_at && formData.display_end_at <= formData.display_start_at) newErrors.display_end_at = 'Akhir tayang harus setelah awal tayang'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -75,15 +81,14 @@ const ForumForm = () => {
 
     setLoading(true)
 
-    const submitData = isEditMode
-      ? { judul: formData.judul || null, pesan: formData.konten, file_lampiran: formData.file_lampiran || null }
-      : {
-          mst_guru_mapel_id: Number(formData.mst_guru_mapel_id),
-          sys_user_id: user?.id,
-          judul: formData.judul || null,
-          pesan: formData.konten,
-          file_lampiran: formData.file_lampiran || null,
-        }
+    const submitData = {
+      judul: formData.judul.trim(), konten: formData.konten,
+      ...(canPublish ? {
+        is_public_display: formData.is_public_display,
+        display_start_at: formData.display_start_at ? new Date(formData.display_start_at).toISOString() : null,
+        display_end_at: formData.display_end_at ? new Date(formData.display_end_at).toISOString() : null,
+      } : {}),
+    }
 
     const { error } = isEditMode ? await forumService.update(id, submitData) : await forumService.create(submitData)
 
@@ -133,12 +138,13 @@ const ForumForm = () => {
               />
             </div>
 
-            {!isEditMode && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Guru & Mata Pelajaran <span className="text-red-500">*</span></label>
-                <Input type="number" name="mst_guru_mapel_id" value={formData.mst_guru_mapel_id} onChange={handleChange} placeholder="Masukkan ID guru mapel" error={errors.mst_guru_mapel_id} />
-              </div>
-            )}
+            {canPublish && <fieldset className="space-y-3 border rounded p-4">
+              <legend>Publikasi TV</legend>
+              <p>Konten dapat dilihat siapa pun di depan TV. Jangan publikasikan data pribadi.</p>
+              <label className="flex gap-2"><input type="checkbox" checked={formData.is_public_display} onChange={e => setFormData({ ...formData, is_public_display: e.target.checked })} />Layak tayang publik</label>
+              <label className="block">Mulai tayang (zona waktu browser)<Input type="datetime-local" name="display_start_at" value={formData.display_start_at} onChange={handleChange} /></label>
+              <label className="block">Akhir tayang (zona waktu browser)<Input type="datetime-local" name="display_end_at" value={formData.display_end_at} onChange={handleChange} error={errors.display_end_at} /></label>
+            </fieldset>}
 
             <div>
               <LexicalEditor
