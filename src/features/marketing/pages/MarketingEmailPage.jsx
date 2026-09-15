@@ -17,7 +17,8 @@ export default function MarketingEmailPage() {
   const [searchInbox, setSearchInbox] = useState('')
 
   const [offer, setOffer] = useState({ email: '', school_name: '', cta_url: 'https://akademihub.id/#demo' })
-  const [custom, setCustom] = useState({ email: '', subject: '', content: '' })
+  const [custom, setCustom] = useState({ from: '', email: '', subject: '', content: '' })
+  const [senders, setSenders] = useState([])
   const [attachments, setAttachments] = useState([])
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef(null)
@@ -36,6 +37,24 @@ export default function MarketingEmailPage() {
 
   useEffect(() => {
     if (tab === 'inbox') fetchInbox()
+  }, [tab])
+
+  useEffect(() => {
+    if (tab !== 'custom') return
+    let active = true
+    emailService.getSenders().then((data) => {
+      if (!active) return
+      setSenders(data || [])
+      setCustom((prev) => ({
+        ...prev,
+        from: data?.some((sender) => sender.email === prev.from) ? prev.from : data?.[0]?.email || '',
+      }))
+    }).catch((err) => {
+      if (!active) return
+      setSenders([])
+      showError('Gagal memuat pengirim', err.message)
+    })
+    return () => { active = false }
   }, [tab])
 
   const handleSelectInbox = async (item) => {
@@ -88,7 +107,7 @@ export default function MarketingEmailPage() {
     try {
       await emailService.sendCustom({ ...custom, attachments })
       showSuccess('Berhasil!', `Email terkirim ke ${custom.email}`)
-      setCustom({ email: '', subject: '', content: '' })
+      setCustom((prev) => ({ from: prev.from, email: '', subject: '', content: '' }))
       setAttachments([])
       if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err) {
@@ -256,6 +275,22 @@ export default function MarketingEmailPage() {
         <Card title="Kirim Email Bebas" subtitle="WYSIWYG editor & multi-lampiran dokumen">
           <form onSubmit={handleCustom} className="space-y-4">
             <div className="max-w-xl">
+              <label htmlFor="email-from" className="mb-1 block text-sm font-medium">Dari *</label>
+              <select
+                id="email-from"
+                value={custom.from}
+                onChange={(e) => setCustom({ ...custom, from: e.target.value })}
+                required
+                disabled={loading || senders.length === 0}
+                className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              >
+                <option value="" disabled>Pilih pengirim</option>
+                {senders.map((sender) => (
+                  <option key={sender.email} value={sender.email}>{sender.name} &lt;{sender.email}&gt;</option>
+                ))}
+              </select>
+            </div>
+            <div className="max-w-xl">
               <label className="mb-1 block text-sm font-medium">Email Tujuan *</label>
               <Input type="email" placeholder="tujuan@sekolah.sch.id" value={custom.email} onChange={(e) => setCustom({ ...custom, email: e.target.value })} required />
             </div>
@@ -294,7 +329,7 @@ export default function MarketingEmailPage() {
               )}
             </div>
             <div className="pt-2">
-              <Button type="submit" variant="primary" disabled={loading}>
+              <Button type="submit" variant="primary" disabled={loading || !custom.from || senders.length === 0}>
                 {loading ? 'Mengirim...' : <><Send size={16} className="mr-2" /> Kirim Email</>}
               </Button>
             </div>
