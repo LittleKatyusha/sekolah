@@ -19,8 +19,8 @@ if (config && config.apiKey) {
 
     self.registration.showNotification(title ?? 'Notifikasi Baru', {
       body: body ?? '',
-      icon: icon ?? '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: icon ?? '/akademihub-app-icon-192.png',
+      badge: '/akademihub-simbol.png',
       data: payload.data,
     })
   })

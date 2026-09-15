@@ -28,7 +28,6 @@ import useAuthStore from '../../store/useAuthStore'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { menuService } from '../../features/menus/services/menuService'
 import { authService } from '../../services/authService'
-import logoHorizontal from '../../assets/logo akademihub-01-03.png'
 import useNavigationProgressStore from '../../store/useNavigationProgressStore'
 import { getTheme } from '../../constants/roleThemes'
 import { canAccessPath, isBackendAvailablePath } from '../../utils/routeAccess'
@@ -459,9 +458,9 @@ const Sidebar = ({ isOpen, onClose }) => {
           {/* Logo */}
           <div className="flex items-center justify-start h-16 border-b sb-divider px-4" style={{ borderColor: 'var(--sb-border)' }}>
             <img
-              src={logoHorizontal}
+              src="/akademihub-app-horizontal.png"
               alt="AkademiHub"
-              className="h-10 w-auto object-contain"
+              className="h-10 w-auto max-w-full object-contain rounded bg-white p-1"
             />
           </div>
 

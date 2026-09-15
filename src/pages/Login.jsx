@@ -6,8 +6,8 @@ import { z } from 'zod'
 import { LogIn, User, Lock, Eye, EyeOff, BookOpen, Users, Award, TrendingUp, AlertCircle } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { apiService } from '../utils/api'
-import logoVertical from '../assets/logo akademihub-01-04.png'
-import logoHorizontal from '../assets/logo akademihub-01-03.png'
+const logoVertical = '/akademihub-app-logo.png'
+const logoHorizontal = '/akademihub-app-horizontal.png'
 
 const REMEMBER_ME_KEY = 'login_remember_me'
 
@@ -243,7 +243,7 @@ const Login = () => {
 
         {/* Logo */}
         <div className="relative z-10 px-12 pt-12">
-          <img src={logoVertical} alt="Akademihub Logo" className="h-14 w-auto drop-shadow-xl" />
+          <img src={logoVertical} alt="AkademiHub" className="h-24 w-auto rounded-lg bg-white p-2" />
         </div>
 
         {/* Hero text + features */}
