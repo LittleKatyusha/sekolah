@@ -69,7 +69,17 @@ describe('SekolahDetail settings', () => {
     sekolahService.updateAiSettings.mockResolvedValue({ data: {}, error: null })
     sekolahService.deleteSetting.mockResolvedValue({ data: {}, error: null })
     showDeleteConfirm.mockResolvedValue({ isConfirmed: true })
-    await renderPage({ role: 'superadmin', roles: [], permissions: [] })
+    // Under §4.2 / W07, superadmin relies on explicit permissions payload instead of client-side role string bypass
+    await renderPage({
+      role: 'superadmin',
+      roles: [],
+      permissions: [
+        { code: 'sekolah.update' },
+        { code: 'sekolah.settings.view' },
+        { code: 'sekolah.settings.update' },
+        { code: 'sekolah.settings.delete' },
+      ],
+    })
 
     expect(screen.getByRole('button', { name: 'Edit Profil' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Edit setting radius_absensi_meter' }))
@@ -122,7 +132,17 @@ describe('SekolahDetail settings', () => {
       error: null,
     })
 
-    await renderPage({ role: 'superadmin', roles: [], permissions: [] })
+    // Under §4.2 / W07, superadmin relies on explicit permissions payload instead of client-side role string bypass
+    await renderPage({
+      role: 'superadmin',
+      roles: [],
+      permissions: [
+        { code: 'sekolah.update' },
+        { code: 'sekolah.settings.view' },
+        { code: 'sekolah.settings.update' },
+        { code: 'sekolah.settings.delete' },
+      ],
+    })
 
     fireEvent.change(screen.getByLabelText('Provider AI'), {
       target: { value: 'cloudflare' },

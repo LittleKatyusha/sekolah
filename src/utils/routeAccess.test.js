@@ -341,12 +341,24 @@ describe('route access', () => {
     expect(canAccessPath(updaterOnly, '/admin/users/create')).toBe(false)
   })
 
-  it('allows full route access for SUPER_ADMIN', () => {
-    const superAdmin = { role: 'SUPER_ADMIN' }
-    expect(canAccessPath(superAdmin, '/admin/users/create')).toBe(true)
-    expect(canAccessPath(superAdmin, '/admin/users/42/edit')).toBe(true)
-    expect(canAccessPath(superAdmin, '/statistik')).toBe(true)
-    expect(canAccessPath(superAdmin, '/unknown-route')).toBe(true)
+  it('enforces explicit permissions payload for SUPER_ADMIN per §4.2 / W07 (no role label bypass)', () => {
+    // Under §4.2 / W07, role label in storage does not bypass route permission guards
+    const superAdminRoleOnly = { role: 'SUPER_ADMIN' }
+    expect(canAccessPath(superAdminRoleOnly, '/admin/users/create')).toBe(false)
+    expect(canAccessPath(superAdminRoleOnly, '/unknown-route')).toBe(false)
+
+    // With explicit authoritative permissions loaded, access is granted
+    const superAdminWithPerms = {
+      role: 'SUPER_ADMIN',
+      permissions: [
+        { code: 'users.create' },
+        { code: 'users.update' },
+        { code: 'statistik.overview' },
+      ],
+    }
+    expect(canAccessPath(superAdminWithPerms, '/admin/users/create')).toBe(true)
+    expect(canAccessPath(superAdminWithPerms, '/admin/users/42/edit')).toBe(true)
+    expect(canAccessPath(superAdminWithPerms, '/statistik')).toBe(true)
   })
 
   it('denies direct routes without permission in fail-closed mode', () => {

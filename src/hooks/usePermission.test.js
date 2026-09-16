@@ -15,11 +15,13 @@ describe('usePermission / checkPermission', () => {
     expect(checkPermission({}, '')).toBe(true)
   })
 
-  it('bypasses permission checks for superadmin', () => {
-    expect(checkPermission({ role: 'SUPER_ADMIN' }, 'any.permission')).toBe(true)
-    expect(checkPermission({ role: 'superadmin' }, 'any.permission')).toBe(true)
-    expect(checkPermission({ role: 'super_admin' }, 'siswa.view')).toBe(true)
-    expect(checkPermission({ roles: [{ code: 'superadmin' }] }, 'anything')).toBe(true)
+  it('enforces explicit permissions payload for superadmin per §4.2 / W07 (no role label bypass)', () => {
+    // Under §4.2 / W07, role label in storage does not grant bypass.
+    // Explicit permission list from authoritative backend payload is required.
+    expect(checkPermission({ role: 'SUPER_ADMIN' }, 'any.permission')).toBe(false)
+    expect(checkPermission({ role: 'superadmin', permissions: [{ code: 'any.permission' }] }, 'any.permission')).toBe(true)
+    expect(checkPermission({ role: 'super_admin', permissions: ['siswa.view'] }, 'siswa.view')).toBe(true)
+    expect(checkPermission({ roles: [{ code: 'superadmin' }] }, 'anything')).toBe(false)
   })
 
   it('resolves flat permissions correctly', () => {

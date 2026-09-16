@@ -91,7 +91,6 @@ const permissionAliases = (code) => {
  */
 export const checkPermission = (user, code) => {
   if (!user) return false
-  if (isSuperAdminUser(user)) return true
   if (!code) return true
   const perms = resolvePermissions(user)
   if (perms.length === 0) return false

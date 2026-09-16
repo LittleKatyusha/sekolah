@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useEffect } from 'react'
+import { lazy, Suspense, useRef, useEffect, useMemo } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, GraduationCap, UserCheck, Wallet,
@@ -7,6 +7,8 @@ import {
   Loader2,
 } from 'lucide-react'
 import { usePageTitle } from '../../../hooks/usePageTitle'
+import useAuthStore from '../../../store/useAuthStore'
+import { checkPermission } from '../../../hooks/usePermission'
 
 const TABS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard, path: '/statistik/overview' },
@@ -34,13 +36,20 @@ const StatistikDashboard = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const scrollRef = useRef(null)
+  const { user } = useAuthStore()
 
-  // Redirect /statistik to /statistik/overview
+  const allowedTabs = useMemo(() => {
+    return TABS.filter((tab) => checkPermission(user, `statistik.${tab.key}`))
+  }, [user])
+
+  // Redirect /statistik to first allowed tab
   useEffect(() => {
     if (location.pathname === '/statistik' || location.pathname === '/statistik/') {
-      navigate('/statistik/overview', { replace: true })
+      if (allowedTabs.length > 0) {
+        navigate(allowedTabs[0].path, { replace: true })
+      }
     }
-  }, [location.pathname, navigate])
+  }, [location.pathname, navigate, allowedTabs])
 
   // Auto-scroll active tab into view
   useEffect(() => {
@@ -50,6 +59,27 @@ const StatistikDashboard = () => {
       active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
     }
   }, [location.pathname])
+
+  if (allowedTabs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Statistik</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Dashboard statistik dan analitik sekolah
+          </p>
+        </div>
+        <div className="card flex h-64 flex-col items-center justify-center p-6 text-center">
+          <p className="text-base font-semibold text-gray-800 dark:text-gray-100">
+            Akses Statistik Terbatas
+          </p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Anda tidak memiliki izin untuk melihat modul statistik sekolah.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -67,7 +97,7 @@ const StatistikDashboard = () => {
           ref={scrollRef}
           className="flex gap-1 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 md:flex-wrap"
         >
-          {TABS.map((tab) => {
+          {allowedTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = location.pathname === tab.path
 

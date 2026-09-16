@@ -440,10 +440,25 @@ const RolePermissionsForm = () => {
     }
   }
 
+  const SYSTEM_ROLES = [
+    'superadmin', 'admin', 'kepala_sekolah', 'wakil_kepala_sekolah',
+    'guru', 'wali_kelas', 'guru_bk', 'staff_keuangan',
+    'staff_perpustakaan', 'admin_ppdb', 'siswa', 'wali', 'staff',
+  ]
+
   const validate = () => {
     const newErrors = {}
     if (!formData.role_id) newErrors.role_id = 'Role wajib dipilih'
-    if (!formData.permission_ids.length) newErrors.permission_ids = 'Minimal satu permission wajib dipilih'
+    if (!Array.isArray(formData.permission_ids)) {
+      newErrors.permission_ids = 'Permissions harus berupa list'
+    }
+
+    const roleName = String(selectedRoleOption?.label || '').toLowerCase().trim()
+    const isSystemRole = SYSTEM_ROLES.some((code) => roleName.includes(code))
+    if (isSystemRole && formData.permission_ids.length === 0) {
+      newErrors.permission_ids = 'Role sistem tidak boleh dikosongkan seluruh permission-nya (anti-lockout)'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -453,10 +468,19 @@ const RolePermissionsForm = () => {
 
     if (!validate()) return
 
-    setSubmitting(true)
-
     const selectedRoleId = Number(formData.role_id)
     const selectedPermissionIds = formData.permission_ids.map((permissionId) => Number(permissionId))
+    const isClearing = selectedPermissionIds.length === 0
+
+    const confirmMsg = isClearing
+      ? 'Perhatian: Anda akan menghapus seluruh permission untuk role ini secara global lintas seluruh sekolah. Lanjutkan?'
+      : 'Perubahan permission ini bersifat global dan memengaruhi seluruh sekolah yang menggunakan role ini. Lanjutkan?'
+
+    if (!window.confirm(confirmMsg)) {
+      return
+    }
+
+    setSubmitting(true)
 
     const result = await roleService.assignPermissions(selectedRoleId, selectedPermissionIds)
     const { error } = result
@@ -465,12 +489,13 @@ const RolePermissionsForm = () => {
     if (!error) {
       clearSessionCaches()
       showSuccess(`Role permission berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
+      await fetchRolePermissionsByRoleId(selectedRoleId)
       navigate('/admin/role-permissions')
     } else {
       if (error?.errors) {
         setErrors(mapApiErrorsToFormErrors(error.errors))
       } else {
-        showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} role permission`)
+        showError(error?.message || `Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} role permission`)
       }
     }
   }
@@ -491,6 +516,7 @@ const RolePermissionsForm = () => {
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-white/80">
                   <ShieldCheck size={14} />
                   {isEditMode ? 'Edit akses role' : 'Role permission builder'}
+                  <span className="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-[10px] text-amber-200">Global / Lintas Sekolah</span>
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                   {isEditMode ? 'Perbarui konfigurasi permission role' : 'Buat assignment permission yang lebih terstruktur'}
@@ -726,6 +752,8 @@ const RolePermissionsForm = () => {
                                   <label className="inline-flex items-center gap-2 self-start rounded-full border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
                                     <input
                                       type="checkbox"
+                                      aria-label={`Pilih semua modul ${formatModuleName(moduleName)}`}
+                                      aria-checked={isIndeterminate ? 'mixed' : allSelected}
                                       checked={allSelected}
                                       ref={(el) => {
                                         if (el) el.indeterminate = isIndeterminate
@@ -879,7 +907,7 @@ const RolePermissionsForm = () => {
                       <Button type="button" variant="secondary" onClick={() => navigate('/admin/role-permissions')}>
                         Batal
                       </Button>
-                      <PermissionGuard permission={isEditMode ? 'role_permissions.update' : 'role_permissions.create'}>
+                      <PermissionGuard permission="roles.assign-permissions">
                         <Button type="submit" disabled={submitting} loading={submitting}>
                           {submitting ? 'Menyimpan konfigurasi...' : isEditMode ? 'Simpan perubahan' : 'Simpan assignment'}
                         </Button>

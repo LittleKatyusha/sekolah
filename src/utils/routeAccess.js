@@ -379,8 +379,8 @@ export const ROUTE_RULES = [
   ['/admin/permissions/:id', 'permissions.view'],
   ['/admin/permissions', 'permissions.view'],
 
-  ['/admin/role-permissions/create', 'role_permissions.create'],
-  ['/admin/role-permissions/:id/edit', 'role_permissions.update'],
+  ['/admin/role-permissions/create', 'roles.assign-permissions'],
+  ['/admin/role-permissions/:id/edit', 'roles.assign-permissions'],
   ['/admin/role-permissions/:id', 'role_permissions.view'],
   ['/admin/role-permissions', 'role_permissions.view'],
 
@@ -442,7 +442,6 @@ export const permissionForPath = (pathname) => {
 
 export const canAccessPath = (user, pathname) => {
   if (!user) return false
-  if (isSuperAdminUser(user)) return true
 
   const normalized = (pathname || '').replace(/\/+$/, '') || '/'
   if (ALLOWLIST_PRIVATE_PATHS.some((path) => normalized === path || normalized.startsWith(`${path}/`))) {

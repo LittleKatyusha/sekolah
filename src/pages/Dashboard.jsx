@@ -284,153 +284,159 @@ const AdminDashboard = ({ data }) => {
       </Suspense>
 
       {/* Financial Section */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-          Financial Overview
-        </h2>
-        <Suspense
-          fallback={
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <DashboardSectionFallback />
-              <DashboardSectionFallback />
-            </div>
-          }
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <DashboardChartBoundary>
-              <SPPTrendChart data={financial?.spp_trend} />
-            </DashboardChartBoundary>
-            <DashboardChartBoundary>
-              <PaymentStatusChart data={financial?.payment_status_distribution} />
-            </DashboardChartBoundary>
-          </div>
-        </Suspense>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard
-            title="Total Pendapatan SPP"
-            value={financial?.yearly_summary?.formatted_total || 'Rp 0'}
-            icon={TrendingUp}
-            color="text-green-600"
-            description={`Tahun ${financial?.yearly_summary?.year || ''}`}
-          />
-          <StatCard
-            title="Total Lunas"
-            value={financial?.yearly_summary?.total_lunas || 0}
-            icon={Users}
-            color="text-blue-600"
-          />
-          <StatCard
-            title="Total Belum Lunas"
-            value={financial?.yearly_summary?.total_belum_lunas || 0}
-            icon={AlertCircle}
-            color="text-red-600"
-          />
-        </div>
-      </div>
-
-      {/* Academic & Attendance Section */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-          Academic & Attendance
-        </h2>
-        <Suspense
-          fallback={
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <DashboardSectionFallback />
-              <DashboardSectionFallback />
-            </div>
-          }
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <DashboardChartBoundary>
-              <Attendance7DaysChart data={academic_attendance?.attendance_7_days} />
-            </DashboardChartBoundary>
-            <DashboardChartBoundary>
-              <NilaiDistributionChart data={academic_attendance?.nilai_distribution} />
-            </DashboardChartBoundary>
-          </div>
-        </Suspense>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Rata-rata Kehadiran"
-            value={`${academic_attendance?.attendance_summary?.rata_rata_kehadiran || 0}%`}
-            icon={TrendingUp}
-            color="text-green-600"
-          />
-          <StatCard
-            title="Total Hadir (7 Hari)"
-            value={academic_attendance?.attendance_summary?.total_hadir_7_hari || 0}
-            icon={Users}
-            color="text-blue-600"
-          />
-          <StatCard
-            title="Rata-rata Nilai"
-            value={academic_attendance?.nilai_summary?.rata_rata || 0}
-            icon={GraduationCap}
-            color="text-purple-600"
-          />
-          <StatCard
-            title="Total Ujian"
-            value={academic_attendance?.nilai_summary?.total_ujian || 0}
-            icon={BookOpen}
-            color="text-indigo-600"
-          />
-        </div>
-      </div>
-
-      {/* Counseling Section */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-          Counseling (BK)
-        </h2>
-        <Suspense
-          fallback={
-            <>
+      {financial && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Financial Overview
+          </h2>
+          <Suspense
+            fallback={
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <DashboardSectionFallback />
                 <DashboardSectionFallback />
               </div>
-              <div className="mb-6">
+            }
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <DashboardChartBoundary>
+                <SPPTrendChart data={financial?.spp_trend} />
+              </DashboardChartBoundary>
+              <DashboardChartBoundary>
+                <PaymentStatusChart data={financial?.payment_status_distribution} />
+              </DashboardChartBoundary>
+            </div>
+          </Suspense>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard
+              title="Total Pendapatan SPP"
+              value={financial?.yearly_summary?.formatted_total || 'Rp 0'}
+              icon={TrendingUp}
+              color="text-green-600"
+              description={`Tahun ${financial?.yearly_summary?.year || ''}`}
+            />
+            <StatCard
+              title="Total Lunas"
+              value={financial?.yearly_summary?.total_lunas || 0}
+              icon={Users}
+              color="text-blue-600"
+            />
+            <StatCard
+              title="Total Belum Lunas"
+              value={financial?.yearly_summary?.total_belum_lunas || 0}
+              icon={AlertCircle}
+              color="text-red-600"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Academic & Attendance Section */}
+      {academic_attendance && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Academic & Attendance
+          </h2>
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <DashboardSectionFallback />
                 <DashboardSectionFallback />
               </div>
-            </>
-          }
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <DashboardChartBoundary>
-              <TopKategoriKasusChart data={counseling?.top_kategori_kasus} />
-            </DashboardChartBoundary>
-            <DashboardChartBoundary>
-              <StatusPenyelesaianChart data={counseling?.status_penyelesaian} />
-            </DashboardChartBoundary>
+            }
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <DashboardChartBoundary>
+                <Attendance7DaysChart data={academic_attendance?.attendance_7_days} />
+              </DashboardChartBoundary>
+              <DashboardChartBoundary>
+                <NilaiDistributionChart data={academic_attendance?.nilai_distribution} />
+              </DashboardChartBoundary>
+            </div>
+          </Suspense>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Rata-rata Kehadiran"
+              value={`${academic_attendance?.attendance_summary?.rata_rata_kehadiran || 0}%`}
+              icon={TrendingUp}
+              color="text-green-600"
+            />
+            <StatCard
+              title="Total Hadir (7 Hari)"
+              value={academic_attendance?.attendance_summary?.total_hadir_7_hari || 0}
+              icon={Users}
+              color="text-blue-600"
+            />
+            <StatCard
+              title="Rata-rata Nilai"
+              value={academic_attendance?.nilai_summary?.rata_rata || 0}
+              icon={GraduationCap}
+              color="text-purple-600"
+            />
+            <StatCard
+              title="Total Ujian"
+              value={academic_attendance?.nilai_summary?.total_ujian || 0}
+              icon={BookOpen}
+              color="text-indigo-600"
+            />
           </div>
-          <div className="mb-6">
-            <DashboardChartBoundary>
-              <KasusPerBulanChart data={counseling?.kasus_per_bulan} />
-            </DashboardChartBoundary>
-          </div>
-        </Suspense>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard
-            title="Total Kasus"
-            value={counseling?.ringkasan?.total_kasus || 0}
-            icon={AlertTriangle}
-            color="text-orange-600"
-          />
-          <StatCard
-            title="Kasus Selesai"
-            value={counseling?.ringkasan?.kasus_selesai || 0}
-            icon={TrendingUp}
-            color="text-green-600"
-          />
-          <StatCard
-            title="Persentase Penyelesaian"
-            value={`${counseling?.ringkasan?.persentase_penyelesaian || 0}%`}
-            icon={GraduationCap}
-            color="text-blue-600"
-          />
         </div>
-      </div>
+      )}
+
+      {/* Counseling Section */}
+      {counseling && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Counseling (BK)
+          </h2>
+          <Suspense
+            fallback={
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <DashboardSectionFallback />
+                  <DashboardSectionFallback />
+                </div>
+                <div className="mb-6">
+                  <DashboardSectionFallback />
+                </div>
+              </>
+            }
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <DashboardChartBoundary>
+                <TopKategoriKasusChart data={counseling?.top_kategori_kasus} />
+              </DashboardChartBoundary>
+              <DashboardChartBoundary>
+                <StatusPenyelesaianChart data={counseling?.status_penyelesaian} />
+              </DashboardChartBoundary>
+            </div>
+            <div className="mb-6">
+              <DashboardChartBoundary>
+                <KasusPerBulanChart data={counseling?.kasus_per_bulan} />
+              </DashboardChartBoundary>
+            </div>
+          </Suspense>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard
+              title="Total Kasus"
+              value={counseling?.ringkasan?.total_kasus || 0}
+              icon={AlertTriangle}
+              color="text-orange-600"
+            />
+            <StatCard
+              title="Kasus Selesai"
+              value={counseling?.ringkasan?.kasus_selesai || 0}
+              icon={TrendingUp}
+              color="text-green-600"
+            />
+            <StatCard
+              title="Persentase Penyelesaian"
+              value={`${counseling?.ringkasan?.persentase_penyelesaian || 0}%`}
+              icon={GraduationCap}
+              color="text-blue-600"
+            />
+          </div>
+        </div>
+      )}
 
       {/* PPDB Section */}
       {ppdb && (

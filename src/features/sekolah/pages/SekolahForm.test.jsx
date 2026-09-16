@@ -22,8 +22,16 @@ vi.mock('../../../utils/sweetalert', () => ({
 describe('SekolahForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Under §4.2 / W07, superadmin relies on explicit permissions payload instead of client-side role string bypass
     useAuthStore.setState({
-      user: { role: 'superadmin', roles: [], permissions: [] },
+      user: {
+        role: 'superadmin',
+        roles: [],
+        permissions: [
+          { code: 'sekolah.update' },
+          { code: 'sekolah.settings.update' },
+        ],
+      },
     })
     sekolahService.getAll.mockResolvedValue({
       data: {

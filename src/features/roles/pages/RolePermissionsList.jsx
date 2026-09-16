@@ -83,7 +83,7 @@ const RolePermissionsList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
-          <PermissionGuard permission="role_permissions.create">
+          <PermissionGuard permission="roles.assign-permissions">
             <Button onClick={() => navigate('/admin/role-permissions/create')}>
               <Plus size={18} className="mr-2" />
               Assign Permissions
