@@ -328,4 +328,14 @@ export const ppdbPublicService = {
       return { data: null, error: error.response?.data || error.message }
     }
   },
+
+  getPublicProfile: async (identifier = null) => {
+    try {
+      const params = identifier ? { identifier } : {}
+      const response = await publicApi.get(`${PUBLIC_BASE}/profile`, { params })
+      return { data: response.data, error: null }
+    } catch (error) {
+      return { data: null, error: error.response?.data || error.message }
+    }
+  },
 }

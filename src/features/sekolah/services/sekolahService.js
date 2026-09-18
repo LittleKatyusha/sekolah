@@ -1,4 +1,5 @@
 import { apiService } from '../../../utils/api'
+import { ppdbPublicService } from '../../ppdb/services/ppdbService'
 
 const BASE_URL = '/sekolah'
 
@@ -131,6 +132,15 @@ export const sekolahService = {
    */
   getSettingByKey: async (sekolahId, key) => {
     return await apiService.get(`${BASE_URL}/${sekolahId}/settings-key/${key}`)
+  },
+
+  /**
+   * Get public profile of a school
+   * @param {string} [identifier] - School identifier/subdomain/slug
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getPublicProfile: async (identifier = null) => {
+    return await ppdbPublicService.getPublicProfile(identifier)
   },
 }
 

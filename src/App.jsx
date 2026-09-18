@@ -114,6 +114,7 @@ const Ekstrakurikuler = lazy(() => import('./pages/Ekstrakurikuler'))
 const Organisasi = lazy(() => import('./pages/Organisasi'))
 const Ppdb = lazy(() => import('./pages/Ppdb'))
 const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
+const PublicProfile = lazy(() => import('./features/sekolah/pages/PublicProfile'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
@@ -279,6 +280,10 @@ function App() {
           <Routes>
             <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+
+            {/* Public School Profile — no authentication required */}
+            <Route path="/profile" element={<PublicProfile />} />
+            <Route path="/profil" element={<PublicProfile />} />
 
             {/* Public PPDB portal — no authentication required */}
             <Route path="/ppdb/portal" element={<PortalPpdb />} />
