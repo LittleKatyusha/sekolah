@@ -6,7 +6,6 @@ import { ppdbPublicService } from '../../ppdb/services/ppdbService'
 
 vi.mock('../../ppdb/services/ppdbService', () => ({
   ppdbPublicService: {
-    getSekolahList: vi.fn(),
     getPublicProfile: vi.fn(),
   },
 }))
@@ -51,10 +50,6 @@ describe('PublicProfile Component', () => {
   })
 
   it('renders school profile information and sections correctly', async () => {
-    ppdbPublicService.getSekolahList.mockResolvedValue({
-      data: [{ id: 1, nama_sekolah: 'SMK Negeri 1 Surabaya', identifier: 'smkn1-sby' }],
-      error: null,
-    })
     ppdbPublicService.getPublicProfile.mockResolvedValue({
       data: mockSekolah,
       error: null,
@@ -79,7 +74,6 @@ describe('PublicProfile Component', () => {
   })
 
   it('renders not found message when school is not found', async () => {
-    ppdbPublicService.getSekolahList.mockResolvedValue({ data: [], error: null })
     ppdbPublicService.getPublicProfile.mockResolvedValue({ data: null, error: 'Profil sekolah tidak ditemukan' })
 
     render(

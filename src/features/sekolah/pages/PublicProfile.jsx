@@ -58,11 +58,10 @@ const PENDIDIKAN_MAP = {
 }
 
 const PublicProfile = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [sekolahList, setSekolahList] = useState([])
 
   const currentIdentifier = searchParams.get('identifier') || searchParams.get('sekolah') || getSubdomain()
 
@@ -92,23 +91,10 @@ const PublicProfile = () => {
   }, [currentIdentifier])
 
   useEffect(() => {
-    ppdbPublicService.getSekolahList().then(({ data }) => {
-      const list = data?.data ?? data
-      if (Array.isArray(list)) {
-        setSekolahList(list)
-      }
-    }).catch(() => {})
-  }, [])
-
-  useEffect(() => {
     if (profile?.nama_sekolah) {
       document.title = `Profil Sekolah — ${profile.nama_sekolah}`
     }
   }, [profile])
-
-  const handleSekolahChange = (newIdentifier) => {
-    setSearchParams(newIdentifier ? { identifier: newIdentifier } : {})
-  }
 
   if (loading) {
     return (
@@ -165,18 +151,6 @@ const PublicProfile = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {sekolahList.length > 1 && (
-              <select
-                value={profile.identifier || ''}
-                onChange={(e) => handleSekolahChange(e.target.value)}
-                className="hidden md:block text-xs rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1.5 px-2.5"
-                aria-label="Pilih Sekolah"
-              >
-                {sekolahList.map((s) => (
-                  <option key={s.id} value={s.identifier || s.slug || s.subdomain}>{s.nama_sekolah || s.name}</option>
-                ))}
-              </select>
-            )}
             <Link to={ppdbLink} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-sm transition">
               <GraduationCap size={15} />
               <span>PPDB Online</span>
