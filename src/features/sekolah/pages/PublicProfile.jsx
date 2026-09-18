@@ -90,9 +90,78 @@ const PublicProfile = () => {
     fetchProfileData(currentIdentifier)
   }, [currentIdentifier])
 
+  // ponytail: dynamic DOM head injection covers JS-aware bots (Googlebot/Bingbot); add edge prerender worker when non-JS scrapers (WhatsApp/FB) demand server-rendered OG tags.
   useEffect(() => {
-    if (profile?.nama_sekolah) {
-      document.title = `Profil Sekolah — ${profile.nama_sekolah}`
+    if (!profile?.nama_sekolah) return
+
+    const prevTitle = document.title
+    const title = `Profil Sekolah — ${profile.nama_sekolah}`
+    document.title = title
+
+    const desc = `${profile.nama_sekolah} — Profil resmi lembaga pendidikan. ${profile.alamat ? profile.alamat + '. ' : ''}Informasi akademik, PPDB online, dan profil tenaga pendidik.`
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : ''
+
+    const setMeta = (attr, key, content) => {
+      if (!content) return
+      let el = document.querySelector(`meta[${attr}="${key}"]`)
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute(attr, key)
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', content)
+    }
+
+    setMeta('name', 'description', desc)
+    setMeta('property', 'og:title', title)
+    setMeta('property', 'og:description', desc)
+    setMeta('property', 'og:type', 'website')
+    setMeta('property', 'og:url', canonicalUrl)
+    setMeta('name', 'twitter:card', profile.logo_url ? 'summary_large_image' : 'summary')
+    setMeta('name', 'twitter:title', title)
+    setMeta('name', 'twitter:description', desc)
+
+    if (profile.logo_url) {
+      setMeta('property', 'og:image', profile.logo_url)
+      setMeta('name', 'twitter:image', profile.logo_url)
+    }
+
+    let canonical = document.querySelector('link[rel="canonical"]')
+    if (!canonical) {
+      canonical = document.createElement('link')
+      canonical.setAttribute('rel', 'canonical')
+      document.head.appendChild(canonical)
+    }
+    canonical.setAttribute('href', canonicalUrl)
+
+    const schemaId = 'school-jsonld'
+    let script = document.getElementById(schemaId)
+    if (!script) {
+      script = document.createElement('script')
+      script.id = schemaId
+      script.type = 'application/ld+json'
+      document.head.appendChild(script)
+    }
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'School',
+      name: profile.nama_sekolah,
+      description: desc,
+      url: canonicalUrl,
+      ...(profile.npsn ? { identifier: profile.npsn } : {}),
+      ...(profile.logo_url ? { image: profile.logo_url } : {}),
+      ...(profile.alamat ? {
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: profile.alamat,
+          addressCountry: 'ID',
+        }
+      } : {}),
+    })
+
+    return () => {
+      document.title = prevTitle
+      script?.remove()
     }
   }, [profile])
 

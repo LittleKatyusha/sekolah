@@ -71,6 +71,19 @@ describe('PublicProfile Component', () => {
     expect(screen.getByText('Rekayasa Perangkat Lunak')).toBeDefined()
     expect(screen.getByText('Pramuka')).toBeDefined()
     expect(screen.getByText('Budi Santoso, S.Pd')).toBeDefined()
+
+    // SEO tags and JSON-LD assertions
+    expect(document.title).toBe('Profil Sekolah — SMK Negeri 1 Surabaya')
+    const metaDesc = document.querySelector('meta[name="description"]')
+    expect(metaDesc?.getAttribute('content')).toContain('SMK Negeri 1 Surabaya')
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    expect(ogTitle?.getAttribute('content')).toBe('Profil Sekolah — SMK Negeri 1 Surabaya')
+    const schemaScript = document.getElementById('school-jsonld')
+    expect(schemaScript).not.toBeNull()
+    const schema = JSON.parse(schemaScript.textContent)
+    expect(schema['@type']).toBe('School')
+    expect(schema.name).toBe('SMK Negeri 1 Surabaya')
+    expect(schema.identifier).toBe('20501234')
   })
 
   it('renders not found message when school is not found', async () => {
