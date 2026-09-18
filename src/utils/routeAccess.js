@@ -421,6 +421,12 @@ export const ROUTE_RULES = [
   ['/admin/kalender-akademik', 'kalender-akademik.view'],
 
   ['/admin/kalender-harian', 'kalender-harian.view'],
+
+  // ── Blog & Artikel ──────────────────────────────────────────
+  ['/artikel/create', 'artikel.create'],
+  ['/artikel/:id/edit', 'artikel.edit'],
+  ['/artikel/:id', 'artikel.view'],
+  ['/artikel', 'artikel.view'],
 ]
 
 const compiledRules = ROUTE_RULES.map(([pattern, permission]) => {

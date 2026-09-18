@@ -201,6 +201,7 @@ const PublicProfile = () => {
   const ppdbActive = ppdb?.is_active && Array.isArray(ppdb?.gelombang) && ppdb.gelombang.length > 0
   const activeGelombang = ppdbActive ? ppdb.gelombang[0] : null
   const ppdbLink = `/ppdb/portal${profile.identifier ? `?sekolah=${profile.identifier}` : ''}`
+  const blogLink = `/blog${profile.identifier || currentIdentifier ? `?sekolah=${encodeURIComponent(profile.identifier || currentIdentifier)}` : ''}`
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-800 dark:text-slate-100 flex flex-col">
@@ -220,6 +221,10 @@ const PublicProfile = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Link to={blogLink} className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-200 transition">
+              <BookOpen size={15} />
+              <span>Berita & Artikel</span>
+            </Link>
             <Link to={ppdbLink} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-sm transition">
               <GraduationCap size={15} />
               <span>PPDB Online</span>
@@ -483,6 +488,7 @@ const PublicProfile = () => {
             {profile.npsn && <p className="mt-0.5">NPSN: {profile.npsn}</p>}
           </div>
           <div className="flex items-center gap-4">
+            <Link to={blogLink} className="hover:text-primary-600 transition">Kabar & Artikel</Link>
             <Link to={ppdbLink} className="hover:text-primary-600 transition">Portal PPDB</Link>
             <Link to="/login" className="hover:text-primary-600 transition">Login</Link>
           </div>

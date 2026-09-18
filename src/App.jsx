@@ -115,6 +115,10 @@ const Organisasi = lazy(() => import('./pages/Organisasi'))
 const Ppdb = lazy(() => import('./pages/Ppdb'))
 const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
 const PublicProfile = lazy(() => import('./features/sekolah/pages/PublicProfile'))
+const PublicBlogList = lazy(() => import('./features/blog/pages/PublicBlogList'))
+const PublicBlogDetail = lazy(() => import('./features/blog/pages/PublicBlogDetail'))
+const ArtikelListPage = lazy(() => import('./features/blog/pages/ArtikelListPage'))
+const ArtikelFormPage = lazy(() => import('./features/blog/pages/ArtikelFormPage'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
@@ -288,6 +292,10 @@ function App() {
             {/* Public PPDB portal — no authentication required */}
             <Route path="/ppdb/portal" element={<PortalPpdb />} />
 
+            {/* Public School Blog — no authentication required */}
+            <Route path="/blog" element={<PublicBlogList />} />
+            <Route path="/blog/:slug" element={<PublicBlogDetail />} />
+
             <Route element={<ProtectedRoute><RouteAccessGuard><MainLayout /></RouteAccessGuard></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -427,6 +435,11 @@ function App() {
 
               {/* EWS */}
               <Route path="/ews/*" element={<EWS />} />
+
+              {/* Blog & Artikel CMS */}
+              <Route path="/artikel" element={<ArtikelListPage />} />
+              <Route path="/artikel/create" element={<ArtikelFormPage />} />
+              <Route path="/artikel/:id/edit" element={<ArtikelFormPage />} />
 
               {/* Jadwal Pelajaran */}
               <Route path="/jadwal-pelajaran/*" element={<JadwalPelajaran />} />
