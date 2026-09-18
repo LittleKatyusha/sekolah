@@ -31,4 +31,11 @@ describe('emailService', () => {
     apiService.post.mockResolvedValue({ data: null, error: { message: 'Forbidden', status: 403 } })
     await expect(emailService.sendOffer({})).rejects.toThrow('Forbidden')
   })
+
+  it('calls sync inbox endpoint', async () => {
+    apiService.post.mockResolvedValue({ data: { data: { synced_count: 5 } } })
+    const res = await emailService.syncInbox()
+    expect(res.payload).toEqual({ synced_count: 5 })
+    expect(apiService.post).toHaveBeenCalledWith('/email/inbox/sync')
+  })
 })

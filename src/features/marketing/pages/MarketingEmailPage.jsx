@@ -7,13 +7,13 @@ import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import { showError, showSuccess, showDeleteConfirm } from '../../../utils/sweetalert'
 import { emailService } from '../services/emailService'
-import DOMPurify from 'dompurify'
 
 export default function MarketingEmailPage() {
   const [tab, setTab] = useState('inbox')
   const [inboxList, setInboxList] = useState([])
   const [selectedInbox, setSelectedInbox] = useState(null)
   const [inboxLoading, setInboxLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [searchInbox, setSearchInbox] = useState('')
 
   const [offer, setOffer] = useState({ email: '', school_name: '', cta_url: 'https://akademihub.id/#demo' })
@@ -59,13 +59,29 @@ export default function MarketingEmailPage() {
 
   const handleSelectInbox = async (item) => {
     setSelectedInbox(item)
-    if (!item.is_read) {
-      try {
-        await emailService.showInbox(item.id)
-        setInboxList((prev) => prev.map((it) => (it.id === item.id ? { ...it, is_read: true } : it)))
-      } catch {
-        // silent
+    try {
+      const res = await emailService.showInbox(item.id)
+      const fresh = res?.payload || res?.data
+      if (fresh) {
+        setSelectedInbox(fresh)
+        setInboxList((prev) => prev.map((it) => (it.id === item.id ? { ...it, ...fresh, is_read: true } : it)))
       }
+    } catch {
+      // silent
+    }
+  }
+
+  const handleSync = async () => {
+    setSyncing(true)
+    try {
+      const res = await emailService.syncInbox()
+      const count = res?.payload?.synced_count ?? 0
+      showSuccess('Sinkronisasi Selesai', `${count} email baru berhasil disinkronkan dari Resend.`)
+      await fetchInbox()
+    } catch (err) {
+      showError('Gagal Sinkronisasi', err?.response?.data?.message || err.message)
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -177,8 +193,11 @@ export default function MarketingEmailPage() {
                 onChange={(e) => setSearchInbox(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchInbox()}
               />
-              <Button variant="secondary" onClick={fetchInbox} disabled={inboxLoading}>
+              <Button variant="secondary" onClick={fetchInbox} disabled={inboxLoading} title="Muat ulang daftar">
                 <RefreshCw size={16} className={inboxLoading ? 'animate-spin' : ''} />
+              </Button>
+              <Button variant="secondary" onClick={handleSync} disabled={inboxLoading || syncing} title="Sinkronkan dari Resend">
+                <Sparkles size={16} className={syncing ? 'animate-spin text-yellow-500' : 'text-blue-500'} />
               </Button>
             </div>
 
@@ -229,11 +248,31 @@ export default function MarketingEmailPage() {
                     <p><strong>Diterima:</strong> {new Date(selectedInbox.received_at).toLocaleString('id-ID')}</p>
                   </div>
 
-                  <div className="prose dark:prose-invert max-w-none text-sm">
+                  <div className="w-full">
                     {selectedInbox.html_body ? (
-                      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedInbox.html_body) }} />
+                      <iframe
+                        key={selectedInbox.id}
+                        title={selectedInbox.subject || 'Email Content'}
+                        srcDoc={selectedInbox.html_body}
+                        className="w-full min-h-[500px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white"
+                        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+                        onLoad={(e) => {
+                          try {
+                            const h = e.target.contentWindow?.document?.body?.scrollHeight
+                            if (h && h > 500) e.target.style.height = `${h + 40}px`
+                          } catch {
+                            // ignore cross-origin restrictions
+                          }
+                        }}
+                      />
+                    ) : selectedInbox.text_body ? (
+                      <pre className="whitespace-pre-wrap font-sans text-sm p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {selectedInbox.text_body}
+                      </pre>
                     ) : (
-                      <pre className="whitespace-pre-wrap font-sans text-sm">{selectedInbox.text_body}</pre>
+                      <div className="text-center py-12 text-gray-400 text-sm italic">
+                        (Email ini tidak memiliki isi pesan)
+                      </div>
                     )}
                   </div>
                 </div>

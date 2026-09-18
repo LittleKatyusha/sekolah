@@ -77,6 +77,17 @@ export const emailService = {
   },
 
   /**
+   * Sinkronisasi email masuk dari Resend Inbound.
+   */
+  syncInbox: async () => {
+    const response = await apiService.post(`${BASE_URL}/inbox/sync`)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
+  /**
    * Hapus email masuk.
    * @param {number|string} id
    */
