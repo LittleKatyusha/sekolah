@@ -80,7 +80,8 @@ const FileUpload = ({
 
       setProgress(100)
       if (onUpload) {
-        onUpload(data.path || data.url) // Adjust based on actual API response
+        const filePath = data?.data?.file_path || data?.data?.url || data?.file_path || data?.path || data?.url
+        onUpload(filePath)
       }
     } catch (err) {
       clearInterval(progressInterval)
