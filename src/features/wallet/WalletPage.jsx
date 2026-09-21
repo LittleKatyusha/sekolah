@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import useAuthStore from '../../store/useAuthStore'
-import { checkPermission } from '../../hooks/usePermission'
+import { checkPermission, isSuperAdminUser } from '../../hooks/usePermission'
 import { amount, date, isGuardian, isStudent, MAX_AMOUNT, money, qrToken, request, walletError } from './wallet'
 
 const button = 'btn-secondary disabled:opacity-50'
@@ -55,7 +55,7 @@ function Collection({ title, path, params, render }) {
 
 export default function WalletPage() {
   const user = useAuthStore(s => s.user), student = isStudent(user), guardian = isGuardian(user)
-  const can = p => checkPermission(user, `wallet.${p}`)
+  const can = p => isSuperAdminUser(user) || checkPermission(user, `wallet.${p}`)
   const { token } = useParams(), [search, setSearch] = useSearchParams()
   const [accounts, setAccounts] = useState([]), [account, setAccount] = useState(null), [selected, setSelected] = useState('')
   const [tab, setTab] = useState(() => student || guardian || can('view-all') ? 'saldo' : can('manage-merchants') ? 'merchants' : can('process-payout') ? 'payouts' : 'cases'), [revision, setRevision] = useState(0), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')

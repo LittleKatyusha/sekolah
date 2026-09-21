@@ -428,6 +428,12 @@ export const ROUTE_RULES = [
   ['/artikel/:id/edit', 'artikel.edit'],
   ['/artikel/:id', 'artikel.view'],
   ['/artikel', 'artikel.view'],
+
+  // ── Midtrans Payment Gateway ─────────────────────────────────
+  ['/pengaturan/midtrans', 'sekolah.settings.view'],
+  ['/keuangan/midtrans', 'sekolah.settings.view'],
+  ['/admin/midtrans', 'sekolah.settings.view'],
+  ['/midtrans', 'sekolah.settings.view'],
 ]
 
 const compiledRules = ROUTE_RULES.map(([pattern, permission]) => {
@@ -438,7 +444,7 @@ const compiledRules = ROUTE_RULES.map(([pattern, permission]) => {
 })
 
 export const permissionForPath = (pathname) => {
-  const normalized = (pathname || '').replace(/\/+$/, '') || '/'
+  const normalized = (pathname || '').split('#')[0].split('?')[0].replace(/\/+$/, '') || '/'
   for (const [regex, permission] of compiledRules) {
     if (regex.test(normalized)) {
       return permission
@@ -450,7 +456,7 @@ export const permissionForPath = (pathname) => {
 export const canAccessPath = (user, pathname) => {
   if (!user) return false
 
-  const normalized = (pathname || '').replace(/\/+$/, '') || '/'
+  const normalized = (pathname || '').split('#')[0].split('?')[0].replace(/\/+$/, '') || '/'
   if (normalized === '/wallet' || /^\/wallet\/pay\/[a-f0-9]{48}$/.test(normalized)) return canUseWallet(user)
   if (ALLOWLIST_PRIVATE_PATHS.some((path) => normalized === path || normalized.startsWith(`${path}/`))) {
     return true
@@ -459,8 +465,10 @@ export const canAccessPath = (user, pathname) => {
   const permission = permissionForPath(normalized)
   if (!permission) return false
 
-  return isSuperAdminUser(user) || checkPermission(user, permission)
+  return checkPermission(user, permission)
 }
 
-export const isBackendAvailablePath = (pathname) => !BACKEND_UNAVAILABLE_PATHS
-  .some((path) => pathname === path || pathname.startsWith(`${path}/`))
+export const isBackendAvailablePath = (pathname) => {
+  const normalized = (pathname || '').split('#')[0].split('?')[0].replace(/\/+$/, '') || '/'
+  return !BACKEND_UNAVAILABLE_PATHS.some((path) => normalized === path || normalized.startsWith(`${path}/`))
+}

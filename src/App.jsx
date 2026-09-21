@@ -122,6 +122,7 @@ const PublicBlogDetail = lazy(() => import('./features/blog/pages/PublicBlogDeta
 const SklVerificationPage = lazy(() => import('./features/siswa/pages/SklVerificationPage'))
 const ArtikelListPage = lazy(() => import('./features/blog/pages/ArtikelListPage'))
 const ArtikelFormPage = lazy(() => import('./features/blog/pages/ArtikelFormPage'))
+const MidtransSettingsPage = lazy(() => import('./features/sekolah/pages/MidtransSettingsPage'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
 const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
@@ -421,9 +422,10 @@ function App() {
 
               {/* Sekolah & Midtrans Gateway */}
               <Route path="/sekolah/*" element={<Sekolah />} />
-              <Route path="/pengaturan/midtrans" element={<Navigate to="/sekolah#midtrans" replace />} />
-              <Route path="/keuangan/midtrans" element={<Navigate to="/sekolah#midtrans" replace />} />
-              <Route path="/admin/midtrans" element={<Navigate to="/sekolah#midtrans" replace />} />
+              <Route path="/pengaturan/midtrans" element={<MidtransSettingsPage />} />
+              <Route path="/keuangan/midtrans" element={<MidtransSettingsPage />} />
+              <Route path="/admin/midtrans" element={<MidtransSettingsPage />} />
+              <Route path="/midtrans" element={<MidtransSettingsPage />} />
 
               {/* Statistik */}
               <Route path="/statistik/*" element={<Statistik />} />

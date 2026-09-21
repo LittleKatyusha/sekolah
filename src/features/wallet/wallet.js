@@ -1,6 +1,8 @@
 import api from '../../utils/api'
 import { checkPermission, isSuperAdminUser } from '../../hooks/usePermission'
 
+export { isSuperAdminUser }
+
 export const MAX_AMOUNT = 9000000000000
 export const walletRoles = (user) => [user?.role, ...(user?.roles || [])].map(r => String(typeof r === 'string' ? r : r?.code || '').toLowerCase())
 export const isStudent = user => walletRoles(user).includes('siswa')

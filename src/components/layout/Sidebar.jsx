@@ -36,7 +36,7 @@ import { getPermissionFingerprint } from '../../hooks/usePermission'
 
 library.add(fas, far, fab)
 
-const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache-v2:'
+const SIDEBAR_MENU_CACHE_PREFIX = 'sidebar-menu-cache-v3:'
 const SIDEBAR_MENU_CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const sidebarMenuRequestCache = new Map()
 
@@ -553,6 +553,23 @@ const Sidebar = ({ isOpen, onClose }) => {
                     >
                       <Table2 size={20} />
                       <span>Kelola TV</span>
+                    </NavLink>
+                  </li>
+                )}
+                {!navigation.some((item) => item.to === '/pengaturan/midtrans' || item.children?.some((child) => child.to === '/pengaturan/midtrans')) && canAccessPath(user, '/pengaturan/midtrans') && (
+                  <li>
+                    <NavLink
+                      to="/pengaturan/midtrans"
+                      className={({ isActive }) =>
+                        isActive ? 'sidebar-link active' : 'sidebar-link'
+                      }
+                      onClick={() => {
+                        handleMenuNavigate?.()
+                        onClose?.()
+                      }}
+                    >
+                      <CreditCard size={20} />
+                      <span>Midtrans Gateway</span>
                     </NavLink>
                   </li>
                 )}
