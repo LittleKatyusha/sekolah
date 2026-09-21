@@ -117,6 +117,7 @@ const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
 const PublicProfile = lazy(() => import('./features/sekolah/pages/PublicProfile'))
 const PublicBlogList = lazy(() => import('./features/blog/pages/PublicBlogList'))
 const PublicBlogDetail = lazy(() => import('./features/blog/pages/PublicBlogDetail'))
+const SklVerificationPage = lazy(() => import('./features/siswa/pages/SklVerificationPage'))
 const ArtikelListPage = lazy(() => import('./features/blog/pages/ArtikelListPage'))
 const ArtikelFormPage = lazy(() => import('./features/blog/pages/ArtikelFormPage'))
 const Sekolah = lazy(() => import('./pages/Sekolah'))
@@ -295,6 +296,10 @@ function App() {
             {/* Public School Blog — no authentication required */}
             <Route path="/blog" element={<PublicBlogList />} />
             <Route path="/blog/:slug" element={<PublicBlogDetail />} />
+
+            {/* Public SKL Document Verification — no authentication required */}
+            <Route path="/verifikasi/skl/:token" element={<SklVerificationPage />} />
+            <Route path="/verify/skl/:token" element={<SklVerificationPage />} />
 
             <Route element={<ProtectedRoute><RouteAccessGuard><MainLayout /></RouteAccessGuard></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
