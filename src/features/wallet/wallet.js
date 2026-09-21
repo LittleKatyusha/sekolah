@@ -1,11 +1,11 @@
 import api from '../../utils/api'
-import { checkPermission } from '../../hooks/usePermission'
+import { checkPermission, isSuperAdminUser } from '../../hooks/usePermission'
 
 export const MAX_AMOUNT = 9000000000000
 export const walletRoles = (user) => [user?.role, ...(user?.roles || [])].map(r => String(typeof r === 'string' ? r : r?.code || '').toLowerCase())
 export const isStudent = user => walletRoles(user).includes('siswa')
 export const isGuardian = user => walletRoles(user).some(r => ['wali', 'wali_siswa'].includes(r))
-export const canUseWallet = user => !walletRoles(user).includes('pedagang') && (isStudent(user) || isGuardian(user) || ['view-all', 'cash-topup', 'manage-merchants', 'process-payout', 'reset-pin', 'handle-cases'].some(p => checkPermission(user, `wallet.${p}`)))
+export const canUseWallet = user => isSuperAdminUser(user) || (!walletRoles(user).includes('pedagang') && (isStudent(user) || isGuardian(user) || ['view-all', 'cash-topup', 'manage-merchants', 'process-payout', 'reset-pin', 'handle-cases'].some(p => checkPermission(user, `wallet.${p}`))))
 export function qrToken(value, origin = window.location.origin) {
   const text = value.trim()
   if (/^[a-f0-9]{48}$/.test(text)) return text

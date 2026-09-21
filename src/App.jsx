@@ -419,8 +419,11 @@ function App() {
               {/* PPDB */}
               <Route path="/ppdb/*" element={<Ppdb />} />
 
-              {/* Sekolah */}
+              {/* Sekolah & Midtrans Gateway */}
               <Route path="/sekolah/*" element={<Sekolah />} />
+              <Route path="/pengaturan/midtrans" element={<Navigate to="/sekolah#midtrans" replace />} />
+              <Route path="/keuangan/midtrans" element={<Navigate to="/sekolah#midtrans" replace />} />
+              <Route path="/admin/midtrans" element={<Navigate to="/sekolah#midtrans" replace />} />
 
               {/* Statistik */}
               <Route path="/statistik/*" element={<Statistik />} />

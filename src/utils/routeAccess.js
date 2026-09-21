@@ -459,7 +459,7 @@ export const canAccessPath = (user, pathname) => {
   const permission = permissionForPath(normalized)
   if (!permission) return false
 
-  return checkPermission(user, permission)
+  return isSuperAdminUser(user) || checkPermission(user, permission)
 }
 
 export const isBackendAvailablePath = (pathname) => !BACKEND_UNAVAILABLE_PATHS

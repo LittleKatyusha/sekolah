@@ -51,6 +51,12 @@ const SekolahDetail = () => {
 
   useEffect(() => {
     fetchSekolah()
+    if (window.location.hash === '#midtrans') {
+      setTimeout(() => {
+        const el = document.getElementById('midtrans')
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 500)
+    }
   }, [])
 
   const fetchSekolah = async () => {
@@ -533,8 +539,9 @@ const SekolahDetail = () => {
 
       {/* Midtrans Payment Gateway Section */}
       <PermissionGuard permission="sekolah.settings.update">
-        <Card>
-          <form onSubmit={handleSaveMidtrans} className="p-6 space-y-4">
+        <div id="midtrans" className="scroll-mt-6">
+          <Card>
+            <form onSubmit={handleSaveMidtrans} className="p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -698,7 +705,8 @@ const SekolahDetail = () => {
             </div>
           </form>
         </Card>
-      </PermissionGuard>
+      </div>
+    </PermissionGuard>
 
       <Card>
         <div className="p-6">

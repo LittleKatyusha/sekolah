@@ -17,7 +17,8 @@ import {
   Clock,
   QrCode,
   Send,
-  MessageCircle
+  MessageCircle,
+  CreditCard
 } from 'lucide-react'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
@@ -503,8 +504,6 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
-            {canAccessPath(user, '/wallet') && <NavLink to="/wallet" className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700"><QrCode size={20} />Saldo & kantin</NavLink>}
-            {canAccessPath(user, '/tv-pair') && <NavLink to="/tv-pair" className="sidebar-link">Kelola TV</NavLink>}
             {loading ? (
               <ul className="space-y-2">
                 {[...Array(5)].map((_, i) => (
@@ -517,12 +516,46 @@ const Sidebar = ({ isOpen, onClose }) => {
               <div className="text-sm text-red-400 text-center p-4">
                 {error}
               </div>
-            ) : navigation.length === 0 ? (
+            ) : navigation.length === 0 && !canAccessPath(user, '/wallet') && !canAccessPath(user, '/tv-pair') ? (
               <div className="text-sm text-center p-4" style={{ color: 'var(--sb-text-muted)' }}>
                 No menu items available
               </div>
             ) : (
               <ul className="space-y-2">
+                {!navigation.some((item) => item.to === '/wallet' || item.children?.some((child) => child.to === '/wallet')) && canAccessPath(user, '/wallet') && (
+                  <li>
+                    <NavLink
+                      to="/wallet"
+                      className={({ isActive }) =>
+                        isActive ? 'sidebar-link active' : 'sidebar-link'
+                      }
+                      onClick={() => {
+                        handleMenuNavigate?.()
+                        onClose?.()
+                      }}
+                    >
+                      <QrCode size={20} />
+                      <span>Kantin & Saldo</span>
+                    </NavLink>
+                  </li>
+                )}
+                {!navigation.some((item) => item.to === '/tv-pair' || item.children?.some((child) => child.to === '/tv-pair')) && canAccessPath(user, '/tv-pair') && (
+                  <li>
+                    <NavLink
+                      to="/tv-pair"
+                      className={({ isActive }) =>
+                        isActive ? 'sidebar-link active' : 'sidebar-link'
+                      }
+                      onClick={() => {
+                        handleMenuNavigate?.()
+                        onClose?.()
+                      }}
+                    >
+                      <Table2 size={20} />
+                      <span>Kelola TV</span>
+                    </NavLink>
+                  </li>
+                )}
                 {navigation.map((item) => (
                   <MenuItem
                     key={item.id}
