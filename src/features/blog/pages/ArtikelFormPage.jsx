@@ -6,6 +6,53 @@ import { fileUploadService } from '../../../services/fileUploadService'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import { showToast } from '../../../utils/sweetalert'
 
+const compressImageForWeb = (file, maxWidth = 1200, maxHeight = 630, quality = 0.85) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      resolve(file)
+      return
+    }
+    // Only compress if browser supports Image & Canvas
+    if (typeof Image === 'undefined' || typeof document === 'undefined') {
+      resolve(file)
+      return
+    }
+    const img = new Image()
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      img.onload = () => {
+        let { width, height } = img
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file)
+              return
+            }
+            const cleanName = file.name.replace(/\.[^/.]+$/, '') + '.jpg'
+            resolve(new File([blob], cleanName, { type: 'image/jpeg' }))
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = () => resolve(file)
+      img.src = e.target?.result
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
 export const ArtikelFormPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -75,7 +122,8 @@ export const ArtikelFormPage = () => {
 
     setUploadingImage(true)
     try {
-      const { data, error } = await fileUploadService.uploadFile(file, 'artikel')
+      const fileToUpload = await compressImageForWeb(file)
+      const { data, error } = await fileUploadService.uploadFile(fileToUpload, 'artikel')
       if (error) {
         showToast(typeof error === 'string' ? error : (error.message || 'Gagal mengunggah thumbnail'), 'error')
       } else {
