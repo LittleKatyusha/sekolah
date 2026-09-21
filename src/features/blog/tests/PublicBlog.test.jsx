@@ -63,6 +63,12 @@ describe('PublicBlogDetail SEO & JSON-LD', () => {
     const ogImage = document.querySelector('meta[property="og:image"]')
     expect(ogImage?.getAttribute('content')).toBe('https://example.com/robotik.jpg')
 
+    const twitterCard = document.querySelector('meta[property="twitter:card"]')
+    expect(twitterCard?.getAttribute('content')).toBe('summary_large_image')
+
+    const twitterImage = document.querySelector('meta[property="twitter:image"]')
+    expect(twitterImage?.getAttribute('content')).toBe('https://example.com/robotik.jpg')
+
     // JSON-LD Script
     const jsonLdScript = document.getElementById('blog-posting-jsonld')
     expect(jsonLdScript).not.toBeNull()

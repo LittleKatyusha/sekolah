@@ -67,8 +67,17 @@ export const PublicBlogDetail = () => {
     setMeta('property', 'og:description', artikel.ringkasan || '')
     setMeta('property', 'og:type', 'article')
     setMeta('property', 'og:url', window.location.href)
+    setMeta('property', 'twitter:card', 'summary_large_image')
+    setMeta('name', 'twitter:card', 'summary_large_image')
+    setMeta('property', 'twitter:title', artikel.judul)
+    setMeta('name', 'twitter:title', artikel.judul)
+    setMeta('property', 'twitter:description', artikel.ringkasan || '')
+    setMeta('name', 'twitter:description', artikel.ringkasan || '')
     if (artikel.thumbnail_url) {
       setMeta('property', 'og:image', artikel.thumbnail_url)
+      setMeta('property', 'og:image:secure_url', artikel.thumbnail_url)
+      setMeta('name', 'twitter:image', artikel.thumbnail_url)
+      setMeta('property', 'twitter:image', artikel.thumbnail_url)
     }
     if (artikel.published_at) {
       setMeta('property', 'article:published_time', artikel.published_at)
