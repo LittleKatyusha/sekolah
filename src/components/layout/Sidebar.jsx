@@ -503,6 +503,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
+            {canAccessPath(user, '/wallet') && <NavLink to="/wallet" className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700"><QrCode size={20} />Saldo & kantin</NavLink>}
             {canAccessPath(user, '/tv-pair') && <NavLink to="/tv-pair" className="sidebar-link">Kelola TV</NavLink>}
             {loading ? (
               <ul className="space-y-2">

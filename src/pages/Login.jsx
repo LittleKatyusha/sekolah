@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { safeWalletReturn } from '../features/wallet/wallet'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -35,6 +36,8 @@ const FEATURES = [
 
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const destination = safeWalletReturn(location.state?.walletReturn)
   const { login } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -66,7 +69,7 @@ const Login = () => {
 
       login(response.data)
       setGoogleLoading(false)
-      navigate('/dashboard')
+      navigate(destination)
     } catch {
       setError('Terjadi kesalahan saat memproses login Google.')
       setGoogleLoading(false)
@@ -92,7 +95,7 @@ const Login = () => {
           }
           login(response.data)
           setGoogleLoading(false)
-          navigate('/dashboard')
+          navigate(destination)
         })
         .catch(() => {
           setError('Gagal memproses otorisasi Google.')
@@ -203,7 +206,7 @@ const Login = () => {
 
       login(response.data)
       setLoading(false)
-      navigate('/dashboard')
+      navigate(destination)
     } catch {
       setError('Terjadi kesalahan. Silakan coba lagi beberapa saat.')
       setLoading(false)

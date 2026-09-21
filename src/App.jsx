@@ -16,9 +16,11 @@ import NavigationProgress from './components/ui/NavigationProgress'
 import useNavigationProgressStore from './store/useNavigationProgressStore'
 import { usePageTitle } from './hooks/usePageTitle'
 import { useFcmToken } from './hooks/useFcmToken'
+import { safeWalletReturn } from './features/wallet/wallet'
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'))
+const WalletPage = lazy(() => import('./features/wallet/WalletPage'))
 const TvPair = lazy(() => import('./pages/TvPair'))
 const UsersList = lazy(() => import('./features/users/pages/UsersList'))
 const UsersForm = lazy(() => import('./features/users/pages/UsersForm'))
@@ -226,7 +228,7 @@ function AuthExpiryNavigator() {
   useEffect(() => {
     const handleAuthExpired = () => {
       useAuthStore.getState().logout()
-      navigate('/login', { replace: true })
+      navigate('/login', { replace: true, state: { walletReturn: safeWalletReturn(window.location.pathname + window.location.search) } })
     }
 
     setAuthExpiredHandler(handleAuthExpired)
@@ -304,6 +306,8 @@ function App() {
             <Route element={<ProtectedRoute><RouteAccessGuard><MainLayout /></RouteAccessGuard></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/wallet" element={<WalletPage />} />
+              <Route path="/wallet/pay/:token" element={<WalletPage />} />
               <Route path="/tv-pair" element={<TvPair />} />
 
               {/* Siswa — insight route must be before the wildcard */}

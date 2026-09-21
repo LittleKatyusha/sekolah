@@ -82,6 +82,18 @@ export const sekolahService = {
     return await apiService.post(`${BASE_URL}/${sekolahId}/settings/ai/test`, data)
   },
 
+  getMidtransSettings: async (sekolahId) => {
+    return await apiService.get(`${BASE_URL}/${sekolahId}/settings/midtrans`)
+  },
+
+  updateMidtransSettings: async (sekolahId, data) => {
+    return await apiService.put(`${BASE_URL}/${sekolahId}/settings/midtrans`, data)
+  },
+
+  testMidtransConnection: async (sekolahId, data) => {
+    return await apiService.post(`${BASE_URL}/${sekolahId}/settings/midtrans/test`, data)
+  },
+
   /**
    * Get a specific setting by ID for a sekolah
    * Endpoint: GET /sekolah/{sekolahId}/settings/{id}

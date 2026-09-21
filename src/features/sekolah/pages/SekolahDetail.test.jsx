@@ -13,6 +13,9 @@ vi.mock('../services/sekolahService', () => ({
     updateSetting: vi.fn(),
     updateAiSettings: vi.fn(),
     testAiConnection: vi.fn(),
+    getMidtransSettings: vi.fn(),
+    updateMidtransSettings: vi.fn(),
+    testMidtransConnection: vi.fn(),
     deleteSetting: vi.fn(),
   },
 }))
@@ -29,6 +32,19 @@ const renderPage = async (user) => {
   useAuthStore.setState({ user })
   sekolahService.getAll.mockResolvedValue({ data: { data: [{ id: 1, nama_sekolah: 'SMP Test' }] }, error: null })
   sekolahService.getSettings.mockResolvedValue({ data: { data: [setting] }, error: null })
+  sekolahService.getMidtransSettings.mockResolvedValue({
+    data: {
+      data: {
+        client_key: 'SB-Mid-client-xxx',
+        is_production: false,
+        is_3ds: true,
+        merchant_id: 'M123',
+        has_server_key: true,
+        is_custom: true,
+      },
+    },
+    error: null,
+  })
 
   render(
     <MemoryRouter>
@@ -170,6 +186,54 @@ describe('SekolahDetail settings', () => {
       )
       expect(screen.getByText('Koneksi AI Gateway Berhasil')).toBeInTheDocument()
       expect(screen.getByText('Waktu respon: 120 ms')).toBeInTheDocument()
+    })
+  })
+
+  it('allows school admin to update and test Midtrans settings', async () => {
+    sekolahService.updateMidtransSettings.mockResolvedValue({ data: {}, error: null })
+    sekolahService.testMidtransConnection.mockResolvedValue({
+      data: { message: 'Koneksi ke Midtrans berhasil diverifikasi!', data: { latency_ms: 85 } },
+      error: null,
+    })
+
+    await renderPage({
+      role: 'admin',
+      roles: [],
+      permissions: [
+        { code: 'sekolah.settings.view' },
+        { code: 'sekolah.settings.update' },
+      ],
+    })
+
+    expect(screen.getByText('Pengaturan Midtrans Payment Gateway')).toBeInTheDocument()
+
+    const clientKeyInput = screen.getByLabelText('Client Key Midtrans')
+    fireEvent.change(clientKeyInput, { target: { value: 'SB-Mid-client-new123' } })
+
+    const testBtn = screen.getByRole('button', { name: /Test Koneksi Midtrans/i })
+    fireEvent.click(testBtn)
+
+    await waitFor(() => {
+      expect(sekolahService.testMidtransConnection).toHaveBeenCalledWith(1, expect.objectContaining({
+        is_production: false,
+      }))
+      expect(showSuccess).toHaveBeenCalledWith(
+        'Koneksi ke Midtrans berhasil diverifikasi!',
+        'Test Koneksi Midtrans Berhasil'
+      )
+      expect(screen.getByText('Koneksi Midtrans Berhasil')).toBeInTheDocument()
+      expect(screen.getByText('Waktu respon: 85 ms')).toBeInTheDocument()
+    })
+
+    const saveBtn = screen.getByRole('button', { name: /Simpan Pengaturan Midtrans/i })
+    fireEvent.click(saveBtn)
+
+    await waitFor(() => {
+      expect(sekolahService.updateMidtransSettings).toHaveBeenCalledWith(1, expect.objectContaining({
+        client_key: 'SB-Mid-client-new123',
+        is_production: false,
+      }))
+      expect(showSuccess).toHaveBeenCalledWith('Konfigurasi Midtrans berhasil disimpan!')
     })
   })
 })

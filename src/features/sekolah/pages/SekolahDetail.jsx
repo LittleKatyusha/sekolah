@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -21,7 +21,22 @@ const SekolahDetail = () => {
   const [testingAi, setTestingAi] = useState(false)
   const [aiTestResult, setAiTestResult] = useState(null)
   const [aiSettings, setAiSettings] = useState({ provider: 'openai', base_url: '', model_id: '', api_key: '' })
-  const visibleSettings = settings.filter(({ key }) => !key.startsWith('ai_'))
+
+  const [savingMidtrans, setSavingMidtrans] = useState(false)
+  const [testingMidtrans, setTestingMidtrans] = useState(false)
+  const [midtransTestResult, setMidtransTestResult] = useState(null)
+  const [showServerKey, setShowServerKey] = useState(false)
+  const [midtransSettings, setMidtransSettings] = useState({
+    server_key: '',
+    client_key: '',
+    is_production: false,
+    is_3ds: true,
+    merchant_id: '',
+    has_server_key: false,
+    is_custom: false,
+  })
+
+  const visibleSettings = settings.filter(({ key }) => !key.startsWith('ai_') && !key.startsWith('midtrans_'))
 
   const AI_PROVIDERS = [
     { id: 'openai', label: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini' },
@@ -70,6 +85,66 @@ const SekolahDetail = () => {
       })
     }
     setLoadingSettings(false)
+    fetchMidtransSettings(sekolahId)
+  }
+
+  const fetchMidtransSettings = async (sekolahId) => {
+    const { data } = await sekolahService.getMidtransSettings(sekolahId)
+    if (data?.data) {
+      const res = data.data
+      setMidtransSettings({
+        server_key: '',
+        client_key: res.client_key || '',
+        is_production: Boolean(res.is_production),
+        is_3ds: res.is_3ds !== undefined ? Boolean(res.is_3ds) : true,
+        merchant_id: res.merchant_id || '',
+        has_server_key: Boolean(res.has_server_key),
+        is_custom: Boolean(res.is_custom),
+      })
+    }
+  }
+
+  const handleSaveMidtrans = async (event) => {
+    event.preventDefault()
+    setSavingMidtrans(true)
+    const payload = {
+      client_key: midtransSettings.client_key,
+      is_production: midtransSettings.is_production,
+      is_3ds: midtransSettings.is_3ds,
+      merchant_id: midtransSettings.merchant_id,
+    }
+    if (midtransSettings.server_key && midtransSettings.server_key.trim() !== '') {
+      payload.server_key = midtransSettings.server_key.trim()
+    }
+    const { error } = await sekolahService.updateMidtransSettings(sekolah.id, payload)
+    setSavingMidtrans(false)
+    if (error) return showError(error?.message || 'Gagal menyimpan konfigurasi Midtrans')
+    showSuccess('Konfigurasi Midtrans berhasil disimpan!')
+    fetchMidtransSettings(sekolah.id)
+    fetchSettings(sekolah.id)
+  }
+
+  const handleTestMidtrans = async () => {
+    setTestingMidtrans(true)
+    setMidtransTestResult(null)
+    const payload = {
+      is_production: midtransSettings.is_production,
+    }
+    if (midtransSettings.server_key && midtransSettings.server_key.trim() !== '') {
+      payload.server_key = midtransSettings.server_key.trim()
+    }
+    const { data, error } = await sekolahService.testMidtransConnection(sekolah.id, payload)
+    setTestingMidtrans(false)
+    if (error) {
+      const errMsg = error?.message || 'Gagal terhubung ke Midtrans API.'
+      setMidtransTestResult({ success: false, message: errMsg })
+      showError(errMsg, 'Test Koneksi Midtrans Gagal')
+      return
+    }
+    const msg = data?.message || 'Koneksi ke Midtrans berhasil diverifikasi!'
+    const latency = data?.data?.latency_ms
+    setMidtransTestResult({ success: true, message: msg, latency_ms: latency })
+    showSuccess(msg, 'Test Koneksi Midtrans Berhasil')
   }
 
   const handleProviderChange = (providerId) => {
@@ -449,6 +524,175 @@ const SekolahDetail = () => {
                 <Button type="submit" disabled={savingAi || testingAi}>
                   <Save size={18} className="mr-2" />
                   {savingAi ? 'Menyimpan...' : 'Simpan Pengaturan AI'}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </Card>
+      </PermissionGuard>
+
+      {/* Midtrans Payment Gateway Section */}
+      <PermissionGuard permission="sekolah.settings.update">
+        <Card>
+          <form onSubmit={handleSaveMidtrans} className="p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <CreditCard size={20} className="text-primary-600 dark:text-primary-400" />
+                  Pengaturan Midtrans Payment Gateway
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  Konfigurasi Server Key, Client Key, dan Environment Midtrans langsung dari database tanpa menyentuh kode.
+                </p>
+              </div>
+              {midtransSettings.is_custom && (
+                <span className="self-start sm:self-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                  Custom Sekolah
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Environment Midtrans
+                </label>
+                <select
+                  aria-label="Environment Midtrans"
+                  className="input-field mt-2 w-full"
+                  value={midtransSettings.is_production ? 'production' : 'sandbox'}
+                  onChange={(e) => setMidtransSettings(prev => ({ ...prev, is_production: e.target.value === 'production' }))}
+                >
+                  <option value="sandbox">Sandbox (Development / Testing)</option>
+                  <option value="production">Production (Live Transaksi Nyata)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Merchant ID (Opsional)
+                </label>
+                <input
+                  aria-label="Merchant ID Midtrans"
+                  placeholder="GXXXXX / MXXXXX"
+                  className="input-field mt-2 w-full"
+                  value={midtransSettings.merchant_id}
+                  onChange={(e) => setMidtransSettings(prev => ({ ...prev, merchant_id: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Client Key
+                </label>
+                <input
+                  aria-label="Client Key Midtrans"
+                  required
+                  placeholder="SB-Mid-client-... atau Mid-client-..."
+                  className="input-field mt-2 w-full"
+                  value={midtransSettings.client_key}
+                  onChange={(e) => setMidtransSettings(prev => ({ ...prev, client_key: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Server Key {midtransSettings.has_server_key && <span className="text-xs text-green-600 dark:text-green-400 font-normal">(Tersimpan)</span>}
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    aria-label="Server Key Midtrans"
+                    type={showServerKey ? 'text' : 'password'}
+                    placeholder={midtransSettings.has_server_key ? '•••••••• (Biarkan kosong jika tidak diubah)' : 'SB-Mid-server-... atau Mid-server-...'}
+                    className="input-field w-full pr-10"
+                    value={midtransSettings.server_key}
+                    onChange={(e) => setMidtransSettings(prev => ({ ...prev, server_key: e.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowServerKey(!showServerKey)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showServerKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                id="is_3ds_toggle"
+                type="checkbox"
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                checked={midtransSettings.is_3ds}
+                onChange={(e) => setMidtransSettings(prev => ({ ...prev, is_3ds: e.target.checked }))}
+              />
+              <label htmlFor="is_3ds_toggle" className="text-sm text-gray-700 dark:text-gray-300">
+                Aktifkan 3D Secure (Direkomendasikan untuk kartu kredit)
+              </label>
+            </div>
+
+            {midtransTestResult && (
+              <div
+                role="alert"
+                className={`p-3 rounded-lg text-sm flex items-start gap-2.5 ${
+                  midtransTestResult.success
+                    ? 'bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300 border border-green-200 dark:border-green-800'
+                    : 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800'
+                }`}
+              >
+                {midtransTestResult.success ? (
+                  <CheckCircle2 size={18} className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" />
+                ) : (
+                  <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium">{midtransTestResult.success ? 'Koneksi Midtrans Berhasil' : 'Koneksi Midtrans Gagal'}</p>
+                  <p className="text-xs mt-0.5">{midtransTestResult.message}</p>
+                  {midtransTestResult.latency_ms !== undefined && (
+                    <p className="text-xs mt-1 text-green-700 dark:text-green-400 font-mono">
+                      Waktu respon: {midtransTestResult.latency_ms} ms
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Server Key disimpan terenkripsi. Webhook dan SNAP akan menggunakan kunci ini secara otomatis.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleTestMidtrans}
+                  disabled={testingMidtrans || savingMidtrans}
+                >
+                  {testingMidtrans ? (
+                    <>
+                      <Loader2 size={18} className="mr-2 animate-spin" />
+                      Menguji...
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={18} className="mr-2" />
+                      Test Koneksi Midtrans
+                    </>
+                  )}
+                </Button>
+                <Button type="submit" disabled={savingMidtrans || testingMidtrans}>
+                  {savingMidtrans ? (
+                    <>
+                      <Loader2 size={18} className="mr-2 animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} className="mr-2" />
+                      Simpan Pengaturan Midtrans
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

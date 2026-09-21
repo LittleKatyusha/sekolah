@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
+import { safeWalletReturn } from '../features/wallet/wallet'
 import useAuthStore from '../store/useAuthStore'
 import { refreshToken as doRefresh } from '../utils/api'
 import authService from '../services/authService'
@@ -26,6 +27,7 @@ const needsProfileHydration = (user) => {
 }
 
 const ProtectedRoute = ({ children }) => {
+  const location = useLocation()
   const { isAuthenticated, token, refreshToken, user, authorizationStatus } = useAuthStore()
   const [initializing, setInitializing] = useState(isAuthenticated && !token)
 
@@ -97,7 +99,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" state={{ walletReturn: safeWalletReturn(location.pathname + location.search) }} replace />
   }
 
   if (authorizationStatus === 'error') {

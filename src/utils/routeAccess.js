@@ -1,4 +1,5 @@
 import { checkPermission, isSuperAdminUser } from '../hooks/usePermission'
+import { canUseWallet } from '../features/wallet/wallet'
 
 // Routes with no active API contract in routes/api.php or microservices. Keep them inaccessible
 // until the backend publishes the corresponding staff-facing endpoints.
@@ -450,6 +451,7 @@ export const canAccessPath = (user, pathname) => {
   if (!user) return false
 
   const normalized = (pathname || '').replace(/\/+$/, '') || '/'
+  if (normalized === '/wallet' || /^\/wallet\/pay\/[a-f0-9]{48}$/.test(normalized)) return canUseWallet(user)
   if (ALLOWLIST_PRIVATE_PATHS.some((path) => normalized === path || normalized.startsWith(`${path}/`))) {
     return true
   }
