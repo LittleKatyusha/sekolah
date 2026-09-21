@@ -136,6 +136,10 @@ export const PublicBlogDetail = () => {
     }
   }
 
+  const waShareUrl = artikel && typeof window !== 'undefined'
+    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(`${artikel.judul}\n\n${window.location.href}`)}`
+    : ''
+
   const schoolQuery = schoolId ? `sekolah=${encodeURIComponent(schoolId)}` : ''
 
   if (loading) {
@@ -176,14 +180,26 @@ export const PublicBlogDetail = () => {
             <ArrowLeft className="w-4 h-4" />
             <span>Semua Artikel</span>
           </Link>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>{copied ? 'Tersalin!' : 'Bagikan'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {waShareUrl && (
+              <a
+                href={waShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] text-white text-xs font-semibold hover:bg-[#20ba5a] transition"
+              >
+                <span>WhatsApp</span>
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>{copied ? 'Tersalin!' : 'Bagikan'}</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -234,8 +250,33 @@ export const PublicBlogDetail = () => {
         )}
 
         {/* Body Content */}
-        <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-100">
+        <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-100 space-y-6">
           <SafeArticleContent content={artikel.konten} className="text-slate-800 leading-relaxed text-base" />
+
+          {/* Share Footer */}
+          <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bagikan Artikel Ini:</span>
+            <div className="flex items-center gap-2">
+              {waShareUrl && (
+                <a
+                  href={waShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] text-white text-xs font-semibold hover:bg-[#20ba5a] transition"
+                >
+                  <span>WhatsApp</span>
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>{copied ? 'Tersalin!' : 'Bagikan / Salin'}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
