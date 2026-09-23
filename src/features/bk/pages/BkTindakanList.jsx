@@ -90,9 +90,9 @@ const BkTindakanList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-tindakan.view"
+              editPermission="bk-tindakan.manage"
+              deletePermission="bk-tindakan.manage"
             />
           </div>
         )

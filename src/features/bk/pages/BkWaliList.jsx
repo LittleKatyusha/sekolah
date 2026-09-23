@@ -107,9 +107,9 @@ const BkWaliList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-wali.view"
+              editPermission="bk-wali.manage"
+              deletePermission="bk-wali.manage"
             />
           </div>
         )

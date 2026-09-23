@@ -5,7 +5,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { bkKasusService, bkJenisService } from '../services/bkService'
+import { bkKasusService, bkJenisService, bkKategoriService } from '../services/bkService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { guruService } from '../../guru/services/guruService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -15,7 +15,7 @@ const BkKasusForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
-  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
+  const submitPermission = isEditMode ? 'bk-kasus.update' : 'bk-kasus.create'
 
   const { options: statusOptions } = useReferenceOptions('status_bk')
 
@@ -25,12 +25,16 @@ const BkKasusForm = () => {
   const [selectedSiswaOption, setSelectedSiswaOption] = useState(null)
   const [selectedGuruOption, setSelectedGuruOption] = useState(null)
   const [selectedJenisOption, setSelectedJenisOption] = useState(null)
+  const [selectedKategoriOption, setSelectedKategoriOption] = useState(null)
 
   const [formData, setFormData] = useState({
     siswa_id: '',
     guru_id: '',
     jenis_id: '',
+    kategori_id: '',
+    judul_kasus: '',
     tanggal: '',
+    tanggal_selesai: '',
     keterangan: '',
     status: ''
   })
@@ -50,6 +54,11 @@ const BkKasusForm = () => {
   const buildJenisOption = useCallback((jenis) => ({
     value: String(jenis.id),
     label: jenis.nama || `Jenis BK #${jenis.id}`
+  }), [])
+
+  const buildKategoriOption = useCallback((kategori) => ({
+    value: String(kategori.id),
+    label: kategori.nama || `Kategori BK #${kategori.id}`
   }), [])
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {
@@ -94,6 +103,20 @@ const BkKasusForm = () => {
     return []
   }, [buildJenisOption])
 
+  const searchKategoriOptions = useCallback(async (keyword = '') => {
+    const { data, error } = await bkKategoriService.getAll({
+      search: keyword || undefined,
+      per_page: 20
+    })
+
+    if (data?.data) {
+      return data.data.map(buildKategoriOption)
+    }
+
+    console.error('Error fetching kategori BK options:', error)
+    return []
+  }, [buildKategoriOption])
+
   // Fetch kasus data for edit mode with AbortController support
   useEffect(() => {
     if (!isEditMode) return
@@ -108,22 +131,26 @@ const BkKasusForm = () => {
 
         if (data) {
           const kasus = data.data
-          let statusValue = kasus.status || ''
-          // Convert string status to integer for the select
-          if (typeof statusValue === 'string' && statusStringToInt[statusValue] !== undefined) {
-            statusValue = statusStringToInt[statusValue]
-          }
+          const statusValue = kasus.status_code ?? (
+            typeof kasus.status === 'number'
+              ? kasus.status
+              : (statusOptions.find(o => o.label === kasus.status)?.value ?? '')
+          )
 
           const siswaId = String(kasus.siswa?.id || kasus.siswa_id || '')
           const guruId = String(kasus.guru?.id || kasus.guru_id || '')
           const jenisId = String(kasus.jenis?.id || kasus.jenis_id || '')
+          const kategoriId = String(kasus.kategori?.id || kasus.kategori_id || '')
 
           setFormData({
             siswa_id: siswaId,
             guru_id: guruId,
             jenis_id: jenisId,
-            tanggal: kasus.tanggal || '',
-            keterangan: kasus.keterangan || '',
+            kategori_id: kategoriId,
+            judul_kasus: kasus.judul_kasus || '',
+            tanggal: kasus.tanggal || kasus.tanggal_mulai || '',
+            tanggal_selesai: kasus.tanggal_selesai || '',
+            keterangan: kasus.keterangan || kasus.deskripsi_masalah || '',
             status: statusValue
           })
 
@@ -138,6 +165,10 @@ const BkKasusForm = () => {
 
           if (kasus.jenis?.id) {
             setSelectedJenisOption(buildJenisOption(kasus.jenis))
+          }
+
+          if (kasus.kategori?.id) {
+            setSelectedKategoriOption(buildKategoriOption(kasus.kategori))
           }
         } else {
           showError('Gagal mengambil data kasus BK')
@@ -159,7 +190,7 @@ const BkKasusForm = () => {
     fetchKasus()
 
     return () => controller.abort()
-  }, [id, isEditMode, navigate, buildSiswaOption, buildGuruOption, buildJenisOption])
+  }, [id, isEditMode, navigate, buildSiswaOption, buildGuruOption, buildJenisOption, buildKategoriOption, statusOptions])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -194,6 +225,9 @@ const BkKasusForm = () => {
       siswa_id: parseInt(formData.siswa_id, 10),
       guru_id: parseInt(formData.guru_id, 10),
       jenis_id: parseInt(formData.jenis_id, 10),
+      kategori_id: formData.kategori_id ? parseInt(formData.kategori_id, 10) : null,
+      judul_kasus: formData.judul_kasus || null,
+      tanggal_selesai: formData.tanggal_selesai || null,
     }
     if (submitData.status !== '' && submitData.status !== null && submitData.status !== undefined) {
       submitData.status = parseInt(submitData.status, 10) || submitData.status
@@ -243,6 +277,22 @@ const BkKasusForm = () => {
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Judul Kasus */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Judul Kasus
+                </label>
+                <input
+                  type="text"
+                  name="judul_kasus"
+                  value={formData.judul_kasus}
+                  onChange={handleChange}
+                  maxLength={150}
+                  placeholder="Judul atau perihal kasus BK"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+
               {/* Siswa */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -297,6 +347,23 @@ const BkKasusForm = () => {
                 />
               </div>
 
+              {/* Kategori BK */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Kategori BK
+                </label>
+                <SearchableSelect
+                  name="kategori_id"
+                  options={selectedKategoriOption ? [selectedKategoriOption] : []}
+                  value={formData.kategori_id}
+                  onChange={handleChange}
+                  loadOptions={searchKategoriOptions}
+                  placeholder="Pilih Kategori BK"
+                  searchPlaceholder="Cari kategori BK..."
+                  noOptionsText="Tidak ada kategori BK yang cocok"
+                />
+              </div>
+
               {/* Tanggal */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -314,6 +381,22 @@ const BkKasusForm = () => {
                 {errors.tanggal && <p className="mt-1 text-sm text-red-500">{Array.isArray(errors.tanggal) ? errors.tanggal[0] : errors.tanggal}</p>}
               </div>
 
+              {/* Tanggal Selesai */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Tanggal Selesai
+                </label>
+                <input
+                  type="date"
+                  name="tanggal_selesai"
+                  value={formData.tanggal_selesai}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
               {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

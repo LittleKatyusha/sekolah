@@ -12,7 +12,7 @@ const BkJenisForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
-  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
+  const submitPermission = isEditMode ? 'bk-jenis.update' : 'bk-jenis.create'
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)

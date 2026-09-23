@@ -108,9 +108,9 @@ const BkSesiList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-sesi.view"
+              editPermission="bk-sesi.manage"
+              deletePermission="bk-sesi.manage"
             />
           </div>
         )

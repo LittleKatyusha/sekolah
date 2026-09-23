@@ -74,9 +74,9 @@ const BkKategoriList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-kategori.view"
+              editPermission="bk-kategori.manage"
+              deletePermission="bk-kategori.manage"
             />
           </div>
         )
