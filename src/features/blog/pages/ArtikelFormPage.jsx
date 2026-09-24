@@ -210,15 +210,15 @@ export const ArtikelFormPage = () => {
         <div className="flex items-center gap-3">
           <Link
             to="/artikel"
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {isEdit ? 'Edit Artikel' : 'Tulis Artikel Baru'}
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Buat dan publikasikan berita sekolah atau karya tulis siswa & guru.
             </p>
           </div>
@@ -230,7 +230,7 @@ export const ArtikelFormPage = () => {
             type="button"
             disabled={submitting}
             onClick={() => handleSubmit('draft')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             <span>Simpan Draf</span>
@@ -248,10 +248,10 @@ export const ArtikelFormPage = () => {
       </div>
 
       {/* Main Form Fields */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
         {/* Title */}
         <div className="space-y-1">
-          <label htmlFor="judul" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="judul" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Judul Artikel <span className="text-rose-500">*</span>
           </label>
           <input
@@ -262,25 +262,27 @@ export const ArtikelFormPage = () => {
             value={judul}
             onChange={(e) => setJudul(e.target.value)}
             placeholder="Masukkan judul artikel yang menarik..."
-            className={`w-full rounded-lg border px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 ${
-              errors.judul ? 'border-rose-400 focus:ring-rose-200' : 'border-gray-300 focus:ring-indigo-200 focus:border-indigo-600'
+            className={`w-full rounded-lg border px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 dark:bg-gray-900 dark:text-gray-100 ${
+              errors.judul
+                ? 'border-rose-400 focus:ring-rose-200 dark:border-rose-500'
+                : 'border-gray-300 focus:ring-indigo-200 focus:border-indigo-600 dark:border-gray-700'
             }`}
           />
-          {errors.judul && <p className="text-xs text-rose-600">{errors.judul}</p>}
+          {errors.judul && <p className="text-xs text-rose-600 dark:text-rose-400">{errors.judul}</p>}
         </div>
 
         {/* Category & Thumbnail Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Category */}
           <div className="space-y-1">
-            <label htmlFor="kategori" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="kategori" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Kategori
             </label>
             <select
               id="kategori"
               value={kategoriId}
               onChange={(e) => setKategoriId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 bg-white"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 bg-white dark:bg-gray-900 dark:text-gray-100"
             >
               <option value="">-- Pilih Kategori --</option>
               {categories.map((c) => (
@@ -293,7 +295,7 @@ export const ArtikelFormPage = () => {
 
           {/* Thumbnail Upload */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Thumbnail / Cover</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Thumbnail / Cover</label>
             <div className="flex items-center gap-3">
               <input
                 type="file"
@@ -304,7 +306,7 @@ export const ArtikelFormPage = () => {
               />
               <label
                 htmlFor="thumbnail-upload"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-200 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 cursor-pointer transition-colors"
               >
                 {uploadingImage ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -319,7 +321,7 @@ export const ArtikelFormPage = () => {
                   <img
                     src={thumbnailUrl}
                     alt="Thumbnail preview"
-                    className="w-12 h-10 object-cover rounded-md border border-gray-200"
+                    className="w-12 h-10 object-cover rounded-md border border-gray-200 dark:border-gray-700"
                   />
                   <button
                     type="button"
@@ -331,13 +333,13 @@ export const ArtikelFormPage = () => {
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-400">Rekomendasi ukuran 1200x630 piksel (JPG/PNG/WEBP)</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Rekomendasi ukuran 1200x630 piksel (JPG/PNG/WEBP)</p>
           </div>
         </div>
 
         {/* Ringkasan (Excerpt) */}
         <div className="space-y-1">
-          <label htmlFor="ringkasan" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="ringkasan" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Ringkasan (Opsional)
           </label>
           <textarea
@@ -346,16 +348,16 @@ export const ArtikelFormPage = () => {
             value={ringkasan}
             onChange={(e) => setRingkasan(e.target.value)}
             placeholder="Biarkan kosong untuk ringkasan otomatis dari isi artikel..."
-            className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
           />
         </div>
 
         {/* Konten Editor (Lexical) */}
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Konten Artikel <span className="text-rose-500">*</span>
           </label>
-          <div className="border border-gray-300 rounded-lg overflow-hidden">
+          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
             <LexicalEditor
               value={konten}
               onChange={(html) => setKonten(html)}
@@ -363,7 +365,7 @@ export const ArtikelFormPage = () => {
               minHeight="350px"
             />
           </div>
-          {errors.konten && <p className="text-xs text-rose-600">{errors.konten}</p>}
+          {errors.konten && <p className="text-xs text-rose-600 dark:text-rose-400">{errors.konten}</p>}
         </div>
       </div>
     </div>

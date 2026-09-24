@@ -195,8 +195,8 @@ export const ArtikelListPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Artikel & Berita</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Artikel & Berita</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Kelola publikasi, artikel, berita, dan karya tulis warga sekolah.
           </p>
         </div>
@@ -214,8 +214,8 @@ export const ArtikelListPage = () => {
       </div>
 
       {/* Filter Tabs & Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between px-4 py-2 gap-3">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between px-4 py-2 gap-3">
           {/* Status Tabs */}
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-1">
             {TABS.map((tab) => (
@@ -225,8 +225,8 @@ export const ArtikelListPage = () => {
                 onClick={() => handleTabChange(tab.key)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 ${
                   activeTab === tab.key
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-900/40 dark:text-indigo-300'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700/50'
                 }`}
               >
                 {tab.label}
@@ -236,27 +236,27 @@ export const ArtikelListPage = () => {
 
           {/* Search Input */}
           <form onSubmit={handleSearchSubmit} className="relative w-full md:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Cari judul artikel..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-900"
             />
           </form>
         </div>
 
         {/* Table Content */}
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-500">
-            <RefreshCw className="w-6 h-6 animate-spin text-indigo-600 mr-2" />
+          <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400">
+            <RefreshCw className="w-6 h-6 animate-spin text-indigo-600 dark:text-indigo-400 mr-2" />
             <span className="text-sm">Memuat artikel...</span>
           </div>
         ) : articles.length === 0 ? (
           <div className="text-center py-16 px-4 space-y-2">
-            <p className="text-sm font-medium text-gray-700">Tidak ada artikel</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Tidak ada artikel</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {activeTab === 'all'
                 ? 'Belum ada artikel yang dibuat. Mulai tulis artikel baru.'
                 : `Tidak ada artikel dengan status "${activeTab}".`}
@@ -264,8 +264,8 @@ export const ArtikelListPage = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50/75 text-xs uppercase font-semibold text-gray-500 border-b border-gray-200">
+            <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+              <thead className="bg-gray-50/75 dark:bg-gray-800/60 text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                 <tr>
                   <th className="px-6 py-3">Artikel</th>
                   <th className="px-4 py-3">Penulis</th>
@@ -274,7 +274,7 @@ export const ArtikelListPage = () => {
                   <th className="px-6 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {articles.map((item) => {
                   const isAuthor = user && item.author_user_id === user.id
                   const canSelfEdit = isAuthor && (item.status === 'draft' || item.status === 'rejected')
@@ -285,39 +285,39 @@ export const ArtikelListPage = () => {
                   const isPublished = item.status === 'published'
 
                   return (
-                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/40 transition-colors">
                       <td className="px-6 py-4">
                         <div className="max-w-md">
-                          <div className="font-semibold text-gray-900 line-clamp-1">{item.judul}</div>
+                          <div className="font-semibold text-gray-900 dark:text-white line-clamp-1">{item.judul}</div>
                           <div className="flex items-center gap-2 mt-1">
                             {item.kategori && (
-                              <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                              <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded">
                                 {item.kategori.nama}
                               </span>
                             )}
-                            <span className="text-xs text-gray-400 font-mono">/{item.slug}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">/{item.slug}</span>
                           </div>
                           {item.rejection_note && item.status === 'rejected' && (
-                            <div className="mt-2 text-xs bg-rose-50 text-rose-700 p-2 rounded border border-rose-200">
+                            <div className="mt-2 text-xs bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 p-2 rounded border border-rose-200 dark:border-rose-800">
                               <span className="font-semibold">Catatan Reviewer:</span> {item.rejection_note}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{item.author_name}</div>
-                        <div className="text-xs text-gray-500 capitalize">{item.author_type}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-200">{item.author_name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{item.author_type}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <ArtikelStatusBadge status={item.status} />
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                         <div>
                           {item.published_at
                             ? new Date(item.published_at).toLocaleDateString('id-ID')
                             : new Date(item.created_at).toLocaleDateString('id-ID')}
                         </div>
-                        <div className="flex items-center gap-1 text-gray-400 mt-0.5">
+                        <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500 mt-0.5">
                           <Eye className="w-3 h-3" />
                           <span>{item.view_count || 0}</span>
                         </div>
@@ -329,7 +329,7 @@ export const ArtikelListPage = () => {
                             to={`/blog/${item.slug}`}
                             target="_blank"
                             title="Buka Halaman Publik"
-                            className="inline-flex p-1.5 text-gray-500 hover:text-indigo-600 rounded-lg hover:bg-gray-100"
+                            className="inline-flex p-1.5 text-gray-500 hover:text-indigo-600 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-gray-700"
                           >
                             <ExternalLink className="w-4 h-4" />
                           </Link>
@@ -341,7 +341,7 @@ export const ArtikelListPage = () => {
                             type="button"
                             onClick={() => handleSubmitForReview(item)}
                             title="Ajukan Review"
-                            className="inline-flex p-1.5 text-amber-600 hover:text-amber-700 rounded-lg hover:bg-amber-50"
+                            className="inline-flex p-1.5 text-amber-600 hover:text-amber-700 rounded-lg hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/30"
                           >
                             <Send className="w-4 h-4" />
                           </button>
@@ -354,7 +354,7 @@ export const ArtikelListPage = () => {
                               type="button"
                               onClick={() => openReviewModal(item, 'approve')}
                               title="Setujui / Tolak"
-                              className="inline-flex p-1.5 text-emerald-600 hover:text-emerald-700 rounded-lg hover:bg-emerald-50"
+                              className="inline-flex p-1.5 text-emerald-600 hover:text-emerald-700 rounded-lg hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/30"
                             >
                               <CheckCircle2 className="w-4 h-4" />
                             </button>
@@ -367,7 +367,7 @@ export const ArtikelListPage = () => {
                             type="button"
                             onClick={() => handleArchive(item)}
                             title="Arsipkan Artikel"
-                            className="inline-flex p-1.5 text-zinc-600 hover:text-zinc-700 rounded-lg hover:bg-zinc-100"
+                            className="inline-flex p-1.5 text-zinc-600 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-300 dark:hover:bg-gray-700"
                           >
                             <Archive className="w-4 h-4" />
                           </button>
@@ -379,7 +379,7 @@ export const ArtikelListPage = () => {
                             type="button"
                             onClick={() => navigate(`/artikel/${item.id}/edit`)}
                             title="Edit Artikel"
-                            className="inline-flex p-1.5 text-indigo-600 hover:text-indigo-700 rounded-lg hover:bg-indigo-50"
+                            className="inline-flex p-1.5 text-indigo-600 hover:text-indigo-700 rounded-lg hover:bg-indigo-50 dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-900/30"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -391,7 +391,7 @@ export const ArtikelListPage = () => {
                             type="button"
                             onClick={() => handleDelete(item)}
                             title="Hapus Artikel"
-                            className="inline-flex p-1.5 text-rose-600 hover:text-rose-700 rounded-lg hover:bg-rose-50"
+                            className="inline-flex p-1.5 text-rose-600 hover:text-rose-700 rounded-lg hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-900/30"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -407,7 +407,7 @@ export const ArtikelListPage = () => {
 
         {/* Pagination */}
         {meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 text-xs text-gray-500">
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
             <span>
               Menampilkan {articles.length} dari {meta.total} artikel
             </span>
@@ -416,16 +416,16 @@ export const ArtikelListPage = () => {
                 type="button"
                 disabled={meta.current_page <= 1}
                 onClick={() => setMeta((p) => ({ ...p, current_page: p.current_page - 1 }))}
-                className="px-2.5 py-1 border rounded bg-white disabled:opacity-40"
+                className="px-2.5 py-1 border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
               >
                 Sebelumnya
               </button>
-              <span>{meta.current_page} / {meta.last_page}</span>
+              <span className="text-gray-700 dark:text-gray-300">{meta.current_page} / {meta.last_page}</span>
               <button
                 type="button"
                 disabled={meta.current_page >= meta.last_page}
                 onClick={() => setMeta((p) => ({ ...p, current_page: p.current_page + 1 }))}
-                className="px-2.5 py-1 border rounded bg-white disabled:opacity-40"
+                className="px-2.5 py-1 border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
               >
                 Selanjutnya
               </button>
