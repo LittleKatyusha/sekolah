@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { Calendar, Eye, User, ArrowLeft, RefreshCw, AlertCircle, Share2, Tag } from 'lucide-react'
+import { Calendar, Eye, User, ArrowLeft, RefreshCw, AlertCircle, Share2, Check, Link as LinkIcon, BookOpen } from 'lucide-react'
 import { blogService } from '../services/blogService'
 import { SafeArticleContent } from '../components/SafeArticleContent'
 import { getSubdomain } from '../../sekolah/pages/PublicProfile'
+import useAuthStore from '../../../store/useAuthStore'
 
 export const PublicBlogDetail = () => {
   const { slug } = useParams()
@@ -13,12 +14,22 @@ export const PublicBlogDetail = () => {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
 
-  const schoolId =
-    searchParams.get('sekolah') ||
-    searchParams.get('tenant') ||
-    searchParams.get('subdomain') ||
-    searchParams.get('identifier') ||
-    getSubdomain()
+  const resolveSchoolId = () => {
+    const fromParam = searchParams.get('sekolah') || searchParams.get('tenant') || searchParams.get('subdomain') || searchParams.get('identifier')
+    if (fromParam) return fromParam.toLowerCase().trim()
+
+    const sub = getSubdomain()
+    if (sub && sub !== 'app' && sub !== 'www') return sub
+
+    const user = useAuthStore.getState().user
+    if (user?.tenant?.slug) return user.tenant.slug
+    if (user?.tenant?.id) return String(user.tenant.id)
+    if (user?.mst_sekolah_id) return String(user.mst_sekolah_id)
+
+    return 'akademihub'
+  }
+
+  const schoolId = resolveSchoolId()
 
   useEffect(() => {
     if (!slug) return
@@ -122,51 +133,56 @@ export const PublicBlogDetail = () => {
     }
   }, [artikel])
 
-  const handleShare = async () => {
-    if (navigator.share) {
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
+  const shareTitle = artikel?.judul || 'Artikel Sekolah'
+
+  const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareTitle}\n\n${shareUrl}`)}`
+  const xLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`
+  const fbLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+  const liLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
+
+  const handleCopy = async () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try {
-        await navigator.share({
-          title: artikel?.judul,
-          text: artikel?.ringkasan,
-          url: window.location.href,
-        })
-      } catch {
-        // Ignored
-      }
-    } else {
-      navigator.clipboard?.writeText(window.location.href)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+        await navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2200)
+      } catch {}
     }
   }
 
-  const waShareUrl = artikel && typeof window !== 'undefined'
-    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(`${artikel.judul}\n\n${window.location.href}`)}`
-    : ''
+  const schoolQuery = schoolId && schoolId !== 'akademihub' ? `sekolah=${encodeURIComponent(schoolId)}` : ''
 
-  const schoolQuery = schoolId ? `sekolah=${encodeURIComponent(schoolId)}` : ''
+  const formattedDate = artikel?.published_at
+    ? new Date(artikel.published_at).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : ''
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
-        <RefreshCw className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="min-h-screen bg-[#fbfaf6] flex flex-col items-center justify-center text-[#52605b]">
+        <RefreshCw className="w-8 h-8 animate-spin text-[#245a49] mb-3" />
+        <p className="text-sm">Memuat artikel...</p>
       </div>
     )
   }
 
   if (error || !artikel) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center space-y-4">
+      <div className="min-h-screen bg-[#fbfaf6] flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm border border-[#eaece8] text-center space-y-4">
           <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-          <h2 className="text-lg font-bold text-slate-900">Artikel Tidak Ditemukan</h2>
-          <p className="text-sm text-slate-600">{error || 'Artikel yang Anda cari tidak tersedia atau belum terbit.'}</p>
+          <h2 className="text-lg font-bold text-[#14231f]">Artikel Tidak Ditemukan</h2>
+          <p className="text-sm text-[#52605b]">{error || 'Artikel yang Anda cari tidak tersedia atau belum terbit.'}</p>
           <Link
             to={`/blog${schoolQuery ? `?${schoolQuery}` : ''}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#245a49] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3e33] transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Kembali ke Berita</span>
+            <span>Kembali ke Blog</span>
           </Link>
         </div>
       </div>
@@ -174,115 +190,145 @@ export const PublicBlogDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div className="min-h-screen bg-[#fbfaf6] text-[#14231f] flex flex-col font-sans">
+      <header className="bg-white/95 backdrop-blur-sm border-b border-[#eaece8] sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             to={`/blog${schoolQuery ? `?${schoolQuery}` : ''}`}
-            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-indigo-600"
+            className="inline-flex items-center gap-2 text-sm text-[#52605b] hover:text-[#245a49] font-medium transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Semua Artikel</span>
+            <span>← Kembali ke Blog</span>
           </Link>
           <div className="flex items-center gap-2">
-            {waShareUrl && (
-              <a
-                href={waShareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] text-white text-xs font-semibold hover:bg-[#20ba5a] transition"
-              >
-                <span>WhatsApp</span>
-              </a>
-            )}
-            <button
-              type="button"
-              onClick={handleShare}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>{copied ? 'Tersalin!' : 'Bagikan'}</span>
-            </button>
+            <BookOpen className="w-4 h-4 text-[#245a49]" />
+            <span className="font-semibold text-xs text-[#14231f] uppercase tracking-wider">Kabar &amp; Panduan</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-10 flex-1 w-full space-y-8">
-        {/* Header Meta */}
-        <div className="space-y-4">
-          {artikel.kategori && (
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700">
-              <Tag className="w-3 h-3" />
-              <span>{artikel.kategori.nama}</span>
-            </div>
-          )}
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full space-y-8">
+        {/* Header Meta & Title */}
+        <header className="space-y-4">
+          <div className="flex items-center flex-wrap gap-2.5 text-xs text-[#52605b]">
+            {artikel.kategori && (
+              <span className="bg-[#eef5f2] text-[#245a49] font-semibold px-3 py-1 rounded text-xs">
+                {artikel.kategori.nama}
+              </span>
+            )}
+            {formattedDate && <time dateTime={artikel.published_at}>{formattedDate}</time>}
+            <span>· {artikel.view_count || 0} pembaca</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#14231f] leading-tight tracking-tight">
             {artikel.judul}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-2 border-b pb-4">
-            <span className="flex items-center gap-1 font-medium text-slate-700">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              {artikel.author_name || 'Redaksi'}
-            </span>
-            {artikel.published_at && (
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                {new Date(artikel.published_at).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5 text-slate-400" />
-              {artikel.view_count || 0} dibaca
-            </span>
-          </div>
-        </div>
+          {artikel.ringkasan && (
+            <p className="text-lg text-[#52605b] leading-relaxed font-normal">
+              {artikel.ringkasan}
+            </p>
+          )}
 
-        {/* Thumbnail */}
+          <div className="text-sm text-[#52605b] pt-1">
+            Ditulis oleh <strong className="text-[#14231f] font-semibold">{artikel.author_name || 'Tim Redaksi'}</strong>
+          </div>
+
+          {/* Social Share Bar */}
+          <div className="flex items-center flex-wrap gap-2 pt-2 border-y border-[#eaece8] py-3 text-xs">
+            <span className="font-medium text-[#52605b] mr-1">Bagikan:</span>
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] text-white font-semibold hover:bg-[#20ba5a] transition"
+              title="Bagikan ke WhatsApp"
+            >
+              <span>WhatsApp</span>
+            </a>
+            <a
+              href={xLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#d8dcd5] bg-white text-[#14231f] font-semibold hover:border-[#14231f] transition"
+              title="Bagikan ke X / Twitter"
+            >
+              <span>X</span>
+            </a>
+            <a
+              href={fbLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1877F2] text-white font-semibold hover:bg-[#166fe5] transition"
+              title="Bagikan ke Facebook"
+            >
+              <span>Facebook</span>
+            </a>
+            <a
+              href={liLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0A66C2] text-white font-semibold hover:bg-[#095196] transition"
+              title="Bagikan ke LinkedIn"
+            >
+              <span>LinkedIn</span>
+            </a>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
+                copied
+                  ? 'bg-[#eef5f2] border-[#245a49] text-[#245a49]'
+                  : 'bg-white border-[#d8dcd5] text-[#14231f] hover:border-[#245a49]'
+              }`}
+              title="Salin tautan artikel"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-[#245a49]" /> : <LinkIcon className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Tersalin!' : 'Salin tautan'}</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Thumbnail Image */}
         {artikel.thumbnail_url && (
-          <div className="rounded-2xl overflow-hidden bg-slate-100 shadow-sm">
+          <div className="rounded-xl overflow-hidden bg-[#eaece8] border border-[#eaece8]">
             <img
               src={artikel.thumbnail_url}
               alt={artikel.judul}
-              className="w-full h-auto max-h-[450px] object-cover"
+              className="w-full h-auto max-h-[500px] object-cover"
             />
           </div>
         )}
 
-        {/* Body Content */}
-        <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-          <SafeArticleContent content={artikel.konten} className="text-slate-800 leading-relaxed text-base" />
+        {/* Article Body */}
+        <article className="bg-white p-6 sm:p-10 rounded-xl border border-[#eaece8] shadow-sm space-y-6">
+          <SafeArticleContent content={artikel.konten} className="text-[#14231f] leading-relaxed text-base prose prose-slate max-w-none" />
+        </article>
 
-          {/* Share Footer */}
-          <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bagikan Artikel Ini:</span>
-            <div className="flex items-center gap-2">
-              {waShareUrl && (
-                <a
-                  href={waShareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] text-white text-xs font-semibold hover:bg-[#20ba5a] transition"
-                >
-                  <span>WhatsApp</span>
-                </a>
-              )}
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>{copied ? 'Tersalin!' : 'Bagikan / Salin'}</span>
-              </button>
-            </div>
+        {/* CTA Box (matching https://akademihub.id/blog/) */}
+        <section className="bg-white border border-[#eaece8] p-8 rounded-xl text-center space-y-3 shadow-sm">
+          <h3 className="text-xl font-bold text-[#14231f]">Kelola Urusan Sekolah Lebih Praktis Bersama AkademiHub</h3>
+          <p className="text-[#52605b] text-sm max-w-lg mx-auto">
+            Tinggalkan pencatatan manual dan sistem yang terpisah. Kunjungi profil resmi sekolah untuk informasi dan layanan digital terintegrasi.
+          </p>
+          <div className="pt-2">
+            <Link
+              to={schoolQuery ? `/profile?${schoolQuery}` : '/'}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#245a49] hover:bg-[#1a3e33] text-white text-sm font-semibold rounded-lg shadow-sm transition"
+            >
+              <span>Kunjungi Profil Sekolah</span>
+              <span aria-hidden="true">↗</span>
+            </Link>
           </div>
-        </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-[#eaece8] py-8 text-center text-xs text-[#52605b]">
+        <div className="max-w-7xl mx-auto px-4">
+          <p>© 2026 AkademiHub. Seluruh hak cipta dilindungi.</p>
+        </div>
+      </footer>
     </div>
   )
 }
