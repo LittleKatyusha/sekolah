@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Award } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -264,6 +264,9 @@ const SekolahDetail = () => {
     handleCancelEditSetting()
     showSuccess(`Setting "${setting.key}" berhasil diperbarui!`)
     fetchSettings(sekolah.id)
+    if (setting.key?.includes('kepala_sekolah')) {
+      fetchSekolah()
+    }
   }
 
   const formatDate = (dateString) => {
@@ -409,6 +412,19 @@ const SekolahDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Subscription Plan</p>
                     <p className="font-medium text-gray-900 dark:text-white capitalize">{sekolah.subscription_plan || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Award size={20} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Kepala Sekolah</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{sekolah.kepala_sekolah?.nama || '-'}</p>
+                    {sekolah.kepala_sekolah?.nip && sekolah.kepala_sekolah.nip !== '-' && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">NIP. {sekolah.kepala_sekolah.nip}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -786,6 +802,10 @@ const SekolahDetail = () => {
                                 if (event.key === 'Escape') handleCancelEditSetting()
                               }}
                             />
+                          ) : setting.key === 'kepala_sekolah_user_id' && sekolah?.kepala_sekolah?.nama ? (
+                            <span>
+                              {setting.value || '-'} <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sekolah.kepala_sekolah.nama})</span>
+                            </span>
                           ) : (
                             setting.value || '-'
                           )}
