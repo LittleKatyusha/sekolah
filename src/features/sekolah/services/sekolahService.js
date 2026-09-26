@@ -5,6 +5,15 @@ const BASE_URL = '/sekolah'
 
 export const sekolahService = {
   /**
+   * Get current sekolah details for authenticated user / tenant
+   * @param {Object} [params] - Query parameters (e.g. { sekolah_id })
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  getCurrent: async (params = {}) => {
+    return await apiService.get(`${BASE_URL}/current`, { params })
+  },
+
+  /**
    * Get all sekolah with pagination and filtering
    * @param {Object} params - Query parameters
    * @returns {Promise<{data: any, error: any}>}

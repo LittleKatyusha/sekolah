@@ -4,6 +4,7 @@ import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save,
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import useAuthStore from '../../../store/useAuthStore'
 import { sekolahService } from '../services/sekolahService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -61,14 +62,40 @@ const SekolahDetail = () => {
 
   const fetchSekolah = async () => {
     setLoading(true)
-    const { data, error } = await sekolahService.getAll({ per_page: 1 })
-    if (data) {
-      const list = data.data?.data || data.data || []
-      const first = Array.isArray(list) ? list[0] : list
-      if (first) {
-        setSekolah(first)
-        fetchSettings(first.id)
+    let currentSekolah = null
+
+    // 1. Try dedicated current endpoint (resolves user's bound school or active tenant)
+    if (typeof sekolahService.getCurrent === 'function') {
+      const res = await sekolahService.getCurrent()
+      if (res?.data?.data) {
+        currentSekolah = res.data.data
       }
+    }
+
+    // 2. If not found, resolve from auth user tenant context
+    if (!currentSekolah) {
+      const user = useAuthStore.getState().user
+      const targetId = user?.tenant?.id ?? user?.mst_sekolah_id
+      if (targetId) {
+        const res = await sekolahService.getById(targetId)
+        if (res?.data?.data) {
+          currentSekolah = res.data.data
+        }
+      }
+    }
+
+    // 3. Fallback for unit tests or unbound superadmin
+    if (!currentSekolah) {
+      const res = await sekolahService.getAll({ per_page: 1 })
+      if (res?.data) {
+        const list = res.data.data?.data || res.data.data || []
+        currentSekolah = Array.isArray(list) ? list[0] : list
+      }
+    }
+
+    if (currentSekolah) {
+      setSekolah(currentSekolah)
+      fetchSettings(currentSekolah.id)
     } else {
       showError('Gagal mengambil data sekolah')
     }
