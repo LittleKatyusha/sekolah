@@ -59,7 +59,8 @@ export const PublicBlogDetail = () => {
     if (!artikel) return
 
     const prevTitle = document.title
-    document.title = `${artikel.judul} — Artikel Sekolah`
+    const schoolLabel = artikel.sekolah_nama || (schoolId && schoolId !== 'akademihub' ? schoolId.toUpperCase() : 'Artikel Sekolah')
+    document.title = `${artikel.judul} — ${schoolLabel}`
 
     // Helper for meta tags
     const setMeta = (attr, key, content) => {
@@ -73,11 +74,20 @@ export const PublicBlogDetail = () => {
       el.setAttribute('content', content)
     }
 
+    const cleanCanonical = `${window.location.origin}/blog/${slug}`
+    let canonicalEl = document.querySelector('link[rel="canonical"]')
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link')
+      canonicalEl.setAttribute('rel', 'canonical')
+      document.head.appendChild(canonicalEl)
+    }
+    canonicalEl.setAttribute('href', cleanCanonical)
+
     setMeta('name', 'description', artikel.ringkasan || '')
     setMeta('property', 'og:title', artikel.judul)
     setMeta('property', 'og:description', artikel.ringkasan || '')
     setMeta('property', 'og:type', 'article')
-    setMeta('property', 'og:url', window.location.href)
+    setMeta('property', 'og:url', cleanCanonical)
     setMeta('property', 'twitter:card', 'summary_large_image')
     setMeta('name', 'twitter:card', 'summary_large_image')
     setMeta('property', 'twitter:title', artikel.judul)
@@ -130,6 +140,8 @@ export const PublicBlogDetail = () => {
       document.title = prevTitle
       const existingScript = document.getElementById('blog-posting-jsonld')
       if (existingScript) existingScript.remove()
+      const cEl = document.querySelector('link[rel="canonical"]')
+      if (cEl) cEl.remove()
     }
   }, [artikel])
 

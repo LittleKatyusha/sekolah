@@ -121,6 +121,46 @@ export const PublicBlogList = () => {
   const schoolQuery = schoolId && schoolId !== 'akademihub' ? `sekolah=${encodeURIComponent(schoolId)}` : ''
   const displayName = schoolInfo?.nama || schoolInfo?.nama_sekolah || (schoolId !== 'akademihub' ? schoolId.toUpperCase() : '')
 
+  useEffect(() => {
+    const prevTitle = document.title
+    document.title = displayName ? `Kabar & Artikel · ${displayName} | AkademiHub` : 'Kabar & Artikel | AkademiHub'
+
+    const setMeta = (attr, key, content) => {
+      if (!content) return
+      let el = document.querySelector(`meta[${attr}="${key}"]`)
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute(attr, key)
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', content)
+    }
+
+    const desc = displayName
+      ? `Publikasi prestasi, liputan kegiatan, dan kabar terkini dari civitas akademika ${displayName}.`
+      : 'Wawasan dan panduan praktis tata usaha digital, manajemen sekolah, dan liputan kegiatan.'
+
+    setMeta('name', 'description', desc)
+    setMeta('property', 'og:title', displayName ? `Kabar & Artikel · ${displayName}` : 'Kabar & Artikel')
+    setMeta('property', 'og:description', desc)
+    setMeta('property', 'og:type', 'website')
+
+    let canonicalEl = document.querySelector('link[rel="canonical"]')
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link')
+      canonicalEl.setAttribute('rel', 'canonical')
+      document.head.appendChild(canonicalEl)
+    }
+    const cleanCanonical = `${window.location.origin}/blog`
+    canonicalEl.setAttribute('href', cleanCanonical)
+
+    return () => {
+      document.title = prevTitle
+      const cEl = document.querySelector('link[rel="canonical"]')
+      if (cEl) cEl.remove()
+    }
+  }, [displayName])
+
   return (
     <div className="min-h-screen bg-[#fbfaf6] text-[#14231f] flex flex-col font-sans">
       <header className="bg-white/95 backdrop-blur-sm border-b border-[#eaece8] sticky top-0 z-20">

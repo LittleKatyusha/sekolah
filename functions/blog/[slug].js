@@ -92,7 +92,7 @@ export async function onRequestGet(context) {
     const title = `${escapeAttr(article.judul)} — ${schoolLabel}`
     const desc = escapeAttr(article.ringkasan || 'Kabar dan artikel pendidikan sekolah.')
     const image = article.thumbnail_url || 'https://akademihub.id/logo-akademihub-horizontal.png'
-    const canonical = url.href
+    const canonical = `${url.origin}/blog/${encodeURIComponent(slug)}`
     const publishedAt = article.published_at || new Date().toISOString()
     const authorName = escapeAttr(article.author_name || 'Tim Redaksi')
     const imageType = image.endsWith('.png') ? 'image/png' : image.endsWith('.webp') ? 'image/webp' : 'image/jpeg'
@@ -101,12 +101,14 @@ export async function onRequestGet(context) {
     html = html.replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
     html = html.replace(/<meta\s+name=["']description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta name="description" content="${desc}" />`)
 
-    // Strip existing OG/Twitter tags and previous JSON-LD to prevent duplicates
+    // Strip existing canonical, OG/Twitter tags and previous JSON-LD to prevent duplicates
+    html = html.replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>\s*/gi, '')
     html = html.replace(/<meta\s+[^>]*(?:property|name)=["'](?:og|twitter):[^"']*["'][^>]*>\s*/gi, '')
     html = html.replace(/<meta\s+[^>]*property=["']article:[^"']*["'][^>]*>\s*/gi, '')
     html = html.replace(/<script[^>]*id=["']article-jsonld["'][^>]*>[\s\S]*?<\/script>\s*/gi, '')
 
     const metaTags = `
+    <link rel="canonical" href="${canonical}" />
     <!-- Open Graph / WhatsApp / Facebook -->
     <meta property="og:site_name" content="${schoolLabel}" />
     <meta property="og:type" content="article" />
