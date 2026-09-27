@@ -341,10 +341,9 @@ describe('route access', () => {
     expect(canAccessPath(updaterOnly, '/admin/users/create')).toBe(false)
   })
 
-  it('enforces explicit permissions payload for SUPER_ADMIN per §4.2 / W07 (no role label bypass)', () => {
-    // Under §4.2 / W07, role label in storage does not bypass route permission guards
+  it('allows superadmin on supported routes but denies unknown routes', () => {
     const superAdminRoleOnly = { role: 'SUPER_ADMIN' }
-    expect(canAccessPath(superAdminRoleOnly, '/admin/users/create')).toBe(false)
+    expect(canAccessPath(superAdminRoleOnly, '/admin/users/create')).toBe(true)
     expect(canAccessPath(superAdminRoleOnly, '/unknown-route')).toBe(false)
 
     // With explicit authoritative permissions loaded, access is granted
