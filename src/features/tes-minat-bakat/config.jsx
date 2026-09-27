@@ -151,7 +151,7 @@ const getName = (value, fallback = '-') => value || fallback
 const renderOpsiLabel = (opsi) => {
   if (!opsi) return '-'
 
-  const label = [opsi.label, opsi.teks_opsi].filter(Boolean).join(' - ')
+  const label = [opsi.label, opsi.opsi ?? opsi.teks_opsi].filter(Boolean).join(' - ')
   return label || '-'
 }
 
@@ -168,12 +168,12 @@ const renderOpsiList = (opsi = []) => {
   return (
     <div className="space-y-2">
       {opsi.map((item) => (
-        <div key={item.id || `${item.label}-${item.urutan || 0}`} className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
+        <div key={item.id || `${item.label}-${item.nomor_urut ?? item.urutan ?? 0}`} className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
           <div className="text-sm font-medium text-gray-900 dark:text-white">{renderOpsiLabel(item)}</div>
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Skor: {item.skor ?? '-'}
+            Skor: {item.nilai ?? item.skor ?? '-'}
             {item.aspek?.nama_aspek ? ` | Aspek: ${item.aspek.nama_aspek}` : ''}
-            {item.urutan ? ` | Urutan: ${item.urutan}` : ''}
+            {(item.nomor_urut ?? item.urutan) != null ? ` | Urutan: ${item.nomor_urut ?? item.urutan}` : ''}
           </div>
         </div>
       ))}
