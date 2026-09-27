@@ -39,7 +39,7 @@ const OrganisasiForm = () => {
   }, [id])
 
   const fetchGuruOptions = async () => {
-    const { data } = await guruService.getAll({ per_page: 100 })
+    const { data } = await guruService.getAll({ per_page: 'all' })
     if (data?.data) {
       setGuruOptions(data.data.map(g => ({
         value: String(g.id),

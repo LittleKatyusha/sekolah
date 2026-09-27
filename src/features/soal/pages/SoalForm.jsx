@@ -4,7 +4,8 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import Input from '../../../components/ui/Input'
+import SearchableSelect from '../../../components/ui/SearchableSelect'
+import { mapelService } from '../../mapel/services/mapelService'
 import LexicalEditor from '../../../components/ui/LexicalEditor'
 import '../../../components/ui/LexicalEditor.css'
 import { showSoal, storeSoal, updateSoal } from '../services/soalService'
@@ -21,11 +22,18 @@ const SoalForm = () => {
   const [formData, setFormData] = useState({
     pertanyaan: '',
     tipe: '',
-    trx_ujian_id: '',
-    bobot: 1,
+    mst_mapel_id: '',
   })
 
   const [errors, setErrors] = useState({})
+  const [mapelOptions, setMapelOptions] = useState([])
+
+  useEffect(() => {
+    mapelService.getMapel({ per_page: 'all' }).then(({ data, error }) => {
+      if (error) return showError('Gagal mengambil mata pelajaran')
+      setMapelOptions((data?.data || []).map((mapel) => ({ value: String(mapel.id), label: mapel.nama || mapel.nama_mapel || `Mapel #${mapel.id}` })))
+    })
+  }, [])
 
   useEffect(() => {
     if (isEditMode) {
@@ -38,13 +46,11 @@ const SoalForm = () => {
     const { data, error } = await showSoal(id)
     if (data) {
       const soal = data.data
-      const ujianId = soal.trx_ujian_id ? String(soal.trx_ujian_id) : ''
 
       setFormData({
         pertanyaan: soal.pertanyaan || '',
         tipe: soal.tipe || '',
-        trx_ujian_id: ujianId,
-        bobot: soal.bobot || 1,
+        mst_mapel_id: String(soal.mst_mapel_id ?? soal.mapel?.id ?? ''),
       })
     } else {
       showError('Gagal mengambil data soal')
@@ -66,8 +72,7 @@ const SoalForm = () => {
     
     if (!formData.pertanyaan.trim()) newErrors.pertanyaan = 'Pertanyaan wajib diisi'
     if (!formData.tipe) newErrors.tipe = 'Tipe soal wajib dipilih'
-    if (!formData.trx_ujian_id) newErrors.trx_ujian_id = 'Ujian wajib dipilih'
-    if (!formData.bobot && formData.bobot !== 0) newErrors.bobot = 'Bobot wajib diisi'
+    if (!formData.mst_mapel_id) newErrors.mst_mapel_id = 'Mata pelajaran wajib dipilih'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -83,8 +88,7 @@ const SoalForm = () => {
     const submitData = {
       pertanyaan: formData.pertanyaan,
       tipe: formData.tipe,
-      trx_ujian_id: Number(formData.trx_ujian_id),
-      bobot: formData.bobot,
+      mst_mapel_id: Number(formData.mst_mapel_id),
     }
 
     let result
@@ -165,34 +169,17 @@ const SoalForm = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Ujian */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Ujian <span className="text-red-500">*</span>
+                    Mata Pelajaran <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    type="number"
-                    value={formData.trx_ujian_id}
-                    name="trx_ujian_id"
+                  <SearchableSelect
+                    value={formData.mst_mapel_id}
+                    name="mst_mapel_id"
                     onChange={handleChange}
-                    placeholder="ID ujian"
-                    error={errors.trx_ujian_id}
-                  />
-                </div>
-
-                {/* Bobot */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Bobot <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    name="bobot"
-                    value={formData.bobot}
-                    onChange={handleChange}
-                    placeholder="Masukkan bobot soal"
-                    min="0"
-                    error={errors.bobot}
+                    options={mapelOptions}
+                    placeholder="Pilih mata pelajaran"
+                    error={errors.mst_mapel_id}
                   />
                 </div>
               </div>

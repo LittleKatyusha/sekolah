@@ -57,22 +57,24 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
         })
       )
 
-      setOptions(Object.fromEntries(entries))
+      setOptions((previous) => ({ ...previous, ...Object.fromEntries(entries) }))
     }
 
     loadOptions()
   }, [resource, resourceKey])
 
   useEffect(() => {
+    let cancelled = false
     const loadDependentOptions = async () => {
       if (resourceKey === 'jawaban') {
-        if (!formData.trx_tes_minat_bakat_peserta_id) {
+        if (!formData.peserta_id) {
           setOptions((previous) => ({ ...previous, pertanyaan: [], opsi: [] }))
           return
         }
 
-        const { data: pesertaResponse, error: pesertaError } = await tesMinatBakatService.peserta.getById(formData.trx_tes_minat_bakat_peserta_id)
-        const tesId = pesertaResponse?.data?.trx_tes_minat_bakat_id
+        const { data: pesertaResponse, error: pesertaError } = await tesMinatBakatService.peserta.getById(formData.peserta_id)
+        if (cancelled) return
+        const tesId = pesertaResponse?.data?.tes_id
 
         if (pesertaError || !tesId) {
           setOptions((previous) => ({ ...previous, pertanyaan: [], opsi: [] }))
@@ -84,20 +86,21 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
           ? []
           : (Array.isArray(pertanyaanResponse?.data?.data) ? pertanyaanResponse.data.data : Array.isArray(pertanyaanResponse?.data) ? pertanyaanResponse.data : []).map((item) => ({
               value: item.id,
-              label: `${item.urutan || '-'} - ${String(item.pertanyaan || '').slice(0, 80)}`,
+              label: `${item.nomor_urut ?? '-'} - ${String(item.pertanyaan || '').slice(0, 80)}`,
             }))
 
         let opsiOptions = []
-        if (formData.mst_tes_minat_bakat_pertanyaan_id) {
-          const { data: detailResponse, error: detailError } = await tesMinatBakatService.pertanyaan.getById(formData.mst_tes_minat_bakat_pertanyaan_id)
+        if (formData.pertanyaan_id) {
+          const { data: detailResponse, error: detailError } = await tesMinatBakatService.pertanyaan.getById(formData.pertanyaan_id)
           opsiOptions = detailError
             ? []
             : (detailResponse?.data?.opsi || []).map((item) => ({
                 value: item.id,
-                label: [item.label, item.teks_opsi].filter(Boolean).join(' - ') || `Opsi #${item.id}`,
+                label: [item.label, item.opsi ?? item.teks_opsi].filter(Boolean).join(' - ') || `Opsi #${item.id}`,
               }))
         }
 
+        if (cancelled) return
         setOptions((previous) => ({
           ...previous,
           pertanyaan: pertanyaanOptions,
@@ -107,7 +110,8 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
     }
 
     loadDependentOptions()
-  }, [formData.mst_tes_minat_bakat_pertanyaan_id, formData.trx_tes_minat_bakat_peserta_id, resourceKey])
+    return () => { cancelled = true }
+  }, [formData.pertanyaan_id, formData.peserta_id, resourceKey])
 
   useEffect(() => {
     if (!isEditMode) return
@@ -139,17 +143,17 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
     setFormData((previous) => {
       const nextState = { ...previous, [name]: type === 'checkbox' ? checked : value }
 
-      if (resourceKey === 'peserta' && name === 'trx_tes_minat_bakat_id') {
+      if (resourceKey === 'peserta' && name === 'tes_id') {
         nextState.siswa_id = ''
       }
 
-      if (resourceKey === 'jawaban' && name === 'trx_tes_minat_bakat_peserta_id') {
-        nextState.mst_tes_minat_bakat_pertanyaan_id = ''
-        nextState.mst_tes_minat_bakat_opsi_id = ''
+      if (resourceKey === 'jawaban' && name === 'peserta_id') {
+        nextState.pertanyaan_id = ''
+        nextState.opsi_id = ''
       }
 
-      if (resourceKey === 'jawaban' && name === 'mst_tes_minat_bakat_pertanyaan_id') {
-        nextState.mst_tes_minat_bakat_opsi_id = ''
+      if (resourceKey === 'jawaban' && name === 'pertanyaan_id') {
+        nextState.opsi_id = ''
       }
 
       return nextState
@@ -223,6 +227,9 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
     setLoading(true)
 
     const payload = normalizeOut(resourceKey, formData)
+    if (isEditMode) {
+      resource.fields.filter((field) => field.readOnlyOnEdit).forEach((field) => { delete payload[field.name] })
+    }
 
     if (resourceKey === 'pertanyaan') {
       if (!isEditMode && Array.isArray(payload.opsi) && payload.opsi.length === 0) {
@@ -251,11 +258,9 @@ const TesMinatBakatFormPage = ({ resourceKey }) => {
   const renderField = (field) => {
     if (field.type === 'select') {
       const selectOptions = field.options || options[field.optionsKey] || []
-      const isDisabled = field.optionsKey === 'pertanyaan' && resourceKey === 'jawaban' && !formData.trx_tes_minat_bakat_peserta_id
-          ? true
-          : field.optionsKey === 'opsi' && resourceKey === 'jawaban' && !formData.mst_tes_minat_bakat_pertanyaan_id
-            ? true
-            : false
+      const isDisabled = (isEditMode && field.readOnlyOnEdit)
+        || (resourceKey === 'jawaban' && field.optionsKey === 'pertanyaan' && !formData.peserta_id)
+        || (resourceKey === 'jawaban' && field.optionsKey === 'opsi' && !formData.pertanyaan_id)
 
       return (
         <div className={field.span === 2 ? 'md:col-span-2' : ''} key={field.name}>

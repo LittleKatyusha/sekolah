@@ -14,7 +14,28 @@ const server = await createServer({
 })
 
 try {
-  const { tesMinatBakatResources, normalizeIn, normalizeOut } = await server.ssrLoadModule('/src/features/tes-minat-bakat/config.jsx')
+  const { tesMinatBakatResources, normalizeIn, normalizeOut, STATUS_TES_OPTIONS, STATUS_PESERTA_OPTIONS } = await server.ssrLoadModule('/src/features/tes-minat-bakat/config.jsx')
+  for (const options of [STATUS_TES_OPTIONS, STATUS_PESERTA_OPTIONS]) {
+    assert.deepEqual(options.map(({ value }) => value), [0, 1, 2, 3])
+  }
+  for (const [key, record] of Object.entries({
+    peserta: { tes_id: 4, siswa_id: 5, status: 0 },
+    jawaban: { peserta_id: 6, pertanyaan_id: 7, opsi_id: 8, nilai: 0, jawaban_teks: 'Jawaban' },
+    hasil: { peserta_id: 6, aspek_id: 2, skor_total: 0, skor_persen: 0, kategori_hasil: 'Rendah', interpretasi: 'Hasil', rekomendasi: 'Belajar' },
+  })) assert.deepEqual(normalizeOut(key, normalizeIn(key, record)), record)
+  const actions = (status) => tesMinatBakatResources.peserta.extraActions({ status }, { navigate: () => {} }).map(({ label }) => label)
+  assert.ok(actions(0).includes('Mulai Tes'))
+  assert.ok(!actions(2).includes('Mulai Tes'))
+  const hasilFields = tesMinatBakatResources.hasil.detailSections[0].fields
+  assert.equal(hasilFields.find(({ label }) => label === 'Skor').value({ skor_total: 0 }), 0)
+  assert.equal(hasilFields.find(({ label }) => label === 'Persentase').value({ skor_persen: 0 }), '0%')
+  const previousTimezone = process.env.TZ
+  process.env.TZ = 'Asia/Jakarta'
+  const tes = normalizeIn('tes', { waktu_mulai: '2026-09-27T02:30:00Z', status: 0 })
+  assert.equal(tes.waktu_mulai, '2026-09-27T09:30')
+  assert.equal(normalizeOut('tes', tes).waktu_mulai, '2026-09-27T02:30:00.000Z')
+  if (previousTimezone === undefined) delete process.env.TZ
+  else process.env.TZ = previousTimezone
   const field = tesMinatBakatResources.pertanyaan.detailSections
     .find((section) => section.title === 'Opsi Jawaban').fields[0]
   const render = (opsi) => renderToStaticMarkup(field.value({ opsi }))

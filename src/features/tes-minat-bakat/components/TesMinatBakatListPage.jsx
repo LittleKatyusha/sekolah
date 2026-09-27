@@ -24,7 +24,7 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
     sort_dir: 'desc',
     search: '',
     filter: '{}',
-    ...(resourceKey === 'hasil' && pesertaIdFilter ? { trx_tes_minat_bakat_peserta_id: pesertaIdFilter } : {}),
+    ...(resourceKey === 'hasil' && pesertaIdFilter ? { peserta_id: pesertaIdFilter } : {}),
   }), [pesertaIdFilter, resourceKey])
 
   const handleDetail = useCallback((record) => {

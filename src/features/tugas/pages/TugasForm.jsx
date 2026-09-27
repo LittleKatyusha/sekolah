@@ -139,7 +139,7 @@ const TugasForm = () => {
       let tenggatWaktu = ''
       if (tugas.tenggat_waktu) {
         const dt = new Date(tugas.tenggat_waktu)
-        tenggatWaktu = dt.toISOString().slice(0, 16)
+        tenggatWaktu = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
       }
       const guruMapelId = tugas.guru_mapel?.id
         ? String(tugas.guru_mapel.id)
@@ -228,7 +228,7 @@ const TugasForm = () => {
       mst_kelas_id: parseInt(formData.mst_kelas_id),
       judul: formData.judul,
       deskripsi: formData.deskripsi || null,
-      tenggat_waktu: formData.tenggat_waktu || null,
+      tenggat_waktu: formData.tenggat_waktu ? new Date(formData.tenggat_waktu).toISOString() : null,
       file_lampiran: formData.file_lampiran || null,
       status: formData.status !== '' ? parseInt(formData.status) : null
     }

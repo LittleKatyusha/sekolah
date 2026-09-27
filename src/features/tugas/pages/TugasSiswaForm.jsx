@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import usePermission from '../../../hooks/usePermission'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -20,6 +21,9 @@ const TugasSiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const { hasPermission } = usePermission()
+  const canGrade = hasPermission('tugas-siswa.nilai')
+  const [originalNilai, setOriginalNilai] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -48,7 +52,7 @@ const TugasSiswaForm = () => {
   }, [id])
 
   const fetchTugasOptions = async () => {
-    const { data, error } = await tugasService.getAll({ per_page: 100 })
+    const { data, error } = await tugasService.getAll({ per_page: 'all' })
     if (data?.data) {
       const options = data.data.map(tugas => ({
         value: String(tugas.id),
@@ -59,7 +63,7 @@ const TugasSiswaForm = () => {
   }
 
   const fetchSiswaOptions = async () => {
-    const { data, error } = await siswaService.getAll({ per_page: 100 })
+    const { data, error } = await siswaService.getAll({ per_page: 'all' })
     if (data?.data) {
       const options = data.data.map(siswa => ({
         value: String(siswa.id),
@@ -78,13 +82,13 @@ const TugasSiswaForm = () => {
       let waktuKumpl = ''
       if (ts.waktu_kumpul || ts.waktu_kumpl) {
         const dt = new Date(ts.waktu_kumpul || ts.waktu_kumpl)
-        waktuKumpl = dt.toISOString().slice(0, 16)
+        waktuKumpl = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
       }
       setFormData({
-        mst_tugas_id: ts.tugas?.id ? String(ts.tugas.id) : (ts.mst_tugas_id ? String(ts.mst_tugas_id) : ''),
-        mst_siswa_id: ts.siswa?.id ? String(ts.siswa.id) : (ts.mst_siswa_id ? String(ts.mst_siswa_id) : ''),
+        mst_tugas_id: String(ts.tugas_id ?? ts.tugas?.id ?? ts.mst_tugas_id ?? ''),
+        mst_siswa_id: String(ts.siswa_id ?? ts.siswa?.id ?? ts.mst_siswa_id ?? ''),
         jawaban_teks: ts.jawaban_teks || ts.jawaban || '',
-        file_siswa: ts.file_siswa || ts.file_path || '',
+        file_siswa: ts.file_jawaban ?? ts.file_siswa ?? ts.file_path ?? '',
         waktu_kumpul: waktuKumpl,
         status_kumpul: (() => {
           const status = ts.status ?? ts.status_kumpul ?? ts.status_kumpl
@@ -93,6 +97,7 @@ const TugasSiswaForm = () => {
         nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
         catatan_guru: ts.catatan_guru || ts.catatan || ''
       })
+      setOriginalNilai(ts.nilai != null ? String(ts.nilai) : '')
     } else {
       showError('Gagal mengambil data tugas siswa')
       navigate('/akademik/tugas-siswa')
@@ -112,6 +117,9 @@ const TugasSiswaForm = () => {
     const newErrors = {}
     if (!formData.mst_tugas_id) newErrors.mst_tugas_id = 'Tugas wajib dipilih'
     if (!formData.mst_siswa_id) newErrors.mst_siswa_id = 'Siswa wajib dipilih'
+    if (canGrade && formData.nilai !== originalNilai && (formData.nilai === '' || !Number.isFinite(Number(formData.nilai)) || Number(formData.nilai) < 0 || Number(formData.nilai) > 100)) {
+      newErrors.nilai = 'Nilai harus berupa angka 0–100; nilai tersimpan tidak dapat dikosongkan'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -129,9 +137,8 @@ const TugasSiswaForm = () => {
       mst_siswa_id: parseInt(formData.mst_siswa_id),
       jawaban_teks: formData.jawaban_teks || null,
       file_siswa: formData.file_siswa || null,
-      waktu_kumpul: formData.waktu_kumpul || null,
+      waktu_kumpul: formData.waktu_kumpul ? new Date(formData.waktu_kumpul).toISOString() : null,
       status_kumpul: formData.status_kumpul !== '' ? parseInt(formData.status_kumpul) : null,
-      nilai: formData.nilai !== '' ? parseFloat(formData.nilai) : null,
       catatan_guru: formData.catatan_guru || null
     }
 
@@ -146,6 +153,18 @@ const TugasSiswaForm = () => {
     const { error } = result
 
     if (!error) {
+      if (isEditMode && canGrade && formData.nilai !== originalNilai) {
+        const { error: gradeError } = await tugasSiswaService.nilai(id, {
+          nilai: Number(formData.nilai), catatan_guru: formData.catatan_guru || null,
+        })
+        if (gradeError) {
+          setErrors(gradeError.errors || {})
+          showError('Data pengumpulan tersimpan, tetapi nilai gagal disimpan. Periksa nilai lalu coba simpan kembali.')
+          setLoading(false)
+          return
+        }
+        setOriginalNilai(formData.nilai)
+      }
       showSuccess(`Tugas siswa berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
       navigate('/akademik/tugas-siswa')
     } else {
@@ -280,7 +299,7 @@ const TugasSiswaForm = () => {
               </div>
 
               {/* Nilai - only shown in edit mode */}
-              {isEditMode && (
+              {isEditMode && canGrade && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nilai (0-100)

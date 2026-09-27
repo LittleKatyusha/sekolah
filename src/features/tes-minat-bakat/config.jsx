@@ -114,16 +114,17 @@ export const JENIS_TES_OPTIONS = [
 ]
 
 export const STATUS_TES_OPTIONS = [
-  { value: 1, label: 'Draft', badge: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-  { value: 2, label: 'Aktif', badge: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  { value: 3, label: 'Selesai', badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  { value: 4, label: 'Arsip', badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
+  { value: 0, label: 'Draft', badge: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+  { value: 1, label: 'Aktif', badge: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  { value: 2, label: 'Selesai', badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  { value: 3, label: 'Arsip', badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
 ]
 
 export const STATUS_PESERTA_OPTIONS = [
-  { value: 1, label: 'Belum mulai', badge: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-  { value: 2, label: 'Mengerjakan', badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
-  { value: 3, label: 'Selesai', badge: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  { value: 0, label: 'Belum mulai', badge: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+  { value: 1, label: 'Mengerjakan', badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
+  { value: 2, label: 'Selesai', badge: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  { value: 3, label: 'Waktu habis', badge: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 ]
 
 export const TIPE_PERTANYAAN_OPTIONS = [
@@ -202,7 +203,6 @@ export const tesMinatBakatResources = {
       { name: 'durasi_menit', label: 'Durasi (Menit)', type: 'number', valueType: 'integer', placeholder: '90' },
       { name: 'status', label: 'Status', type: 'select', options: STATUS_TES_OPTIONS, valueType: 'integer', placeholder: 'Pilih status' },
       { name: 'deskripsi', label: 'Deskripsi', type: 'textarea', span: 2, rows: 3, placeholder: 'Deskripsi tes' },
-      { name: 'catatan', label: 'Catatan', type: 'textarea', span: 2, rows: 3, placeholder: 'Catatan tambahan' },
     ],
     optionLoaders: {
       semester: async () => await loadOptions(
@@ -275,7 +275,6 @@ export const tesMinatBakatResources = {
           { label: 'Waktu Selesai', value: (record) => formatDateTime(record.waktu_selesai) },
           { label: 'Durasi', value: (record) => record.durasi_menit ? `${record.durasi_menit} menit` : '-' },
           { label: 'Deskripsi', value: (record) => getName(record.deskripsi) },
-          { label: 'Catatan', value: (record) => getName(record.catatan) },
         ],
       },
     ],
@@ -387,7 +386,7 @@ export const tesMinatBakatResources = {
         headerName: 'Tes',
         minWidth: 180,
         flex: 1,
-        cellRenderer: (params) => params.data?.tes?.nama || '-',
+        cellRenderer: (params) => params.data?.tes?.nama_tes || '-',
       },
       {
         headerName: 'Aspek',
@@ -403,18 +402,12 @@ export const tesMinatBakatResources = {
         cellRenderer: (params) => params.value || '-',
       },
       {
-        field: 'tipe_jawaban',
+        field: 'tipe_pertanyaan',
         headerName: 'Tipe',
         minWidth: 140,
         cellRenderer: (params) => renderOptionBadge(params.value, TIPE_PERTANYAAN_MAP),
       },
-      { field: 'urutan', headerName: 'Urutan', minWidth: 90 },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        minWidth: 120,
-        cellRenderer: (params) => renderActiveBadge(Boolean(params.value)),
-      },
+      { field: 'nomor_urut', headerName: 'Urutan', minWidth: 90 },
       {
         headerName: 'Aksi',
         width: 80,
@@ -438,11 +431,10 @@ export const tesMinatBakatResources = {
       {
         title: 'Informasi Pertanyaan',
         fields: [
-          { label: 'Tes', value: (record) => getName(record.tes?.nama) },
+          { label: 'Tes', value: (record) => getName(record.tes?.nama_tes) },
           { label: 'Aspek', value: (record) => getName(record.aspek?.nama_aspek) },
-          { label: 'Tipe Jawaban', value: (record) => renderOptionBadge(record.tipe_jawaban, TIPE_PERTANYAAN_MAP) },
-          { label: 'Urutan', value: (record) => record.urutan ?? '-' },
-          { label: 'Status', value: (record) => renderActiveBadge(Boolean(record.is_active)) },
+          { label: 'Tipe Jawaban', value: (record) => renderOptionBadge(record.tipe_pertanyaan, TIPE_PERTANYAAN_MAP) },
+          { label: 'Urutan', value: (record) => record.nomor_urut ?? '-' },
           { label: 'Pertanyaan', value: (record) => getName(record.pertanyaan) },
         ],
       },
@@ -455,8 +447,8 @@ export const tesMinatBakatResources = {
     ],
     summary: (record) => ({
       title: record.pertanyaan || 'Pertanyaan Tes',
-      subtitle: record.tes?.nama || 'Tanpa tes',
-      badge: renderOptionBadge(record.tipe_jawaban, TIPE_PERTANYAAN_MAP),
+      subtitle: record.tes?.nama_tes || 'Tanpa tes',
+      badge: renderOptionBadge(record.tipe_pertanyaan, TIPE_PERTANYAAN_MAP),
     }),
     getDeleteLabel: (record) => `pertanyaan "${record.pertanyaan || record.id}"`,
   },
@@ -472,12 +464,9 @@ export const tesMinatBakatResources = {
     basePath: '/akademik/tes-minat-bakat/peserta',
     service: tesMinatBakatService.peserta,
     fields: [
-      { name: 'trx_tes_minat_bakat_id', label: 'Tes', type: 'select', optionsKey: 'tes', valueType: 'integer', required: true, placeholder: 'Pilih tes' },
+      { name: 'tes_id', label: 'Tes', type: 'select', optionsKey: 'tes', valueType: 'integer', required: true, placeholder: 'Pilih tes' },
       { name: 'siswa_id', label: 'Siswa', type: 'select', optionsKey: 'siswa', valueType: 'integer', required: true, placeholder: 'Pilih siswa' },
-      { name: 'nomor_peserta', label: 'Nomor Peserta', type: 'text', placeholder: 'Nomor peserta' },
       { name: 'status', label: 'Status', type: 'select', options: STATUS_PESERTA_OPTIONS, valueType: 'integer', placeholder: 'Pilih status' },
-      { name: 'hasil_ringkas', label: 'Hasil Ringkas', type: 'textarea', span: 2, rows: 3, placeholder: 'Ringkasan hasil peserta' },
-      { name: 'rekomendasi', label: 'Rekomendasi', type: 'textarea', span: 2, rows: 3, placeholder: 'Rekomendasi tindak lanjut' },
     ],
     optionLoaders: {
       tes: async () => await loadOptions(
@@ -496,7 +485,7 @@ export const tesMinatBakatResources = {
         headerName: 'Tes',
         minWidth: 180,
         flex: 1,
-        cellRenderer: (params) => params.data?.tes?.nama || '-',
+        cellRenderer: (params) => params.data?.tes?.nama_tes || '-',
       },
       {
         headerName: 'Siswa',
@@ -504,7 +493,6 @@ export const tesMinatBakatResources = {
         flex: 1,
         cellRenderer: (params) => params.data?.siswa?.nama || '-',
       },
-      { field: 'nomor_peserta', headerName: 'Nomor Peserta', minWidth: 140 },
       {
         field: 'status',
         headerName: 'Status',
@@ -524,8 +512,8 @@ export const tesMinatBakatResources = {
         cellRenderer: (params) => formatDateShort(params.value),
       },
       {
-        field: 'skor_total',
-        headerName: 'Skor Total',
+        field: 'progress_persen',
+        headerName: 'Progres (%)',
         minWidth: 110,
         cellRenderer: (params) => params.value ?? '-',
       },
@@ -552,21 +540,18 @@ export const tesMinatBakatResources = {
       {
         title: 'Informasi Peserta',
         fields: [
-          { label: 'Tes', value: (record) => getName(record.tes?.nama) },
+          { label: 'Tes', value: (record) => getName(record.tes?.nama_tes) },
           { label: 'Siswa', value: (record) => getName(record.siswa?.nama) },
-          { label: 'Nomor Peserta', value: (record) => getName(record.nomor_peserta) },
           { label: 'Status', value: (record) => renderOptionBadge(record.status, STATUS_PESERTA_MAP) },
           { label: 'Waktu Mulai', value: (record) => formatDateTime(record.waktu_mulai) },
           { label: 'Waktu Selesai', value: (record) => formatDateTime(record.waktu_selesai) },
-          { label: 'Skor Total', value: (record) => record.skor_total ?? '-' },
-          { label: 'Hasil Ringkas', value: (record) => getName(record.hasil_ringkas) },
-          { label: 'Rekomendasi', value: (record) => getName(record.rekomendasi) },
+          { label: 'Progres (%)', value: (record) => record.progress_persen ?? '-' },
         ],
       },
     ],
     summary: (record) => ({
       title: record.siswa?.nama || 'Peserta Tes',
-      subtitle: record.tes?.nama || record.nomor_peserta || 'Tanpa identitas peserta',
+      subtitle: record.tes?.nama_tes || 'Tanpa identitas peserta',
       badge: renderOptionBadge(record.status, STATUS_PESERTA_MAP),
     }),
     extraActions: (record, { navigate }) => {
@@ -578,7 +563,7 @@ export const tesMinatBakatResources = {
         navigateTo: `/akademik/tes-minat-bakat/hasil?pesertaId=${record.id}&pesertaName=${encodeURIComponent(record.siswa?.nama || `Peserta #${record.id}`)}`,
       })
 
-      if (record.status === 1) {
+      if (record.status === 0) {
         actions.push({
           label: 'Mulai Tes',
           variant: 'success',
@@ -587,7 +572,7 @@ export const tesMinatBakatResources = {
         })
       }
 
-      if (record.status === 2) {
+      if (record.status === 1) {
         actions.push({
           label: 'Selesaikan Tes',
           variant: 'primary',
@@ -618,20 +603,16 @@ export const tesMinatBakatResources = {
     basePath: '/akademik/tes-minat-bakat/jawaban',
     service: tesMinatBakatService.jawaban,
     fields: [
-      { name: 'trx_tes_minat_bakat_peserta_id', label: 'Peserta', type: 'select', optionsKey: 'peserta', valueType: 'integer', required: true, placeholder: 'Pilih peserta' },
-      { name: 'mst_tes_minat_bakat_pertanyaan_id', label: 'Pertanyaan', type: 'select', optionsKey: 'pertanyaan', valueType: 'integer', required: true, placeholder: 'Pilih pertanyaan' },
-      { name: 'mst_tes_minat_bakat_opsi_id', label: 'Opsi Jawaban', type: 'select', optionsKey: 'opsi', valueType: 'integer', placeholder: 'Pilih opsi jawaban' },
-      { name: 'skor', label: 'Skor', type: 'number', valueType: 'number', placeholder: '0.00' },
+      { name: 'peserta_id', label: 'Peserta', type: 'select', optionsKey: 'peserta', valueType: 'integer', required: true, placeholder: 'Pilih peserta', readOnlyOnEdit: true },
+      { name: 'pertanyaan_id', label: 'Pertanyaan', type: 'select', optionsKey: 'pertanyaan', valueType: 'integer', required: true, placeholder: 'Pilih pertanyaan', readOnlyOnEdit: true },
+      { name: 'opsi_id', label: 'Opsi Jawaban', type: 'select', optionsKey: 'opsi', valueType: 'integer', placeholder: 'Pilih opsi jawaban' },
+      { name: 'nilai', label: 'Skor', type: 'number', valueType: 'integer', placeholder: '0' },
       { name: 'jawaban_teks', label: 'Jawaban Teks', type: 'textarea', span: 2, rows: 4, placeholder: 'Jawaban dalam bentuk teks' },
     ],
     optionLoaders: {
       peserta: async () => await loadOptions(
         tesMinatBakatService.peserta.getAll,
-        (item) => ({ value: item.id, label: `${item.siswa?.nama || `Peserta #${item.id}`} - ${item.tes?.nama || 'Tanpa tes'}` })
-      ),
-      pertanyaan: async () => await loadOptions(
-        tesMinatBakatService.pertanyaan.getAll,
-        (item) => ({ value: item.id, label: `${item.urutan || '-'} - ${String(item.pertanyaan || '').slice(0, 80)}` })
+        (item) => ({ value: item.id, label: `${item.siswa?.nama || `Peserta #${item.id}`} - ${item.tes?.nama_tes || 'Tanpa tes'}` })
       ),
     },
     buildColumns: ({ handleDetail, handleEdit, handleDelete, ActionsMenu }) => [
@@ -645,7 +626,7 @@ export const tesMinatBakatResources = {
         headerName: 'Tes',
         minWidth: 170,
         flex: 1,
-        cellRenderer: (params) => params.data?.peserta?.tes?.nama || '-',
+        cellRenderer: (params) => params.data?.peserta?.tes?.nama_tes || '-',
       },
       {
         headerName: 'Pertanyaan',
@@ -656,9 +637,9 @@ export const tesMinatBakatResources = {
       {
         headerName: 'Opsi',
         minWidth: 130,
-        cellRenderer: (params) => getOpsiDisplay(params.data?.opsi, params.data?.mst_tes_minat_bakat_opsi_id || '-'),
+        cellRenderer: (params) => getOpsiDisplay(params.data?.opsi, params.data?.opsi_id || '-'),
       },
-      { field: 'skor', headerName: 'Skor', minWidth: 100 },
+      { field: 'nilai', headerName: 'Skor', minWidth: 100 },
       {
         headerName: 'Aksi',
         width: 80,
@@ -683,18 +664,18 @@ export const tesMinatBakatResources = {
         title: 'Informasi Jawaban',
         fields: [
           { label: 'Peserta', value: (record) => getName(record.peserta?.siswa?.nama) },
-          { label: 'Tes', value: (record) => getName(record.peserta?.tes?.nama) },
+          { label: 'Tes', value: (record) => getName(record.peserta?.tes?.nama_tes) },
           { label: 'Pertanyaan', value: (record) => getName(record.pertanyaan?.pertanyaan) },
-          { label: 'Opsi', value: (record) => getOpsiDisplay(record.opsi, record.mst_tes_minat_bakat_opsi_id || '-') },
+          { label: 'Opsi', value: (record) => getOpsiDisplay(record.opsi, record.opsi_id || '-') },
           { label: 'Jawaban Teks', value: (record) => getName(record.jawaban_teks) },
-          { label: 'Skor', value: (record) => record.skor ?? '-' },
+          { label: 'Skor', value: (record) => record.nilai ?? '-' },
         ],
       },
     ],
     summary: (record) => ({
       title: record.peserta?.siswa?.nama || 'Jawaban Peserta',
       subtitle: record.pertanyaan?.pertanyaan || 'Tanpa pertanyaan',
-      badge: makeBadge(`Skor ${record.skor ?? 0}`, 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400'),
+      badge: makeBadge(`Skor ${record.nilai ?? 0}`, 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400'),
     }),
     getDeleteLabel: (record) => `jawaban peserta "${record.peserta?.siswa?.nama || record.id}"`,
   },
@@ -713,18 +694,18 @@ export const tesMinatBakatResources = {
     allowEdit: false,
     allowDelete: false,
     fields: [
-      { name: 'trx_tes_minat_bakat_peserta_id', label: 'Peserta', type: 'select', optionsKey: 'peserta', valueType: 'integer', required: true, placeholder: 'Pilih peserta' },
-      { name: 'mst_tes_minat_bakat_aspek_id', label: 'Aspek', type: 'select', optionsKey: 'aspek', valueType: 'integer', required: true, placeholder: 'Pilih aspek' },
-      { name: 'skor', label: 'Skor', type: 'number', valueType: 'number', required: true, placeholder: '0.00' },
-      { name: 'persentase', label: 'Persentase', type: 'number', valueType: 'number', placeholder: '0 - 100' },
+      { name: 'peserta_id', label: 'Peserta', type: 'select', optionsKey: 'peserta', valueType: 'integer', required: true, placeholder: 'Pilih peserta' },
+      { name: 'aspek_id', label: 'Aspek', type: 'select', optionsKey: 'aspek', valueType: 'integer', required: true, placeholder: 'Pilih aspek' },
+      { name: 'skor_total', label: 'Skor', type: 'number', valueType: 'integer', required: true, placeholder: '0' },
+      { name: 'skor_persen', label: 'Persentase', type: 'number', valueType: 'integer', placeholder: '0 - 100' },
       { name: 'kategori_hasil', label: 'Kategori Hasil', type: 'text', placeholder: 'Dominan / Cukup / Rendah' },
-      { name: 'deskripsi_hasil', label: 'Deskripsi Hasil', type: 'textarea', span: 2, rows: 3, placeholder: 'Deskripsi hasil' },
+      { name: 'interpretasi', label: 'Deskripsi Hasil', type: 'textarea', span: 2, rows: 3, placeholder: 'Deskripsi hasil' },
       { name: 'rekomendasi', label: 'Rekomendasi', type: 'textarea', span: 2, rows: 3, placeholder: 'Rekomendasi tindak lanjut' },
     ],
     optionLoaders: {
       peserta: async () => await loadOptions(
         tesMinatBakatService.peserta.getAll,
-        (item) => ({ value: item.id, label: `${item.siswa?.nama || `Peserta #${item.id}`} - ${item.tes?.nama || 'Tanpa tes'}` })
+        (item) => ({ value: item.id, label: `${item.siswa?.nama || `Peserta #${item.id}`} - ${item.tes?.nama_tes || 'Tanpa tes'}` })
       ),
       aspek: async () => await loadOptions(
         tesMinatBakatService.aspek.getAll,
@@ -744,9 +725,9 @@ export const tesMinatBakatResources = {
         flex: 1,
         cellRenderer: (params) => params.data?.aspek?.nama_aspek || '-',
       },
-      { field: 'skor', headerName: 'Skor', minWidth: 100 },
+      { field: 'skor_total', headerName: 'Skor', minWidth: 100 },
       {
-        field: 'persentase',
+        field: 'skor_persen',
         headerName: 'Persentase',
         minWidth: 120,
         cellRenderer: (params) => params.value != null ? `${params.value}%` : '-',
@@ -776,12 +757,12 @@ export const tesMinatBakatResources = {
         title: 'Informasi Hasil',
         fields: [
           { label: 'Peserta', value: (record) => getName(record.peserta?.siswa?.nama) },
-          { label: 'Tes', value: (record) => getName(record.peserta?.tes?.nama) },
+          { label: 'Tes', value: (record) => getName(record.peserta?.tes?.nama_tes) },
           { label: 'Aspek', value: (record) => getName(record.aspek?.nama_aspek) },
-          { label: 'Skor', value: (record) => record.skor ?? '-' },
-          { label: 'Persentase', value: (record) => record.persentase != null ? `${record.persentase}%` : '-' },
+          { label: 'Skor', value: (record) => record.skor_total ?? '-' },
+          { label: 'Persentase', value: (record) => record.skor_persen != null ? `${record.skor_persen}%` : '-' },
           { label: 'Kategori Hasil', value: (record) => getName(record.kategori_hasil) },
-          { label: 'Deskripsi Hasil', value: (record) => getName(record.deskripsi_hasil) },
+          { label: 'Deskripsi Hasil', value: (record) => getName(record.interpretasi) },
           { label: 'Rekomendasi', value: (record) => getName(record.rekomendasi) },
         ],
       },
@@ -831,6 +812,10 @@ export const normalizeOut = (resourceKey, formData) => {
         }))
       : []
   }
+
+  tesMinatBakatResources[resourceKey].fields.filter((field) => field.type === 'datetime-local').forEach((field) => {
+    normalized[field.name] = formData[field.name] ? new Date(formData[field.name]).toISOString() : null
+  })
 
   return normalized
 }

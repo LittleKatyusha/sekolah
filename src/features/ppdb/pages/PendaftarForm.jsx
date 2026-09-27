@@ -98,7 +98,7 @@ const PendaftarForm = () => {
         jenis_kelamin: p.jenis_kelamin != null ? String(p.jenis_kelamin) : '',
         telp_hp: p.telp_hp || '',
         asal_sekolah: p.asal_sekolah || '',
-        tanggal_lahir: p.tanggal_lahir || '',
+        tanggal_lahir: p.tanggal_lahir?.slice(0, 10) || '',
         pilihan_jurusan_id: p.pilihan_jurusan_id ? String(p.pilihan_jurusan_id) : '',
         status_pendaftaran: p.status_pendaftaran || 'draft',
         // Akademik
