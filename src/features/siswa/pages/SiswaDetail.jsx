@@ -10,6 +10,7 @@ import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
 import SklPreviewModal from '../components/SklPreviewModal'
+import SiswaQrCard from '../components/SiswaQrCard'
 
 const SiswaDetail = () => {
   const { id } = useParams()
@@ -205,6 +206,7 @@ const SiswaDetail = () => {
               </div>
             </div>
           </Card>
+          <SiswaQrCard key={siswa.id} siswaId={siswa.id} />
         </div>
 
         {/* Details Tabs */}
