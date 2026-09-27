@@ -364,11 +364,10 @@ export const tesMinatBakatResources = {
     basePath: '/akademik/tes-minat-bakat/pertanyaan',
     service: tesMinatBakatService.pertanyaan,
     fields: [
-      { name: 'trx_tes_minat_bakat_id', label: 'Tes', type: 'select', optionsKey: 'tes', valueType: 'integer', required: true, placeholder: 'Pilih tes' },
-      { name: 'mst_tes_minat_bakat_aspek_id', label: 'Aspek', type: 'select', optionsKey: 'aspek', valueType: 'integer', placeholder: 'Pilih aspek' },
-      { name: 'tipe_jawaban', label: 'Tipe Jawaban', type: 'select', options: TIPE_PERTANYAAN_OPTIONS, valueType: 'integer', required: true, placeholder: 'Pilih tipe jawaban' },
-      { name: 'urutan', label: 'Urutan', type: 'number', valueType: 'integer', placeholder: '1' },
-      { name: 'is_active', label: 'Aktif', type: 'checkbox' },
+      { name: 'tes_id', label: 'Tes', type: 'select', optionsKey: 'tes', valueType: 'integer', required: true, placeholder: 'Pilih tes' },
+      { name: 'aspek_id', label: 'Aspek', type: 'select', optionsKey: 'aspek', valueType: 'integer', placeholder: 'Pilih aspek' },
+      { name: 'tipe_pertanyaan', label: 'Tipe Jawaban', type: 'select', options: TIPE_PERTANYAAN_OPTIONS, valueType: 'integer', required: true, placeholder: 'Pilih tipe jawaban' },
+      { name: 'nomor_urut', label: 'Urutan', type: 'number', valueType: 'integer', placeholder: '1' },
       { name: 'pertanyaan', label: 'Pertanyaan', type: 'textarea', span: 2, rows: 4, required: true, placeholder: 'Tulis pertanyaan tes' },
     ],
     optionLoaders: {
@@ -802,14 +801,16 @@ export const normalizeIn = (resourceKey, record) => {
   const normalized = defaultNormalizeIn(tesMinatBakatResources[resourceKey].fields, record)
 
   if (resourceKey === 'pertanyaan') {
+    normalized.tes_id = record?.tes_id ?? record?.trx_tes_minat_bakat_id ?? ''
+    normalized.aspek_id = record?.aspek_id !== undefined ? (record.aspek_id ?? '') : (record?.mst_tes_minat_bakat_aspek_id ?? '')
+    normalized.tipe_pertanyaan = record?.tipe_pertanyaan ?? record?.tipe_jawaban ?? ''
+    normalized.nomor_urut = record?.nomor_urut ?? record?.urutan ?? ''
     normalized.opsi = Array.isArray(record?.opsi)
       ? record.opsi.map((opsi) => ({
           id: opsi.id,
-          label: opsi.label ?? '',
-          teks_opsi: opsi.teks_opsi ?? '',
-          skor: opsi.skor ?? '',
-          urutan: opsi.urutan ?? '',
-          mst_tes_minat_bakat_aspek_id: opsi.mst_tes_minat_bakat_aspek_id ?? record?.mst_tes_minat_bakat_aspek_id ?? '',
+          opsi: opsi.opsi ?? opsi.teks_opsi ?? '',
+          nilai: opsi.nilai ?? opsi.skor ?? '',
+          nomor_urut: opsi.nomor_urut ?? opsi.urutan ?? '',
         }))
       : []
   }
@@ -822,16 +823,12 @@ export const normalizeOut = (resourceKey, formData) => {
 
   if (resourceKey === 'pertanyaan') {
     normalized.opsi = Array.isArray(formData?.opsi)
-      ? formData.opsi
-        .map((opsi) => ({
+      ? formData.opsi.map((opsi) => ({
           ...(opsi.id ? { id: opsi.id } : {}),
-          label: opsi.label?.trim() || '',
-          teks_opsi: opsi.teks_opsi?.trim() || '',
-          skor: toFloat(opsi.skor),
-          urutan: toInteger(opsi.urutan),
-          mst_tes_minat_bakat_aspek_id: toInteger(opsi.mst_tes_minat_bakat_aspek_id),
+          opsi: opsi.opsi?.trim() || '',
+          nilai: toFloat(opsi.nilai),
+          nomor_urut: toFloat(opsi.nomor_urut),
         }))
-        .filter((opsi) => opsi.label || opsi.teks_opsi || opsi.skor !== null)
       : []
   }
 
