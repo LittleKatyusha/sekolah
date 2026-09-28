@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
+import useFileImport from '../../../hooks/useFileImport'
+import ImportFeedback, { ImportErrorMessage } from '../../../components/ui/ImportFeedback'
 import * as XLSX from 'xlsx'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -44,8 +46,7 @@ const downloadTemplate = () => {
 export const ImportTahunAjaranModal = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  const { loading, result, setResult, error, setError, handleSubmit } = useFileImport(file, tahunAjaranService.importExcel, onSuccess)
   const fileInputRef = useRef(null)
 
   const handleFileChange = useCallback((selectedFile) => {
@@ -60,7 +61,8 @@ export const ImportTahunAjaranModal = ({ onClose, onSuccess }) => {
     }
     setFile(selectedFile)
     setResult(null)
-  }, [])
+    setError('')
+  }, [setResult, setError])
 
   const handleInputChange = (e) => {
     handleFileChange(e.target.files?.[0])
@@ -71,24 +73,6 @@ export const ImportTahunAjaranModal = ({ onClose, onSuccess }) => {
     e.preventDefault()
     setDragOver(false)
     handleFileChange(e.dataTransfer.files?.[0])
-  }
-
-  const handleSubmit = async () => {
-    if (!file) return
-
-    setLoading(true)
-    const { data, error } = await tahunAjaranService.importExcel(file)
-    setLoading(false)
-
-    if (error) {
-      showError(error?.message || 'Gagal mengimpor data tahun ajaran.')
-      return
-    }
-
-    setResult(data?.data || data)
-    if ((data?.data?.imported ?? data?.imported ?? 0) > 0) {
-      onSuccess?.()
-    }
   }
 
   return (
@@ -110,6 +94,7 @@ export const ImportTahunAjaranModal = ({ onClose, onSuccess }) => {
             <button type="button" onClick={downloadTemplate} className="text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400 shrink-0 ml-2">Unduh Template</button>
           </div>
 
+          <ImportFeedback error={error} result={result} />
           {!result ? (
             <div
               onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -146,7 +131,7 @@ export const ImportTahunAjaranModal = ({ onClose, onSuccess }) => {
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris Excel</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Kode</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Tipe</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Keterangan</th>
@@ -158,7 +143,7 @@ export const ImportTahunAjaranModal = ({ onClose, onSuccess }) => {
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.row}</td>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.identifier ?? '-'}</td>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.code}</td>
-                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400">{err.message}</td>
+                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400"><ImportErrorMessage error={err} /></td>
                         </tr>
                       ))}
                     </tbody>
