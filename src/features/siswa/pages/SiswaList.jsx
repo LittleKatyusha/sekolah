@@ -200,7 +200,6 @@ const SiswaList = () => {
         <ImportSiswaModal
           onClose={() => setShowImport(false)}
           onSuccess={() => {
-            setShowImport(false)
             if (gridRef.current?.refreshGrid) gridRef.current.refreshGrid()
           }}
         />

@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
 import { SISWA_TEMPLATE_HEADERS } from '../siswaImportContract'
 
@@ -23,7 +22,8 @@ const downloadTemplate = () => {
   const guide = [
     ['Versi template', 'v2 (nama_kelas natural key + UID RFID)'],
     ['Sheet wajib', 'Data — row 1 header, row 2 contoh (hapus sebelum import)'],
-    ['Wajib diisi', 'nis, nama, jenis_kelamin (L/P)'],
+    ['Wajib diisi', 'nis, nama, jenis_kelamin (L/P), email'],
+    ['NISN', 'Opsional, maksimal 10 karakter dan harus unik jika diisi.'],
     ['Kelas', 'Isi nama_kelas persis sesuai data sekolah, bukan ID'],
     ['UID RFID', 'Opsional. Isi UID kartu heksadesimal, contoh A1B2C3D4. Harus unik.'],
     ['Tanggal', 'Format YYYY-MM-DD'],
@@ -57,6 +57,7 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
   const [dragOver, setDragOver] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null) // import result summary
+  const [error, setError] = useState('')
   const fileInputRef = useRef(null)
   const dialogRef = useRef(null)
   const initialFocusRef = useRef(null)
@@ -91,17 +92,19 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
   }
 
   const handleFileChange = useCallback((selectedFile) => {
-    if (!selectedFile) return
+    if (!selectedFile || submittingRef.current) return
+    setFile(null)
+    setResult(null)
+    setError('')
     if (!selectedFile.name.match(/\.(xlsx|xls)$/i)) {
-      showError('Format file tidak didukung. Gunakan file Excel (.xlsx atau .xls).')
+      setError('Format file tidak didukung. Gunakan file Excel (.xlsx atau .xls).')
       return
     }
     if (selectedFile.size > MAX_SIZE_BYTES) {
-      showError('Ukuran file melebihi batas 5MB.')
+      setError('Ukuran file melebihi batas 5MB.')
       return
     }
     setFile(selectedFile)
-    setResult(null)
   }, [])
 
   const handleInputChange = (e) => {
@@ -121,24 +124,34 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
 
     submittingRef.current = true
     setLoading(true)
+    setError('')
     let response
     try {
       response = await siswaService.importExcel(file)
+    } catch {
+      setError('Hasil import belum dapat dipastikan. Periksa koneksi dan refresh data siswa sebelum mengunggah ulang.')
+      return
     } finally {
       submittingRef.current = false
       setLoading(false)
     }
-    const { data, error } = response
+    const { data, error: uploadError } = response
 
-    if (error) {
-      showError(error?.message || 'Gagal mengimpor data siswa.')
+    if (uploadError) {
+      setError(typeof uploadError === 'string'
+        ? `Hasil import belum dapat dipastikan (${uploadError}). Refresh data siswa sebelum mengunggah ulang.`
+        : uploadError.message || 'Gagal mengimpor data siswa.')
       return
     }
 
-    setResult(data)
+    const summary = data?.data ?? data
+    if (!Number.isInteger(summary?.imported) || !Number.isInteger(summary?.failed)) {
+      setError('Hasil import tidak dapat dibaca. Refresh data siswa sebelum mengunggah ulang.')
+      return
+    }
+    setResult(summary)
 
-    if (data.imported > 0) {
-      showSuccess(`${data.imported} siswa berhasil diimport.`)
+    if (summary.imported > 0) {
       onSuccess?.()
     }
   }
@@ -146,7 +159,7 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
   return (
     /* Backdrop */
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="import-siswa-title" onKeyDown={handleDialogKeyDown} className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="import-siswa-title" onKeyDown={handleDialogKeyDown} className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 id="import-siswa-title" className="text-lg font-semibold text-gray-900 dark:text-white">Import Data Siswa</h2>
@@ -198,6 +211,7 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
               className="hidden"
               onChange={handleInputChange}
               data-testid="file-input"
+              disabled={loading}
             />
             {file ? (
               <div className="flex items-center justify-center gap-3">
@@ -209,7 +223,9 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null) }}
+                  onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); setError('') }}
+                  disabled={loading}
+                  aria-label="Hapus file"
                   className="ml-auto p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -230,9 +246,26 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
             )}
           </div>
 
+          {error && (
+            <div role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+              {error}
+            </div>
+          )}
+
           {/* Import result summary */}
           {result && (
             <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
+              <div role="status" className={`p-3 ${result.failed > 0
+                ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300'
+                : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'}`}>
+                <p className="font-semibold">
+                  {result.failed > 0
+                    ? result.imported > 0 ? 'Import selesai, sebagian data gagal.' : 'Import gagal. Tidak ada siswa yang berhasil diimport.'
+                    : result.imported > 0 ? 'Import berhasil.' : 'Tidak ada data siswa yang diimport.'}
+                </p>
+                <p>{result.imported} berhasil, {result.failed} gagal, {result.skipped ?? 0} dilewati.</p>
+                {result.failed > 0 && <p>Perbaiki baris yang gagal, lalu upload ulang hanya data tersebut.</p>}
+              </div>
               <div className="flex divide-x divide-gray-200 dark:divide-gray-700">
                 <div className="flex-1 px-4 py-3 text-center">
                   <p className="text-2xl font-bold text-green-600">{result.imported}</p>
@@ -253,8 +286,8 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris</th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Identifier</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris Excel</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">NIS</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Kode</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Keterangan</th>
                       </tr>
@@ -265,7 +298,15 @@ const ImportSiswaModal = ({ onClose, onSuccess }) => {
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.row}</td>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.identifier ?? '-'}</td>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.code}</td>
-                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400">{err.message}</td>
+                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400">
+                            {err.fields ? (
+                              <ul className="space-y-1">
+                                {Object.entries(err.fields).map(([field, messages]) => (
+                                  <li key={field}><strong>{field}</strong>: {messages.join(' ')}</li>
+                                ))}
+                              </ul>
+                            ) : err.message}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
