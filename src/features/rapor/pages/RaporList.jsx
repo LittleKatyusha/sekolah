@@ -1,16 +1,17 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Printer } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { raporService } from '../services/raporService'
+import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onPrint }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -72,6 +73,14 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
                 <Eye size={16} className="text-blue-600" />
                 Detail
               </button>
+              <button
+                onClick={() => handleAction(onPrint)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Printer size={16} className="text-emerald-600" />
+                Cetak Rapor
+              </button>
+
             </PermissionGuard>
             <PermissionGuard permission="rapor.edit">
               <button
@@ -136,6 +145,27 @@ const RaporList = () => {
       }
     }
   }, [])
+  const handlePrint = useCallback(async (data) => {
+    const siswaName = data.siswa?.nama || 'Siswa'
+    const siswaId = data.mst_siswa_id || data.siswa?.id
+    const semesterId = Number(data.semester_kode || data.semester)
+    const { error } = await reportService.generateAndDownload({
+      report_path: '/reports/akademik/rapor_siswa',
+      parameters: {
+        siswa_id: siswaId,
+        semester: semesterId,
+        tahun_ajaran_id: data.tahun_ajaran_id || null,
+      },
+      format: 'pdf',
+      output_filename: `Rapor_${siswaName}_${data.semester || ''}`.replace(/\s+/g, '_'),
+    })
+    if (error) {
+      showError(error.message || 'Gagal mengunduh rapor PDF.')
+    } else {
+      showSuccess('Rapor PDF berhasil diunduh.')
+    }
+  }, [])
+
 
   const handleRefresh = useCallback(() => {
     if (gridRef.current?.refreshGrid) {
@@ -266,12 +296,13 @@ const RaporList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
+              onPrint={() => handlePrint(params.data)}
             />
           </div>
         )
       }
     }
-  ], [handleDelete, handleDetail, handleEdit])
+  ], [handleDelete, handleDetail, handleEdit, handlePrint])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

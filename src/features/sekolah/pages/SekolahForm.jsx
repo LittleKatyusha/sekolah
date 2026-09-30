@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import useAuthStore from '../../../store/useAuthStore'
 import { sekolahService } from '../services/sekolahService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -45,21 +46,47 @@ const SekolahForm = () => {
 
   const fetchSekolah = async () => {
     setFetchingData(true)
-    const { data, error } = await sekolahService.getAll({ per_page: 1 })
-    if (data) {
-      const list = data.data?.data || data.data || []
-      const first = Array.isArray(list) ? list[0] : list
-      if (first) {
-        setSekolahId(first.id)
-        setFormData({
-          nama_sekolah: first.nama_sekolah || '',
-          npsn: first.npsn || '',
-          alamat: first.alamat || '',
-          logo_path: first.logo_path || '',
-          is_active: first.is_active !== null && first.is_active !== undefined ? String(Number(first.is_active)) : '1',
-          subscription_plan: first.subscription_plan || '',
-        })
+    let currentSekolah = null
+
+    // 1. Try dedicated current endpoint (resolves user's bound school or active tenant)
+    if (typeof sekolahService.getCurrent === 'function') {
+      const res = await sekolahService.getCurrent()
+      if (res?.data?.data) {
+        currentSekolah = res.data.data
       }
+    }
+
+    // 2. If not found, resolve from auth user tenant context
+    if (!currentSekolah) {
+      const user = useAuthStore.getState().user
+      const targetId = user?.tenant?.id ?? user?.mst_sekolah_id
+      if (targetId) {
+        const res = await sekolahService.getById(targetId)
+        if (res?.data?.data) {
+          currentSekolah = res.data.data
+        }
+      }
+    }
+
+    // 3. Fallback for unit tests or unbound superadmin
+    if (!currentSekolah) {
+      const res = await sekolahService.getAll({ per_page: 1 })
+      if (res?.data) {
+        const list = res.data.data?.data || res.data.data || []
+        currentSekolah = Array.isArray(list) ? list[0] : list
+      }
+    }
+
+    if (currentSekolah) {
+      setSekolahId(currentSekolah.id)
+      setFormData({
+        nama_sekolah: currentSekolah.nama_sekolah || '',
+        npsn: currentSekolah.npsn || '',
+        alamat: currentSekolah.alamat || '',
+        logo_path: currentSekolah.logo_path || '',
+        is_active: currentSekolah.is_active !== null && currentSekolah.is_active !== undefined ? String(Number(currentSekolah.is_active)) : '1',
+        subscription_plan: currentSekolah.subscription_plan || '',
+      })
     } else {
       showError('Gagal mengambil data sekolah')
       navigate('/sekolah')

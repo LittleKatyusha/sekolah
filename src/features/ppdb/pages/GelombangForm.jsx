@@ -61,7 +61,7 @@ const GelombangForm = () => {
   }, [id])
 
   const fetchTahunAjaranOptions = async () => {
-    const { data } = await tahunAjaranService.getAll({ per_page: 100 })
+    const { data } = await tahunAjaranService.getAll({ per_page: 'all' })
     if (data?.data) {
       setTahunAjaranOptions(data.data.map(ta => ({
         value: String(ta.id),
@@ -79,8 +79,8 @@ const GelombangForm = () => {
         mst_sekolah_id: g.mst_sekolah_id ? String(g.mst_sekolah_id) : '',
         nama_gelombang: g.nama_gelombang || '',
         tahun_ajaran_id: g.tahun_ajaran_id ? String(g.tahun_ajaran_id) : '',
-        tgl_mulai: g.tgl_mulai || '',
-        tgl_selesai: g.tgl_selesai || '',
+        tgl_mulai: g.tgl_mulai?.slice(0, 10) || '',
+        tgl_selesai: g.tgl_selesai?.slice(0, 10) || '',
         biaya_pendaftaran: g.biaya_pendaftaran !== null && g.biaya_pendaftaran !== undefined ? String(g.biaya_pendaftaran) : '',
         is_active: g.is_active !== null && g.is_active !== undefined ? String(Number(g.is_active)) : '1',
         // Seleksi
@@ -134,7 +134,7 @@ const GelombangForm = () => {
       is_seleksi_otomatis: formData.is_seleksi_otomatis === '1',
       metode_seleksi: parseInt(formData.metode_seleksi) || 1,
       allow_cadangan: formData.allow_cadangan === '1',
-      persentase_cadangan: parseInt(formData.persentase_cadangan) || 20,
+      persentase_cadangan: formData.persentase_cadangan === '' ? 20 : Number(formData.persentase_cadangan),
     }
 
     let result

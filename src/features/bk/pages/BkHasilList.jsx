@@ -106,9 +106,9 @@ const BkHasilList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-hasil.view"
+              editPermission="bk-hasil.manage"
+              deletePermission="bk-hasil.manage"
             />
           </div>
         )

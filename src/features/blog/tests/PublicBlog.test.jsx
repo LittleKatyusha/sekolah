@@ -69,6 +69,12 @@ describe('PublicBlogDetail SEO & JSON-LD', () => {
     const twitterImage = document.querySelector('meta[property="twitter:image"]')
     expect(twitterImage?.getAttribute('content')).toBe('https://example.com/robotik.jpg')
 
+    // Canonical link
+    const canonicalLink = document.querySelector('link[rel="canonical"]')
+    expect(canonicalLink).not.toBeNull()
+    expect(canonicalLink?.getAttribute('href')).toContain('/blog/juara-1-lomba-robotik-nasional-k8x1a2')
+    expect(canonicalLink?.getAttribute('href')).not.toContain('?sekolah=smada')
+
     // JSON-LD Script
     const jsonLdScript = document.getElementById('blog-posting-jsonld')
     expect(jsonLdScript).not.toBeNull()
@@ -76,6 +82,46 @@ describe('PublicBlogDetail SEO & JSON-LD', () => {
     expect(schema['@type']).toBe('BlogPosting')
     expect(schema.headline).toBe('Juara 1 Lomba Robotik Nasional')
     expect(schema.author?.name).toBe('Ahmad Fauzi')
+  })
+})
+
+describe('PublicBlogList SEO', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.title = ''
+    document.querySelectorAll('meta[property^="og:"]').forEach((el) => el.remove())
+    document.querySelectorAll('link[rel="canonical"]').forEach((el) => el.remove())
+  })
+
+  it('updates title and canonical link for tenant blog list', async () => {
+    blogService.getPublicArticles = vi.fn().mockResolvedValue({
+      data: { success: true, data: [mockArtikel], meta: { current_page: 1, last_page: 1, total: 1 } },
+      error: null,
+    })
+    blogService.getPublicCategories = vi.fn().mockResolvedValue({
+      data: { success: true, data: [] },
+      error: null,
+    })
+
+    const { default: PublicBlogList } = await import('../pages/PublicBlogList')
+
+    render(
+      <MemoryRouter initialEntries={['/blog?sekolah=smada']}>
+        <Routes>
+          <Route path="/blog" element={<PublicBlogList />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(document.title).toContain('Kabar & Artikel')
+      expect(document.title).toContain('SMADA')
+    })
+
+    const canonicalLink = document.querySelector('link[rel="canonical"]')
+    expect(canonicalLink).not.toBeNull()
+    expect(canonicalLink?.getAttribute('href')).toContain('/blog')
+    expect(canonicalLink?.getAttribute('href')).not.toContain('?sekolah=smada')
   })
 })
 

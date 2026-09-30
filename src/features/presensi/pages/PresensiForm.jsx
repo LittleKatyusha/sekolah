@@ -114,6 +114,7 @@ const PresensiForm = () => {
         tanggal: presensi.tanggal || '',
         jam_masuk: presensi.jam_masuk || '',
         status: '',
+        correction_reason: '',
         keterangan: presensi.keterangan || ''
       })
       setRawPresensiStatus(presensi.status)

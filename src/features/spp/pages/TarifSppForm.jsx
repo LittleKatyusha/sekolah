@@ -39,8 +39,8 @@ const TarifSppForm = () => {
 
   const fetchOptions = async () => {
     const [kelasRes, tahunAjaranRes] = await Promise.all([
-      kelasService.getAll({ per_page: 100 }),
-      tahunAjaranService.getAll({ per_page: 100 })
+      kelasService.getAll({ per_page: 'all' }),
+      tahunAjaranService.getAll({ per_page: 'all' })
     ])
 
     const kelasList = kelasRes.data?.data || []

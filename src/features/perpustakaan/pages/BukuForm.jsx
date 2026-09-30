@@ -47,7 +47,7 @@ const BukuForm = () => {
       penulis: buku.penulis || '',
       penerbit: buku.penerbit || '',
       tahun: buku.tahun || '',
-      stok: buku.stok || '',
+      stok: buku.stok ?? '',
       })
     } else {
       showError('Gagal mengambil data buku')
@@ -124,7 +124,7 @@ const BukuForm = () => {
     penulis: formData.penulis || null,
     penerbit: formData.penerbit || null,
     tahun: formData.tahun ? parseInt(formData.tahun) : null,
-    stok: formData.stok ? parseInt(formData.stok) : null,
+    stok: formData.stok === '' ? null : Number(formData.stok),
     }
 
     let result

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { CreditCard, Save, Zap, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, ShieldCheck, ExternalLink } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import useAuthStore from '../../../store/useAuthStore'
 import { sekolahService } from '../services/sekolahService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -29,9 +30,32 @@ const MidtransSettingsPage = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await sekolahService.getAll({ per_page: 1 })
-      const list = data?.data?.data || data?.data || []
-      const current = Array.isArray(list) ? list[0] : list
+      let current = null
+
+      if (typeof sekolahService.getCurrent === 'function') {
+        const res = await sekolahService.getCurrent()
+        if (res?.data?.data) {
+          current = res.data.data
+        }
+      }
+
+      if (!current) {
+        const user = useAuthStore.getState().user
+        const targetId = user?.tenant?.id ?? user?.mst_sekolah_id
+        if (targetId) {
+          const res = await sekolahService.getById(targetId)
+          if (res?.data?.data) {
+            current = res.data.data
+          }
+        }
+      }
+
+      if (!current) {
+        const { data } = await sekolahService.getAll({ per_page: 1 })
+        const list = data?.data?.data || data?.data || []
+        current = Array.isArray(list) ? list[0] : list
+      }
+
       if (current?.id) {
         setSekolah(current)
         await loadMidtrans(current.id)

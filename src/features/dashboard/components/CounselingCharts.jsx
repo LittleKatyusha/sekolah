@@ -47,11 +47,11 @@ export const TopKategoriKasusChart = ({ data }) => {
 }
 
 export const StatusPenyelesaianChart = ({ data }) => {
-  if (!data || !data.labels || !data.data) {
+  if (!data?.labels?.some((_, index) => data.data?.[index] > 0)) {
     return (
       <Card title="Case Resolution Status">
         <div className="h-[300px] flex items-center justify-center text-gray-500">
-          No data available
+          Belum ada data status kasus BK untuk filter yang dipilih.
         </div>
       </Card>
     )
@@ -60,7 +60,7 @@ export const StatusPenyelesaianChart = ({ data }) => {
   const chartData = data.labels.map((label, index) => ({
     name: label,
     value: data.data[index] || 0,
-    percentage: data.percentages[index] || 0,
+    percentage: data.percentages?.[index] || 0,
   }))
 
   const COLORS = data.colors || ['#10B981', '#3B82F6', '#F59E0B', '#EF4444']

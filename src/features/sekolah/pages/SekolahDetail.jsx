@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Edit, School, MapPin, Hash, Shield, CreditCard, Settings, Trash2, Save, X, Zap, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Award } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import useAuthStore from '../../../store/useAuthStore'
 import { sekolahService } from '../services/sekolahService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RfidDevicesCard from '../components/RfidDevicesCard'
@@ -62,14 +63,40 @@ const SekolahDetail = () => {
 
   const fetchSekolah = async () => {
     setLoading(true)
-    const { data, error } = await sekolahService.getAll({ per_page: 1 })
-    if (data) {
-      const list = data.data?.data || data.data || []
-      const first = Array.isArray(list) ? list[0] : list
-      if (first) {
-        setSekolah(first)
-        fetchSettings(first.id)
+    let currentSekolah = null
+
+    // 1. Try dedicated current endpoint (resolves user's bound school or active tenant)
+    if (typeof sekolahService.getCurrent === 'function') {
+      const res = await sekolahService.getCurrent()
+      if (res?.data?.data) {
+        currentSekolah = res.data.data
       }
+    }
+
+    // 2. If not found, resolve from auth user tenant context
+    if (!currentSekolah) {
+      const user = useAuthStore.getState().user
+      const targetId = user?.tenant?.id ?? user?.mst_sekolah_id
+      if (targetId) {
+        const res = await sekolahService.getById(targetId)
+        if (res?.data?.data) {
+          currentSekolah = res.data.data
+        }
+      }
+    }
+
+    // 3. Fallback for unit tests or unbound superadmin
+    if (!currentSekolah) {
+      const res = await sekolahService.getAll({ per_page: 1 })
+      if (res?.data) {
+        const list = res.data.data?.data || res.data.data || []
+        currentSekolah = Array.isArray(list) ? list[0] : list
+      }
+    }
+
+    if (currentSekolah) {
+      setSekolah(currentSekolah)
+      fetchSettings(currentSekolah.id)
     } else {
       showError('Gagal mengambil data sekolah')
     }
@@ -238,6 +265,9 @@ const SekolahDetail = () => {
     handleCancelEditSetting()
     showSuccess(`Setting "${setting.key}" berhasil diperbarui!`)
     fetchSettings(sekolah.id)
+    if (setting.key?.includes('kepala_sekolah')) {
+      fetchSekolah()
+    }
   }
 
   const formatDate = (dateString) => {
@@ -383,6 +413,19 @@ const SekolahDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Subscription Plan</p>
                     <p className="font-medium text-gray-900 dark:text-white capitalize">{sekolah.subscription_plan || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Award size={20} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Kepala Sekolah</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{sekolah.kepala_sekolah?.nama || '-'}</p>
+                    {sekolah.kepala_sekolah?.nip && sekolah.kepala_sekolah.nip !== '-' && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">NIP. {sekolah.kepala_sekolah.nip}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -764,6 +807,10 @@ const SekolahDetail = () => {
                                 if (event.key === 'Escape') handleCancelEditSetting()
                               }}
                             />
+                          ) : setting.key === 'kepala_sekolah_user_id' && sekolah?.kepala_sekolah?.nama ? (
+                            <span>
+                              {setting.value || '-'} <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sekolah.kepala_sekolah.nama})</span>
+                            </span>
                           ) : (
                             setting.value || '-'
                           )}

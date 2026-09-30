@@ -8,6 +8,8 @@ import { showDeleteConfirm, showSuccess } from '../../../utils/sweetalert'
 
 vi.mock('../services/sekolahService', () => ({
   sekolahService: {
+    getCurrent: vi.fn(),
+    getById: vi.fn(),
     getAll: vi.fn(),
     getSettings: vi.fn(),
     updateSetting: vi.fn(),
@@ -258,6 +260,36 @@ describe('SekolahDetail settings', () => {
         api_url: 'http://server.test/api/v1/akademik/rfid/check-in',
         scan_cooldown_ms: 4000,
       })
+    })
+  })
+
+  it('loads the current tenant school when available', async () => {
+    sekolahService.getCurrent.mockResolvedValue({
+      data: {
+        data: {
+          id: 3,
+          nama_sekolah: 'SMAS DARUSSALAM Purwasari',
+          npsn: '20231292',
+          alamat: 'Jl. H. Mustopa No.13',
+          subscription_plan: 'premium',
+          is_active: true,
+        },
+      },
+      error: null,
+    })
+    sekolahService.getSettings.mockResolvedValue({ data: { data: [] }, error: null })
+    sekolahService.getMidtransSettings.mockResolvedValue({ data: { data: {} }, error: null })
+
+    render(
+      <MemoryRouter>
+        <SekolahDetail />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getAllByText('SMAS DARUSSALAM Purwasari').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('20231292').length).toBeGreaterThanOrEqual(1)
+      expect(sekolahService.getSettings).toHaveBeenCalledWith(3)
     })
   })
 })

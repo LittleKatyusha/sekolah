@@ -120,6 +120,9 @@ const PublicProfile = lazy(() => import('./features/sekolah/pages/PublicProfile'
 const PublicBlogList = lazy(() => import('./features/blog/pages/PublicBlogList'))
 const PublicBlogDetail = lazy(() => import('./features/blog/pages/PublicBlogDetail'))
 const SklVerificationPage = lazy(() => import('./features/siswa/pages/SklVerificationPage'))
+const SiswaPublicProfile = lazy(() => import('./features/siswa/pages/SiswaPublicProfile'))
+const RaporVerificationPage = lazy(() => import('./features/rapor/pages/RaporVerificationPage'))
+
 const ArtikelListPage = lazy(() => import('./features/blog/pages/ArtikelListPage'))
 const ArtikelFormPage = lazy(() => import('./features/blog/pages/ArtikelFormPage'))
 const MidtransSettingsPage = lazy(() => import('./features/sekolah/pages/MidtransSettingsPage'))
@@ -301,8 +304,14 @@ function App() {
             <Route path="/blog/:slug" element={<PublicBlogDetail />} />
 
             {/* Public SKL Document Verification — no authentication required */}
+            <Route path="/publik/siswa/:token" element={<SiswaPublicProfile />} />
             <Route path="/verifikasi/skl/:token" element={<SklVerificationPage />} />
             <Route path="/verify/skl/:token" element={<SklVerificationPage />} />
+
+            {/* Public Rapor Document Verification — no authentication required */}
+            <Route path="/verifikasi/rapor/:token" element={<RaporVerificationPage />} />
+            <Route path="/verify/rapor/:token" element={<RaporVerificationPage />} />
+
 
             <Route element={<ProtectedRoute><RouteAccessGuard><MainLayout /></RouteAccessGuard></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />

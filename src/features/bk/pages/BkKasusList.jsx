@@ -115,9 +115,9 @@ const BkKasusList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-kasus.view"
+              editPermission="bk-kasus.update"
+              deletePermission="bk-kasus.delete"
             />
           </div>
         )

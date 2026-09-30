@@ -74,9 +74,9 @@ const BkJenisList = () => {
               onDetail={() => handleDetail(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              editPermission="bk.edit"
-              deletePermission="bk.delete"
+              detailPermission="bk-jenis.view"
+              editPermission="bk-jenis.update"
+              deletePermission="bk-jenis.delete"
             />
           </div>
         )

@@ -12,7 +12,7 @@ const BkHasilForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
-  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
+  const submitPermission = 'bk-hasil.manage'
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)

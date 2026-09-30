@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, ClipboardList, Hash, Sparkles, Copy, Check, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, ClipboardList, Hash, Sparkles, Copy, Check, RefreshCw, Printer } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { raporService } from '../services/raporService'
+import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 const RaporDetail = () => {
@@ -20,6 +21,36 @@ const RaporDetail = () => {
   const [narasi, setNarasi] = useState(null)
   const [catatanGuru, setCatatanGuru] = useState('')
   const [copied, setCopied] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownloadPdf = async () => {
+    if (!rapor) return
+    setDownloading(true)
+    try {
+      const siswaId = rapor.mst_siswa_id || rapor.siswa?.id
+      const semesterId = Number(rapor.semester_kode || rapor.semester)
+      const { error } = await reportService.generateAndDownload({
+        report_path: '/reports/akademik/rapor_siswa',
+        parameters: {
+          siswa_id: siswaId,
+          semester: semesterId,
+          tahun_ajaran_id: rapor.tahun_ajaran_id || null,
+        },
+        format: 'pdf',
+        output_filename: `Rapor_${rapor.siswa?.nama || 'Siswa'}_${rapor.semester || ''}`.replace(/\s+/g, '_'),
+      })
+      if (error) {
+        showError(error.message || 'Gagal mengunduh rapor PDF.')
+      } else {
+        showSuccess('Rapor PDF berhasil diunduh.')
+      }
+    } catch (err) {
+      showError(err.message || 'Terjadi kesalahan saat mengunduh rapor.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
 
   useEffect(() => {
     fetchRapor()
@@ -103,6 +134,11 @@ const RaporDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Rapor</h1>
         </div>
         <div className="flex gap-3">
+          <Button variant="primary" onClick={handleDownloadPdf} disabled={downloading}>
+            {downloading ? <RefreshCw size={18} className="mr-2 animate-spin" /> : <Printer size={18} className="mr-2" />}
+            {downloading ? 'Mengunduh...' : 'Cetak E-Rapor'}
+          </Button>
+
           <PermissionGuard permission="rapor.edit">
             <Button variant="warning" onClick={() => navigate(`/akademik/rapor/${id}/edit`)}>
               <Edit size={18} className="mr-2" />

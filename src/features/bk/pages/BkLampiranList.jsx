@@ -89,8 +89,8 @@ const BkLampiranList = () => {
               data={params.data}
               onDetail={() => handleDetail(params.data)}
               onDelete={() => handleDelete(params.data)}
-              detailPermission="bk.view"
-              deletePermission="bk.delete"
+              detailPermission="bk-lampiran.view"
+              deletePermission="bk-lampiran.manage"
             />
           </div>
         )

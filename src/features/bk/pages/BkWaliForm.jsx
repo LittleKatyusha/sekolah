@@ -14,7 +14,7 @@ const BkWaliForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
-  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
+  const submitPermission = 'bk-wali.manage'
 
   const { options: peranOptions } = useReferenceOptions('peran_wali_bk')
 
@@ -79,10 +79,15 @@ const BkWaliForm = () => {
 
         if (data) {
           const wali = data.data
+          const peranVal = wali.peran_code ?? (
+            typeof wali.peran === 'number'
+              ? wali.peran
+              : (peranOptions.find(o => o.label === wali.peran)?.value ?? wali.peran ?? '')
+          )
           setFormData({
             trx_bk_kasus_id: wali.trx_bk_kasus_id || '',
             mst_wali_id: wali.mst_wali_id || wali.wali_murid?.id || '',
-            peran: wali.peran || ''
+            peran: peranVal
           })
 
           if (wali.kasus) {
@@ -122,7 +127,7 @@ const BkWaliForm = () => {
     fetchWali()
 
     return () => controller.abort()
-  }, [id, isEditMode, navigate, buildKasusOption, buildWaliOption])
+  }, [id, isEditMode, navigate, buildKasusOption, buildWaliOption, peranOptions])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -149,7 +154,8 @@ const BkWaliForm = () => {
 
     setLoading(true)
 
-    const submitData = { ...formData, peran: parseInt(formData.peran) }
+    const parsedPeran = parseInt(formData.peran, 10)
+    const submitData = { ...formData, peran: Number.isNaN(parsedPeran) ? formData.peran : parsedPeran }
 
     let result
 

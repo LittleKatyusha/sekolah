@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import useFileImport from '../../../hooks/useFileImport'
+import ImportFeedback, { ImportErrorMessage } from '../../../components/ui/ImportFeedback'
 import * as XLSX from 'xlsx'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -64,8 +66,7 @@ const downloadTemplate = () => {
 export const ImportGuruModal = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  const { loading, result, setResult, error, setError, handleSubmit } = useFileImport(file, guruService.importExcel, onSuccess)
   const fileInputRef = useRef(null)
   const dialogRef = useRef(null)
   const initialFocusRef = useRef(null)
@@ -114,33 +115,13 @@ export const ImportGuruModal = ({ onClose, onSuccess }) => {
     }
     setFile(selectedFile)
     setResult(null)
-  }, [])
+    setError('')
+  }, [setResult, setError])
 
   const handleDrop = (e) => {
     e.preventDefault()
     setDragOver(false)
     handleFileChange(e.dataTransfer?.files?.[0])
-  }
-
-  const handleSubmit = async () => {
-    if (!file || loading) return
-
-    setLoading(true)
-    const response = await guruService.importExcel(file)
-    setLoading(false)
-
-    if (response?.error) {
-      const err = response.error
-      showError(err.message || 'Gagal mengimpor file Excel')
-      return
-    }
-
-    const payload = response.data?.data ?? response.data
-    setResult(payload)
-
-    if (payload?.imported > 0) {
-      onSuccess?.(payload)
-    }
   }
 
   return (
@@ -178,6 +159,7 @@ export const ImportGuruModal = ({ onClose, onSuccess }) => {
             </Button>
           </div>
 
+          <ImportFeedback error={error} result={result} />
           {!result ? (
             <div
               onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -230,7 +212,7 @@ export const ImportGuruModal = ({ onClose, onSuccess }) => {
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Baris Excel</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">NIP</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Tipe</th>
                         <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Keterangan</th>
@@ -242,7 +224,7 @@ export const ImportGuruModal = ({ onClose, onSuccess }) => {
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.row}</td>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.identifier ?? '-'}</td>
                           <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{err.code}</td>
-                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400">{err.message}</td>
+                          <td className="px-3 py-1.5 text-red-600 dark:text-red-400"><ImportErrorMessage error={err} /></td>
                         </tr>
                       ))}
                     </tbody>

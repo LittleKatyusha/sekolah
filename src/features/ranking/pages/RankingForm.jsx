@@ -42,9 +42,9 @@ const RankingForm = () => {
 
   const fetchOptions = async () => {
     const [siswaResult, kelasResult, semesterResult] = await Promise.all([
-      siswaService.getAll({ per_page: 100 }),
-      kelasService.getAll({ per_page: 100 }),
-      semesterService.getAll({ per_page: 100 })
+      siswaService.getAll({ per_page: 'all' }),
+      kelasService.getAll({ per_page: 'all' }),
+      semesterService.getAll({ per_page: 'all' })
     ])
 
     if (siswaResult.data?.data) {

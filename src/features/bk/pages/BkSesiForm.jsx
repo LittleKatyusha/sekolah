@@ -13,7 +13,7 @@ const BkSesiForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
-  const submitPermission = isEditMode ? 'bk.edit' : 'bk.create'
+  const submitPermission = 'bk-sesi.manage'
 
   const { options: metodeOptions } = useReferenceOptions('metode_bk')
 
@@ -61,10 +61,15 @@ const BkSesiForm = () => {
 
         if (data) {
           const sesi = data.data
+          const metodeVal = sesi.metode_code ?? (
+            typeof sesi.metode === 'number'
+              ? sesi.metode
+              : (metodeOptions.find(o => o.label === sesi.metode)?.value ?? sesi.metode ?? '')
+          )
           setFormData({
             trx_bk_kasus_id: sesi.trx_bk_kasus_id || '',
             tanggal: sesi.tanggal || '',
-            metode: sesi.metode || '',
+            metode: metodeVal,
             catatan: sesi.catatan || ''
           })
 
@@ -96,7 +101,7 @@ const BkSesiForm = () => {
     fetchSesi()
 
     return () => controller.abort()
-  }, [id, isEditMode, navigate, buildKasusOption])
+  }, [id, isEditMode, navigate, buildKasusOption, metodeOptions])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -124,7 +129,8 @@ const BkSesiForm = () => {
 
     setLoading(true)
 
-    const submitData = { ...formData, metode: parseInt(formData.metode) }
+    const parsedMetode = parseInt(formData.metode, 10)
+    const submitData = { ...formData, metode: Number.isNaN(parsedMetode) ? formData.metode : parsedMetode }
 
     let result
 
