@@ -94,6 +94,26 @@ export const sekolahService = {
     return await apiService.post(`${BASE_URL}/${sekolahId}/settings/midtrans/test`, data)
   },
 
+  getRfidDevices: async (sekolahId) => {
+    return await apiService.get(`${BASE_URL}/${sekolahId}/rfid-devices`)
+  },
+
+  createRfidDevice: async (sekolahId, data) => {
+    return await apiService.post(`${BASE_URL}/${sekolahId}/rfid-devices`, data)
+  },
+
+  updateRfidDeviceConfig: async (sekolahId, data) => {
+    return await apiService.put(`${BASE_URL}/${sekolahId}/rfid-devices/config`, data)
+  },
+
+  updateRfidDevice: async (sekolahId, deviceId, data) => {
+    return await apiService.put(`${BASE_URL}/${sekolahId}/rfid-devices/${deviceId}`, data)
+  },
+
+  rotateRfidDeviceToken: async (sekolahId, deviceId) => {
+    return await apiService.post(`${BASE_URL}/${sekolahId}/rfid-devices/${deviceId}/rotate-token`)
+  },
+
   /**
    * Get a specific setting by ID for a sekolah
    * Endpoint: GET /sekolah/{sekolahId}/settings/{id}

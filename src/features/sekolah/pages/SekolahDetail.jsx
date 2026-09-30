@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { sekolahService } from '../services/sekolahService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import RfidDevicesCard from '../components/RfidDevicesCard'
 
 const SekolahDetail = () => {
   const navigate = useNavigate()
@@ -535,6 +536,10 @@ const SekolahDetail = () => {
             </div>
           </form>
         </Card>
+      </PermissionGuard>
+
+      <PermissionGuard permission="sekolah.settings.view">
+        <RfidDevicesCard sekolahId={sekolah.id} settings={settings} />
       </PermissionGuard>
 
       {/* Midtrans Payment Gateway Section */}

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History, GraduationCap, FileText, ExternalLink, Eye } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History, GraduationCap, FileText, ExternalLink, Eye, Radio, Loader2 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import FileUpload from '../../../components/ui/FileUpload'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { siswaService } from '../services/siswaService'
+import RfidEnrollment from '../components/RfidEnrollment'
 import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
@@ -21,6 +22,7 @@ const SiswaDetail = () => {
   const [absensiSummary, setAbsensiSummary] = useState(null)
   const [printingSkl, setPrintingSkl] = useState(false)
   const [showSklModal, setShowSklModal] = useState(false)
+  const [showRfidEnrollment, setShowRfidEnrollment] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -135,6 +137,9 @@ const SiswaDetail = () => {
             Insight 360°
           </Button>
           <PermissionGuard permission="siswa.update">
+            <Button variant="secondary" onClick={() => setShowRfidEnrollment(true)}>
+              <Radio size={18} className="mr-2" />{siswa.rfid_uid ? 'Ganti' : 'Daftarkan'} RFID via scan
+            </Button>
             <Button variant="warning" onClick={() => navigate(`/siswa/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
               Edit
@@ -149,6 +154,9 @@ const SiswaDetail = () => {
         </div>
       </div>
 
+      {showRfidEnrollment && <PermissionGuard permission="siswa.update">
+        <RfidEnrollment key={siswa.id} siswa={siswa} onClose={() => setShowRfidEnrollment(false)} onSuccess={(uid) => setSiswa((current) => ({ ...current, rfid_uid: uid }))} />
+      </PermissionGuard>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile Card */}
         <div className="md:col-span-1">
@@ -404,6 +412,12 @@ const SiswaDetail = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Informasi Sekolah */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Kartu RFID</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{siswa.rfid_uid ? `UID terdaftar: ${siswa.rfid_uid}` : 'Belum ada kartu terdaftar.'}</p>
                   </div>
 
                   {/* Informasi Sekolah */}

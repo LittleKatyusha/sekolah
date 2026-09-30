@@ -75,6 +75,16 @@ export const siswaService = {
     return await apiService.put(`${BASE_URL}/${id}`, data)
   },
 
+  startRfidEnrollment: async (id, deviceId) => {
+    return await apiService.post(`${BASE_URL}/${id}/rfid-enrollment`, { device_id: deviceId })
+  },
+
+  getRfidReaders: (id) => apiService.get(`${BASE_URL}/${id}/rfid-readers`),
+
+  getRfidEnrollment: (id, deviceId, sessionId) => apiService.get(`${BASE_URL}/${id}/rfid-enrollment`, {
+    params: { device_id: deviceId, session_id: sessionId },
+  }),
+
   /**
    * Delete siswa
    * @param {number|string} id - Siswa ID

@@ -8,11 +8,13 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
 import ImportSiswaModal from './ImportSiswaModal'
+import RfidEnrollment from '../components/RfidEnrollment'
 
 const SiswaList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [showImport, setShowImport] = useState(false)
+  const [enrollmentSiswa, setEnrollmentSiswa] = useState(null)
   
   // Column definitions
   const columnDefs = useMemo(() => [
@@ -103,6 +105,41 @@ const SiswaList = () => {
       }
     },
     {
+      field: 'rfid_uid',
+      headerName: 'Kartu RFID',
+       width: 290,
+       minWidth: 270,
+      sortable: false,
+      filter: false,
+      cellRenderer: ({ data, value }) => {
+        if (!data) return null;
+        if (!Object.prototype.hasOwnProperty.call(data, 'rfid_uid')) return 'Tidak tersedia';
+        return (
+          <div className="h-full flex items-center gap-3">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${value
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+              {value ? 'Terdaftar' : 'Belum terdaftar'}
+            </span>
+            <PermissionGuard permission="siswa.update">
+              <button
+                type="button"
+                 aria-label={`${value ? 'Ganti' : 'Daftarkan'} RFID ${data.nama} via scan`}
+                 disabled={Boolean(enrollmentSiswa)}
+                className="text-sm underline text-primary-700 dark:text-primary-300 focus-visible:outline focus-visible:outline-2"
+                onClick={(event) => {
+                  event.stopPropagation()
+                   setEnrollmentSiswa(data)
+                }}
+              >
+                 {value ? 'Ganti' : 'Daftarkan'} via scan
+              </button>
+            </PermissionGuard>
+          </div>
+        )
+      }
+    },
+    {
       headerName: 'Aksi',
       width: 80,
       minWidth: 80,
@@ -126,7 +163,7 @@ const SiswaList = () => {
         )
       }
     }
-  ], [navigate])
+   ], [navigate, enrollmentSiswa])
 
   // Default column definition
   const defaultColDef = useMemo(() => ({
@@ -206,6 +243,9 @@ const SiswaList = () => {
         />
       )}
 
+      {enrollmentSiswa && <PermissionGuard permission="siswa.update">
+        <RfidEnrollment key={enrollmentSiswa.id} siswa={enrollmentSiswa} onClose={() => setEnrollmentSiswa(null)} onSuccess={handleRefresh} />
+      </PermissionGuard>}
       <Card>
         <InfiniteGrid
           ref={gridRef}

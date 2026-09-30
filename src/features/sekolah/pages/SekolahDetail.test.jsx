@@ -17,6 +17,11 @@ vi.mock('../services/sekolahService', () => ({
     updateMidtransSettings: vi.fn(),
     testMidtransConnection: vi.fn(),
     deleteSetting: vi.fn(),
+    getRfidDevices: vi.fn(),
+    createRfidDevice: vi.fn(),
+    updateRfidDeviceConfig: vi.fn(),
+    updateRfidDevice: vi.fn(),
+    rotateRfidDeviceToken: vi.fn(),
   },
 }))
 
@@ -45,6 +50,7 @@ const renderPage = async (user) => {
     },
     error: null,
   })
+  sekolahService.getRfidDevices.mockResolvedValue({ data: { data: [] }, error: null })
 
   render(
     <MemoryRouter>
@@ -234,6 +240,24 @@ describe('SekolahDetail settings', () => {
         is_production: false,
       }))
       expect(showSuccess).toHaveBeenCalledWith('Konfigurasi Midtrans berhasil disimpan!')
+    })
+  })
+
+  it('saves centralized RFID scanner configuration', async () => {
+    sekolahService.updateRfidDeviceConfig.mockResolvedValue({ data: {}, error: null })
+    await renderPage({ role: 'admin', roles: [], permissions: [{ code: 'sekolah.settings.view' }, { code: 'sekolah.settings.update' }] })
+
+    fireEvent.change(screen.getByLabelText('URL API RFID'), {
+      target: { value: 'http://server.test/api/v1/akademik/rfid/check-in' },
+    })
+    fireEvent.change(screen.getByLabelText('Cooldown RFID'), { target: { value: '4000' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Simpan' }))
+
+    await waitFor(() => {
+      expect(sekolahService.updateRfidDeviceConfig).toHaveBeenCalledWith(1, {
+        api_url: 'http://server.test/api/v1/akademik/rfid/check-in',
+        scan_cooldown_ms: 4000,
+      })
     })
   })
 })
