@@ -216,7 +216,7 @@ const GuruStats = () => {
           {/* Row 1: Distribusi Mapel (Pie) + Kehadiran Breakdown (Donut) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card title="Distribusi per Mata Pelajaran">
-              <div className="h-72">
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -226,14 +226,16 @@ const GuruStats = () => {
                       cx="50%"
                       cy="50%"
                       outerRadius={95}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
                     >
                       {mapelData.map((entry, i) => (
                         <Cell key={i} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(val) => formatNumber(val)} />
+                    <Tooltip formatter={(val, name) => {
+                      const total = mapelData.reduce((acc, curr) => acc + curr.value, 0)
+                      const pct = total > 0 ? ((val / total) * 100).toFixed(0) : 0
+                      return [`${formatNumber(val)} guru (${pct}%)`, name]
+                    }} />
                     <Legend wrapperStyle={{ fontSize: '13px' }} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -241,7 +243,7 @@ const GuruStats = () => {
             </Card>
 
             <Card title="Breakdown Kehadiran">
-              <div className="h-72">
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -253,14 +255,18 @@ const GuruStats = () => {
                       innerRadius={55}
                       outerRadius={95}
                       paddingAngle={3}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ percent }) => (percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : null)}
                       labelLine={false}
                     >
                       {kehadiranData.map((entry, i) => (
                         <Cell key={i} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(val) => formatNumber(val)} />
+                    <Tooltip formatter={(val, name) => {
+                      const total = kehadiranData.reduce((acc, curr) => acc + curr.value, 0)
+                      const pct = total > 0 ? ((val / total) * 100).toFixed(0) : 0
+                      return [`${formatNumber(val)} (${pct}%)`, name]
+                    }} />
                     <Legend wrapperStyle={{ fontSize: '13px' }} />
                   </PieChart>
                 </ResponsiveContainer>
