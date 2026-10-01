@@ -115,6 +115,11 @@ const formatShortDate = (dateString) => {
   })
 }
 
+const formatTime = (value) => {
+  if (!value) return '-'
+  return String(value).slice(0, 5)
+}
+
 const extractRows = (responseData) => {
   const payload = responseData?.data
   if (Array.isArray(payload)) return payload
@@ -158,6 +163,12 @@ const StudentAbsensiCard = ({ item }) => {
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <Calendar size={16} />
             <span>{formatDate(item?.tanggal)}</span>
+            {(item?.jam_masuk || item?.jam_pulang) && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600">•</span>
+                <span>Masuk: {formatTime(item?.jam_masuk)} / Pulang: {formatTime(item?.jam_pulang)}</span>
+              </>
+            )}
           </div>
           <div className="mt-3 flex items-center gap-3">
             <div className={`h-10 w-1 rounded-full ${meta.className.split(' ')[0] || 'bg-gray-300'}`} />
@@ -579,6 +590,26 @@ const AdminAbsensiSiswaList = () => {
       width: 130,
       minWidth: 110,
       cellRenderer: (params) => <StatusBadge status={params.value} />,
+    },
+    {
+      field: 'jam_masuk',
+      backendField: 'jam_masuk',
+      headerName: 'Jam Masuk',
+      sortable: true,
+      filter: true,
+      width: 120,
+      minWidth: 110,
+      cellRenderer: (params) => formatTime(params.value),
+    },
+    {
+      field: 'jam_pulang',
+      backendField: 'jam_pulang',
+      headerName: 'Jam Pulang',
+      sortable: true,
+      filter: true,
+      width: 120,
+      minWidth: 110,
+      cellRenderer: (params) => formatTime(params.value),
     },
     {
       field: 'keterangan',

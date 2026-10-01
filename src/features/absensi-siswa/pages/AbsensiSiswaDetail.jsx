@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Calendar } from 'lucide-react'
+import { ArrowLeft, User, Calendar, Clock } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { absensiSiswaService } from '../services/absensiSiswaService'
@@ -27,6 +27,11 @@ const formatDateTime = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const formatTime = (value) => {
+  if (!value) return '-'
+  return String(value).slice(0, 5)
 }
 
 // Status Badge Component
@@ -180,6 +185,26 @@ const AbsensiSiswaDetail = () => {
                     <div className="mt-1">
                       <StatusBadge status={absensi.status_absensi} />
                     </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} className="text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Jam Masuk</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatTime(absensi.jam_masuk)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} className="text-cyan-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Jam Pulang</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatTime(absensi.jam_pulang)}</p>
                   </div>
                 </div>
 
