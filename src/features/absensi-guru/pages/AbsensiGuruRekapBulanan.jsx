@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Search, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
@@ -67,30 +68,50 @@ const AbsensiGuruRekapBulanan = () => {
     setRekap(data.data)
   }, [bulan, tahun])
 
-  const handleExportCSV = useCallback(() => {
+  const handleExportExcel = useCallback(() => {
     if (!rekap?.rekap?.length) return
     const bulanLabel = BULAN_OPTIONS.find((b) => b.value === Number(bulan))?.label ?? bulan
-    const headers = ['No', 'NIP', 'Nama Guru', 'Hadir', 'Izin', 'Sakit', 'Alpha', 'Total Hari']
-    const rows = rekap.rekap.map((row, i) => [
-      i + 1,
-      row.nip,
-      row.nama,
-      row.hadir,
-      row.izin,
-      row.sakit,
-      row.alpha,
-      row.total_hari,
-    ])
-    const csvContent = [headers, ...rows]
-      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `rekap-absensi-guru-${bulanLabel}-${tahun}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    const headers = ['No', 'NIP', 'Nama Guru', 'Hadir', 'Izin', 'Sakit', 'Alpha', 'Total Hari', '% Hadir']
+    const rows = rekap.rekap.map((row, i) => {
+      const pct = row.total_hari > 0 ? Math.round((row.hadir / row.total_hari) * 100) : 0
+      return [
+        i + 1,
+        row.nip || '-',
+        row.nama || '-',
+        row.hadir ?? 0,
+        row.izin ?? 0,
+        row.sakit ?? 0,
+        row.alpha ?? 0,
+        row.total_hari ?? 0,
+        `${pct}%`,
+      ]
+    })
+
+    const totalHadir = rekap.rekap.reduce((s, r) => s + (r.hadir || 0), 0)
+    const totalIzin = rekap.rekap.reduce((s, r) => s + (r.izin || 0), 0)
+    const totalSakit = rekap.rekap.reduce((s, r) => s + (r.sakit || 0), 0)
+    const totalAlpha = rekap.rekap.reduce((s, r) => s + (r.alpha || 0), 0)
+    const totalHari = rekap.rekap.reduce((s, r) => s + (r.total_hari || 0), 0)
+    const summaryRow = ['Total', '', '', totalHadir, totalIzin, totalSakit, totalAlpha, totalHari, '']
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows, summaryRow])
+    worksheet['!cols'] = [
+      { wch: 6 },
+      { wch: 20 },
+      { wch: 30 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 10 },
+    ]
+
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rekap Guru')
+
+    const filename = `rekap-absensi-guru-${bulanLabel}-${tahun}.xlsx`
+    XLSX.writeFile(workbook, filename)
   }, [rekap, bulan, tahun])
 
   const bulanLabel = BULAN_OPTIONS.find((b) => b.value === Number(bulan))?.label ?? bulan
@@ -109,9 +130,9 @@ const AbsensiGuruRekapBulanan = () => {
           </h1>
         </div>
         {rekap?.rekap?.length > 0 && (
-          <Button variant="outline" size="sm" onClick={handleExportCSV}>
+          <Button variant="outline" size="sm" onClick={handleExportExcel}>
             <Download size={16} className="mr-2" />
-            Export CSV
+            Export Excel
           </Button>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Search, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
@@ -45,6 +46,7 @@ const AbsensiSiswaRekapBulanan = () => {
   const [bulan, setBulan] = useState(now.getMonth() + 1)
   const [tahun, setTahun] = useState(now.getFullYear())
   const [kelasId, setKelasId] = useState('')
+  const [searchedKelasId, setSearchedKelasId] = useState('')
   const [kelasOptions, setKelasOptions] = useState([])
   const [loading, setLoading] = useState(false)
   const [rekap, setRekap] = useState(null)
@@ -83,27 +85,69 @@ const AbsensiSiswaRekapBulanan = () => {
       return
     }
     setRekap(data.data)
+    setSearchedKelasId(kelasId)
   }, [bulan, tahun, kelasId])
 
-  const handleExportCSV = useCallback(() => {
+  const handleExportExcel = useCallback(() => {
+    if (!searchedKelasId) {
+      showError('Export hanya dapat dilakukan per kelas. Silakan pilih kelas terlebih dahulu.')
+      return
+    }
+    if (kelasId !== searchedKelasId) {
+      showError('Filter kelas telah diubah. Silakan klik Tampilkan terlebih dahulu.')
+      return
+    }
     if (!rekap?.rekap?.length) return
+
     const bulanLabel = BULAN_OPTIONS.find((b) => b.value === Number(bulan))?.label ?? bulan
+    const namaKelas = kelasOptions.find((k) => k.value === String(searchedKelasId))?.label || `Kelas ${searchedKelasId}`
+
     const headers = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir', 'Izin', 'Sakit', 'Alpha', 'Total Hari', '% Hadir']
     const rows = rekap.rekap.map((row, i) => {
       const pct = row.total_hari > 0 ? Math.round((row.hadir / row.total_hari) * 100) : 0
-      return [i + 1, row.nis, row.nama, row.kelas, row.hadir, row.izin, row.sakit, row.alpha, row.total_hari, `${pct}%`]
+      return [
+        i + 1,
+        row.nis || '-',
+        row.nama || '-',
+        row.kelas || '-',
+        row.hadir ?? 0,
+        row.izin ?? 0,
+        row.sakit ?? 0,
+        row.alpha ?? 0,
+        row.total_hari ?? 0,
+        `${pct}%`,
+      ]
     })
-    const csvContent = [headers, ...rows]
-      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `rekap-absensi-siswa-${bulanLabel}-${tahun}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
-  }, [rekap, bulan, tahun])
+
+    const totalHadir = rekap.rekap.reduce((s, r) => s + (r.hadir || 0), 0)
+    const totalIzin = rekap.rekap.reduce((s, r) => s + (r.izin || 0), 0)
+    const totalSakit = rekap.rekap.reduce((s, r) => s + (r.sakit || 0), 0)
+    const totalAlpha = rekap.rekap.reduce((s, r) => s + (r.alpha || 0), 0)
+    const totalHari = rekap.rekap.reduce((s, r) => s + (r.total_hari || 0), 0)
+    const summaryRow = ['Total', '', '', '', totalHadir, totalIzin, totalSakit, totalAlpha, totalHari, '']
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows, summaryRow])
+    worksheet['!cols'] = [
+      { wch: 6 },
+      { wch: 16 },
+      { wch: 30 },
+      { wch: 16 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 10 },
+    ]
+
+    const workbook = XLSX.utils.book_new()
+    const sheetName = namaKelas.substring(0, 31).replace(/[\\/?*[\]]/g, '')
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName || 'Rekap')
+
+    const safeKelas = namaKelas.replace(/[^a-zA-Z0-9-_]/g, '_')
+    const filename = `rekap-absensi-siswa-${safeKelas}-${bulanLabel}-${tahun}.xlsx`
+    XLSX.writeFile(workbook, filename)
+  }, [searchedKelasId, kelasId, rekap, bulan, tahun, kelasOptions])
 
   const bulanLabel = BULAN_OPTIONS.find((b) => b.value === Number(bulan))?.label ?? bulan
 
@@ -121,10 +165,33 @@ const AbsensiSiswaRekapBulanan = () => {
           </h1>
         </div>
         {rekap?.rekap?.length > 0 && (
-          <Button variant="outline" size="sm" onClick={handleExportCSV}>
-            <Download size={16} className="mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+            {!searchedKelasId ? (
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                *Export hanya tersedia per kelas
+              </span>
+            ) : kelasId !== searchedKelasId ? (
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                *Klik Tampilkan untuk memperbarui data
+              </span>
+            ) : null}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportExcel}
+              disabled={!searchedKelasId || kelasId !== searchedKelasId}
+              title={
+                !searchedKelasId
+                  ? 'Export hanya dapat dilakukan per kelas. Silakan pilih kelas terlebih dahulu.'
+                  : kelasId !== searchedKelasId
+                  ? 'Filter kelas diubah. Silakan klik Tampilkan terlebih dahulu.'
+                  : 'Export Excel (.xlsx)'
+              }
+            >
+              <Download size={16} className="mr-2" />
+              Export Excel
+            </Button>
+          </div>
         )}
       </div>
 
@@ -191,7 +258,7 @@ const AbsensiSiswaRekapBulanan = () => {
         <Card
           title={
             rekap
-              ? `Rekap ${bulanLabel} ${tahun}${kelasId ? ` — ${kelasOptions.find(k => k.value === kelasId)?.label ?? ''}` : ''} — ${rekap.total} Siswa`
+              ? `Rekap ${bulanLabel} ${tahun}${searchedKelasId ? ` — ${kelasOptions.find(k => k.value === searchedKelasId)?.label ?? ''}` : ''} — ${rekap.total} Siswa`
               : 'Tidak ada data'
           }
         >
