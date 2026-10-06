@@ -3,6 +3,7 @@ import TesMinatBakatDashboard from '../features/tes-minat-bakat/components/TesMi
 import TesMinatBakatDetailPage from '../features/tes-minat-bakat/components/TesMinatBakatDetailPage'
 import TesMinatBakatFormPage from '../features/tes-minat-bakat/components/TesMinatBakatFormPage'
 import TesMinatBakatListPage from '../features/tes-minat-bakat/components/TesMinatBakatListPage'
+import TesMinatBakatPesertaBulkFormPage from '../features/tes-minat-bakat/components/TesMinatBakatPesertaBulkFormPage'
 
 const TesMinatBakat = () => {
   return (
@@ -26,7 +27,7 @@ const TesMinatBakat = () => {
       <Route path="pertanyaan/:id/edit" element={<TesMinatBakatFormPage resourceKey="pertanyaan" />} />
 
       <Route path="peserta" element={<TesMinatBakatListPage resourceKey="peserta" />} />
-      <Route path="peserta/create" element={<TesMinatBakatFormPage resourceKey="peserta" />} />
+      <Route path="peserta/create" element={<TesMinatBakatPesertaBulkFormPage />} />
       <Route path="peserta/:id" element={<TesMinatBakatDetailPage resourceKey="peserta" />} />
       <Route path="peserta/:id/edit" element={<TesMinatBakatFormPage resourceKey="peserta" />} />
 

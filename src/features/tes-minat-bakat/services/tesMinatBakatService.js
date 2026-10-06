@@ -48,6 +48,9 @@ export const tesMinatBakatService = {
     getBySiswa: async (siswaId) => {
       return await apiService.get(`/akademik/tes-minat-bakat-peserta/siswa/${siswaId}`)
     },
+    bulkCreate: async (data) => {
+      return await apiService.post('/akademik/tes-minat-bakat-peserta/bulk', data)
+    },
     start: async (id) => {
       return await apiService.post(`/akademik/tes-minat-bakat-peserta/${id}/mulai`)
     },
