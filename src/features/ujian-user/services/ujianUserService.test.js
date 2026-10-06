@@ -37,4 +37,10 @@ describe('ujianUserService exam engine contracts', () => {
     })
     expect(result).toEqual(mockResponse)
   })
+  it('submits bulk registration correctly', async () => {
+    const payload = { trx_ujian_id: 1, siswa_ids: [101, 102], sisa_waktu: 3600 }
+    await ujianUserService.bulkCreate(payload)
+    expect(apiService.post).toHaveBeenCalledWith('/akademik/ujian-user/bulk', payload)
+  })
+
 })

@@ -47,6 +47,10 @@ export const eksSiswaService = {
   create: (data) =>
     apiService.post(PENDAFTARAN_BASE, data),
 
+  bulkCreate: (data) =>
+    apiService.post(`${PENDAFTARAN_BASE}/bulk`, data),
+
+
   updateStatus: (id, status) =>
     apiService.put(`${PENDAFTARAN_BASE}/${id}/status`, { status }),
 

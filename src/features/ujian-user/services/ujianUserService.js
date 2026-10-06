@@ -38,6 +38,19 @@ export const ujianUserService = {
   create: async (data) => {
     return await apiService.post(BASE_URL, data)
   },
+  /**
+   * Bulk create ujian users
+   * @param {Object} data - Bulk registration data
+   * @param {number} data.trx_ujian_id - Ujian ID
+   * @param {number[]} data.siswa_ids - Array of Siswa IDs
+   * @param {number} [data.sisa_waktu] - Duration in seconds
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  bulkCreate: async (data) => {
+    return await apiService.post(`${BASE_URL}/bulk`, data)
+  },
+
+
 
   /**
    * Update existing ujian user
