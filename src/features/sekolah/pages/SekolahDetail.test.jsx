@@ -18,6 +18,8 @@ vi.mock('../services/sekolahService', () => ({
     getMidtransSettings: vi.fn(),
     updateMidtransSettings: vi.fn(),
     testMidtransConnection: vi.fn(),
+    getKartuPelajarTemplate: vi.fn(),
+    updateKartuPelajarTemplate: vi.fn(),
     deleteSetting: vi.fn(),
     getRfidDevices: vi.fn(),
     createRfidDevice: vi.fn(),
@@ -39,6 +41,7 @@ const renderPage = async (user) => {
   useAuthStore.setState({ user })
   sekolahService.getAll.mockResolvedValue({ data: { data: [{ id: 1, nama_sekolah: 'SMP Test' }] }, error: null })
   sekolahService.getSettings.mockResolvedValue({ data: { data: [setting] }, error: null })
+  sekolahService.getKartuPelajarTemplate.mockResolvedValue({ data: { data: {} }, error: null })
   sekolahService.getMidtransSettings.mockResolvedValue({
     data: {
       data: {

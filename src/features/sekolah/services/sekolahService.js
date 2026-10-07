@@ -103,6 +103,14 @@ export const sekolahService = {
     return await apiService.post(`${BASE_URL}/${sekolahId}/settings/midtrans/test`, data)
   },
 
+  getKartuPelajarTemplate: async (sekolahId) => {
+    return await apiService.get(`${BASE_URL}/${sekolahId}/settings/kartu-pelajar`)
+  },
+
+  updateKartuPelajarTemplate: async (sekolahId, data) => {
+    return await apiService.put(`${BASE_URL}/${sekolahId}/settings/kartu-pelajar`, data)
+  },
+
   getRfidDevices: async (sekolahId) => {
     return await apiService.get(`${BASE_URL}/${sekolahId}/rfid-devices`)
   },

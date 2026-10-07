@@ -136,6 +136,25 @@ export const siswaService = {
   },
 
   /**
+   * Cetak kartu pelajar massal (Blob PDF)
+   */
+  cetakKartuPelajar: async (payload = {}) => {
+    return await apiService.post(`${BASE_URL}/kartu-pelajar/cetak`, payload, {
+      responseType: 'blob',
+    })
+  },
+
+  /**
+   * Cetak kartu pelajar satuan (Blob PDF)
+   */
+  cetakKartuPelajarSingle: async (id, params = {}) => {
+    return await apiService.get(`${BASE_URL}/${id}/kartu-pelajar`, {
+      params,
+      responseType: 'blob',
+    })
+  },
+
+  /**
    * Import siswa data from an Excel file (.xlsx / .xls)
    * @param {File} file - Excel file (max 5MB)
    * @returns {Promise<{data: {imported: number, failed: number, skipped: number, errors: Array, errors_truncated: boolean}, error: any}>}

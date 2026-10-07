@@ -8,6 +8,7 @@ import useAuthStore from '../../../store/useAuthStore'
 import { sekolahService } from '../services/sekolahService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RfidDevicesCard from '../components/RfidDevicesCard'
+import KartuPelajarSettingsCard from '../components/KartuPelajarSettingsCard'
 
 const SekolahDetail = () => {
   const navigate = useNavigate()
@@ -579,6 +580,10 @@ const SekolahDetail = () => {
             </div>
           </form>
         </Card>
+      </PermissionGuard>
+
+      <PermissionGuard permission="sekolah.settings.view">
+        <KartuPelajarSettingsCard sekolahId={sekolah.id} />
       </PermissionGuard>
 
       <PermissionGuard permission="sekolah.settings.view">

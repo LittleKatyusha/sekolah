@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History, GraduationCap, FileText, ExternalLink, Eye, Radio, Loader2 } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, Calendar, BookOpen, Clock, Mail, Phone, MapPin, Heart, Droplets, Ruler, Weight, School, Hash, Users, Activity, History, GraduationCap, FileText, ExternalLink, Eye, Radio, Loader2, IdCard } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import FileUpload from '../../../components/ui/FileUpload'
@@ -22,6 +22,7 @@ const SiswaDetail = () => {
   const [activeTab, setActiveTab] = useState('profile')
   const [absensiSummary, setAbsensiSummary] = useState(null)
   const [printingSkl, setPrintingSkl] = useState(false)
+  const [printingKartu, setPrintingKartu] = useState(false)
   const [showSklModal, setShowSklModal] = useState(false)
   const [showRfidEnrollment, setShowRfidEnrollment] = useState(false)
 
@@ -86,6 +87,31 @@ const SiswaDetail = () => {
     }
   }
 
+  const handlePrintKartu = async () => {
+    setPrintingKartu(true)
+    try {
+      const res = await siswaService.cetakKartuPelajarSingle(id, { format: 'cr80', side: 'both' })
+      if (res?.data) {
+        const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/pdf' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `kartu_pelajar_${siswa?.nama || id}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000)
+        showSuccess('Kartu pelajar berhasil diunduh!')
+      } else {
+        showError('Gagal mengunduh kartu pelajar')
+      }
+    } catch {
+      showError('Gagal mengunduh kartu pelajar')
+    } finally {
+      setPrintingKartu(false)
+    }
+  }
+
   const formatDate = (dateString) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
@@ -132,6 +158,10 @@ const SiswaDetail = () => {
           <Button variant="secondary" onClick={handlePrintSkl} loading={printingSkl}>
             <GraduationCap size={16} className="mr-2 text-indigo-600 dark:text-indigo-400" />
             Unduh SKL (PDF)
+          </Button>
+          <Button variant="secondary" onClick={handlePrintKartu} loading={printingKartu}>
+            <IdCard size={16} className="mr-2 text-primary-600 dark:text-primary-400" />
+            Cetak Kartu (PDF)
           </Button>
           <Button variant="primary" onClick={() => navigate(`/siswa/${id}/insight`)}>
             <Activity size={16} className="mr-2" />

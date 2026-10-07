@@ -8,12 +8,14 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
 import ImportSiswaModal from './ImportSiswaModal'
+import CetakKartuModal from '../components/CetakKartuModal'
 import RfidEnrollment from '../components/RfidEnrollment'
 
 const SiswaList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [showImport, setShowImport] = useState(false)
+  const [showCetakKartu, setShowCetakKartu] = useState(false)
   const [enrollmentSiswa, setEnrollmentSiswa] = useState(null)
   
   // Column definitions
@@ -208,6 +210,14 @@ const SiswaList = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Data Siswa</h1>
         <div className="flex flex-col sm:flex-row gap-3">
+          <PermissionGuard permission="siswa.view">
+            <Button onClick={() => setShowCetakKartu(true)} variant="secondary" title="Cetak Kartu Pelajar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+              </svg>
+              Cetak Kartu
+            </Button>
+          </PermissionGuard>
           <PermissionGuard permission="siswa.create">
             <Button onClick={() => setShowImport(true)} variant="secondary" title="Import Excel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
@@ -239,6 +249,12 @@ const SiswaList = () => {
           onSuccess={() => {
             if (gridRef.current?.refreshGrid) gridRef.current.refreshGrid()
           }}
+        />
+      )}
+
+      {showCetakKartu && (
+        <CetakKartuModal
+          onClose={() => setShowCetakKartu(false)}
         />
       )}
 
