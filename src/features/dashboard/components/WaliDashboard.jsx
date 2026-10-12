@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, CheckCircle, AlertTriangle, DollarSign, Globe } from 'lucide-react'
+import { Users, CheckCircle, AlertTriangle, DollarSign, Globe, Trophy } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import QuickActions from './QuickActions'
 
@@ -61,6 +61,14 @@ const WaliDashboard = ({ data }) => {
                     </span>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => navigate('/ekstrakurikuler/kegiatan')}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 text-sm font-medium rounded-lg transition-colors border border-emerald-200 dark:border-emerald-800"
+                >
+                  <Trophy size={15} />
+                  Jadwal & Kegiatan Ekskul
+                </button>
 
                 {child.tunggakan_spp_count > 0 && (
                   <button

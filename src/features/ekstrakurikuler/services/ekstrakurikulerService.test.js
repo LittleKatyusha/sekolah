@@ -10,7 +10,7 @@ vi.mock('../../../utils/api', () => ({
 }))
 
 import { apiService } from '../../../utils/api'
-import { eksSiswaService, ekstrakurikulerService } from './ekstrakurikulerService'
+import { eksSiswaService, ekstrakurikulerService, eksKegiatanService } from './ekstrakurikulerService'
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -29,5 +29,24 @@ describe('ekstrakurikulerService', () => {
   it('fetches participants by ekstrakurikuler', async () => {
     await eksSiswaService.getByEkstrakurikuler(5)
     expect(apiService.get).toHaveBeenCalledWith('/ekstrakurikuler/pendaftaran/ekstrakurikuler/5')
+  })
+
+  it('calls eksKegiatanService endpoints correctly', async () => {
+    await eksKegiatanService.getAll({ status: 'dijadwalkan' })
+    expect(apiService.get).toHaveBeenCalledWith('/ekstrakurikuler/kegiatan/', { params: { status: 'dijadwalkan' } })
+
+    const kegiatanData = {
+      ekstrakurikuler_id: 1,
+      nama_kegiatan: 'Latihan Rutin',
+      tanggal: '2026-10-15',
+    }
+    await eksKegiatanService.create(kegiatanData)
+    expect(apiService.post).toHaveBeenCalledWith('/ekstrakurikuler/kegiatan', kegiatanData)
+
+    await eksKegiatanService.getBySiswa(25)
+    expect(apiService.get).toHaveBeenCalledWith('/ekstrakurikuler/kegiatan/siswa/25')
+
+    await eksKegiatanService.getJadwalAnak()
+    expect(apiService.get).toHaveBeenCalledWith('/ekstrakurikuler/kegiatan/jadwal-anak', { params: {} })
   })
 })

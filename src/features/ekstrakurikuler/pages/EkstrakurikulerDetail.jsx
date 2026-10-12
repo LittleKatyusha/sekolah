@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, Award, User, MapPin, Clock, Calendar, Hash, Users } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Award, User, MapPin, Clock, Calendar, Hash, Users, Plus } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { ekstrakurikulerService } from '../services/ekstrakurikulerService'
-import { eksSiswaService } from '../services/ekstrakurikulerService'
+import { ekstrakurikulerService, eksSiswaService, eksKegiatanService } from '../services/ekstrakurikulerService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
 const STATUS_MAP = {
   aktif: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   nonaktif: { label: 'Nonaktif', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   keluar: { label: 'Keluar', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
+  dijadwalkan: { label: 'Dijadwalkan', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  terlaksana: { label: 'Terlaksana', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  dibatalkan: { label: 'Dibatalkan', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 }
 
 const EkstrakurikulerDetail = () => {
@@ -21,26 +23,31 @@ const EkstrakurikulerDetail = () => {
   const [loading, setLoading] = useState(false)
   const [ekskul, setEkskul] = useState(null)
   const [enrolledStudents, setEnrolledStudents] = useState([])
+  const [kegiatanList, setKegiatanList] = useState([])
 
   useEffect(() => {
-  const fetchData = async () => {
-  setLoading(true)
-  const [ekskulResult, studentsResult] = await Promise.all([
-  ekstrakurikulerService.getById(id),
-  eksSiswaService.getByEkstrakurikuler(id)
-  ])
-  if (ekskulResult.data) {
-  setEkskul(ekskulResult.data.data)
-  } else {
-  showError('Gagal mengambil data ekstrakurikuler')
-  navigate('/ekstrakurikuler')
-  }
-  if (studentsResult.data?.data) {
-  setEnrolledStudents(studentsResult.data.data)
-  }
-  setLoading(false)
-  }
-  fetchData()
+    const fetchData = async () => {
+      setLoading(true)
+      const [ekskulResult, studentsResult, kegiatanResult] = await Promise.all([
+        ekstrakurikulerService.getById(id),
+        eksSiswaService.getByEkstrakurikuler(id),
+        eksKegiatanService.getByEkstrakurikuler(id)
+      ])
+      if (ekskulResult.data) {
+        setEkskul(ekskulResult.data.data)
+      } else {
+        showError('Gagal mengambil data ekstrakurikuler')
+        navigate('/ekstrakurikuler')
+      }
+      if (studentsResult.data?.data) {
+        setEnrolledStudents(studentsResult.data.data)
+      }
+      if (kegiatanResult.data?.data) {
+        setKegiatanList(kegiatanResult.data.data)
+      }
+      setLoading(false)
+    }
+    fetchData()
   }, [id, navigate])
 
   const handleDelete = async () => {
@@ -242,6 +249,71 @@ const EkstrakurikulerDetail = () => {
           </Card>
         </div>
       </div>
+
+      {/* Kegiatan Ekstrakurikuler */}
+      <Card>
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Calendar size={20} className="text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Jadwal & Agenda Kegiatan</h3>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">
+                {kegiatanList.length}
+              </span>
+            </div>
+            <PermissionGuard permission="ekstrakurikuler.kegiatan.manage">
+              <Button size="sm" onClick={() => navigate('/ekstrakurikuler/kegiatan/create')}>
+                <Plus size={16} className="mr-1" />
+                Tambah Kegiatan
+              </Button>
+            </PermissionGuard>
+          </div>
+
+          {kegiatanList.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada kegiatan yang dijadwalkan</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800">
+                  <tr>
+                    <th className="px-4 py-3">Tanggal</th>
+                    <th className="px-4 py-3">Nama Kegiatan</th>
+                    <th className="px-4 py-3">Waktu</th>
+                    <th className="px-4 py-3">Lokasi</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {kegiatanList.map((k) => (
+                    <tr key={k.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                        {k.tanggal ? new Date(k.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{k.nama_kegiatan}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{k.jadwal_waktu || '-'}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{k.lokasi || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_MAP[k.status]?.bg || ''}`}>
+                          {STATUS_MAP[k.status]?.label || k.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => navigate(`/ekstrakurikuler/kegiatan/${k.id}`)}
+                          className="text-xs font-medium text-primary-600 hover:text-primary-800 dark:text-primary-400"
+                        >
+                          Lihat Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Enrolled Students */}
       <Card>

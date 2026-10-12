@@ -293,6 +293,10 @@ export const ROUTE_RULES = [
   ['/ppdb', 'ppdb.gelombang.view'],
 
   // ── Ekstrakurikuler ────────────────────────────────────────
+  ['/ekstrakurikuler/kegiatan/create', 'ekstrakurikuler.kegiatan.manage'],
+  ['/ekstrakurikuler/kegiatan/:id/edit', 'ekstrakurikuler.kegiatan.manage'],
+  ['/ekstrakurikuler/kegiatan/:id', 'ekstrakurikuler.kegiatan.view'],
+  ['/ekstrakurikuler/kegiatan', 'ekstrakurikuler.kegiatan.view'],
   ['/ekstrakurikuler/pendaftaran/create', 'ekstrakurikuler.pendaftaran.manage'],
   ['/ekstrakurikuler/pendaftaran/:id/edit', 'ekstrakurikuler.pendaftaran.manage'],
   ['/ekstrakurikuler/pendaftaran/:id', 'ekstrakurikuler.pendaftaran.view'],

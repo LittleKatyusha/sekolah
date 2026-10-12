@@ -67,6 +67,8 @@ const PAGE_TITLES = {
 
   // Lainnya
   '/ekstrakurikuler': 'Ekstrakurikuler',
+  '/ekstrakurikuler/kegiatan': 'Kegiatan Ekstrakurikuler',
+  '/ekstrakurikuler/pendaftaran': 'Pendaftaran Ekstrakurikuler',
   '/organisasi': 'Organisasi',
   '/perpustakaan': 'Perpustakaan',
   '/perpustakaan/buku': 'Perpustakaan — Buku',

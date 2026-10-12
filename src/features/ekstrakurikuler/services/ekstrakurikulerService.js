@@ -4,6 +4,8 @@ const EKSKUL_BASE = '/ekstrakurikuler'
 const EKSKUL_LIST = '/ekstrakurikuler/'
 const PENDAFTARAN_BASE = '/ekstrakurikuler/pendaftaran'
 const PENDAFTARAN_LIST = '/ekstrakurikuler/pendaftaran/'
+const KEGIATAN_BASE = '/ekstrakurikuler/kegiatan'
+const KEGIATAN_LIST = '/ekstrakurikuler/kegiatan/'
 
 /**
  * Service for managing master Ekstrakurikuler
@@ -73,7 +75,37 @@ export const eksSiswaService = {
     apiService.post(`${PENDAFTARAN_BASE}/check-status`, data),
 }
 
+/**
+ * Service for managing Ekstrakurikuler Kegiatan (activities / sessions / schedule)
+ */
+export const eksKegiatanService = {
+  getAll: (params = {}) =>
+    apiService.get(KEGIATAN_LIST, { params }),
+
+  getById: (id) =>
+    apiService.get(`${KEGIATAN_BASE}/${id}`),
+
+  create: (data) =>
+    apiService.post(KEGIATAN_BASE, data),
+
+  update: (id, data) =>
+    apiService.put(`${KEGIATAN_BASE}/${id}`, data),
+
+  delete: (id) =>
+    apiService.delete(`${KEGIATAN_BASE}/${id}`),
+
+  getByEkstrakurikuler: (ekstrakurikulerId) =>
+    apiService.get(`${KEGIATAN_BASE}/ekstrakurikuler/${ekstrakurikulerId}`),
+
+  getBySiswa: (siswaId) =>
+    apiService.get(`${KEGIATAN_BASE}/siswa/${siswaId}`),
+
+  getJadwalAnak: (params = {}) =>
+    apiService.get(`${KEGIATAN_BASE}/jadwal-anak`, { params }),
+}
+
 export default {
   ekstrakurikulerService,
   eksSiswaService,
+  eksKegiatanService,
 }

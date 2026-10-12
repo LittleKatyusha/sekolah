@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, BookOpen, GraduationCap, DollarSign, Calendar, FileText } from 'lucide-react'
+import { Users, BookOpen, GraduationCap, DollarSign, Calendar, FileText, Trophy } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 
 const quickActionsByRole = {
@@ -19,11 +19,13 @@ const quickActionsByRole = {
     { label: 'Jadwal Pelajaran', icon: Calendar, path: '/jadwal-pelajaran', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     { label: 'Nilai Saya', icon: FileText, path: '/akademik/nilai', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
     { label: 'Tugas', icon: BookOpen, path: '/akademik/tugas', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+    { label: 'Kegiatan Ekskul', icon: Trophy, path: '/ekstrakurikuler/kegiatan', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
     { label: 'Pembayaran SPP', icon: DollarSign, path: '/keuangan/pembayaran-spp', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
   ],
   wali: [
     { label: 'Pembayaran SPP', icon: DollarSign, path: '/keuangan/pembayaran-spp', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
     { label: 'Nilai Anak', icon: FileText, path: '/akademik/nilai', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
+    { label: 'Jadwal & Ekskul', icon: Trophy, path: '/ekstrakurikuler/kegiatan', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
   ],
 }
 
