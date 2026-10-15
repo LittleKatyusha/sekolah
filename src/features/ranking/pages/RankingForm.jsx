@@ -12,6 +12,11 @@ import { semesterService } from '../../semester/services/semesterService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 
+const toSiswaOption = (s) => ({
+  value: String(s.id),
+  label: `${s.nama} (${s.nis || '-'})`
+})
+
 const RankingForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -41,18 +46,10 @@ const RankingForm = () => {
   }, [id])
 
   const fetchOptions = async () => {
-    const [siswaResult, kelasResult, semesterResult] = await Promise.all([
-      siswaService.getAll({ per_page: 'all' }),
+    const [kelasResult, semesterResult] = await Promise.all([
       kelasService.getAll({ per_page: 'all' }),
       semesterService.getAll({ per_page: 'all' })
     ])
-
-    if (siswaResult.data?.data) {
-      setSiswaOptions(siswaResult.data.data.map(s => ({
-        value: String(s.id),
-        label: `${s.nama} (${s.nis || '-'})`
-      })))
-    }
 
     if (kelasResult.data?.data) {
       setKelasOptions(kelasResult.data.data.map(k => ({
@@ -70,11 +67,17 @@ const RankingForm = () => {
     }
   }
 
+  const searchSiswa = async (keyword = '') => {
+    const { data } = await siswaService.getAll({ search: keyword || undefined, per_page: 20 })
+    return (data?.data || []).map(toSiswaOption)
+  }
+
   const fetchRanking = async () => {
     setFetchingData(true)
     const { data, error } = await rankingService.getById(id)
     if (data) {
       const ranking = data.data
+      if (ranking.siswa?.id) setSiswaOptions([toSiswaOption(ranking.siswa)])
       setFormData({
         mst_siswa_id: ranking.siswa?.id
           ? String(ranking.siswa.id)
@@ -188,6 +191,7 @@ const RankingForm = () => {
                   value={formData.mst_siswa_id}
                   onChange={handleChange}
                   options={siswaOptions}
+                  loadOptions={searchSiswa}
                   placeholder="Pilih siswa"
                   error={errors.mst_siswa_id}
                 />

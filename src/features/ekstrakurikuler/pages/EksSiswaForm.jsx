@@ -10,6 +10,7 @@ import { eksSiswaService, ekstrakurikulerService } from '../services/ekstrakurik
 import { siswaService } from '../../siswa/services/siswaService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { extractGridRows } from '../../../components/ui/agGridQuery'
 
 const STATUS_OPTIONS = [
   { value: 'aktif', label: 'Aktif' },
@@ -48,7 +49,9 @@ const EksSiswaForm = () => {
   const [tanggalDaftar, setTanggalDaftar] = useState(new Date().toISOString().split('T')[0])
   const [status, setStatus] = useState('aktif')
   const [kelasOptions, setKelasOptions] = useState([])
-  const [allSiswa, setAllSiswa] = useState([])
+  const [siswaRows, setSiswaRows] = useState([])
+  const [totalFiltered, setTotalFiltered] = useState(0)
+  const [loadingSiswa, setLoadingSiswa] = useState(true)
   const [existingSiswaIds, setExistingSiswaIds] = useState(new Set())
   const [loadingExisting, setLoadingExisting] = useState(false)
   const [selectedSiswaIds, setSelectedSiswaIds] = useState(new Set())
@@ -89,10 +92,9 @@ const EksSiswaForm = () => {
     const loadInitialData = async () => {
       setLoadingInitial(true)
       try {
-        const [ekskulRes, kelasRes, siswaRes] = await Promise.all([
+        const [ekskulRes, kelasRes] = await Promise.all([
           ekstrakurikulerService.getAll({ per_page: 100 }),
           kelasService.getAll({ per_page: 'all' }),
-          siswaService.getAll({ per_page: 'all' }),
         ])
 
         if (cancelled) return
@@ -102,11 +104,9 @@ const EksSiswaForm = () => {
           value: String(k.id),
           label: k.nama_kelas || `Kelas #${k.id}`,
         }))
-        const loadedSiswa = getItems(siswaRes)
 
         setEkskulOptions(loadedEkskul)
         setKelasOptions(loadedKelas)
-        setAllSiswa(loadedSiswa)
       } catch (err) {
         console.error('Failed to load initial data for ekskul pendaftaran:', err)
       } finally {
@@ -193,30 +193,38 @@ const EksSiswaForm = () => {
     return () => { cancelled = true }
   }, [isEditMode, selectedEkskulId])
 
-  // Filtered students list for Bulk Mode
-  const filteredSiswa = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim()
-    return allSiswa.filter((siswa) => {
-      if (filterKelasId) {
-        const studentKelasId = siswa.mst_kelas_id ?? siswa.kelas?.id
-        if (String(studentKelasId) !== String(filterKelasId)) return false
+  // Server-side page of students (search/kelas filter + startRow/endRow)
+  useEffect(() => {
+    if (isEditMode) return
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      setLoadingSiswa(true)
+      const startRow = (currentPage - 1) * pageSize
+      const { data, error } = await siswaService.getAll({
+        startRow,
+        endRow: startRow + pageSize,
+        search: searchQuery.trim() || undefined,
+        kelas_id: filterKelasId || undefined,
+      })
+      if (cancelled) return
+      if (error) {
+        console.error('Failed to fetch siswa page:', error)
+        setSiswaRows([])
+        setTotalFiltered(0)
+      } else {
+        const { rows, totalCount } = extractGridRows(data)
+        setSiswaRows(rows)
+        setTotalFiltered(totalCount)
       }
-
-      if (q) {
-        const nameMatch = (siswa.nama || '').toLowerCase().includes(q)
-        const nisMatch = (siswa.nis || '').toLowerCase().includes(q)
-        const kelasMatch = (siswa.kelas?.nama_kelas || '').toLowerCase().includes(q)
-        if (!nameMatch && !nisMatch && !kelasMatch) return false
-      }
-
-      return true
-    })
-  }, [allSiswa, filterKelasId, searchQuery])
+      setLoadingSiswa(false)
+    }, 300)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [isEditMode, currentPage, pageSize, searchQuery, filterKelasId])
 
   // Selectable students in current filtered view (excluding already enrolled)
   const selectableFilteredSiswa = useMemo(() => {
-    return filteredSiswa.filter((s) => !existingSiswaIds.has(Number(s.id)))
-  }, [filteredSiswa, existingSiswaIds])
+    return siswaRows.filter((s) => !existingSiswaIds.has(Number(s.id)))
+  }, [siswaRows, existingSiswaIds])
 
   // Master checkbox status
   const isAllFilteredSelected = useMemo(() => {
@@ -260,14 +268,9 @@ const EksSiswaForm = () => {
     setSelectedSiswaIds(new Set())
   }
 
-  // Pagination calculation
-  const totalFiltered = filteredSiswa.length
-  const totalPages = pageSize === 'all' ? 1 : Math.ceil(totalFiltered / pageSize) || 1
-  const paginatedSiswa = useMemo(() => {
-    if (pageSize === 'all') return filteredSiswa
-    const start = (currentPage - 1) * pageSize
-    return filteredSiswa.slice(start, start + pageSize)
-  }, [filteredSiswa, currentPage, pageSize])
+  // Pagination calculation (server-side)
+  const totalPages = Math.ceil(totalFiltered / pageSize) || 1
+  const paginatedSiswa = siswaRows
 
   useEffect(() => {
     setCurrentPage(1)
@@ -646,7 +649,7 @@ const EksSiswaForm = () => {
                 </thead>
 
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                  {loadingInitial ? (
+                  {loadingInitial || loadingSiswa ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-gray-500 dark:text-gray-400">
                         <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-primary-500" />
@@ -735,18 +738,17 @@ const EksSiswaForm = () => {
                   <span>Baris per halaman:</span>
                   <select
                     value={pageSize}
-                    onChange={(e) => setPageSize(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
                     className="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
-                    <option value="all">Semua</option>
                   </select>
                 </label>
               </div>
 
-              {pageSize !== 'all' && totalPages > 1 && (
+              {totalPages > 1 && (
                 <div className="flex items-center gap-1">
                   <Button
                     type="button"
