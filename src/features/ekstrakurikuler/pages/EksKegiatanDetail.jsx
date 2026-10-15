@@ -50,6 +50,10 @@ const EksKegiatanDetail = () => {
         navigate('/ekstrakurikuler/kegiatan')
       } else {
         showError('Gagal menghapus kegiatan')
+      }
+    }
+  }
+
   if (loading || !kegiatan) {
     return (
       <div className="flex justify-center py-12">
@@ -178,10 +182,6 @@ const EksKegiatanDetail = () => {
       </div>
     </div>
   )
-
-      }
-    }
-  }
 }
 
 export default EksKegiatanDetail

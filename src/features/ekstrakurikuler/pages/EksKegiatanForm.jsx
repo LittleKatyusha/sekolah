@@ -121,6 +121,12 @@ const EksKegiatanForm = () => {
     setLoading(false)
     if (!error) {
       showSuccess(`Kegiatan berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}!`)
+      navigate('/ekstrakurikuler/kegiatan')
+    } else {
+      showError(error?.message || 'Gagal menyimpan kegiatan')
+    }
+  }
+
   if (fetchingData) {
     return (
       <div className="flex justify-center py-12">
@@ -268,12 +274,6 @@ const EksKegiatanForm = () => {
       </Card>
     </div>
   )
-
-      navigate('/ekstrakurikuler/kegiatan')
-    } else {
-      showError(error?.message || 'Gagal menyimpan kegiatan')
-    }
-  }
 }
 
 export default EksKegiatanForm
