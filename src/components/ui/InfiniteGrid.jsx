@@ -94,6 +94,10 @@ const InfiniteGrid = forwardRef(({
     [columnDefs]
   )
 
+  // ponytail: columnDefs/transformData via ref so inline/changing identities don't rebuild datasource (resets to page 1)
+  const latestRef = useRef({})
+  latestRef.current = { normalizedColumnDefs, transformData }
+
   // Create the infinite row model datasource
   const dataSource = useMemo(() => ({
     getRows: async (params) => {
@@ -105,7 +109,7 @@ const InfiniteGrid = forwardRef(({
             sortModel,
             filterModel,
             staticParams: stabilizedStaticParams,
-            columnDefs: normalizedColumnDefs,
+            columnDefs: latestRef.current.normalizedColumnDefs,
           })
         : buildLegacyRequestParams({
             startRow,
@@ -124,14 +128,14 @@ const InfiniteGrid = forwardRef(({
           return
         }
 
-        const { rows, totalCount } = extractGridRows(data, transformData)
+        const { rows, totalCount } = extractGridRows(data, latestRef.current.transformData)
         handleGridSuccess(params, rows, totalCount)
       } catch (error) {
         console.error('Exception fetching data:', error)
         handleGridFailure(params)
       }
     }
-  }), [endpoint, normalizedColumnDefs, requestMode, transformData, stabilizedStaticParams])
+  }), [endpoint, requestMode, stabilizedStaticParams])
 
   // Default column definition
   const mergedDefaultColDef = useMemo(() => ({
