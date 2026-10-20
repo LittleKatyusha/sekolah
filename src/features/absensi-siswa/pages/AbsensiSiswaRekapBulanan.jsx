@@ -29,6 +29,7 @@ const now = new Date()
 const StatusPill = ({ count, variant }) => {
   const styles = {
     hadir: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    terlambat: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     izin: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     sakit: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
     alpha: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -102,7 +103,7 @@ const AbsensiSiswaRekapBulanan = () => {
     const bulanLabel = BULAN_OPTIONS.find((b) => b.value === Number(bulan))?.label ?? bulan
     const namaKelas = kelasOptions.find((k) => k.value === String(searchedKelasId))?.label || `Kelas ${searchedKelasId}`
 
-    const headers = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir', 'Izin', 'Sakit', 'Alpha', 'Total Hari', '% Hadir']
+    const headers = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha', 'Total Hari', '% Hadir']
     const rows = rekap.rekap.map((row, i) => {
       const pct = row.total_hari > 0 ? Math.round((row.hadir / row.total_hari) * 100) : 0
       return [
@@ -111,6 +112,7 @@ const AbsensiSiswaRekapBulanan = () => {
         row.nama || '-',
         row.kelas || '-',
         row.hadir ?? 0,
+        row.terlambat ?? 0,
         row.izin ?? 0,
         row.sakit ?? 0,
         row.alpha ?? 0,
@@ -120,11 +122,12 @@ const AbsensiSiswaRekapBulanan = () => {
     })
 
     const totalHadir = rekap.rekap.reduce((s, r) => s + (r.hadir || 0), 0)
+    const totalTerlambat = rekap.rekap.reduce((s, r) => s + (r.terlambat || 0), 0)
     const totalIzin = rekap.rekap.reduce((s, r) => s + (r.izin || 0), 0)
     const totalSakit = rekap.rekap.reduce((s, r) => s + (r.sakit || 0), 0)
     const totalAlpha = rekap.rekap.reduce((s, r) => s + (r.alpha || 0), 0)
     const totalHari = rekap.rekap.reduce((s, r) => s + (r.total_hari || 0), 0)
-    const summaryRow = ['Total', '', '', '', totalHadir, totalIzin, totalSakit, totalAlpha, totalHari, '']
+    const summaryRow = ['Total', '', '', '', totalHadir, totalTerlambat, totalIzin, totalSakit, totalAlpha, totalHari, '']
 
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows, summaryRow])
     worksheet['!cols'] = [
@@ -283,6 +286,7 @@ const AbsensiSiswaRekapBulanan = () => {
                     <th className="text-left py-3 px-3 font-semibold text-gray-700 dark:text-gray-300">Nama Siswa</th>
                     <th className="text-left py-3 px-3 font-semibold text-gray-700 dark:text-gray-300">Kelas</th>
                     <th className="text-center py-3 px-3 font-semibold text-green-700 dark:text-green-400">Hadir</th>
+                    <th className="text-center py-3 px-3 font-semibold text-red-700 dark:text-red-400">Terlambat</th>
                     <th className="text-center py-3 px-3 font-semibold text-yellow-700 dark:text-yellow-400">Izin</th>
                     <th className="text-center py-3 px-3 font-semibold text-orange-700 dark:text-orange-400">Sakit</th>
                     <th className="text-center py-3 px-3 font-semibold text-red-700 dark:text-red-400">Alpha</th>
@@ -310,6 +314,7 @@ const AbsensiSiswaRekapBulanan = () => {
                         <td className="py-3 px-3 font-medium text-gray-900 dark:text-white">{row.nama || '-'}</td>
                         <td className="py-3 px-3 text-gray-600 dark:text-gray-400">{row.kelas || '-'}</td>
                         <td className="py-3 px-3 text-center"><StatusPill count={row.hadir} variant="hadir" /></td>
+                        <td className="py-3 px-3 text-center"><StatusPill count={row.terlambat || 0} variant="terlambat" /></td>
                         <td className="py-3 px-3 text-center"><StatusPill count={row.izin} variant="izin" /></td>
                         <td className="py-3 px-3 text-center"><StatusPill count={row.sakit} variant="sakit" /></td>
                         <td className="py-3 px-3 text-center"><StatusPill count={row.alpha} variant="alpha" /></td>
@@ -323,19 +328,22 @@ const AbsensiSiswaRekapBulanan = () => {
                   <tr className="border-t-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/40">
                     <td colSpan={4} className="py-3 px-3 font-semibold text-gray-700 dark:text-gray-300">Total</td>
                     <td className="py-3 px-3 text-center font-bold text-green-700 dark:text-green-400">
-                      {rekap.rekap.reduce((s, r) => s + r.hadir, 0)}
-                    </td>
-                    <td className="py-3 px-3 text-center font-bold text-yellow-700 dark:text-yellow-400">
-                      {rekap.rekap.reduce((s, r) => s + r.izin, 0)}
-                    </td>
-                    <td className="py-3 px-3 text-center font-bold text-orange-700 dark:text-orange-400">
-                      {rekap.rekap.reduce((s, r) => s + r.sakit, 0)}
+                      {rekap.rekap.reduce((s, r) => s + (r.hadir || 0), 0)}
                     </td>
                     <td className="py-3 px-3 text-center font-bold text-red-700 dark:text-red-400">
-                      {rekap.rekap.reduce((s, r) => s + r.alpha, 0)}
+                      {rekap.rekap.reduce((s, r) => s + (r.terlambat || 0), 0)}
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-yellow-700 dark:text-yellow-400">
+                      {rekap.rekap.reduce((s, r) => s + (r.izin || 0), 0)}
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-orange-700 dark:text-orange-400">
+                      {rekap.rekap.reduce((s, r) => s + (r.sakit || 0), 0)}
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-red-700 dark:text-red-400">
+                      {rekap.rekap.reduce((s, r) => s + (r.alpha || 0), 0)}
                     </td>
                     <td className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">
-                      {rekap.rekap.reduce((s, r) => s + r.total_hari, 0)}
+                      {rekap.rekap.reduce((s, r) => s + (r.total_hari || 0), 0)}
                     </td>
                     <td />
                   </tr>

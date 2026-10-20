@@ -28,6 +28,12 @@ const STATUS_META = {
     accentClass: 'text-green-600 dark:text-green-400',
     softClass: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/40',
   },
+  terlambat: {
+    label: 'Terlambat',
+    className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    accentClass: 'text-red-600 dark:text-red-400',
+    softClass: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/40',
+  },
   sakit: {
     label: 'Sakit',
     className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
@@ -78,6 +84,12 @@ const STATUS_META = {
   },
   '4': {
     label: 'Alpha',
+    className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    accentClass: 'text-red-600 dark:text-red-400',
+    softClass: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/40',
+  },
+  '5': {
+    label: 'Terlambat',
     className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     accentClass: 'text-red-600 dark:text-red-400',
     softClass: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/40',
@@ -696,11 +708,17 @@ const AdminAbsensiSiswaList = () => {
       </div>
 
       {selectedSiswaId && summaryData && (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
           <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
             <div className="text-center">
               <h3 className="text-sm font-medium text-green-800 dark:text-green-400">Hadir</h3>
               <p className="text-2xl font-bold text-green-900 dark:text-green-300">{summaryData.hadir || 0}</p>
+            </div>
+          </Card>
+          <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+            <div className="text-center">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-400">Terlambat</h3>
+              <p className="text-2xl font-bold text-red-900 dark:text-red-300">{summaryData.terlambat || 0}</p>
             </div>
           </Card>
           <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20">

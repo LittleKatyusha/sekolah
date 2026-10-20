@@ -41,6 +41,10 @@ const StatusBadge = ({ status }) => {
       label: 'Hadir',
       className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
     },
+    terlambat: {
+      label: 'Terlambat',
+      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+    },
     tidak_hadir: {
       label: 'Tidak Hadir',
       className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
@@ -52,10 +56,35 @@ const StatusBadge = ({ status }) => {
     sakit: {
       label: 'Sakit',
       className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+    },
+    alpha: {
+      label: 'Alpha',
+      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+    },
+    '1': {
+      label: 'Hadir',
+      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+    },
+    '2': {
+      label: 'Izin',
+      className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+    },
+    '3': {
+      label: 'Sakit',
+      className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+    },
+    '4': {
+      label: 'Alpha',
+      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+    },
+    '5': {
+      label: 'Terlambat',
+      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
     }
   }
 
-  const config = statusConfig[status] || {
+  const key = status === null || status === undefined ? '' : String(status).toLowerCase()
+  const config = statusConfig[key] || {
     label: status || '-',
     className: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
   }

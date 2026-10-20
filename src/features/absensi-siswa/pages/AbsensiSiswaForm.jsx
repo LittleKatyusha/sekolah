@@ -12,8 +12,8 @@ import useAuthStore from '../../../store/useAuthStore'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const STATUS_MAP = {
-  hadir: '1', sakit: '2', izin: '3', alpha: '4', alpa: '4',
-  '1': '1', '2': '2', '3': '3', '4': '4',
+  hadir: '1', sakit: '2', izin: '3', alpha: '4', alpa: '4', terlambat: '5',
+  '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
 }
 
 const mapStatus = (raw) => {

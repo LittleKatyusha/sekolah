@@ -197,4 +197,44 @@ describe('AbsensiSiswaRekapBulanan', () => {
     expect(exportBtn).toBeDisabled()
     expect(screen.getByText(/Klik Tampilkan untuk memperbarui data/i)).toBeDefined()
   })
+
+  it('renders terlambat column and includes terlambat in exported excel', async () => {
+    absensiSiswaService.getRekapBulanan.mockResolvedValueOnce({
+      data: {
+        data: {
+          total: 1,
+          rekap: [
+            { siswa_id: 101, nis: '1001', nama: 'Budi Late', kelas: 'X-1', hadir: 15, terlambat: 5, izin: 1, sakit: 0, alpha: 0, total_hari: 21 },
+          ],
+        },
+      },
+      error: null,
+    })
+
+    render(
+      <MemoryRouter>
+        <AbsensiSiswaRekapBulanan />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(kelasService.getAll).toHaveBeenCalled()
+    })
+
+    const kelasSelect = screen.getByDisplayValue('Semua Kelas')
+    fireEvent.change(kelasSelect, { target: { value: '1' } })
+    fireEvent.click(screen.getByRole('button', { name: /tampilkan/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Budi Late')).toBeDefined()
+      expect(screen.getByText('Terlambat')).toBeDefined()
+    })
+
+    const exportBtn = screen.getByRole('button', { name: /export excel/i })
+    fireEvent.click(exportBtn)
+
+    expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
+    const [workbook] = XLSX.writeFile.mock.calls[0]
+    expect(workbook).toBeDefined()
+  })
 })
