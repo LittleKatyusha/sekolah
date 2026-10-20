@@ -57,7 +57,13 @@ vi.mock('../../../components/guards/PermissionGuard', () => ({
 }))
 
 const mockUjianList = [
-  { id: 1, nama: 'Penilaian Tengah Semester Matematika' },
+  {
+    id: 1,
+    nama: 'ASESMEN TENGAH SEMESTER',
+    mst_kelas_id: 10,
+    mapel: { id: 5, nama: 'Matematika' },
+    kelas: { id: 10, nama_kelas: 'XI IPA 1' },
+  },
   { id: 2, nama: 'Ujian Akhir Semester Fisika' },
 ]
 
@@ -121,5 +127,35 @@ describe('UjianUserForm Bulk Mode', () => {
     fireEvent.click(selectAllBtn)
 
     expect(screen.getByText(/2 Siswa Dipilih/i)).toBeInTheDocument()
+  })
+
+  it('formats exam dropdown label with subject and class, and displays details upon selection', async () => {
+    render(
+      <MemoryRouter>
+        <UjianUserForm />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Pilih ujian...')).toBeInTheDocument()
+    })
+
+    // Click SearchableSelect dropdown
+    fireEvent.click(screen.getByText('Pilih ujian...'))
+
+    // Expect formatted label with subject and class
+    const examOption = await screen.findByText('ASESMEN TENGAH SEMESTER (Matematika - XI IPA 1)')
+    expect(examOption).toBeInTheDocument()
+
+    // Select the exam option
+    fireEvent.click(examOption)
+
+    // Verify metadata detail section is displayed
+    await waitFor(() => {
+      expect(screen.getByText('Mata Pelajaran:')).toBeInTheDocument()
+      expect(screen.getByText('Matematika')).toBeInTheDocument()
+      expect(screen.getByText('Kelas:')).toBeInTheDocument()
+      expect(screen.getAllByText('XI IPA 1').length).toBeGreaterThan(0)
+    })
   })
 })

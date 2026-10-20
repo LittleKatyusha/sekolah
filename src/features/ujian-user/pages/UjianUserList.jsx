@@ -185,10 +185,16 @@ const UjianUserList = () => {
     const fetchUjianList = async () => {
       const { data, error } = await ujianService.getAll({ per_page: 100 })
       if (data && data.data) {
-        const options = data.data.map(ujian => ({
-          value: ujian.id,
-          label: ujian.nama || `Ujian #${ujian.id}`
-        }))
+        const options = data.data.map((ujian) => {
+          const mapel = ujian.mapel?.nama || ujian.mapel?.nama_mapel || ujian.mapel_nama || ''
+          const kelas = ujian.kelas?.nama_kelas || ujian.kelas?.nama || ujian.nama_kelas || ''
+          const nama = ujian.nama || `Ujian #${ujian.id}`
+          const parts = [mapel, kelas].filter(Boolean)
+          return {
+            value: ujian.id,
+            label: parts.length > 0 ? `${nama} (${parts.join(' - ')})` : nama,
+          }
+        })
         setUjianList(options)
       } else {
         console.error('Error fetching ujian:', error)
@@ -284,7 +290,11 @@ const UjianUserList = () => {
       valueGetter: (params) => {
         const row = params.data
         if (!row) return '-'
-        return row.ujian?.nama || `Ujian #${row.trx_ujian_id ?? '-'}`
+        const nama = row.ujian?.nama || `Ujian #${row.trx_ujian_id ?? '-'}`
+        const mapel = row.ujian?.mapel?.nama || row.ujian?.mapel?.nama_mapel || row.ujian?.mapel_nama || ''
+        const kelas = row.ujian?.kelas?.nama_kelas || row.ujian?.kelas?.nama || row.ujian?.nama_kelas || ''
+        const parts = [mapel, kelas].filter(Boolean)
+        return parts.length > 0 ? `${nama} (${parts.join(' - ')})` : nama
       }
     },
     {

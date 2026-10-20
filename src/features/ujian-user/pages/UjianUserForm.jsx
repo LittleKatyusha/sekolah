@@ -52,10 +52,23 @@ const UjianUserForm = () => {
   const [pageSize, setPageSize] = useState(25)
   const [loadingInitial, setLoadingInitial] = useState(true)
 
-  const buildUjianOption = useCallback((ujian) => ({
-    value: String(ujian.id),
-    label: ujian.nama || `Ujian #${ujian.id} - ${ujian.mapel?.nama || 'Unknown'}`
-  }), [])
+  const buildUjianOption = useCallback((ujian) => {
+    const mapel = ujian.mapel?.nama || ujian.mapel?.nama_mapel || ujian.mapel_nama || ''
+    const kelas = ujian.kelas?.nama_kelas || ujian.kelas?.nama || ujian.nama_kelas || ''
+    const nama = ujian.nama || `Ujian #${ujian.id}`
+    const parts = [mapel, kelas].filter(Boolean)
+    return {
+      value: String(ujian.id),
+      label: parts.length > 0 ? `${nama} (${parts.join(' - ')})` : nama,
+      ujian,
+    }
+  }, [])
+
+  const selectedUjianData = useMemo(() => {
+    if (!selectedUjianId) return null
+    const opt = ujianOptions.find((o) => String(o.value) === String(selectedUjianId))
+    return opt?.ujian || null
+  }, [selectedUjianId, ujianOptions])
 
   const buildSiswaOption = useCallback((siswa) => ({
     value: String(siswa.id),
@@ -456,6 +469,22 @@ const UjianUserForm = () => {
                       {Array.isArray(errors.trx_ujian_id) ? errors.trx_ujian_id[0] : errors.trx_ujian_id}
                     </p>
                   )}
+                  {selectedUjianOption?.ujian && (
+                    <div className="mt-2 flex flex-wrap items-center gap-6 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Mata Pelajaran: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {selectedUjianOption.ujian.mapel?.nama || selectedUjianOption.ujian.mapel?.nama_mapel || selectedUjianOption.ujian.mapel_nama || '-'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Kelas: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {selectedUjianOption.ujian.kelas?.nama_kelas || selectedUjianOption.ujian.kelas?.nama || selectedUjianOption.ujian.nama_kelas || '-'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Siswa Select */}
@@ -549,8 +578,15 @@ const UjianUserForm = () => {
                 name="trx_ujian_id"
                 value={selectedUjianId}
                 onChange={(e) => {
-                  setSelectedUjianId(e.target.value)
+                  const newUjianId = e.target.value
+                  setSelectedUjianId(newUjianId)
                   if (errors.trx_ujian_id) setErrors((prev) => ({ ...prev, trx_ujian_id: null }))
+
+                  const chosen = ujianOptions.find((o) => String(o.value) === String(newUjianId))?.ujian
+                  const targetKelasId = chosen?.mst_kelas_id ?? chosen?.kelas?.id
+                  if (targetKelasId) {
+                    setFilterKelasId(String(targetKelasId))
+                  }
                 }}
                 options={ujianOptions}
                 placeholder="Pilih ujian..."
@@ -577,6 +613,23 @@ const UjianUserForm = () => {
                 placeholder="Durasi dalam menit (contoh: 60)"
               />
             </div>
+
+            {selectedUjianData && (
+              <div className="md:col-span-2 flex flex-wrap items-center gap-6 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Mata Pelajaran: </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {selectedUjianData.mapel?.nama || selectedUjianData.mapel?.nama_mapel || selectedUjianData.mapel_nama || '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Kelas: </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {selectedUjianData.kelas?.nama_kelas || selectedUjianData.kelas?.nama || selectedUjianData.nama_kelas || '-'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>

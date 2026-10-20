@@ -243,7 +243,7 @@ const UjianUserDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Mata Pelajaran</p>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {ujianUser.ujian?.mapel?.nama || '-'}
+                      {ujianUser.ujian?.mapel?.nama || ujianUser.ujian?.mapel?.nama_mapel || ujianUser.ujian?.mapel_nama || '-'}
                     </p>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ const UjianUserDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Kelas</p>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {ujianUser.ujian?.kelas?.nama_kelas || '-'}
+                      {ujianUser.ujian?.kelas?.nama_kelas || ujianUser.ujian?.kelas?.nama || ujianUser.ujian?.nama_kelas || '-'}
                     </p>
                   </div>
                 </div>
