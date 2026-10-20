@@ -105,7 +105,7 @@ const AbsensiSiswaRekapBulanan = () => {
 
     const headers = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha', 'Total Hari', '% Hadir']
     const rows = rekap.rekap.map((row, i) => {
-      const pct = row.total_hari > 0 ? Math.round((row.hadir / row.total_hari) * 100) : 0
+      const pct = row.total_hari > 0 ? Math.round(((row.hadir + (row.terlambat || 0)) / row.total_hari) * 100) : 0
       return [
         i + 1,
         row.nis || '-',
@@ -297,7 +297,7 @@ const AbsensiSiswaRekapBulanan = () => {
                 <tbody>
                   {rekap.rekap.map((row, idx) => {
                     const pctHadir = row.total_hari > 0
-                      ? Math.round((row.hadir / row.total_hari) * 100)
+                      ? Math.round(((row.hadir + (row.terlambat || 0)) / row.total_hari) * 100)
                       : 0
                     const pctColor =
                       pctHadir >= 90 ? 'text-green-600 dark:text-green-400'

@@ -228,6 +228,7 @@ describe('AbsensiSiswaRekapBulanan', () => {
     await waitFor(() => {
       expect(screen.getByText('Budi Late')).toBeDefined()
       expect(screen.getByText('Terlambat')).toBeDefined()
+      expect(screen.getByText('95%')).toBeDefined()
     })
 
     const exportBtn = screen.getByRole('button', { name: /export excel/i })
@@ -236,5 +237,11 @@ describe('AbsensiSiswaRekapBulanan', () => {
     expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
     const [workbook] = XLSX.writeFile.mock.calls[0]
     expect(workbook).toBeDefined()
+
+    const aoaCalls = XLSX.utils.aoa_to_sheet.mock.calls
+    expect(aoaCalls.length).toBeGreaterThan(0)
+    const exportedRows = aoaCalls[0][0]
+    // Row 1 is header, row 2 is Budi Late
+    expect(exportedRows[1]).toContain('95%')
   })
 })
