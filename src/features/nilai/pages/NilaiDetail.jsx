@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { nilaiService } from '../services/nilaiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import { formatJenisLabel } from '../../ujian/utils/ujianFormatters'
 
 const NilaiDetail = () => {
   const { id } = useParams()
@@ -214,7 +215,7 @@ const NilaiDetail = () => {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Jenis Ujian</p>
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                          {nilai.ujian.jenis}
+                          {formatJenisLabel(nilai.ujian.jenis)}
                         </span>
                       </div>
                     )}
