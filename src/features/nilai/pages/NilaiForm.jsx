@@ -8,7 +8,7 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import { nilaiService } from '../services/nilaiService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { ujianService } from '../../ujian/services/ujianService'
-import { formatJenisLabel } from '../../ujian/utils/ujianFormatters'
+import { formatUjianOptionLabel } from '../../ujian/utils/ujianFormatters'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 
@@ -38,7 +38,7 @@ const NilaiForm = () => {
 
   const buildUjianOption = useCallback((ujian) => ({
     value: String(ujian.id),
-    label: `${ujian.mapel?.nama || ujian.mapel?.nama_mapel || '-'} - ${formatJenisLabel(ujian.jenis, { short: true })} - ${ujian.semester || '-'}`
+    label: formatUjianOptionLabel(ujian)
   }), [])
 
   const searchSiswaOptions = useCallback(async (keyword = '') => {

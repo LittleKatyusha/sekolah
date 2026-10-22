@@ -6,7 +6,7 @@ import Button from '../../../components/ui/Button'
 import { nilaiService } from '../services/nilaiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { formatJenisLabel } from '../../ujian/utils/ujianFormatters'
+import { formatJenisLabel, getUjianName } from '../../ujian/utils/ujianFormatters'
 
 const NilaiDetail = () => {
   const { id } = useParams()
@@ -32,7 +32,7 @@ const NilaiDetail = () => {
   }
 
   const handleDelete = async () => {
-    const label = `Nilai ${nilai.siswa?.nama || ''} - ${nilai.ujian?.nama || ''}`
+    const label = `Nilai ${nilai.siswa?.nama || ''} - ${getUjianName(nilai.ujian)}`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await nilaiService.delete(nilai.id)
@@ -162,7 +162,7 @@ const NilaiDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Ujian</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{nilai.ujian?.nama || '-'}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{getUjianName(nilai.ujian)}</p>
                   </div>
                 </div>
 

@@ -9,6 +9,7 @@ import { nilaiService } from '../services/nilaiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import usePermission from '../../../hooks/usePermission'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import { getUjianName } from '../../ujian/utils/ujianFormatters'
 
 // Actions Menu Component (portal-based dropdown)
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
@@ -138,7 +139,7 @@ const NilaiList = () => {
   }, [navigate])
 
   const handleDelete = useCallback(async (data) => {
-    const label = `Nilai ${data.siswa?.nama || ''} - ${data.ujian?.nama || ''}`
+    const label = `Nilai ${data.siswa?.nama || ''} - ${getUjianName(data.ujian)}`
     const result = await showDeleteConfirm(label)
     if (result.isConfirmed) {
       const { error } = await nilaiService.delete(data.id)
@@ -191,7 +192,7 @@ const NilaiList = () => {
       filter: true,
       flex: 1,
       minWidth: 180,
-      cellRenderer: (params) => params.value || '-'
+      cellRenderer: (params) => params.value || getUjianName(params.data?.ujian)
     },
     { 
       field: 'ujian.semester', 

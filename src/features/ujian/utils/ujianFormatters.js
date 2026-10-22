@@ -106,3 +106,12 @@ export const getUjianName = (ujian) => {
 
   return ujian.id ? `Ujian #${ujian.id}` : 'Ujian'
 }
+
+export const formatUjianOptionLabel = (ujian) => {
+  if (!ujian) return '-'
+  const prefix = ujian.nama?.trim() ? `${ujian.nama.trim()} - ` : ''
+  const mapel = getMapelLabel(ujian.mapel)
+  const jenis = formatJenisLabel(ujian.jenis, { short: true })
+  const semester = ujian.semester || '-'
+  return `${prefix}${mapel} - ${jenis} - ${semester}`
+}
