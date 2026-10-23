@@ -74,6 +74,8 @@ const ALL_PROTECTED_LEAF_ROUTES = [
   "/akademik/nilai/:id",
   "/akademik/nilai/:id/edit",
   "/akademik/nilai/create",
+  "/akademik/nilai/kelas",
+  "/akademik/nilai/bulk",
   "/akademik/presensi",
   "/akademik/presensi/:id",
   "/akademik/presensi/edit/:id",

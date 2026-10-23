@@ -94,6 +94,8 @@ export const ROUTE_RULES = [
 
   // ── Akademik — Nilai ───────────────────────────────────────
   ['/akademik/nilai/create', 'nilai.create'],
+  ['/akademik/nilai/kelas', 'nilai.create'],
+  ['/akademik/nilai/bulk', 'nilai.create'],
   ['/akademik/nilai/:id/edit', 'nilai.update'],
   ['/akademik/nilai/:id', 'nilai.view'],
   ['/akademik/nilai', 'nilai.view'],

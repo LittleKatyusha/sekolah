@@ -39,6 +39,15 @@ export const nilaiService = {
   },
 
   /**
+   * Batch upsert nilai per ujian/kelas
+   * @param {Object} data - { trx_ujian_id: number, items: Array<{ mst_siswa_id: number, nilai: number, keterangan?: string }> }
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchStore: async (data) => {
+    return await apiService.post(`${BASE_URL}/batch`, data)
+  },
+
+  /**
    * Update existing nilai
    * @param {number|string} id - Nilai ID
    * @param {Object} data - Updated nilai data

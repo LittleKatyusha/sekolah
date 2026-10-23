@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Users } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
@@ -218,14 +218,25 @@ const NilaiForm = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="secondary" onClick={() => navigate('/akademik/nilai')}>
-          <ArrowLeft size={18} className="mr-2" />
-          Kembali
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {isEditMode ? 'Edit Nilai' : 'Tambah Nilai Baru'}
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="secondary" onClick={() => navigate('/akademik/nilai')}>
+            <ArrowLeft size={18} className="mr-2" />
+            Kembali
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isEditMode ? 'Edit Nilai' : 'Tambah Nilai Baru'}
+          </h1>
+        </div>
+
+        {!isEditMode && (
+          <PermissionGuard permission="nilai.create">
+            <Button variant="secondary" onClick={() => navigate('/akademik/nilai/kelas')}>
+              <Users size={18} className="mr-2" />
+              Input Nilai Per Kelas
+            </Button>
+          </PermissionGuard>
+        )}
       </div>
 
       <Card>

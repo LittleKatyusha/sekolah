@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -302,6 +302,10 @@ const NilaiList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="nilai.create">
+            <Button variant="secondary" onClick={() => navigate('/akademik/nilai/kelas')}>
+              <Users size={18} className="mr-2" />
+              Input Nilai Per Kelas
+            </Button>
             <Button onClick={() => navigate('/akademik/nilai/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Nilai
