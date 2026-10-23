@@ -10,7 +10,9 @@ import {
   Search,
   Sparkles,
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  Download,
+  Upload
 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -21,6 +23,8 @@ import { ujianService } from '../../ujian/services/ujianService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { formatUjianOptionLabel } from '../../ujian/utils/ujianFormatters'
 import { showSuccess, showError, showConfirm } from '../../../utils/sweetalert'
+import { downloadNilaiTemplate } from '../utils/templateUtils'
+import ImportNilaiModal from './ImportNilaiModal'
 
 const NilaiKelasForm = () => {
   const navigate = useNavigate()
@@ -39,6 +43,7 @@ const NilaiKelasForm = () => {
   const [saving, setSaving] = useState(false)
   const [filterKeyword, setFilterKeyword] = useState('')
   const [bulkFillScore, setBulkFillScore] = useState('')
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
   const inputRefs = useRef({})
 
@@ -350,7 +355,33 @@ const NilaiKelasForm = () => {
         </div>
 
         {selectedKelasId && selectedUjianId && siswaList.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const examName = selectedUjianOption?.ujian?.nama || selectedUjianOption?.label || 'Ujian'
+                const className = selectedKelasOption?.kelas?.nama_kelas || selectedKelasOption?.label || 'Kelas'
+                downloadNilaiTemplate(siswaList, examName, className)
+              }}
+              disabled={loadingData || saving}
+              title="Unduh Template Excel"
+              className="flex items-center"
+            >
+              <Download size={18} className="mr-1.5" />
+              Unduh Template
+            </Button>
+            <PermissionGuard permission="nilai.create">
+              <Button
+                variant="secondary"
+                onClick={() => setIsImportModalOpen(true)}
+                disabled={loadingData || saving}
+                title="Import Nilai dari Excel"
+                className="flex items-center"
+              >
+                <Upload size={18} className="mr-1.5" />
+                Import Excel
+              </Button>
+            </PermissionGuard>
             <Button
               variant="secondary"
               onClick={loadClassStudentsAndGrades}
@@ -655,6 +686,20 @@ const NilaiKelasForm = () => {
           </div>
         )}
       </Card>
+
+      {isImportModalOpen && (
+        <ImportNilaiModal
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={async () => {
+            await loadClassStudentsAndGrades()
+          }}
+          ujianId={selectedUjianId}
+          kelasId={selectedKelasId}
+          ujianName={selectedUjianOption?.ujian?.nama || selectedUjianOption?.label}
+          className={selectedKelasOption?.kelas?.nama_kelas || selectedKelasOption?.label}
+          siswaList={siswaList}
+        />
+      )}
     </div>
   )
 }

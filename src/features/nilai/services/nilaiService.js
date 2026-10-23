@@ -48,6 +48,40 @@ export const nilaiService = {
   },
 
   /**
+   * Import nilai from Excel spreadsheet
+   * @param {Object} payload
+   * @param {File} payload.file
+   * @param {number|string} payload.trx_ujian_id
+   * @param {number|string} [payload.mst_kelas_id]
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  importExcel: async ({ file, trx_ujian_id, mst_kelas_id }) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('trx_ujian_id', trx_ujian_id)
+    if (mst_kelas_id) {
+      formData.append('mst_kelas_id', mst_kelas_id)
+    }
+    return await apiService.post(`${BASE_URL}/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  /**
+   * Download Excel template for nilai import
+   * @param {Object} params
+   * @param {number|string} params.ujian_id
+   * @param {number|string} [params.kelas_id]
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  downloadTemplate: async ({ ujian_id, kelas_id }) => {
+    return await apiService.get(`${BASE_URL}/template`, {
+      params: { ujian_id, kelas_id },
+      responseType: 'blob',
+    })
+  },
+
+  /**
    * Update existing nilai
    * @param {number|string} id - Nilai ID
    * @param {Object} data - Updated nilai data

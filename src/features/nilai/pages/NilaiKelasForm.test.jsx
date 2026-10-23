@@ -175,4 +175,26 @@ describe('NilaiKelasForm', () => {
     expect(inputs[0]).toHaveValue(80)
     expect(inputs[1]).toHaveValue(75)
   })
+
+  it('renders unduh template and opens import modal on button click', async () => {
+    render(
+      <MemoryRouter>
+        <NilaiKelasForm />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Ahmad Dahlan')).toBeInTheDocument()
+    })
+
+    expect(screen.getByRole('button', { name: /Unduh Template/i })).toBeInTheDocument()
+    const importBtn = screen.getByRole('button', { name: /Import Excel/i })
+    expect(importBtn).toBeInTheDocument()
+
+    fireEvent.click(importBtn)
+
+    await waitFor(() => {
+      expect(screen.getByText('Import Nilai Excel')).toBeInTheDocument()
+    })
+  })
 })
