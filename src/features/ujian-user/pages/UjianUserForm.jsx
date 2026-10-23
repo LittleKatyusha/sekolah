@@ -81,11 +81,13 @@ const UjianUserForm = () => {
       per_page: 20
     })
 
-    if (data?.data) {
+    if (Array.isArray(data?.data)) {
       return data.data.map(buildUjianOption)
     }
 
-    console.error('Error fetching ujian:', error)
+    if (error) {
+      console.error('Error fetching ujian:', error)
+    }
     return []
   }, [buildUjianOption])
 
@@ -95,11 +97,13 @@ const UjianUserForm = () => {
       per_page: 20
     })
 
-    if (data?.data) {
+    if (Array.isArray(data?.data)) {
       return data.data.map(buildSiswaOption)
     }
 
-    console.error('Error fetching siswa:', error)
+    if (error) {
+      console.error('Error fetching siswa:', error)
+    }
     return []
   }, [buildSiswaOption])
 

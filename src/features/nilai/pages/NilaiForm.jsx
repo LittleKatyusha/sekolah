@@ -47,11 +47,13 @@ const NilaiForm = () => {
       per_page: 20
     })
 
-    if (data?.data) {
+    if (Array.isArray(data?.data)) {
       return data.data.map(buildSiswaOption)
     }
 
-    console.error('Failed to fetch siswa:', error)
+    if (error) {
+      console.error('Failed to fetch siswa:', error)
+    }
     return []
   }, [buildSiswaOption])
 
@@ -61,11 +63,13 @@ const NilaiForm = () => {
       per_page: 20
     })
 
-    if (data?.data) {
+    if (Array.isArray(data?.data)) {
       return data.data.map(buildUjianOption)
     }
 
-    console.error('Failed to fetch ujian:', error)
+    if (error) {
+      console.error('Failed to fetch ujian:', error)
+    }
     return []
   }, [buildUjianOption])
 
