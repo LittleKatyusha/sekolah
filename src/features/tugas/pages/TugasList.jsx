@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, GraduationCap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -19,7 +19,7 @@ const STATUS_MAP = {
 }
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onGrade }) => {
   const { hasPermission } = usePermission()
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -63,6 +63,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
 
   const canEdit = hasPermission('tugas.update')
   const canDelete = hasPermission('tugas.delete')
+  const canGrade = hasPermission('tugas-siswa.nilai') || hasPermission('tugas-siswa.update')
 
   return (
     <div className="relative">
@@ -92,6 +93,15 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
               <Eye size={16} className="text-blue-600" />
               Detail
             </button>
+            {canGrade && (
+              <button
+                onClick={() => handleAction(onGrade)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <GraduationCap size={16} className="text-emerald-600" />
+                Nilai Siswa
+              </button>
+            )}
             {canEdit && (
               <button
                 onClick={() => handleAction(onEdit)}
@@ -132,6 +142,10 @@ const TugasList = () => {
 
   const handleEdit = useCallback((data) => {
     navigate(`/akademik/tugas/${data.id}/edit`)
+  }, [navigate])
+
+  const handleGrade = useCallback((data) => {
+    navigate(`/akademik/tugas/${data.id}/grade`)
   }, [navigate])
 
   const handleDetail = useCallback((data) => {
@@ -263,6 +277,7 @@ const TugasList = () => {
             <ActionsMenu
               data={params.data}
               onDetail={() => handleDetail(params.data)}
+              onGrade={() => handleGrade(params.data)}
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
             />
@@ -270,7 +285,7 @@ const TugasList = () => {
         )
       }
     }
-  ], [formatDateTime, handleDetail, handleEdit, handleDelete])
+  ], [formatDateTime, handleDetail, handleGrade, handleEdit, handleDelete])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

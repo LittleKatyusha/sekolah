@@ -213,6 +213,17 @@ export const tugasSiswaService = {
       tugasSiswaService.normalizePayload(data)
     )
   },
+  /**
+   * Batch grade assignment submissions for students
+   * @param {Object} data - Batch grading payload
+   * @param {number} data.tugas_id - Tugas ID
+   * @param {Array<{siswa_id: number, nilai: number, catatan_guru?: string}>} data.items - Grading items
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchStore: async (data) => {
+    return await apiService.post(`${TUGAS_SISWA_BASE_URL}/batch`, data)
+  },
+
 }
 
 export default tugasService
