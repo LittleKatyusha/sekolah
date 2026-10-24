@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Sparkles } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Sparkles, FileSpreadsheet, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -10,6 +10,8 @@ import { deleteSoal } from '../services/soalService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import GenerateSoalModal from '../components/GenerateSoalModal'
+import ImportSoalModal from './ImportSoalModal'
+import AssignUjianModal from './AssignUjianModal'
 
 const getLabel = (value, options) => {
   if (!value || !options?.length) return value ?? '-'
@@ -128,6 +130,9 @@ const SoalList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [generateModalOpen, setGenerateModalOpen] = useState(false)
+  const [importModalOpen, setImportModalOpen] = useState(false)
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [selectedSoals, setSelectedSoals] = useState([])
   const { options: tipeSoalOptions } = useReferenceOptions('tipe_soal')
   const { options: tingkatKesulitanOptions } = useReferenceOptions('tingkat_kesulitan')
 
@@ -136,6 +141,18 @@ const SoalList = () => {
     sort_dir: 'desc',
     filter: '{}',
   }), [])
+
+  const handleSelectionChanged = useCallback((event) => {
+    const rows = event.api.getSelectedRows()
+    setSelectedSoals(rows)
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedSoals([])
+  }, [])
 
   const handleEdit = useCallback((data) => {
     navigate(`/akademik/soals/${data.id}/edit`)
@@ -161,6 +178,17 @@ const SoalList = () => {
   }, [])
 
   const columnDefs = useMemo(() => [
+    {
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      width: 48,
+      minWidth: 48,
+      maxWidth: 48,
+      suppressSizeToFit: true,
+      sortable: false,
+      filter: false,
+      resizable: false,
+    },
     {
       field: 'id',
       headerName: 'ID',
@@ -284,6 +312,14 @@ const SoalList = () => {
           </Button>
           <PermissionGuard permission="soals.create">
             <Button
+              onClick={() => setImportModalOpen(true)}
+              variant="secondary"
+              className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+            >
+              <FileSpreadsheet size={18} className="mr-2" />
+              Import Excel
+            </Button>
+            <Button
               onClick={() => setGenerateModalOpen(true)}
               variant="secondary"
               className="border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-600 dark:text-violet-400 dark:hover:bg-violet-900/20"
@@ -307,12 +343,65 @@ const SoalList = () => {
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          rowSelection={true}
+          onSelectionChanged={handleSelectionChanged}
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}
           height={600}
         />
       </Card>
+
+      {selectedSoals.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl rounded-xl px-5 py-3 flex items-center gap-4 animate-in fade-in slide-in-from-bottom duration-200">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-300 font-semibold px-2.5 py-0.5 rounded-full text-xs">
+              {selectedSoals.length}
+            </span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              soal dipilih
+            </span>
+          </div>
+          <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => setAssignModalOpen(true)}
+              className="flex items-center gap-1.5"
+            >
+              <BookOpen size={15} />
+              Tambahkan ke Ujian
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={clearSelection}
+            >
+              Batal
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {importModalOpen && (
+        <ImportSoalModal
+          onClose={() => setImportModalOpen(false)}
+          onSuccess={() => {
+            setImportModalOpen(false)
+            handleRefresh()
+          }}
+        />
+      )}
+
+      <AssignUjianModal
+        open={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        selectedSoals={selectedSoals}
+        onSuccess={() => {
+          clearSelection()
+          handleRefresh()
+        }}
+      />
 
       <GenerateSoalModal
         open={generateModalOpen}
