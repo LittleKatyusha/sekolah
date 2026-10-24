@@ -89,6 +89,11 @@ export const anggotaService = {
     return await apiService.post(ANGGOTA_BASE, data)
   },
 
+  bulkCreate: async (data) => {
+    return await apiService.post(`${ANGGOTA_BASE}/bulk`, data)
+  },
+
+
   update: async (id, data) => {
     return await apiService.put(`${ANGGOTA_BASE}/${id}`, data)
   },
