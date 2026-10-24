@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle, FileBarChart2, Globe, ExternalLink } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, AlertTriangle, FileBarChart2, Globe, ExternalLink, CreditCard } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -10,6 +10,7 @@ import { pembayaranSppService } from '../services/sppService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { openOnlinePayment } from '../utils/onlinePayment'
+import PembayaranSppBatchModal from './PembayaranSppBatchModal'
 
 const getLabel = (value, options) => {
   if (!value || !options?.length) return value ?? '-'
@@ -137,6 +138,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onBayarOnline, detailPe
 const PembayaranSppList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false)
   const { options: statusBayarOptions } = useReferenceOptions('status_bayar')
   const { options: metodePembayaranOptions } = useReferenceOptions('metode_pembayaran')
 
@@ -341,6 +343,16 @@ const PembayaranSppList = () => {
               Laporan Keuangan
             </Button>
           </PermissionGuard>
+          <PermissionGuard permission="pembayaran-spp.bayar">
+            <Button
+              variant="secondary"
+              onClick={() => setIsBatchModalOpen(true)}
+              className="border-emerald-500 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+            >
+              <CreditCard size={18} className="mr-2 text-emerald-600 dark:text-emerald-400" />
+              Kasir Kolektif
+            </Button>
+          </PermissionGuard>
           <PermissionGuard permission="pembayaran-spp.create">
             <Button onClick={() => navigate('/keuangan/pembayaran-spp/create')}>
               <Plus size={18} className="mr-2" />
@@ -364,6 +376,17 @@ const PembayaranSppList = () => {
           height={600}
         />
       </Card>
+
+      {isBatchModalOpen && (
+        <PembayaranSppBatchModal
+          isOpen={isBatchModalOpen}
+          onClose={() => setIsBatchModalOpen(false)}
+          onSuccess={() => {
+            setIsBatchModalOpen(false)
+            handleRefresh()
+          }}
+        />
+      )}
     </div>
   )
 }

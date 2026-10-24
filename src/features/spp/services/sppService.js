@@ -77,6 +77,10 @@ export const pembayaranSppService = {
     return await apiService.post(`${PEMBAYARAN_BASE}/bayar-multiple`, data)
   },
 
+  batchBayar: async (data) => {
+    return await apiService.post(`${PEMBAYARAN_BASE}/batch-bayar`, data)
+  },
+
   hitungDenda: async (params = {}) => {
     return await apiService.get(`${PEMBAYARAN_BASE}/hitung-denda`, { params })
   },
