@@ -86,6 +86,7 @@ const MapelForm = lazy(() => import('./features/mapel/pages/MapelForm'))
 const MapelDetail = lazy(() => import('./features/mapel/pages/MapelDetail'))
 const GuruMapelList = lazy(() => import('./features/guru-mapel/pages/GuruMapelList'))
 const GuruMapelForm = lazy(() => import('./features/guru-mapel/pages/GuruMapelForm'))
+const GuruMapelBatchForm = lazy(() => import('./features/guru-mapel/pages/GuruMapelBatchForm'))
 const GuruMapelDetail = lazy(() => import('./features/guru-mapel/pages/GuruMapelDetail'))
 const WaliList = lazy(() => import('./features/wali/pages/WaliList'))
 const WaliDetail = lazy(() => import('./features/wali/pages/WaliDetail'))
@@ -340,6 +341,7 @@ function App() {
               {/* Guru Mapel */}
               <Route path="/guru-mapel" element={<GuruMapelList />} />
               <Route path="/guru-mapel/create" element={<GuruMapelForm />} />
+              <Route path="/guru-mapel/batch" element={<GuruMapelBatchForm />} />
               <Route path="/guru-mapel/:id" element={<GuruMapelDetail />} />
               <Route path="/guru-mapel/:id/edit" element={<GuruMapelForm />} />
 

@@ -19,6 +19,10 @@ export const guruMapelService = {
     return await apiService.post(BASE_URL, data)
   },
 
+  batchStore: async (data) => {
+    return await apiService.post(`${BASE_URL}/batch`, data)
+  },
+
   updateGuruMapel: async (id, data) => {
     return await apiService.put(`${BASE_URL}/${id}`, data)
   },
