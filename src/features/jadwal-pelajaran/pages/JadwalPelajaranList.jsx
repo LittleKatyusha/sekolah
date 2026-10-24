@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw, LayoutGrid } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -183,6 +183,15 @@ const JadwalPelajaranList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="jadwal-pelajaran.create">
+            <Button
+              onClick={() => navigate('/jadwal-pelajaran/matriks')}
+              variant="secondary"
+              className="border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              title="Penyusunan Jadwal Matriks Mingguan"
+            >
+              <LayoutGrid size={18} className="mr-2" />
+              Matriks Mingguan
+            </Button>
             <Button onClick={() => navigate('/jadwal-pelajaran/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Jadwal

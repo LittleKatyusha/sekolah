@@ -77,6 +77,19 @@ export const jadwalPelajaranService = {
   getByKelasAndHari: async (kelasId, hari) => {
     return await apiService.get(`${BASE_URL}/kelas/${kelasId}/hari`, { params: { hari } })
   },
+  /**
+   * Batch store weekly timetable matrix with conflict detection (TASK-P1-3)
+   * @param {Object} data
+   * @param {number} data.mst_kelas_id
+   * @param {Array<Object>} data.jadwal
+   * @param {boolean} [data.validate_only]
+   * @param {boolean} [data.replace_existing]
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchStore: async (data) => {
+    return await apiService.post(`${BASE_URL}/batch`, data)
+  },
+
 }
 
 export default jadwalPelajaranService
