@@ -64,6 +64,15 @@ export const guruService = {
   },
 
   /**
+   * Batch delete guru
+   * @param {Array<number|string>} ids - Array of Guru IDs
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchDelete: async (ids) => {
+    return await apiService.post(`${BASE_URL}/batch-delete`, { ids })
+  },
+
+  /**
    * Get guru by mapel ID
    * @param {number|string} mapelId - Mapel ID
    * @returns {Promise<{data: any, error: any}>}

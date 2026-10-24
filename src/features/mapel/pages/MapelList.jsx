@@ -6,6 +6,8 @@ import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import BatchActionBar from '../../../components/ui/BatchActionBar'
+import { exportSelectedRowsToExcel } from '../../../utils/excelExport'
 import { mapelService } from '../services/mapelService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import ImportMapelModal from './ImportMapelModal'
@@ -115,6 +117,7 @@ const MapelList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [showImport, setShowImport] = useState(false)
+  const [selectedRows, setSelectedRows] = useState([])
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -154,7 +157,49 @@ const MapelList = () => {
     }
   }, [])
 
+  const handleSelectionChanged = useCallback((event) => {
+    setSelectedRows(event.api.getSelectedRows())
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedRows([])
+  }, [])
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return
+    const result = await showDeleteConfirm(`${selectedRows.length} mata pelajaran terpilih`)
+    if (result.isConfirmed) {
+      const ids = selectedRows.map((r) => r.id)
+      const { error } = await mapelService.batchDelete(ids)
+      if (!error) {
+        showSuccess(`${selectedRows.length} mata pelajaran berhasil dihapus!`)
+        clearSelection()
+        handleRefresh()
+      } else {
+        showError('Gagal menghapus mata pelajaran terpilih')
+      }
+    }
+  }, [selectedRows, clearSelection, handleRefresh])
+
+  const handleBatchExport = useCallback(() => {
+    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-mapel-terpilih.xlsx', 'Data Mapel')
+  }, [selectedRows, columnDefs])
+
   const columnDefs = useMemo(() => [
+    {
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      width: 48,
+      minWidth: 48,
+      maxWidth: 48,
+      suppressSizeToFit: true,
+      sortable: false,
+      filter: false,
+      resizable: false,
+    },
     {
       field: 'kode',
       backendField: 'kode_mapel',
@@ -233,12 +278,22 @@ const MapelList = () => {
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          rowSelection={true}
+          onSelectionChanged={handleSelectionChanged}
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}
           height={600}
         />
       </Card>
+
+      <BatchActionBar
+        selectedCount={selectedRows.length}
+        itemLabel="mata pelajaran"
+        onDelete={handleBatchDelete}
+        onExport={handleBatchExport}
+        onClear={clearSelection}
+      />
 
       {showImport && (
         <ImportMapelModal

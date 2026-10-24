@@ -64,6 +64,15 @@ export const mapelService = {
   },
 
   /**
+   * Batch delete mapel
+   * @param {Array<number|string>} ids - Array of Mapel IDs
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchDelete: async (ids) => {
+    return await apiService.post(`${BASE_URL}/batch-delete`, { ids })
+  },
+
+  /**
    * Get gurus assigned to a mapel
    * Endpoint: GET /mapel/{id}/gurus
    * @param {number|string} id - Mapel ID

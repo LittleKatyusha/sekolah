@@ -12,6 +12,8 @@ import { usePageTitle } from '../../../hooks/usePageTitle'
 import usePermission from '../../../hooks/usePermission'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import useAuthStore from '../../../store/useAuthStore'
+import BatchActionBar from '../../../components/ui/BatchActionBar'
+import { exportSelectedRowsToExcel } from '../../../utils/excelExport'
 import ImportBukuModal from './ImportBukuModal'
 
 // ─── Actions Menu Component (Admin/Guru) ───────────────────────────────────────
@@ -454,6 +456,7 @@ const AdminBukuView = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [showImport, setShowImport] = useState(false)
+  const [selectedRows, setSelectedRows] = useState([])
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
@@ -483,7 +486,58 @@ const AdminBukuView = () => {
     }
   }, [])
 
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
+    }
+  }, [])
+
+  const handleSelectionChanged = useCallback((event) => {
+    setSelectedRows(event.api.getSelectedRows())
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedRows([])
+  }, [])
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return
+    const result = await showDeleteConfirm(`${selectedRows.length} buku terpilih`)
+    if (result.isConfirmed) {
+      const ids = selectedRows.map((r) => r.id)
+      const { error } = await bukuService.batchDelete(ids)
+      if (!error) {
+        showSuccess(`${selectedRows.length} buku berhasil dihapus!`)
+        clearSelection()
+        handleRefresh()
+      } else {
+        showError('Gagal menghapus buku terpilih')
+      }
+    }
+  }, [selectedRows, clearSelection, handleRefresh])
+
+  const handleBatchExport = useCallback(() => {
+    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-buku-terpilih.xlsx', 'Data Buku')
+  }, [selectedRows, columnDefs])
+
   const columnDefs = useMemo(() => [
+    {
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      width: 48,
+      minWidth: 48,
+      maxWidth: 48,
+      suppressSizeToFit: true,
+      sortable: false,
+      filter: false,
+      resizable: false,
+    },
     {
       field: 'id',
       headerName: 'ID',
@@ -590,15 +644,6 @@ const AdminBukuView = () => {
     filter: true,
   }), [])
 
-  const handleRefresh = useCallback(() => {
-    if (gridRef.current?.refreshGrid) {
-      gridRef.current.refreshGrid()
-    }
-    if (gridRef.current?.api) {
-      gridRef.current.api.refreshInfiniteCache()
-    }
-  }, [])
-
   return (
     <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -632,12 +677,23 @@ const AdminBukuView = () => {
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          rowSelection={true}
+          onSelectionChanged={handleSelectionChanged}
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}
           height={600}
         />
       </Card>
+
+      <BatchActionBar
+        selectedCount={selectedRows.length}
+        itemLabel="buku"
+        onDelete={handleBatchDelete}
+        onExport={handleBatchExport}
+        onClear={clearSelection}
+      />
+
       {showImport && (
         <ImportBukuModal onClose={() => setShowImport(false)} onSuccess={handleRefresh} />
       )}

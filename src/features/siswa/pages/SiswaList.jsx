@@ -5,6 +5,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import BatchActionBar from '../../../components/ui/BatchActionBar'
+import { exportSelectedRowsToExcel } from '../../../utils/excelExport'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { siswaService } from '../services/siswaService'
 import ImportSiswaModal from './ImportSiswaModal'
@@ -17,9 +19,21 @@ const SiswaList = () => {
   const [showImport, setShowImport] = useState(false)
   const [showCetakKartu, setShowCetakKartu] = useState(false)
   const [enrollmentSiswa, setEnrollmentSiswa] = useState(null)
+  const [selectedRows, setSelectedRows] = useState([])
   
   // Column definitions
   const columnDefs = useMemo(() => [
+    {
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      width: 48,
+      minWidth: 48,
+      maxWidth: 48,
+      suppressSizeToFit: true,
+      sortable: false,
+      filter: false,
+      resizable: false,
+    },
     { 
       field: 'nis', 
       headerName: 'NIS',
@@ -205,6 +219,37 @@ const SiswaList = () => {
     }
   }, [])
 
+  const handleSelectionChanged = useCallback((event) => {
+    setSelectedRows(event.api.getSelectedRows())
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedRows([])
+  }, [])
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return
+    const result = await showDeleteConfirm(`${selectedRows.length} siswa terpilih`)
+    if (result.isConfirmed) {
+      const ids = selectedRows.map((r) => r.id)
+      const { error } = await siswaService.batchDelete(ids)
+      if (!error) {
+        showSuccess(`${selectedRows.length} siswa berhasil dihapus!`)
+        clearSelection()
+        handleRefresh()
+      } else {
+        showError('Gagal menghapus siswa terpilih')
+      }
+    }
+  }, [selectedRows, clearSelection, handleRefresh])
+
+  const handleBatchExport = useCallback(() => {
+    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-siswa-terpilih.xlsx', 'Data Siswa')
+  }, [selectedRows, columnDefs])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -275,6 +320,8 @@ const SiswaList = () => {
           endpoint="/siswa/"
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          rowSelection={true}
+          onSelectionChanged={handleSelectionChanged}
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}
@@ -282,6 +329,14 @@ const SiswaList = () => {
           height={600}
         />
       </Card>
+
+      <BatchActionBar
+        selectedCount={selectedRows.length}
+        itemLabel="siswa"
+        onDelete={handleBatchDelete}
+        onExport={handleBatchExport}
+        onClear={clearSelection}
+      />
     </div>
   )
 }

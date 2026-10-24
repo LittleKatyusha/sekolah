@@ -59,6 +59,15 @@ export const bukuService = {
     return await apiService.delete(`/perpustakaan/buku/${id}`)
   },
 
+  /**
+   * Batch delete buku
+   * @param {Array<number|string>} ids - Array of Buku IDs
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchDelete: async (ids) => {
+    return await apiService.post('/perpustakaan/buku/batch-delete', { ids })
+  },
+
   importExcel: async (file) => {
     const formData = new FormData()
     formData.append('file', file)

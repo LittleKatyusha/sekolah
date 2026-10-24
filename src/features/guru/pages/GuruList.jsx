@@ -7,6 +7,8 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
+import BatchActionBar from '../../../components/ui/BatchActionBar'
+import { exportSelectedRowsToExcel } from '../../../utils/excelExport'
 import { guruService } from '../services/guruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
@@ -124,6 +126,7 @@ const GuruList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [selectedRows, setSelectedRows] = useState([])
 
   const { options: jkOptions } = useReferenceOptions('jenis_kelamin')
   const { options: pendidikanOptions } = useReferenceOptions('pendidikan_terakhir')
@@ -162,6 +165,17 @@ const GuruList = () => {
   const getPendidikanLabel = useCallback((value) => getLabel(value, pendidikanOptions), [pendidikanOptions])
 
   const columnDefs = useMemo(() => [
+    {
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      width: 48,
+      minWidth: 48,
+      maxWidth: 48,
+      suppressSizeToFit: true,
+      sortable: false,
+      filter: false,
+      resizable: false,
+    },
     {
       field: 'nip',
       headerName: 'NIP',
@@ -277,6 +291,37 @@ const GuruList = () => {
     }
   }, [])
 
+  const handleSelectionChanged = useCallback((event) => {
+    setSelectedRows(event.api.getSelectedRows())
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedRows([])
+  }, [])
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return
+    const result = await showDeleteConfirm(`${selectedRows.length} guru terpilih`)
+    if (result.isConfirmed) {
+      const ids = selectedRows.map((r) => r.id)
+      const { error } = await guruService.batchDelete(ids)
+      if (!error) {
+        showSuccess(`${selectedRows.length} guru berhasil dihapus!`)
+        clearSelection()
+        handleRefresh()
+      } else {
+        showError('Gagal menghapus guru terpilih')
+      }
+    }
+  }, [selectedRows, clearSelection, handleRefresh])
+
+  const handleBatchExport = useCallback(() => {
+    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-guru-terpilih.xlsx', 'Data Guru')
+  }, [selectedRows, columnDefs])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -305,12 +350,22 @@ const GuruList = () => {
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          rowSelection={true}
+          onSelectionChanged={handleSelectionChanged}
           cacheBlockSize={20}
           paginationPageSize={20}
           paginationPageSizeSelector={[10, 20, 50, 100]}
           height={600}
         />
       </Card>
+
+      <BatchActionBar
+        selectedCount={selectedRows.length}
+        itemLabel="guru"
+        onDelete={handleBatchDelete}
+        onExport={handleBatchExport}
+        onClear={clearSelection}
+      />
 
       {showImportModal && (
         <ImportGuruModal

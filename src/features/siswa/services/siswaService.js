@@ -95,6 +95,15 @@ export const siswaService = {
   },
 
   /**
+   * Batch delete siswa
+   * @param {Array<number|string>} ids - Array of Siswa IDs
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchDelete: async (ids) => {
+    return await apiService.post(`${BASE_URL}/batch-delete`, { ids })
+  },
+
+  /**
    * Get siswa by kelas
    * @param {number|string} kelasId - Kelas ID
    * @returns {Promise<{data: any, error: any}>}
