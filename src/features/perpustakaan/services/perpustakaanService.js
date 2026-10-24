@@ -109,6 +109,15 @@ export const peminjamanService = {
   },
 
   /**
+   * Batch borrow multiple books for a student
+   * @param {Object} data - Batch borrow data { mst_siswa_id, buku_ids, tanggal_pinjam, tanggal_jatuh_tempo, keterangan }
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchPinjam: async (data) => {
+    return await apiService.post('/perpustakaan/peminjaman/batch-pinjam', data)
+  },
+
+  /**
    * Update existing peminjaman
    * @param {number|string} id - Peminjaman ID
    * @param {Object} data - Updated peminjaman data
