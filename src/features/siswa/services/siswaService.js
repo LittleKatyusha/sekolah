@@ -136,6 +136,19 @@ export const siswaService = {
   },
 
   /**
+   * Batch promote or graduate students (TASK-P1-2)
+   * @param {Object} data - Batch promote payload
+   * @param {number} [data.from_mst_kelas_id] - Source class ID
+   * @param {number} [data.to_mst_kelas_id] - Target class ID
+   * @param {Array<number>} data.siswa_ids - Student IDs
+   * @param {'promote'|'lulus'|'mutasi'} data.action - Action type
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  batchPromote: async (data) => {
+    return await apiService.post(`${BASE_URL}/batch-promote`, data)
+  },
+
+  /**
    * Cetak kartu pelajar massal (Blob PDF)
    */
   cetakKartuPelajar: async (payload = {}) => {

@@ -226,6 +226,14 @@ const SiswaList = () => {
               Import Excel
             </Button>
           </PermissionGuard>
+          <PermissionGuard permission="siswa.naik-kelas">
+            <Button onClick={() => navigate('/siswa/kenaikan-kelas')} variant="secondary" title="Kenaikan / Mutasi Kelas">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+              </svg>
+              Kenaikan Kelas
+            </Button>
+          </PermissionGuard>
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
               <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
