@@ -11,6 +11,7 @@ const ALL_PROTECTED_LEAF_ROUTES = [
   "/absensi-siswa",
   "/absensi-siswa/:id",
   "/absensi-siswa/edit/:id",
+  "/absensi-siswa/kelas",
   "/absensi-siswa/rekap-bulanan",
   "/absensi-siswa/tambah",
   "/admin/activity-logs",

@@ -8,6 +8,7 @@ import {
   Sparkles,
   ClipboardList,
   BarChart2,
+  Users,
 } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -699,6 +700,10 @@ const AdminAbsensiSiswaList = () => {
             Rekap Bulanan
           </Button>
           <PermissionGuard permission="absensi-siswa.create">
+            <Button variant="outline" onClick={() => navigate('/absensi-siswa/kelas')} title="Presensi Per Rombel Kelas">
+              <Users size={18} className="mr-2" />
+              Presensi Kelas
+            </Button>
             <Button onClick={handleAdd}>
               <Plus size={18} className="mr-2" />
               Tambah Absensi

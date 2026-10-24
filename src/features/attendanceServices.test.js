@@ -37,4 +37,16 @@ describe('Go attendance contracts', () => {
     expect(apiService.post).toHaveBeenCalledWith('/akademik/presensi/sessions', { trx_jadwal_pelajaran_id: 12, tanggal: '2026-08-31' })
     expect(apiService.post).toHaveBeenCalledWith('/akademik/presensi/sessions/9/finalize', { confirm: true })
   })
+
+  it('dispatches bulk student attendance to canonical endpoint with proper payload', async () => {
+    const payload = {
+      tanggal: '2026-04-12',
+      items: [
+        { mst_siswa_id: 101, status: 1, keterangan: null },
+        { mst_siswa_id: 102, status: 3, keterangan: 'Demam' },
+      ],
+    }
+    await absensiSiswaService.bulkAbsensiSiswa(payload)
+    expect(apiService.post).toHaveBeenCalledWith('/akademik/absensi-siswa/bulk', payload)
+  })
 })

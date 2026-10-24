@@ -92,6 +92,17 @@ export const absensiSiswaService = {
   },
 
   getRekapBulanan: (params = {}) => apiService.get(`${BASE_URL}/rekap-bulanan`, { params }),
+  /**
+   * Bulk upsert absensi siswa
+   * @param {Object} data - Bulk absensi data
+   * @param {string} data.tanggal - Date (YYYY-MM-DD)
+   * @param {Array<{mst_siswa_id: number, status: number, keterangan?: string|null}>} data.items - Attendance items
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  bulkAbsensiSiswa: async (data) => {
+    return await apiService.post(`${BASE_URL}/bulk`, data)
+  },
+
 }
 
 export default absensiSiswaService

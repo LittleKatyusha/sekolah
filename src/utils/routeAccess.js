@@ -73,6 +73,7 @@ export const ROUTE_RULES = [
   ['/wali', 'wali.view'],
 
   // ── Kehadiran — Absensi Siswa ──────────────────────────────
+  ['/absensi-siswa/kelas', 'absensi-siswa.create'],
   ['/absensi-siswa/tambah', 'absensi-siswa.create'],
   ['/absensi-siswa/edit/:id', 'absensi-siswa.update'],
   ['/absensi-siswa/rekap-bulanan', 'absensi-siswa.view'],
