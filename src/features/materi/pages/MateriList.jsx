@@ -7,8 +7,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
+import useAuthStore from '../../../store/useAuthStore'
 import { materiService } from '../services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import StudentMateriView from '../components/StudentMateriView'
 
 // Helper function to strip HTML tags
 const stripHtmlTags = (html) => {
@@ -133,7 +135,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editP
   )
 }
 
-const MateriList = () => {
+const AdminMateriView = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
 
@@ -303,6 +305,19 @@ const MateriList = () => {
       </Card>
     </div>
   )
+}
+
+const MateriList = () => {
+  const { user } = useAuthStore()
+  const isSiswa =
+    user?.role?.toLowerCase?.() === 'siswa' ||
+    user?.roles?.some?.((r) => (r.code || r)?.toLowerCase?.() === 'siswa')
+
+  if (isSiswa) {
+    return <StudentMateriView />
+  }
+
+  return <AdminMateriView />
 }
 
 export default MateriList

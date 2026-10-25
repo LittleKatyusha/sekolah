@@ -1,11 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, FileText, Link, Hash, AlignLeft } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, FileText, Link, Hash, AlignLeft, ExternalLink, Play, Presentation, Video } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { materiService } from '../services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+
+const getYouTubeId = (url) => {
+  if (!url) return null
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
+  return match ? match[1] : null
+}
+
+const getGoogleSlidesEmbed = (url) => {
+  if (!url) return null
+  const match = url.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/)
+  return match ? `https://docs.google.com/presentation/d/${match[1]}/embed?start=false&loop=false&delayms=3000` : null
+}
 
 // Status mapping for display (backend: 1 Aktif, 0 Draft)
 const STATUS_MAP = {
@@ -19,6 +31,9 @@ const MateriDetail = () => {
   
   const [loading, setLoading] = useState(false)
   const [materi, setMateri] = useState(null)
+
+  const youtubeId = useMemo(() => getYouTubeId(materi?.link_video), [materi?.link_video])
+  const slidesEmbed = useMemo(() => getGoogleSlidesEmbed(materi?.link_video), [materi?.link_video])
 
   useEffect(() => {
     fetchMateri()
@@ -188,7 +203,23 @@ const MateriDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">File Materi</p>
-                    <p className="font-medium text-gray-900 dark:text-white break-all">{materi.file_materi || '-'}</p>
+                    {materi.file_materi ? (
+                      materi.file_materi.startsWith('http://') || materi.file_materi.startsWith('https://') ? (
+                        <a
+                          href={materi.file_materi}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 font-medium text-primary-600 dark:text-primary-400 hover:underline break-all"
+                        >
+                          <span>Buka Dokumen / Unduh Modul</span>
+                          <ExternalLink size={14} />
+                        </a>
+                      ) : (
+                        <p className="font-medium text-gray-900 dark:text-white break-all">{materi.file_materi}</p>
+                      )
+                    ) : (
+                      <p className="font-medium text-gray-900 dark:text-white">-</p>
+                    )}
                   </div>
                 </div>
 
@@ -203,9 +234,10 @@ const MateriDetail = () => {
                         href={materi.link_video}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-primary-600 hover:underline break-all"
+                        className="inline-flex items-center gap-1.5 font-medium text-primary-600 hover:underline break-all"
                       >
-                        {materi.link_video}
+                        <span>{materi.link_video}</span>
+                        <ExternalLink size={14} />
                       </a>
                     ) : (
                       <p className="font-medium text-gray-900 dark:text-white">-</p>
@@ -213,6 +245,42 @@ const MateriDetail = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Media Embed Player */}
+              {youtubeId && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Video size={18} className="text-rose-500" />
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Video Pembelajaran</h4>
+                  </div>
+                  <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 bg-black">
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+                      title={materi.judul || 'Video Materi'}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full border-0"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {slidesEmbed && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Presentation size={18} className="text-amber-500" />
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Slide Presentasi</h4>
+                  </div>
+                  <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 bg-black">
+                    <iframe
+                      src={slidesEmbed}
+                      title={materi.judul || 'Slide Materi'}
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full border-0"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Deskripsi Section */}
               {materi.deskripsi && (
