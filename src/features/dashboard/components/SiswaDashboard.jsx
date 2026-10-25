@@ -10,21 +10,29 @@ import DashboardAttendanceCard from './DashboardAttendanceCard'
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
   Hadir: '#10B981',
+  Terlambat: '#F59E0B',
   Izin: '#3B82F6',
-  Sakit: '#F59E0B',
+  Sakit: '#8B5CF6',
   Alpha: '#EF4444',
 }
 
 const STATUS_LABELS = {
   '1': 'Hadir',
-  '2': 'Sakit',
-  '3': 'Izin',
+  '2': 'Izin',
+  '3': 'Sakit',
   '4': 'Alpha',
+  '5': 'Terlambat',
+  '15': 'Hadir',
+  '16': 'Izin',
+  '17': 'Sakit',
+  '18': 'Alpha',
+  '94': 'Terlambat',
   hadir: 'Hadir',
-  sakit: 'Sakit',
   izin: 'Izin',
+  sakit: 'Sakit',
   alpha: 'Alpha',
   alpa: 'Alpha',
+  terlambat: 'Terlambat',
 }
 
 const SISWA_QUICK_ACTIONS = [
@@ -40,14 +48,25 @@ const normalizeStatusKey = (value) => {
   return String(value).toLowerCase()
 }
 
+const resolveStatusName = (item) => {
+  const rawKey = normalizeStatusKey(item?.status)
+  if (rawKey && STATUS_LABELS[rawKey]) return STATUS_LABELS[rawKey]
+  const labelKey = normalizeStatusKey(item?.status_label)
+  if (labelKey && labelKey !== 'belum absen' && STATUS_LABELS[labelKey]) return STATUS_LABELS[labelKey]
+  if (item?.status_label && item.status_label !== 'Belum Absen') return item.status_label
+  return `Status ${item?.status ?? '-'}`
+}
+
 const incrementAttendanceSummary = (summary, attendanceRecord) => {
   const statusKey = normalizeStatusKey(attendanceRecord?.status_absensi ?? attendanceRecord?.status)
   if (!statusKey) return summary
 
+  const resolvedLabel = STATUS_LABELS[statusKey] || `Status ${attendanceRecord?.status ?? attendanceRecord?.status_absensi ?? '-'}`
   const nextSummary = Array.isArray(summary) ? [...summary] : []
   const existingIndex = nextSummary.findIndex((item) => {
     const itemKey = normalizeStatusKey(item?.status_label ?? item?.status)
-    return itemKey === statusKey || item?.status === attendanceRecord?.status
+    const itemResolvedName = resolveStatusName(item)
+    return itemKey === statusKey || item?.status === attendanceRecord?.status || itemResolvedName === resolvedLabel
   })
 
   if (existingIndex >= 0) {
@@ -60,7 +79,7 @@ const incrementAttendanceSummary = (summary, attendanceRecord) => {
     ...nextSummary,
     {
       status: attendanceRecord?.status ?? attendanceRecord?.status_absensi ?? statusKey,
-      status_label: STATUS_LABELS[statusKey] || `Status ${attendanceRecord?.status ?? attendanceRecord?.status_absensi ?? '-'}`,
+      status_label: resolvedLabel,
       total: 1,
     },
   ]
@@ -103,15 +122,24 @@ const SiswaDashboard = ({ data, authUser }) => {
     setAttendanceSummaryState((current) => incrementAttendanceSummary(current, record))
   }, [])
 
-  const attendanceChartData = (attendanceSummaryState || []).map((item) => ({
-    name: item.status_label || `Status ${item.status}`,
-    value: item.total,
-  }))
+  const attendanceChartData = useMemo(() => {
+    const grouped = {}
+    for (const item of (attendanceSummaryState || [])) {
+      const name = resolveStatusName(item)
+      const val = Number(item.total || 0)
+      if (val > 0) {
+        grouped[name] = (grouped[name] || 0) + val
+      }
+    }
+    return Object.entries(grouped).map(([name, value]) => ({ name, value }))
+  }, [attendanceSummaryState])
 
   const attendanceColors = attendanceChartData.map((item) => STATUS_COLORS[item.name] || '#6B7280')
 
   const totalAttendance = attendanceChartData.reduce((s, i) => s + i.value, 0)
-  const hadirCount = attendanceChartData.find((i) => i.name === 'Hadir')?.value || 0
+  const hadirCount = attendanceChartData
+    .filter((i) => i.name === 'Hadir' || i.name === 'Terlambat')
+    .reduce((s, i) => s + i.value, 0)
   const hadirPct = totalAttendance > 0 ? Math.round((hadirCount / totalAttendance) * 100) : 0
 
   const avgNilai = useMemo(() => {
@@ -294,8 +322,8 @@ const SiswaDashboard = ({ data, authUser }) => {
             <div className="flex h-24 items-center justify-center text-sm text-gray-400">Belum ada nilai.</div>
           ) : (
             <div className="space-y-3">
-              {recent_grades.map((grade) => (
-                <div key={grade.id} className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/40">
+              {recent_grades.map((grade, index) => (
+                <div key={grade.id || index} className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/40">
                   <span
                     className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums ${
                       grade.nilai >= 80

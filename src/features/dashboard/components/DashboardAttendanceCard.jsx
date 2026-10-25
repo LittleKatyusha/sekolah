@@ -11,14 +11,21 @@ import { showConfirm, showError, showSuccess } from '../../../utils/sweetalert'
 
 const STATUS_META = {
   '1': { label: 'Hadir', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  '2': { label: 'Sakit', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
-  '3': { label: 'Izin', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  '2': { label: 'Izin', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  '3': { label: 'Sakit', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
   '4': { label: 'Alpha', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  '5': { label: 'Terlambat', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  '15': { label: 'Hadir', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  '16': { label: 'Izin', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  '17': { label: 'Sakit', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
+  '18': { label: 'Alpha', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  '94': { label: 'Terlambat', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
   hadir: { label: 'Hadir', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  sakit: { label: 'Sakit', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
   izin: { label: 'Izin', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  sakit: { label: 'Sakit', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
   alpha: { label: 'Alpha', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
   alpa: { label: 'Alpha', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  terlambat: { label: 'Terlambat', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
   tidak_hadir: { label: 'Tidak Hadir', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 }
 
