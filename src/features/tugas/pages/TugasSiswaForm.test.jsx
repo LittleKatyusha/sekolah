@@ -98,9 +98,13 @@ describe('TugasSiswaForm', () => {
     expect(screen.getByText('Upload File')).toBeInTheDocument()
     expect(screen.getByText(/Klik untuk mengunggah atau seret file ke sini/i)).toBeInTheDocument()
     expect(screen.queryByPlaceholderText('Path file (opsional)')).not.toBeInTheDocument()
+
+    // Status Kumpul & Catatan Guru hidden for siswa
+    expect(screen.queryByText('Status Kumpul')).not.toBeInTheDocument()
+    expect(screen.queryByText('Catatan Guru')).not.toBeInTheDocument()
   })
 
-  it('shows SearchableSelect for Siswa when user is not siswa', async () => {
+  it('shows SearchableSelect for Siswa and teacher fields when user is not siswa', async () => {
     useAuthStore.setState({
       user: {
         id: 1,
@@ -120,5 +124,7 @@ describe('TugasSiswaForm', () => {
     })
 
     expect(screen.getByText('Upload File')).toBeInTheDocument()
+    expect(screen.getByText('Status Kumpul')).toBeInTheDocument()
+    expect(screen.getByText('Catatan Guru')).toBeInTheDocument()
   })
 })

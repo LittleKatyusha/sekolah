@@ -318,19 +318,21 @@ const TugasSiswaForm = () => {
               </div>
 
               {/* Status Kumpul */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Status Kumpul
-                </label>
-                <SearchableSelect
-                  name="status_kumpul"
-                  value={formData.status_kumpul}
-                  onChange={handleChange}
-                  options={STATUS_KUMPUL_OPTIONS}
-                  placeholder="Pilih status"
-                  error={errors.status_kumpul}
-                />
-              </div>
+              {!isSiswa && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Status Kumpul
+                  </label>
+                  <SearchableSelect
+                    name="status_kumpul"
+                    value={formData.status_kumpul}
+                    onChange={handleChange}
+                    options={STATUS_KUMPUL_OPTIONS}
+                    placeholder="Pilih status"
+                    error={errors.status_kumpul}
+                  />
+                </div>
+              )}
 
               {/* Nilai - only shown in edit mode */}
               {isEditMode && canGrade && (
@@ -352,22 +354,24 @@ const TugasSiswaForm = () => {
               )}
 
               {/* Catatan */}
-              <div className={isEditMode ? '' : 'md:col-span-2'}>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Catatan Guru
-                </label>
-                <textarea
-                  name="catatan_guru"
-                  value={formData.catatan_guru}
-                  onChange={handleChange}
-                  placeholder="Catatan dari guru (opsional)"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"
-                />
-                {errors.catatan_guru && (
-                  <p className="mt-1 text-sm text-red-500">{errors.catatan_guru}</p>
-                )}
-              </div>
+              {!isSiswa && (
+                <div className={isEditMode ? '' : 'md:col-span-2'}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Catatan Guru
+                  </label>
+                  <textarea
+                    name="catatan_guru"
+                    value={formData.catatan_guru}
+                    onChange={handleChange}
+                    placeholder="Catatan dari guru (opsional)"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"
+                  />
+                  {errors.catatan_guru && (
+                    <p className="mt-1 text-sm text-red-500">{errors.catatan_guru}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
