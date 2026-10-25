@@ -321,6 +321,8 @@ describe('route access', () => {
     expect(permissionForPath('/admin/users/42')).toBe('users.view')
     expect(permissionForPath('/admin/users/create')).toBe('users.create')
     expect(permissionForPath('/admin/users/42/edit')).toBe('users.update')
+    expect(permissionForPath('/akademik/ujian/42/nilai')).toBe('nilai.update')
+    expect(permissionForPath('/akademik/ujian/42')).toBe('ujian.view')
   })
 
   it('enforces specific action permissions instead of broad list access', () => {

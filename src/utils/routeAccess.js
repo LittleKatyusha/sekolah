@@ -157,7 +157,7 @@ export const ROUTE_RULES = [
   // ── Akademik — Ujian ───────────────────────────────────────
   ['/akademik/ujian/create', 'ujian.create'],
   ['/akademik/ujian/:id/edit', 'ujian.update'],
-  ['/akademik/ujian/:id/nilai', 'ujian.view'],
+  ['/akademik/ujian/:id/nilai', 'nilai.update'],
   ['/akademik/ujian/:id', 'ujian.view'],
   ['/akademik/ujian', 'ujian.view'],
 

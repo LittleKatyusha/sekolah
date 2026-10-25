@@ -87,7 +87,7 @@ const UjianDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Ujian</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <PermissionGuard permission="ujian.view">
+          <PermissionGuard permission="nilai.update">
             <Button variant="info" onClick={() => navigate(`/akademik/ujian/${id}/nilai`)}>
               <Award size={18} className="mr-2" />
               Lihat Nilai

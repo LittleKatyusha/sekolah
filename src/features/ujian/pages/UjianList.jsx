@@ -93,7 +93,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
                 Edit
               </button>
             </PermissionGuard>
-            <PermissionGuard permission="ujian.view">
+            <PermissionGuard permission="nilai.update">
               <button
                 onClick={() => handleAction(onNilai)}
                 className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
