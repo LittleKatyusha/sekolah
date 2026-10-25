@@ -1,7 +1,14 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, X, File, Image as ImageIcon } from 'lucide-react'
 import Button from './Button'
 import { fileUploadService } from '../../services/fileUploadService'
+
+const isImageFile = (url, f) => {
+  if (f?.type?.startsWith('image/')) return true
+  if (!url || typeof url !== 'string') return false
+  if (url.startsWith('data:image/')) return true
+  return /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(url)
+}
 
 const FileUpload = ({
   label,
@@ -9,7 +16,9 @@ const FileUpload = ({
   accept = 'image/*',
   maxSize = 5 * 1024 * 1024, // 5MB default
   className = '',
-  previewUrl: initialPreviewUrl = null
+  previewUrl: initialPreviewUrl = null,
+  folder = '',
+  error: propError = null,
 }) => {
   const [file, setFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(initialPreviewUrl)
@@ -17,6 +26,10 @@ const FileUpload = ({
   const [error, setError] = useState(null)
   const [progress, setProgress] = useState(0)
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    setPreviewUrl(initialPreviewUrl)
+  }, [initialPreviewUrl])
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0]
@@ -29,9 +42,22 @@ const FileUpload = ({
     }
 
     // Validate type
-    if (accept && !selectedFile.type.match(accept.replace('*', '.*'))) {
-      setError('Invalid file type')
-      return
+    if (accept && accept !== '*' && accept !== '*/*') {
+      const types = accept.split(',').map((t) => t.trim().toLowerCase())
+      const fileName = selectedFile.name.toLowerCase()
+      const fileType = (selectedFile.type || '').toLowerCase()
+
+      const isMatch = types.some((type) => {
+        if (type === '*' || type === '*/*') return true
+        if (type.startsWith('.')) return fileName.endsWith(type)
+        if (type.endsWith('/*')) return fileType.startsWith(type.slice(0, -1))
+        return fileType === type
+      })
+
+      if (!isMatch) {
+        setError('Invalid file type')
+        return
+      }
     }
 
     setFile(selectedFile)
@@ -58,7 +84,6 @@ const FileUpload = ({
     setError(null)
 
     // Simulate progress since axios interceptors might hide actual upload progress
-    // or we'd need to modify the service to accept onUploadProgress
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
@@ -70,7 +95,7 @@ const FileUpload = ({
     }, 200)
 
     try {
-      const { data, error: uploadError } = await fileUploadService.uploadFile(fileToUpload)
+      const { data, error: uploadError } = await fileUploadService.uploadFile(fileToUpload, folder)
       
       clearInterval(progressInterval)
       
@@ -79,9 +104,12 @@ const FileUpload = ({
       }
 
       setProgress(100)
+      const filePath = data?.data?.file_path || data?.data?.url || data?.data?.path || data?.file_path || data?.path || data?.url
       if (onUpload) {
-        const filePath = data?.data?.file_path || data?.data?.url || data?.file_path || data?.path || data?.url
         onUpload(filePath)
+      }
+      if (!fileToUpload.type.startsWith('image/')) {
+        setPreviewUrl(filePath)
       }
     } catch (err) {
       clearInterval(progressInterval)
@@ -109,6 +137,9 @@ const FileUpload = ({
     fileInputRef.current.click()
   }
 
+  const displayError = error || propError
+  const hasPreview = Boolean(previewUrl || file)
+
   return (
     <div className={`space-y-2 ${className}`}>
       {label && (
@@ -126,25 +157,25 @@ const FileUpload = ({
           className="hidden"
         />
 
-        {!previewUrl && !file ? (
+        {!hasPreview ? (
           <div
             onClick={triggerFileInput}
             className={`
               border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors
-              ${error ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 hover:border-primary-500 dark:border-gray-600 dark:hover:border-primary-500'}
+              ${displayError ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 hover:border-primary-500 dark:border-gray-600 dark:hover:border-primary-500'}
             `}
           >
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-              Click to upload or drag and drop
+              Klik untuk mengunggah atau seret file ke sini
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              Max size: {maxSize / 1024 / 1024}MB
+              Maksimal: {maxSize / 1024 / 1024}MB
             </p>
           </div>
         ) : (
           <div className="relative rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            {previewUrl ? (
+            {previewUrl && isImageFile(previewUrl, file) ? (
               <div className="relative aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <img
                   src={previewUrl}
@@ -154,14 +185,25 @@ const FileUpload = ({
               </div>
             ) : (
               <div className="p-4 flex items-center gap-3 bg-gray-50 dark:bg-gray-800">
-                <File className="w-8 h-8 text-primary-500" />
+                <File className="w-8 h-8 text-primary-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                    {file?.name}
+                    {file?.name || (typeof previewUrl === 'string' ? previewUrl.split('/').pop() : 'Berkas')}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {(file?.size / 1024).toFixed(1)} KB
-                  </p>
+                  {file?.size ? (
+                    <p className="text-xs text-gray-500">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </p>
+                  ) : previewUrl ? (
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-block truncate max-w-full"
+                    >
+                      Lihat berkas terunggah
+                    </a>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -171,6 +213,7 @@ const FileUpload = ({
               <button
                 type="button"
                 onClick={handleRemove}
+                aria-label="Hapus file"
                 className="p-1 bg-white dark:bg-gray-800 rounded-full shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
               >
                 <X size={16} />
@@ -189,9 +232,9 @@ const FileUpload = ({
           </div>
         )}
 
-        {error && (
+        {displayError && (
           <p className="mt-1 text-sm text-red-500">
-            {error}
+            {displayError}
           </p>
         )}
       </div>

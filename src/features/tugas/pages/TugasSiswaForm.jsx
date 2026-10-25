@@ -5,8 +5,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import FileUpload from '../../../components/ui/FileUpload'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
+import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
@@ -25,12 +27,20 @@ const TugasSiswaForm = () => {
   const canGrade = hasPermission('tugas-siswa.nilai')
   const [originalNilai, setOriginalNilai] = useState('')
 
+  const user = useAuthStore((state) => state.user)
+  const isSiswa = user?.role?.toLowerCase?.() === 'siswa' || user?.roles?.some?.((r) => (r.code || r)?.toLowerCase?.() === 'siswa')
+  const currentSiswaId = user?.profile?.id ?? user?.profile?.mst_siswa_id ?? user?.profile?.siswa_id ?? user?.mst_siswa_id ?? user?.siswa?.id ?? ''
+  const authSiswaName = user?.profile?.nama || user?.siswa?.nama || user?.name || (currentSiswaId ? `Siswa #${currentSiswaId}` : 'Siswa')
+  const authSiswaNis = user?.profile?.nis || user?.siswa?.nis || ''
+  const authSiswaLabel = authSiswaNis ? `${authSiswaNis} - ${authSiswaName}` : authSiswaName
+  const [selectedSiswaLabel, setSelectedSiswaLabel] = useState('')
+
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
   
   const [formData, setFormData] = useState({
     mst_tugas_id: '',
-    mst_siswa_id: '',
+    mst_siswa_id: (!isEditMode && isSiswa && currentSiswaId) ? String(currentSiswaId) : '',
     jawaban_teks: '',
     file_siswa: '',
     waktu_kumpul: '',
@@ -45,11 +55,19 @@ const TugasSiswaForm = () => {
 
   useEffect(() => {
     fetchTugasOptions()
-    fetchSiswaOptions()
+    if (!isSiswa) {
+      fetchSiswaOptions()
+    }
     if (isEditMode) {
       fetchTugasSiswa()
     }
-  }, [id])
+  }, [id, isSiswa])
+
+  useEffect(() => {
+    if (isSiswa && currentSiswaId && !isEditMode) {
+      setFormData(prev => (prev.mst_siswa_id ? prev : { ...prev, mst_siswa_id: String(currentSiswaId) }))
+    }
+  }, [isSiswa, currentSiswaId, isEditMode])
 
   const fetchTugasOptions = async () => {
     const { data, error } = await tugasService.getAll({ per_page: 'all' })
@@ -78,6 +96,9 @@ const TugasSiswaForm = () => {
     const { data, error } = await tugasSiswaService.getById(id)
     if (data) {
       const ts = data.data
+      if (ts.siswa) {
+        setSelectedSiswaLabel(`${ts.siswa.nis ? ts.siswa.nis + ' - ' : ''}${ts.siswa.nama || ts.siswa.name || `Siswa #${ts.siswa.id}`}`)
+      }
       // Format datetime for datetime-local input
       let waktuKumpl = ''
       if (ts.waktu_kumpul || ts.waktu_kumpl) {
@@ -223,14 +244,24 @@ const TugasSiswaForm = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Siswa <span className="text-red-500">*</span>
                 </label>
-                <SearchableSelect
-                  name="mst_siswa_id"
-                  value={formData.mst_siswa_id}
-                  onChange={handleChange}
-                  options={siswaOptions}
-                  placeholder="Pilih siswa"
-                  error={errors.mst_siswa_id}
-                />
+                {isSiswa ? (
+                  <Input
+                    type="text"
+                    value={selectedSiswaLabel || authSiswaLabel}
+                    disabled
+                    readOnly
+                    className="bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-700 dark:text-gray-300"
+                  />
+                ) : (
+                  <SearchableSelect
+                    name="mst_siswa_id"
+                    value={formData.mst_siswa_id}
+                    onChange={handleChange}
+                    options={siswaOptions}
+                    placeholder="Pilih siswa"
+                    error={errors.mst_siswa_id}
+                  />
+                )}
               </div>
 
               {/* Jawaban */}
@@ -251,17 +282,20 @@ const TugasSiswaForm = () => {
                 )}
               </div>
 
-              {/* File Path */}
+              {/* File Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  File Path
-                </label>
-                <Input
-                  type="text"
-                  name="file_siswa"
-                  value={formData.file_siswa}
-                  onChange={handleChange}
-                  placeholder="Path file (opsional)"
+                <FileUpload
+                  label="Upload File"
+                  accept="image/*,application/pdf,.doc,.docx"
+                  maxSize={10 * 1024 * 1024}
+                  folder="tugas"
+                  previewUrl={formData.file_siswa}
+                  onUpload={(path) => {
+                    setFormData(prev => ({ ...prev, file_siswa: path || '' }))
+                    if (errors.file_siswa) {
+                      setErrors(prev => ({ ...prev, file_siswa: null }))
+                    }
+                  }}
                   error={errors.file_siswa}
                 />
               </div>
