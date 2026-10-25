@@ -125,6 +125,7 @@ const ALL_PROTECTED_LEAF_ROUTES = [
   "/akademik/tugas/:id",
   "/akademik/tugas/:id/edit",
   "/akademik/tugas/:id/grade",
+  "/akademik/tugas/grade",
   "/akademik/tugas/create",
   "/akademik/ujian",
   "/akademik/ujian-jawaban",

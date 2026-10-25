@@ -103,7 +103,8 @@ export const ROUTE_RULES = [
 
   // ── Akademik — Tugas ───────────────────────────────────────
   ['/akademik/tugas/create', 'tugas.create'],
-  ['/akademik/tugas/:id/grade', 'tugas-siswa.update'],
+  ['/akademik/tugas/:id/grade', 'tugas-siswa.nilai'],
+  ['/akademik/tugas/grade', 'tugas-siswa.nilai'],
   ['/akademik/tugas/:id/edit', 'tugas.update'],
   ['/akademik/tugas/:id', 'tugas.view'],
   ['/akademik/tugas', 'tugas.view'],

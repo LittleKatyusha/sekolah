@@ -19,7 +19,7 @@ const STATUS_MAP = {
 }
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onGrade }) => {
+export const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onGrade }) => {
   const { hasPermission } = usePermission()
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -63,7 +63,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onGrade }) => {
 
   const canEdit = hasPermission('tugas.update')
   const canDelete = hasPermission('tugas.delete')
-  const canGrade = hasPermission('tugas-siswa.nilai') || hasPermission('tugas-siswa.update')
+  const canGrade = hasPermission('tugas-siswa.nilai')
 
   return (
     <div className="relative">
