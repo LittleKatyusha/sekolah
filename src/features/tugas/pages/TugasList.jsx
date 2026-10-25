@@ -7,8 +7,10 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
+import useAuthStore from '../../../store/useAuthStore'
 import { tugasService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import StudentTugasView from '../components/StudentTugasView'
 
 // Status mapping for display
 const STATUS_MAP = {
@@ -131,7 +133,7 @@ export const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onGrade }) => {
   )
 }
 
-const TugasList = () => {
+const AdminTugasView = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const staticParams = useMemo(() => ({
@@ -326,6 +328,19 @@ const TugasList = () => {
       </Card>
     </div>
   )
+}
+
+const TugasList = () => {
+  const { user } = useAuthStore()
+  const isSiswa =
+    user?.role?.toLowerCase?.() === 'siswa' ||
+    user?.roles?.some?.((r) => (r.code || r)?.toLowerCase?.() === 'siswa')
+
+  if (isSiswa) {
+    return <StudentTugasView />
+  }
+
+  return <AdminTugasView />
 }
 
 export default TugasList

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -22,6 +22,8 @@ const STATUS_KUMPUL_OPTIONS = [
 const TugasSiswaForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const initialTugasId = location.state?.mst_tugas_id || location.state?.tugas_id || ''
   const isEditMode = !!id
   const { hasPermission } = usePermission()
   const canGrade = hasPermission('tugas-siswa.nilai')
@@ -39,7 +41,7 @@ const TugasSiswaForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
   
   const [formData, setFormData] = useState({
-    mst_tugas_id: '',
+    mst_tugas_id: (!isEditMode && initialTugasId) ? String(initialTugasId) : '',
     mst_siswa_id: (!isEditMode && isSiswa && currentSiswaId) ? String(currentSiswaId) : '',
     jawaban_teks: '',
     file_siswa: '',
@@ -67,7 +69,10 @@ const TugasSiswaForm = () => {
     if (isSiswa && currentSiswaId && !isEditMode) {
       setFormData(prev => (prev.mst_siswa_id ? prev : { ...prev, mst_siswa_id: String(currentSiswaId) }))
     }
-  }, [isSiswa, currentSiswaId, isEditMode])
+    if (initialTugasId && !isEditMode) {
+      setFormData(prev => (prev.mst_tugas_id ? prev : { ...prev, mst_tugas_id: String(initialTugasId) }))
+    }
+  }, [isSiswa, currentSiswaId, initialTugasId, isEditMode])
 
   const fetchTugasOptions = async () => {
     const { data, error } = await tugasService.getAll({ per_page: 'all' })

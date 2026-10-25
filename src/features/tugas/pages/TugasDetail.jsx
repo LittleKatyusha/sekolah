@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2 } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 
@@ -27,10 +28,22 @@ const SUBMISSION_STATUS_MAP = {
 const TugasDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  const isSiswa =
+    user?.role?.toLowerCase?.() === 'siswa' ||
+    user?.roles?.some?.((r) => (r.code || r)?.toLowerCase?.() === 'siswa')
+  const currentSiswaId =
+    user?.profile?.id ??
+    user?.profile?.mst_siswa_id ??
+    user?.profile?.siswa_id ??
+    user?.mst_siswa_id ??
+    user?.siswa?.id ??
+    ''
   
   const [loading, setLoading] = useState(false)
   const [tugas, setTugas] = useState(null)
   const [submissions, setSubmissions] = useState([])
+  const [studentSubmission, setStudentSubmission] = useState(null)
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
 
   useEffect(() => {
@@ -52,9 +65,21 @@ const TugasDetail = () => {
 
   const fetchSubmissions = async () => {
     setLoadingSubmissions(true)
-    const { data, error } = await tugasSiswaService.getByTugas(id)
-    if (data) {
-      setSubmissions(data.data || [])
+    if (isSiswa && currentSiswaId) {
+      const { data } = await tugasSiswaService.getBySiswa(currentSiswaId, { tugas_id: id })
+      if (data) {
+        const list = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []
+        const matched =
+          list.find((s) => String(s.tugas_id ?? s.mst_tugas_id ?? s.tugas?.id) === String(id)) ||
+          list[0] ||
+          null
+        setStudentSubmission(matched)
+      }
+    } else {
+      const { data } = await tugasSiswaService.getByTugas(id)
+      if (data) {
+        setSubmissions(data.data || [])
+      }
     }
     setLoadingSubmissions(false)
   }
@@ -136,6 +161,16 @@ const TugasDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tugas</h1>
         </div>
         <div className="flex gap-3">
+          {isSiswa && (
+            <Button
+              onClick={() =>
+                navigate('/akademik/tugas-siswa/create', { state: { mst_tugas_id: String(id) } })
+              }
+            >
+              <Upload size={18} className="mr-2" />
+              Kumpulkan Tugas
+            </Button>
+          )}
           <PermissionGuard permission="tugas.update">
             <Button variant="warning" onClick={() => navigate(`/akademik/tugas/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
@@ -293,13 +328,78 @@ const TugasDetail = () => {
       <Card>
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Pengumpulan Siswa ({submissions.length})
+            {isSiswa ? 'Status Pengumpulan Tugas' : `Pengumpulan Siswa (${submissions.length})`}
           </h3>
           
           {loadingSubmissions ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
             </div>
+          ) : isSiswa ? (
+            studentSubmission ? (
+              <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/40 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={20} />
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      Tugas Sudah Dikumpulkan
+                    </span>
+                  </div>
+                  {getSubmissionStatusBadge(
+                    studentSubmission.status_label ??
+                      studentSubmission.status_kumpul_label ??
+                      studentSubmission.status
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Waktu Kumpul</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {formatDateTime(studentSubmission.waktu_kumpul || studentSubmission.waktu_kumpl)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Nilai</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {studentSubmission.nilai !== null && studentSubmission.nilai !== undefined
+                        ? `${studentSubmission.nilai} / 100`
+                        : 'Belum dinilai'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Catatan Guru</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {studentSubmission.catatan_guru || studentSubmission.catatan || '-'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/akademik/tugas-siswa/${studentSubmission.id}`)}
+                  >
+                    Lihat Detail Pengumpulan
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <p className="text-gray-500 dark:text-gray-400">
+                  Anda belum mengumpulkan tugas ini.
+                </p>
+                <Button
+                  onClick={() =>
+                    navigate('/akademik/tugas-siswa/create', { state: { mst_tugas_id: String(id) } })
+                  }
+                >
+                  <Upload size={16} className="mr-2" />
+                  Kumpulkan Tugas Sekarang
+                </Button>
+              </div>
+            )
           ) : submissions.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               Belum ada pengumpulan tugas dari siswa
