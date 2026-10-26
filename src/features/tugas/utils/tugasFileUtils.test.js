@@ -6,6 +6,7 @@ import {
   hasAttachment,
   getAttachmentPath,
   openAttachment,
+  resolveFileUrl,
 } from './tugasFileUtils'
 import { fileUploadService } from '../../../services/fileUploadService'
 
@@ -50,7 +51,9 @@ describe('tugasFileUtils', () => {
     expect(hasAttachment(null)).toBe(false)
   })
 
-  it('opens direct http url without presigned call', async () => {
+  it('resolves direct http url and opens attachment without presigned call', async () => {
+    const url = await resolveFileUrl('', 'https://cdn.example.com/tugas.pdf')
+    expect(url).toBe('https://cdn.example.com/tugas.pdf')
     await openAttachment('', 'https://cdn.example.com/tugas.pdf')
     expect(window.open).toHaveBeenCalledWith(
       'https://cdn.example.com/tugas.pdf',
@@ -60,11 +63,17 @@ describe('tugasFileUtils', () => {
     expect(fileUploadService.getPresignedUrl).not.toHaveBeenCalled()
   })
 
-  it('fetches presigned url for storage path and opens it', async () => {
+  it('resolves presigned url for storage path and opens it', async () => {
     fileUploadService.getPresignedUrl.mockResolvedValueOnce({
       data: { data: { url: 'https://s3.example.com/signed-url' } },
     })
 
+    const url = await resolveFileUrl('2026/10/abc/tugas.pdf', null)
+    expect(url).toBe('https://s3.example.com/signed-url')
+
+    fileUploadService.getPresignedUrl.mockResolvedValueOnce({
+      data: { data: { url: 'https://s3.example.com/signed-url' } },
+    })
     await openAttachment('2026/10/abc/tugas.pdf', null)
 
     expect(fileUploadService.getPresignedUrl).toHaveBeenCalledWith('2026/10/abc/tugas.pdf')
@@ -75,3 +84,4 @@ describe('tugasFileUtils', () => {
     )
   })
 })
+

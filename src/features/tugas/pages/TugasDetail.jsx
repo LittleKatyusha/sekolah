@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink, Eye } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
@@ -8,6 +8,7 @@ import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { hasAttachment, getAttachmentPath, openAttachment, getFileName } from '../utils/tugasFileUtils'
+import TugasFilePreviewModal from '../components/TugasFilePreviewModal'
 
 // Status mapping for display
 const STATUS_MAP = {
@@ -46,6 +47,23 @@ const TugasDetail = () => {
   const [submissions, setSubmissions] = useState([])
   const [studentSubmission, setStudentSubmission] = useState(null)
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
+  const [previewModal, setPreviewModal] = useState({
+    open: false,
+    filePath: '',
+    fileUrl: '',
+    title: '',
+    subtitle: '',
+  })
+
+  const handleOpenPreview = (rawPath, directUrl, title, subtitle) => {
+    setPreviewModal({
+      open: true,
+      filePath: rawPath,
+      fileUrl: directUrl,
+      title: title || 'Pratinjau Berkas',
+      subtitle: subtitle || getFileName(rawPath || directUrl),
+    })
+  }
 
   useEffect(() => {
     fetchTugas()
@@ -285,11 +303,18 @@ const TugasDetail = () => {
                     {hasAttachment(tugas) ? (
                       <button
                         type="button"
-                        onClick={() => openAttachment(getAttachmentPath(tugas), tugas.file_url)}
+                        onClick={() =>
+                          handleOpenPreview(
+                            getAttachmentPath(tugas),
+                            tugas.file_url,
+                            `Lampiran: ${tugas.judul || 'Tugas'}`,
+                            getFileName(getAttachmentPath(tugas))
+                          )
+                        }
                         className="inline-flex items-center gap-1.5 mt-0.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline text-left"
-                        title="Buka / Unduh File Lampiran"
+                        title="Lihat Pratinjau File Lampiran"
                       >
-                        <Download size={14} className="shrink-0" />
+                        <Eye size={14} className="shrink-0" />
                         <span className="truncate max-w-[150px]">{getFileName(getAttachmentPath(tugas))}</span>
                       </button>
                     ) : (
@@ -385,11 +410,18 @@ const TugasDetail = () => {
                     {hasAttachment(studentSubmission) ? (
                       <button
                         type="button"
-                        onClick={() => openAttachment(getAttachmentPath(studentSubmission), studentSubmission.file_url)}
+                        onClick={() =>
+                          handleOpenPreview(
+                            getAttachmentPath(studentSubmission),
+                            studentSubmission.file_url,
+                            'Berkas Tugas Anda',
+                            getFileName(getAttachmentPath(studentSubmission))
+                          )
+                        }
                         className="inline-flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-primary-600 hover:underline"
-                        title="Buka / Unduh Berkas Anda"
+                        title="Lihat Pratinjau Berkas Anda"
                       >
-                        <Download size={13} />
+                        <Eye size={13} />
                         <span className="truncate max-w-[120px]">{getFileName(getAttachmentPath(studentSubmission))}</span>
                       </button>
                     ) : (
@@ -474,12 +506,19 @@ const TugasDetail = () => {
                         {hasAttachment(submission) ? (
                           <button
                             type="button"
-                            onClick={() => openAttachment(getAttachmentPath(submission), submission.file_url)}
+                            onClick={() =>
+                              handleOpenPreview(
+                                getAttachmentPath(submission),
+                                submission.file_url,
+                                `Tugas: ${submission.siswa?.nama || submission.siswa?.name || 'Siswa'}`,
+                                getFileName(getAttachmentPath(submission))
+                              )
+                            }
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 transition-colors"
-                            title={`Unduh ${getFileName(getAttachmentPath(submission))}`}
+                            title={`Pratinjau ${getFileName(getAttachmentPath(submission))}`}
                           >
-                            <Download size={14} />
-                            <span>Unduh File</span>
+                            <Eye size={14} />
+                            <span>Preview File</span>
                           </button>
                         ) : (
                           <span className="text-xs text-gray-400 italic">-</span>
@@ -501,6 +540,15 @@ const TugasDetail = () => {
           )}
         </div>
       </Card>
+
+      <TugasFilePreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal((prev) => ({ ...prev, open: false }))}
+        filePath={previewModal.filePath}
+        fileUrl={previewModal.fileUrl}
+        title={previewModal.title}
+        subtitle={previewModal.subtitle}
+      />
     </div>
   )
 }

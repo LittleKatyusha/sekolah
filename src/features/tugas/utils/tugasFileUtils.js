@@ -47,35 +47,54 @@ export const getAttachmentPath = (item) => {
   )
 }
 
-export const openAttachment = async (rawPath, directUrl) => {
+export const getDirectFileUrl = (rawPath, directUrl) => {
   const targetUrl = directUrl && typeof directUrl === 'string' ? directUrl.trim() : ''
   const path = rawPath && typeof rawPath === 'string' ? rawPath.trim() : ''
 
   if (targetUrl && (targetUrl.startsWith('http://') || targetUrl.startsWith('https://') || targetUrl.startsWith('data:'))) {
-    window.open(targetUrl, '_blank', 'noopener,noreferrer')
-    return
+    return targetUrl
   }
 
   if (path && (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:'))) {
-    window.open(path, '_blank', 'noopener,noreferrer')
-    return
+    return path
   }
 
-  if (!path && !targetUrl) return
+  return ''
+}
+
+export const resolveFileUrl = async (rawPath, directUrl) => {
+  const direct = getDirectFileUrl(rawPath, directUrl)
+  if (direct) return direct
+
+  const path = rawPath && typeof rawPath === 'string' ? rawPath.trim() : ''
+  const targetUrl = directUrl && typeof directUrl === 'string' ? directUrl.trim() : ''
+  if (!path && !targetUrl) return ''
 
   const candidate = path || targetUrl
   try {
     const { data } = await fileUploadService.getPresignedUrl(candidate)
     const presigned = data?.data?.url || data?.url
     if (presigned) {
-      window.open(presigned, '_blank', 'noopener,noreferrer')
-      return
+      return presigned
     }
   } catch (err) {
     console.error('Failed to resolve presigned file URL:', err)
   }
 
-  // Fallback to relative storage or direct open
-  const fallbackUrl = candidate.startsWith('/') ? candidate : `/${candidate}`
-  window.open(fallbackUrl, '_blank', 'noopener,noreferrer')
+  return candidate.startsWith('/') ? candidate : `/${candidate}`
 }
+
+export const openAttachment = async (rawPath, directUrl) => {
+  const direct = getDirectFileUrl(rawPath, directUrl)
+  if (direct) {
+    window.open(direct, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  const url = await resolveFileUrl(rawPath, directUrl)
+  if (url) {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+}
+
+
