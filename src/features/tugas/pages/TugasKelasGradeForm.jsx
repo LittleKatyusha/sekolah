@@ -25,6 +25,7 @@ import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { formatDateTime } from '../../../utils/formatters'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { isImageFile, getFileName, hasAttachment, getAttachmentPath, openAttachment } from '../utils/tugasFileUtils'
 
 const TugasKelasGradeForm = () => {
   const navigate = useNavigate()
@@ -179,7 +180,8 @@ const TugasKelasGradeForm = () => {
           statusLabel,
           waktu_kumpul: sub?.waktu_kumpul || null,
           jawaban: sub?.jawaban || null,
-          file_jawaban: sub?.file_jawaban || null,
+          file_jawaban: sub?.file_jawaban || sub?.file_siswa || sub?.file_path || null,
+          file_url: sub?.file_url || null,
           submissionId: sub?.id || null,
         }
       })
@@ -456,16 +458,16 @@ const TugasKelasGradeForm = () => {
                   {tugasDetail.judul}
                 </h3>
               </div>
-              {tugasDetail.file_lampiran ? (
-                <a
-                  href={tugasDetail.file_lampiran}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 text-xs font-medium gap-1"
+              {hasAttachment(tugasDetail) ? (
+                <button
+                  type="button"
+                  onClick={() => openAttachment(getAttachmentPath(tugasDetail), tugasDetail.file_url)}
+                  className="inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 text-xs font-medium gap-1 hover:underline"
+                  title="Unduh Lampiran Soal"
                 >
                   <Download size={14} />
                   Unduh Lampiran Soal
-                </a>
+                </button>
               ) : null}
             </div>
 
@@ -650,16 +652,15 @@ const TugasKelasGradeForm = () => {
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <div className="flex items-center justify-center gap-1.5">
-                            {row.file_jawaban && (
-                              <a
-                                href={row.file_jawaban}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1 rounded text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30"
-                                title="Unduh File Jawaban"
+                            {(row.file_jawaban || row.file_url) && (
+                              <button
+                                type="button"
+                                onClick={() => openAttachment(row.file_jawaban, row.file_url)}
+                                className="p-1 rounded text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+                                title={`Unduh File Jawaban (${getFileName(row.file_jawaban || row.file_url)})`}
                               >
                                 <Download size={15} />
-                              </a>
+                              </button>
                             )}
                             {row.jawaban && (
                               <button
@@ -670,6 +671,7 @@ const TugasKelasGradeForm = () => {
                                     siswaNama: siswa.nama,
                                     jawaban: row.jawaban,
                                     fileJawaban: row.file_jawaban,
+                                    fileUrl: row.file_url,
                                   })
                                 }
                                 className="p-1 rounded text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center gap-1 text-xs font-medium"
@@ -679,7 +681,7 @@ const TugasKelasGradeForm = () => {
                                 <span>Lihat</span>
                               </button>
                             )}
-                            {!row.file_jawaban && !row.jawaban && (
+                            {!row.file_jawaban && !row.file_url && !row.jawaban && (
                               <span className="text-gray-400 text-xs italic">-</span>
                             )}
                           </div>
@@ -755,17 +757,26 @@ const TugasKelasGradeForm = () => {
               {previewModal.jawaban || <span className="italic text-gray-400">Tidak ada jawaban teks</span>}
             </div>
 
-            {previewModal.fileJawaban && (
-              <div className="pt-2">
-                <a
-                  href={previewModal.fileJawaban}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium"
+            {(previewModal.fileJawaban || previewModal.fileUrl) && (
+              <div className="pt-2 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => openAttachment(previewModal.fileJawaban, previewModal.fileUrl)}
+                  className="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium hover:underline text-left"
                 >
-                  <ExternalLink size={16} />
-                  Buka / Unduh File Jawaban
-                </a>
+                  <ExternalLink size={16} className="shrink-0" />
+                  <span>Buka / Unduh File Jawaban ({getFileName(previewModal.fileJawaban || previewModal.fileUrl)})</span>
+                </button>
+                {isImageFile(previewModal.fileUrl || previewModal.fileJawaban) && (
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden max-h-60 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-2">
+                    <img
+                      src={previewModal.fileUrl || previewModal.fileJawaban}
+                      alt="Lampiran Jawaban"
+                      className="max-h-56 object-contain rounded cursor-pointer hover:opacity-95"
+                      onClick={() => openAttachment(previewModal.fileJawaban, previewModal.fileUrl)}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Trash2, MoreVertical, Star } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Trash2, MoreVertical, Star, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -9,6 +9,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { hasAttachment, getAttachmentPath, openAttachment, getFileName } from '../utils/tugasFileUtils'
 
 // Submission status mapping
 const STATUS_MAP = {
@@ -262,6 +263,35 @@ const TugasSiswaList = () => {
         if (nilai === null || nilai === undefined) return '-'
         return (
           <span className="font-medium">{nilai}</span>
+        )
+      }
+    },
+    {
+      headerName: 'File',
+      width: 105,
+      minWidth: 95,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params) => {
+        const row = params.data
+        if (!row || !hasAttachment(row)) {
+          return <span className="text-xs text-gray-400 italic">-</span>
+        }
+        return (
+          <div className="h-full flex items-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                openAttachment(getAttachmentPath(row), row.file_url)
+              }}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-950/40 transition-colors"
+              title={`Unduh ${getFileName(getAttachmentPath(row))}`}
+            >
+              <Download size={13} />
+              <span>Unduh</span>
+            </button>
+          </div>
         )
       }
     },

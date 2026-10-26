@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { hasAttachment, getAttachmentPath, openAttachment, getFileName } from '../utils/tugasFileUtils'
 
 // Status mapping for display
 const STATUS_MAP = {
@@ -279,9 +280,21 @@ const TugasDetail = () => {
                   <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText size={20} className="text-indigo-600" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">File Path</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{tugas.file_path || '-'}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">File Lampiran Tugas</p>
+                    {hasAttachment(tugas) ? (
+                      <button
+                        type="button"
+                        onClick={() => openAttachment(getAttachmentPath(tugas), tugas.file_url)}
+                        className="inline-flex items-center gap-1.5 mt-0.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline text-left"
+                        title="Buka / Unduh File Lampiran"
+                      >
+                        <Download size={14} className="shrink-0" />
+                        <span className="truncate max-w-[150px]">{getFileName(getAttachmentPath(tugas))}</span>
+                      </button>
+                    ) : (
+                      <p className="font-medium text-gray-900 dark:text-white">-</p>
+                    )}
                   </div>
                 </div>
 
@@ -352,7 +365,7 @@ const TugasDetail = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm pt-2">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Waktu Kumpul</p>
                     <p className="font-medium text-gray-900 dark:text-white">
@@ -366,6 +379,22 @@ const TugasDetail = () => {
                         ? `${studentSubmission.nilai} / 100`
                         : 'Belum dinilai'}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Berkas Anda</p>
+                    {hasAttachment(studentSubmission) ? (
+                      <button
+                        type="button"
+                        onClick={() => openAttachment(getAttachmentPath(studentSubmission), studentSubmission.file_url)}
+                        className="inline-flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-primary-600 hover:underline"
+                        title="Buka / Unduh Berkas Anda"
+                      >
+                        <Download size={13} />
+                        <span className="truncate max-w-[120px]">{getFileName(getAttachmentPath(studentSubmission))}</span>
+                      </button>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic mt-0.5">Tidak melampirkan berkas</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Catatan Guru</p>
@@ -414,6 +443,7 @@ const TugasDetail = () => {
                     <th className="px-4 py-3">Tanggal Kumpul</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Nilai</th>
+                    <th className="px-4 py-3 text-center">File Tugas</th>
                     <th className="px-4 py-3">Aksi</th>
                   </tr>
                 </thead>
@@ -439,6 +469,21 @@ const TugasDetail = () => {
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                         {submission.nilai !== null && submission.nilai !== undefined ? submission.nilai : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {hasAttachment(submission) ? (
+                          <button
+                            type="button"
+                            onClick={() => openAttachment(getAttachmentPath(submission), submission.file_url)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 transition-colors"
+                            title={`Unduh ${getFileName(getAttachmentPath(submission))}`}
+                          >
+                            <Download size={14} />
+                            <span>Unduh File</span>
+                          </button>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">-</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <button

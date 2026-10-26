@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star, Save, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star, Save, MessageSquare, Download, ExternalLink, Image as ImageIcon, FileCheck } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { isImageFile, isPdfFile, getFileName, hasAttachment, getAttachmentPath, openAttachment } from '../utils/tugasFileUtils'
 
 // Submission status mapping
 const STATUS_MAP = {
@@ -142,6 +143,13 @@ const TugasSiswaDetail = () => {
       </div>
     )
   }
+
+  const hasFile = hasAttachment(tugasSiswa)
+  const filePath = getAttachmentPath(tugasSiswa)
+  const fileUrl = tugasSiswa?.file_url
+  const fileName = getFileName(filePath || fileUrl)
+  const isImage = isImageFile(fileUrl || filePath)
+  const isPdf = isPdfFile(fileUrl || filePath)
 
   return (
     <div className="space-y-6">
@@ -288,11 +296,89 @@ const TugasSiswaDetail = () => {
                   <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText size={20} className="text-indigo-600" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">File Path</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{tugasSiswa.file_siswa || tugasSiswa.file_path || '-'}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">File Tugas</p>
+                    {hasFile ? (
+                      <button
+                        type="button"
+                        onClick={() => openAttachment(filePath, fileUrl)}
+                        className="inline-flex items-center gap-1.5 mt-0.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline text-left"
+                        title="Buka / Unduh File Tugas"
+                      >
+                        <Download size={14} className="shrink-0" />
+                        <span className="truncate max-w-[150px]">{fileName}</span>
+                      </button>
+                    ) : (
+                      <p className="font-medium text-gray-900 dark:text-white">-</p>
+                    )}
                   </div>
                 </div>
+              </div>
+
+              {/* Berkas / File Upload Section */}
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <FileCheck size={18} className="text-primary-600 dark:text-primary-400" />
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Berkas Hasil Upload Tugas Siswa
+                    </h4>
+                  </div>
+                  {hasFile && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => openAttachment(filePath, fileUrl)}
+                      className="inline-flex items-center gap-1.5"
+                    >
+                      <Download size={15} />
+                      Buka / Unduh Berkas
+                    </Button>
+                  )}
+                </div>
+
+                {hasFile ? (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 shrink-0">
+                          {isImage ? <ImageIcon size={20} /> : <FileText size={20} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {fileName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {isImage ? 'Berkas Gambar (Klik gambar atau tombol untuk membuka)' : isPdf ? 'Dokumen PDF' : 'Berkas Tugas Siswa'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openAttachment(filePath, fileUrl)}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline"
+                      >
+                        <span>Lihat Ukuran Penuh</span>
+                        <ExternalLink size={13} />
+                      </button>
+                    </div>
+
+                    {isImage && (
+                      <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden max-h-96 flex items-center justify-center bg-white dark:bg-gray-900 p-2">
+                        <img
+                          src={fileUrl || filePath}
+                          alt="Pratinjau Tugas Siswa"
+                          className="max-h-96 w-auto object-contain rounded cursor-pointer hover:opacity-95 transition-opacity"
+                          onClick={() => openAttachment(filePath, fileUrl)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-center text-sm text-gray-400 italic border border-dashed border-gray-200 dark:border-gray-700">
+                    Siswa belum/tidak melampirkan berkas file pada tugas ini
+                  </div>
+                )}
               </div>
 
               {/* Jawaban Section */}
