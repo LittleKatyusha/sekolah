@@ -543,11 +543,11 @@ const AdminBukuView = () => {
     },
     {
       field: 'tahun',
-      headerName: 'Tahun',
+      headerName: 'Tahun Terbit',
       sortable: true,
       filter: true,
-      width: 100,
-      minWidth: 80,
+      width: 120,
+      minWidth: 100,
       cellRenderer: (params) => params.value || '-'
     },
     {

@@ -20,12 +20,13 @@ const BukuForm = () => {
   const [fetchingData, setFetchingData] = useState(false)
   
   const [formData, setFormData] = useState({
-  isbn: '',
-  judul: '',
-  penulis: '',
-  penerbit: '',
-  tahun: '',
-  stok: '',
+    isbn: '',
+    judul: '',
+    penulis: '',
+    penerbit: '',
+    prolog: '',
+    tahun: '',
+    stok: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -42,12 +43,13 @@ const BukuForm = () => {
     if (data) {
       const buku = data.data
       setFormData({
-      isbn: buku.isbn || '',
-      judul: buku.judul || '',
-      penulis: buku.penulis || '',
-      penerbit: buku.penerbit || '',
-      tahun: buku.tahun || '',
-      stok: buku.stok ?? '',
+        isbn: buku.isbn || '',
+        judul: buku.judul || '',
+        penulis: buku.penulis || '',
+        penerbit: buku.penerbit || '',
+        prolog: buku.prolog || '',
+        tahun: buku.tahun || '',
+        stok: buku.stok ?? '',
       })
     } else {
       showError('Gagal mengambil data buku')
@@ -123,6 +125,7 @@ const BukuForm = () => {
     isbn: formData.isbn || null,
     penulis: formData.penulis || null,
     penerbit: formData.penerbit || null,
+    prolog: formData.prolog ? formData.prolog.trim() : null,
     tahun: formData.tahun ? parseInt(formData.tahun) : null,
     stok: formData.stok === '' ? null : Number(formData.stok),
     }
@@ -232,32 +235,34 @@ const BukuForm = () => {
                 />
               </div>
 
-              {/* Tahun */}
+              {/* Tahun Terbit */}
               <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Tahun
-              </label>
-              <input
-              type="number"
-              name="tahun"
-              value={formData.tahun}
-              onChange={handleChange}
-              min="1900"
-              max={currentYear}
-              placeholder={`1900 - ${currentYear}`}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              />
-              {errors.tahun && (
-              <p className="mt-1 text-sm text-red-500">{errors.tahun}</p>
-              )}
+                <label htmlFor="tahun" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Tahun Terbit
+                </label>
+                <input
+                  id="tahun"
+                  type="number"
+                  name="tahun"
+                  value={formData.tahun}
+                  onChange={handleChange}
+                  min="1900"
+                  max={currentYear + 1}
+                  placeholder={`Contoh: ${currentYear}`}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                />
+                {errors.tahun && (
+                  <p className="mt-1 text-sm text-red-500">{errors.tahun}</p>
+                )}
               </div>
 
               {/* Stok */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="stok" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Stok
                 </label>
                 <input
+                  id="stok"
                   type="number"
                   name="stok"
                   value={formData.stok}
@@ -268,6 +273,25 @@ const BukuForm = () => {
                 />
                 {errors.stok && (
                   <p className="mt-1 text-sm text-red-500">{errors.stok}</p>
+                )}
+              </div>
+
+              {/* Prolog / Pendahuluan */}
+              <div className="md:col-span-2">
+                <label htmlFor="prolog" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Prolog / Pendahuluan
+                </label>
+                <textarea
+                  id="prolog"
+                  name="prolog"
+                  rows={4}
+                  value={formData.prolog}
+                  onChange={handleChange}
+                  placeholder="Ringkasan, sinopsis, atau pendahuluan isi buku..."
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                />
+                {errors.prolog && (
+                  <p className="mt-1 text-sm text-red-500">{errors.prolog}</p>
                 )}
               </div>
 

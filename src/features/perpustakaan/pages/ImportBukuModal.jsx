@@ -10,8 +10,8 @@ import { bukuService } from '../services/perpustakaanService'
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
 const downloadTemplate = () => {
-  const headers = ['isbn', 'judul', 'penulis', 'penerbit', 'tahun', 'stok']
-  const example = ['9786020000001', 'Buku Contoh — hapus baris ini', 'Penulis Contoh', 'Penerbit Contoh', '2026', '10']
+  const headers = ['isbn', 'judul', 'penulis', 'penerbit', 'tahun', 'stok', 'prolog']
+  const example = ['9786020000001', 'Buku Contoh — hapus baris ini', 'Penulis Contoh', 'Penerbit Contoh', '2026', '10', 'Prolog atau ringkasan isi buku contoh']
   const guide = [
     ['Versi template', 'template_import_buku_v1.xlsx'],
     ['Sheet wajib', 'Data — row 1 header, row 2 contoh (hapus sebelum import)'],
@@ -19,15 +19,16 @@ const downloadTemplate = () => {
     ['isbn', 'Identifier unik, maksimal 20 karakter. Format sel sebagai teks.'],
     ['judul', 'Maksimal 150 karakter.'],
     ['penulis / penerbit', 'Opsional, maksimal 100 karakter.'],
-    ['tahun', 'Opsional, integer 1900 sampai tahun depan.'],
+    ['tahun', 'Opsional, tahun terbit buku (integer 1900 sampai tahun depan).'],
     ['stok', 'Integer non-negatif. Import tidak pernah menambah stok buku existing.'],
+    ['prolog', 'Opsional, teks bebas sinopsis/pendahuluan buku.'],
     ['Duplicate', 'ISBN yang sudah terdaftar akan gagal (create-only).'],
     ['Batas', 'Maksimal 5.000 baris data, 100 kolom, file 5 MB'],
   ]
 
   const ws = XLSX.utils.aoa_to_sheet([headers, example])
   ws['!cols'] = headers.map(() => ({ wch: 25 }))
-  ws['!autofilter'] = { ref: 'A1:F2' }
+  ws['!autofilter'] = { ref: 'A1:G2' }
 
   headers.forEach((_, colIdx) => {
     const cellAddr = XLSX.utils.encode_cell({ r: 0, c: colIdx })

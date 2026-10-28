@@ -191,16 +191,17 @@ const BukuDetail = () => {
                   </div>
                 </div>
 
-                {/* Tahun */}
+                {/* Tahun Terbit */}
                 <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Calendar size={20} className="text-yellow-600" />
+                  <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar size={20} className="text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tahun Terbit</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{buku.tahun || '-'}</p>
+                  </div>
                 </div>
-                <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Tahun</p>
-                <p className="font-medium text-gray-900 dark:text-white">{buku.tahun || '-'}</p>
-                </div>
-                </div>
+
                 {/* Stok */}
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -212,6 +213,19 @@ const BukuDetail = () => {
                   </div>
                 </div>
 
+              </div>
+
+              {/* Prolog / Pendahuluan */}
+              <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <FileText size={18} className="text-primary-600" />
+                  Prolog / Pendahuluan
+                </h4>
+                <div className="rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4 border border-gray-100 dark:border-gray-700/60">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
+                    {buku.prolog || 'Belum ada prolog atau pendahuluan untuk buku ini.'}
+                  </p>
+                </div>
               </div>
 
               {/* Timestamps */}
