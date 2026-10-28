@@ -1,13 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink, Eye } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink, Eye, Users, Link2, RotateCcw } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import { hasAttachment, getAttachmentPath, openAttachment, getFileName, isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
+import {
+  hasAttachment,
+  getAttachmentPath,
+  openAttachment,
+  getFileName,
+  isSubmissionGraded,
+  getSubmissionScore,
+  getSubmissionLink,
+  getLinkProviderLabel,
+  isGroupSubmission,
+  getGroupMembers,
+  isRevisionRequested,
+} from '../utils/tugasFileUtils'
 import TugasFilePreviewModal from '../components/TugasFilePreviewModal'
 
 // Status mapping for display
@@ -23,6 +35,7 @@ const SUBMISSION_STATUS_MAP = {
   belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
   dinilai: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  'perlu revisi': { label: 'Perlu Revisi', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
@@ -382,15 +395,36 @@ const TugasDetail = () => {
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={20} />
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      Tugas Sudah Dikumpulkan
+                      {isRevisionRequested(studentSubmission)
+                        ? 'Pengumpulan Tugas Perlu Revisi'
+                        : 'Tugas Sudah Dikumpulkan'}
                     </span>
                   </div>
                   {getSubmissionStatusBadge(
-                    studentSubmission.status_label ??
-                      studentSubmission.status_kumpul_label ??
-                      studentSubmission.status
+                    isRevisionRequested(studentSubmission)
+                      ? 'Perlu Revisi'
+                      : studentSubmission.status_label ??
+                        studentSubmission.status_kumpul_label ??
+                        studentSubmission.status
                   )}
                 </div>
+
+                {isGroupSubmission(studentSubmission) && (
+                  <div className="flex items-center gap-2 flex-wrap px-3 py-2 rounded-xl bg-violet-50/80 dark:bg-violet-950/30 border border-violet-200/60 dark:border-violet-800/40 text-xs text-violet-900 dark:text-violet-200">
+                    <Users size={15} className="text-violet-600 dark:text-violet-400 shrink-0" />
+                    <span className="font-semibold">
+                      {studentSubmission.nama_kelompok ||
+                        studentSubmission.metadata?.nama_kelompok ||
+                        'Tugas Kelompok'}
+                      :
+                    </span>
+                    <span>
+                      {getGroupMembers(studentSubmission)
+                        .map((m) => m.nama)
+                        .join(', ') || 'Anggota kelompok terdaftar'}
+                    </span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm pt-2">
                   <div>
@@ -402,33 +436,51 @@ const TugasDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Nilai</p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {isSubmissionGraded(studentSubmission)
+                      {isRevisionRequested(studentSubmission)
+                        ? 'Perlu Revisi'
+                        : isSubmissionGraded(studentSubmission)
                         ? `${getSubmissionScore(studentSubmission)} / 100`
                         : 'Menunggu Koreksi'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Berkas Anda</p>
-                    {hasAttachment(studentSubmission) ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleOpenPreview(
-                            getAttachmentPath(studentSubmission),
-                            studentSubmission.file_url,
-                            'Berkas Tugas Anda',
-                            getFileName(getAttachmentPath(studentSubmission))
-                          )
-                        }
-                        className="inline-flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-primary-600 hover:underline"
-                        title="Lihat Pratinjau Berkas Anda"
-                      >
-                        <Eye size={13} />
-                        <span className="truncate max-w-[120px]">{getFileName(getAttachmentPath(studentSubmission))}</span>
-                      </button>
-                    ) : (
-                      <p className="text-xs text-gray-500 italic mt-0.5">Tidak melampirkan berkas</p>
-                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Berkas / Tautan Anda</p>
+                    <div className="flex flex-col gap-1 mt-0.5">
+                      {hasAttachment(studentSubmission) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleOpenPreview(
+                              getAttachmentPath(studentSubmission),
+                              studentSubmission.file_url,
+                              'Berkas Tugas Anda',
+                              getFileName(getAttachmentPath(studentSubmission))
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:underline"
+                          title="Lihat Pratinjau Berkas Anda"
+                        >
+                          <Eye size={13} />
+                          <span className="truncate max-w-[140px]">
+                            {getFileName(getAttachmentPath(studentSubmission))}
+                          </span>
+                        </button>
+                      )}
+                      {getSubmissionLink(studentSubmission) && (
+                        <a
+                          href={getSubmissionLink(studentSubmission)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:underline"
+                        >
+                          <Link2 size={13} />
+                          <span>{getLinkProviderLabel(getSubmissionLink(studentSubmission))}</span>
+                        </a>
+                      )}
+                      {!hasAttachment(studentSubmission) && !getSubmissionLink(studentSubmission) && (
+                        <p className="text-xs text-gray-500 italic">Tidak melampirkan berkas/tautan</p>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Catatan Guru</p>
@@ -438,7 +490,17 @@ const TugasDetail = () => {
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 flex items-center gap-2 flex-wrap">
+                  {isRevisionRequested(studentSubmission) && (
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      onClick={() => navigate(`/akademik/tugas-siswa/${studentSubmission.id}/edit`)}
+                    >
+                      <RotateCcw size={15} className="mr-1.5" />
+                      Revisi Pengumpulan
+                    </Button>
+                  )}
                   <Button
                     variant="secondary"
                     size="sm"
@@ -486,23 +548,39 @@ const TugasDetail = () => {
                     <tr key={submission.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <td className="px-4 py-3">{index + 1}</td>
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                        {submission.siswa?.nama || submission.siswa?.name || '-'}
+                        <div>{submission.siswa?.nama || submission.siswa?.name || '-'}</div>
+                        {isGroupSubmission(submission) && (
+                          <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/70 dark:border-violet-800/60">
+                            <Users size={11} />
+                            <span>
+                              {submission.nama_kelompok ||
+                                submission.metadata?.nama_kelompok ||
+                                'Kelompok'}
+                            </span>
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                         {formatDateTime(submission.waktu_kumpul || submission.waktu_kumpl)}
                       </td>
                       <td className="px-4 py-3">
                         {getSubmissionStatusBadge(
-                          submission.status_label
-                          ?? submission.status_kumpul_label
-                          ?? submission.status_kumpl_label
-                          ?? submission.status
-                          ?? submission.status_kumpul
-                          ?? submission.status_kumpl
+                          isRevisionRequested(submission)
+                            ? 'Perlu Revisi'
+                            : submission.status_label
+                              ?? submission.status_kumpul_label
+                              ?? submission.status_kumpl_label
+                              ?? submission.status
+                              ?? submission.status_kumpul
+                              ?? submission.status_kumpl
                         )}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                        {isSubmissionGraded(submission) ? (
+                        {isRevisionRequested(submission) ? (
+                          <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                            Perlu Revisi
+                          </span>
+                        ) : isSubmissionGraded(submission) ? (
                           getSubmissionScore(submission)
                         ) : (
                           <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
@@ -511,26 +589,41 @@ const TugasDetail = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {hasAttachment(submission) ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleOpenPreview(
-                                getAttachmentPath(submission),
-                                submission.file_url,
-                                `Tugas: ${submission.siswa?.nama || submission.siswa?.name || 'Siswa'}`,
-                                getFileName(getAttachmentPath(submission))
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 transition-colors"
-                            title={`Pratinjau ${getFileName(getAttachmentPath(submission))}`}
-                          >
-                            <Eye size={14} />
-                            <span>Preview File</span>
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-400 italic">-</span>
-                        )}
+                        <div className="inline-flex items-center justify-center gap-1.5 flex-wrap">
+                          {hasAttachment(submission) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpenPreview(
+                                  getAttachmentPath(submission),
+                                  submission.file_url,
+                                  `Tugas: ${submission.siswa?.nama || submission.siswa?.name || 'Siswa'}`,
+                                  getFileName(getAttachmentPath(submission))
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-primary-700 bg-primary-50 hover:bg-primary-100 dark:text-primary-300 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 transition-colors"
+                              title={`Pratinjau ${getFileName(getAttachmentPath(submission))}`}
+                            >
+                              <Eye size={14} />
+                              <span>Preview File</span>
+                            </button>
+                          )}
+                          {getSubmissionLink(submission) && (
+                            <a
+                              href={getSubmissionLink(submission)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-sky-700 bg-sky-50 hover:bg-sky-100 dark:text-sky-300 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 transition-colors"
+                              title={getSubmissionLink(submission)}
+                            >
+                              <Link2 size={13} />
+                              <span>{getLinkProviderLabel(getSubmissionLink(submission))}</span>
+                            </a>
+                          )}
+                          {!hasAttachment(submission) && !getSubmissionLink(submission) && (
+                            <span className="text-xs text-gray-400 italic">-</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <button

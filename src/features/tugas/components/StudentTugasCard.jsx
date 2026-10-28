@@ -13,6 +13,9 @@ import {
   MessageSquare,
   Hourglass,
   Eye,
+  Users,
+  Link2,
+  RotateCcw,
 } from 'lucide-react'
 import {
   hasAttachment,
@@ -21,6 +24,11 @@ import {
   openAttachment,
   isSubmissionGraded,
   getSubmissionScore,
+  getSubmissionLink,
+  getLinkProviderLabel,
+  isGroupSubmission,
+  getGroupMembers,
+  isRevisionRequested,
 } from '../utils/tugasFileUtils'
 
 const stripHtml = (html) => (html ? html.replace(/<[^>]*>?/gm, '').trim() : '')
@@ -110,6 +118,7 @@ export default function StudentTugasCard({
   submission,
   onOpen,
   onSubmit,
+  onRevise,
   onPreviewAttachment,
 }) {
   const mapelNama = tugas.guru_mapel?.mapel?.nama || 'Mata Pelajaran'
@@ -126,6 +135,18 @@ export default function StudentTugasCard({
   const isSubmitted = Boolean(submission)
   const isGraded = useMemo(() => isSubmissionGraded(submission), [submission])
   const scoreValue = useMemo(() => getSubmissionScore(submission), [submission])
+  const needsRevision = useMemo(() => isRevisionRequested(submission), [submission])
+  const submissionLink = useMemo(() => getSubmissionLink(submission), [submission])
+  const isGroup = useMemo(() => isGroupSubmission(submission), [submission])
+  const groupMembers = useMemo(() => getGroupMembers(submission), [submission])
+  const groupName =
+    submission?.nama_kelompok ||
+    submission?.metadata?.nama_kelompok ||
+    (isGroup ? 'Tugas Kelompok' : '')
+  const isTaskGroupHint = useMemo(() => {
+    const text = `${tugas.judul || ''} ${plainDeskripsi || ''}`.toLowerCase()
+    return text.includes('kelompok')
+  }, [tugas.judul, plainDeskripsi])
   const teacherNote = submission?.catatan_guru || submission?.catatan || ''
 
   const deadlineStatus = useMemo(() => {
@@ -185,7 +206,11 @@ export default function StudentTugasCard({
               </span>
             )}
 
-            {isGraded ? (
+            {needsRevision ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300 border border-orange-200/70 dark:border-orange-800/60">
+                <RotateCcw size={11} /> Perlu Revisi
+              </span>
+            ) : isGraded ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
                 <Award size={12} /> Nilai: {scoreValue}
               </span>
@@ -216,6 +241,40 @@ export default function StudentTugasCard({
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
           {plainDeskripsi || 'Klik untuk melihat petunjuk dan detail pengerjaan tugas ini.'}
         </p>
+
+        {(isGroup || isTaskGroupHint || submissionLink) && (
+          <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
+            {isGroup ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/70 dark:border-violet-800/60">
+                <Users size={11} />
+                <span>
+                  {groupName}
+                  {groupMembers.length > 0 ? ` (${groupMembers.length} anggota)` : ''}
+                </span>
+              </span>
+            ) : (
+              isTaskGroupHint && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-violet-50/70 text-violet-600 dark:bg-violet-950/30 dark:text-violet-300 border border-violet-200/50 dark:border-violet-800/40">
+                  <Users size={11} />
+                  <span>Tugas Kelompok</span>
+                </span>
+              )
+            )}
+            {submissionLink && (
+              <a
+                href={submissionLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800/60 transition-colors"
+                title={submissionLink}
+              >
+                <Link2 size={11} />
+                <span>{getLinkProviderLabel(submissionLink)}</span>
+              </a>
+            )}
+          </div>
+        )}
 
         {teacherNote && (
           <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200">
@@ -279,7 +338,19 @@ export default function StudentTugasCard({
         </div>
 
         <div className="flex items-center gap-2 pt-1">
-          {isSubmitted ? (
+          {needsRevision ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onRevise ? onRevise() : onOpen?.()
+              }}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-orange-600 hover:bg-orange-700 text-white shadow-xs hover:shadow transition-all duration-200 group/btn"
+            >
+              <RotateCcw size={14} />
+              <span>Revisi Tugas</span>
+            </button>
+          ) : isSubmitted ? (
             <button
               type="button"
               onClick={(e) => {

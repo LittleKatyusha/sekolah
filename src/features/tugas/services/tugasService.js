@@ -101,6 +101,11 @@ export const tugasSiswaService = {
     mst_siswa_id: data.mst_siswa_id ?? data.siswa_id ?? null,
     jawaban_teks: data.jawaban_teks ?? data.jawaban ?? null,
     file_siswa: data.file_siswa ?? data.file_path ?? null,
+    link_tugas: data.link_tugas ?? null,
+    nama_kelompok: data.nama_kelompok ?? null,
+    anggota_kelompok_ids: Array.isArray(data.anggota_kelompok_ids)
+      ? data.anggota_kelompok_ids
+      : undefined,
     waktu_kumpul: data.waktu_kumpul ?? data.waktu_kumpl ?? null,
     status_kumpul: data.status_kumpul ?? data.status_kumpl ?? null,
     catatan_guru: data.catatan_guru ?? data.catatan ?? null,
@@ -197,6 +202,8 @@ export const tugasSiswaService = {
     return await apiService.post(`${TUGAS_SISWA_BASE_URL}/${id}/nilai`, {
       ...data,
       catatan_guru: data.catatan_guru ?? data.catatan ?? null,
+      perlu_revisi: Boolean(data.perlu_revisi),
+      sync_kelompok: data.sync_kelompok !== undefined ? Boolean(data.sync_kelompok) : true,
     })
   },
 

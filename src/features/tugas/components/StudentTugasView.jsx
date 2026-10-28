@@ -15,6 +15,7 @@ import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import {
   isSubmissionGraded,
+  isRevisionRequested,
   deduplicateTugasList,
   getFileName,
 } from '../utils/tugasFileUtils'
@@ -163,6 +164,7 @@ export default function StudentTugasView() {
     let totalSubmitted = 0
     let totalGraded = 0
     let totalWaitingGrade = 0
+    let totalRevision = 0
     let totalPending = 0
     let totalOverdue = 0
     const now = Date.now()
@@ -171,7 +173,9 @@ export default function StudentTugasView() {
       const sub = submissionMap[t.id]
       if (sub) {
         totalSubmitted += 1
-        if (isSubmissionGraded(sub)) {
+        if (isRevisionRequested(sub)) {
+          totalRevision += 1
+        } else if (isSubmissionGraded(sub)) {
           totalGraded += 1
         } else {
           totalWaitingGrade += 1
@@ -193,6 +197,7 @@ export default function StudentTugasView() {
       totalSubmitted,
       totalGraded,
       totalWaitingGrade,
+      totalRevision,
       totalPending,
       totalOverdue,
     }
@@ -209,6 +214,7 @@ export default function StudentTugasView() {
 
         const sub = submissionMap[item.id]
         const graded = isSubmissionGraded(sub)
+        const revision = isRevisionRequested(sub)
 
         if (selectedStatus === 'pending') {
           if (sub) return false
@@ -218,8 +224,10 @@ export default function StudentTugasView() {
           if (isNaN(dl) || dl >= now) return false
         } else if (selectedStatus === 'submitted') {
           if (!sub) return false
+        } else if (selectedStatus === 'revision') {
+          if (!sub || !revision) return false
         } else if (selectedStatus === 'waiting_grade') {
-          if (!sub || graded) return false
+          if (!sub || graded || revision) return false
         } else if (selectedStatus === 'graded') {
           if (!sub || !graded) return false
         }
@@ -460,6 +468,12 @@ export default function StudentTugasView() {
               count: stats.totalOverdue,
               show: stats.totalOverdue > 0 || selectedStatus === 'overdue',
             },
+            {
+              id: 'revision',
+              label: '🔄 Perlu Revisi',
+              count: stats.totalRevision,
+              show: stats.totalRevision > 0 || selectedStatus === 'revision',
+            },
             { id: 'submitted', label: '✅ Sudah Kumpul', count: stats.totalSubmitted, show: true },
             {
               id: 'waiting_grade',
@@ -565,6 +579,11 @@ export default function StudentTugasView() {
               submission={submissionMap[tugas.id]}
               onOpen={() => handleOpenDetail(tugas.id)}
               onSubmit={() => handleSubmitTugas(tugas)}
+              onRevise={
+                submissionMap[tugas.id]?.id
+                  ? () => navigate(`/akademik/tugas-siswa/${submissionMap[tugas.id].id}/edit`)
+                  : undefined
+              }
               onPreviewAttachment={handleOpenPreview}
             />
           ))}

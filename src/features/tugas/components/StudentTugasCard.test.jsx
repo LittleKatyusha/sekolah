@@ -91,4 +91,42 @@ describe('StudentTugasCard', () => {
     expect(screen.queryByText(/Nilai: 0/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Lihat Pengumpulan/i)).toBeInTheDocument()
   })
+
+  it('displays group badge, external link chip, and Revisi Tugas button when revision is requested', () => {
+    const handleRevise = vi.fn()
+    const revisionGroupSubmission = {
+      id: 105,
+      status: 1,
+      status_label: 'Perlu Revisi',
+      perlu_revisi: true,
+      is_kelompok: true,
+      nama_kelompok: 'Kelompok 2 Sosiologi',
+      anggota_kelompok: [
+        { id: 1, nama: 'Andi' },
+        { id: 2, nama: 'Rina' },
+      ],
+      link_tugas: 'https://drive.google.com/file/d/abc',
+      catatan_guru: 'Tolong lengkapi daftar pustaka.',
+      waktu_kumpul: '2026-10-25T08:00:00+00:00',
+    }
+
+    render(
+      <StudentTugasCard
+        tugas={dummyTugas}
+        submission={revisionGroupSubmission}
+        onOpen={vi.fn()}
+        onRevise={handleRevise}
+      />
+    )
+
+    expect(screen.getByText(/Perlu Revisi/i)).toBeInTheDocument()
+    expect(screen.getByText(/Kelompok 2 Sosiologi \(2 anggota\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Google Drive/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tolong lengkapi daftar pustaka/i)).toBeInTheDocument()
+
+    const reviseBtn = screen.getByText(/Revisi Tugas/i)
+    expect(reviseBtn).toBeInTheDocument()
+    fireEvent.click(reviseBtn)
+    expect(handleRevise).toHaveBeenCalledTimes(1)
+  })
 })

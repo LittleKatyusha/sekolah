@@ -10,6 +10,11 @@ import {
   isSubmissionGraded,
   getSubmissionScore,
   deduplicateTugasList,
+  getSubmissionLink,
+  getLinkProviderLabel,
+  isGroupSubmission,
+  getGroupMembers,
+  isRevisionRequested,
 } from './tugasFileUtils'
 import { fileUploadService } from '../../../services/fileUploadService'
 
@@ -152,6 +157,36 @@ describe('tugasFileUtils', () => {
     expect(deduped).toHaveLength(2)
     expect(deduped[0].id).toBe(11)
     expect(deduped[1].id).toBe(12)
+  })
+
+  it('extracts external links and provider labels', () => {
+    expect(
+      getSubmissionLink({ metadata: { link_tugas: 'https://drive.google.com/file/d/123' } })
+    ).toBe('https://drive.google.com/file/d/123')
+    expect(getLinkProviderLabel('https://drive.google.com/file/d/123')).toBe('Google Drive')
+    expect(getLinkProviderLabel('https://www.canva.com/design/abc')).toBe('Canva')
+    expect(getLinkProviderLabel('https://youtu.be/xyz')).toBe('YouTube')
+    expect(getLinkProviderLabel('https://github.com/org/repo')).toBe('GitHub')
+  })
+
+  it('detects group submissions, members, and revision requests', () => {
+    const groupSub = {
+      id: 50,
+      is_kelompok: true,
+      nama_kelompok: 'Kelompok 1',
+      anggota_kelompok: [
+        { id: 1, nama: 'Budi' },
+        { id: 2, nama: 'Siti' },
+      ],
+      perlu_revisi: true,
+      status_label: 'Perlu Revisi',
+      nilai: 75,
+    }
+    expect(isGroupSubmission(groupSub)).toBe(true)
+    expect(getGroupMembers(groupSub)).toHaveLength(2)
+    expect(isRevisionRequested(groupSub)).toBe(true)
+    // When revision is requested, isSubmissionGraded should return false so student sees Perlu Revisi
+    expect(isSubmissionGraded(groupSub)).toBe(false)
   })
 })
 

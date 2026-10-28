@@ -104,6 +104,7 @@ export const openAttachment = async (rawPath, directUrl) => {
  */
 export const isSubmissionGraded = (submission) => {
   if (!submission || typeof submission !== 'object') return false
+  if (isRevisionRequested(submission)) return false
   if (submission.is_graded === true) return true
   if (submission.is_graded === false) return false
 
@@ -146,6 +147,65 @@ export const isSubmissionGraded = (submission) => {
 export const getSubmissionScore = (submission) => {
   if (!isSubmissionGraded(submission)) return null
   return Number(submission.nilai)
+}
+
+/**
+ * Extracts external submission link (Google Drive, Canva, YouTube, GitHub, etc.)
+ */
+export const getSubmissionLink = (item) => {
+  if (!item || typeof item !== 'object') return ''
+  const link = item.link_tugas ?? item.metadata?.link_tugas ?? ''
+  return typeof link === 'string' ? link.trim() : ''
+}
+
+/**
+ * Returns a human-friendly provider name for an external submission URL.
+ */
+export const getLinkProviderLabel = (url) => {
+  if (!url || typeof url !== 'string') return 'Tautan Tugas'
+  const lower = url.toLowerCase()
+  if (lower.includes('drive.google.com')) return 'Google Drive'
+  if (lower.includes('docs.google.com')) return 'Google Docs'
+  if (lower.includes('canva.com')) return 'Canva'
+  if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'YouTube'
+  if (lower.includes('github.com')) return 'GitHub'
+  if (lower.includes('figma.com')) return 'Figma'
+  return 'Tautan Eksternal'
+}
+
+/**
+ * Checks whether a submission is a group assignment submission.
+ */
+export const isGroupSubmission = (item) => {
+  if (!item || typeof item !== 'object') return false
+  if (item.is_kelompok || item.metadata?.is_kelompok) return true
+  const members = item.anggota_kelompok ?? item.metadata?.anggota_kelompok
+  if (Array.isArray(members) && members.length > 1) return true
+  const groupName = item.nama_kelompok ?? item.metadata?.nama_kelompok
+  return Boolean(groupName && String(groupName).trim().length > 0)
+}
+
+/**
+ * Returns the normalized array of group members ({ id, nis, nama }) for a submission.
+ */
+export const getGroupMembers = (item) => {
+  if (!item || typeof item !== 'object') return []
+  const members = item.anggota_kelompok ?? item.metadata?.anggota_kelompok
+  return Array.isArray(members) ? members : []
+}
+
+/**
+ * Checks whether the teacher has requested a revision / resubmission.
+ */
+export const isRevisionRequested = (item) => {
+  if (!item || typeof item !== 'object') return false
+  if (item.perlu_revisi === true || item.metadata?.perlu_revisi === true) return true
+  const label = String(
+    item.status_label ?? item.status_kumpul_label ?? item.status_kumpl_label ?? ''
+  )
+    .trim()
+    .toLowerCase()
+  return label === 'perlu revisi'
 }
 
 /**

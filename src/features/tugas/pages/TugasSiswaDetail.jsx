@@ -1,13 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star, Save, MessageSquare, Download, ExternalLink, Image as ImageIcon, FileCheck, Eye } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star, Save, MessageSquare, Download, ExternalLink, Image as ImageIcon, FileCheck, Eye, Users, Link2, RotateCcw } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import { isImageFile, isPdfFile, getFileName, hasAttachment, getAttachmentPath, openAttachment, isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
+import {
+  isImageFile,
+  isPdfFile,
+  getFileName,
+  hasAttachment,
+  getAttachmentPath,
+  openAttachment,
+  isSubmissionGraded,
+  getSubmissionScore,
+  getSubmissionLink,
+  getLinkProviderLabel,
+  isGroupSubmission,
+  getGroupMembers,
+  isRevisionRequested,
+} from '../utils/tugasFileUtils'
 import TugasFilePreviewModal from '../components/TugasFilePreviewModal'
 
 // Submission status mapping
@@ -16,6 +30,7 @@ const STATUS_MAP = {
   belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
   dinilai: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  'perlu revisi': { label: 'Perlu Revisi', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
@@ -30,7 +45,12 @@ const TugasSiswaDetail = () => {
   const [loading, setLoading] = useState(false)
   const [tugasSiswa, setTugasSiswa] = useState(null)
   const [showGradeForm, setShowGradeForm] = useState(location.state?.openGrade || false)
-  const [gradeData, setGradeData] = useState({ nilai: '', catatan: '' })
+  const [gradeData, setGradeData] = useState({
+    nilai: '',
+    catatan_guru: '',
+    perlu_revisi: false,
+    sync_kelompok: true,
+  })
   const [gradeLoading, setGradeLoading] = useState(false)
   const [gradeErrors, setGradeErrors] = useState({})
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
@@ -47,7 +67,9 @@ const TugasSiswaDetail = () => {
       setTugasSiswa(ts)
       setGradeData({
         nilai: isSubmissionGraded(ts) ? String(getSubmissionScore(ts)) : '',
-        catatan_guru: ts.catatan_guru || ts.catatan || ''
+        catatan_guru: ts.catatan_guru || ts.catatan || '',
+        perlu_revisi: isRevisionRequested(ts),
+        sync_kelompok: true,
       })
     } else {
       showError('Gagal mengambil data tugas siswa')
@@ -74,9 +96,10 @@ const TugasSiswaDetail = () => {
     e.preventDefault()
     
     const newErrors = {}
-    if (gradeData.nilai === '' || gradeData.nilai === null) {
-      newErrors.nilai = 'Nilai wajib diisi'
-    } else if (parseFloat(gradeData.nilai) < 0 || parseFloat(gradeData.nilai) > 100) {
+    const hasNilai = gradeData.nilai !== '' && gradeData.nilai !== null && gradeData.nilai !== undefined
+    if (!gradeData.perlu_revisi && !hasNilai) {
+      newErrors.nilai = 'Nilai wajib diisi (atau centang Minta Revisi)'
+    } else if (hasNilai && (parseFloat(gradeData.nilai) < 0 || parseFloat(gradeData.nilai) > 100)) {
       newErrors.nilai = 'Nilai harus antara 0-100'
     }
     
@@ -87,13 +110,19 @@ const TugasSiswaDetail = () => {
 
     setGradeLoading(true)
     const submitData = {
-      nilai: parseFloat(gradeData.nilai),
-      catatan_guru: gradeData.catatan_guru || null
+      nilai: hasNilai ? parseFloat(gradeData.nilai) : null,
+      catatan_guru: gradeData.catatan_guru || null,
+      perlu_revisi: Boolean(gradeData.perlu_revisi),
+      sync_kelompok: Boolean(gradeData.sync_kelompok),
     }
 
     const { error } = await tugasSiswaService.nilai(id, submitData)
     if (!error) {
-      showSuccess('Nilai berhasil disimpan!')
+      showSuccess(
+        gradeData.perlu_revisi
+          ? 'Permintaan revisi berhasil dikirim ke siswa!'
+          : 'Nilai berhasil disimpan!'
+      )
       setShowGradeForm(false)
       fetchTugasSiswa()
     } else {
@@ -154,6 +183,10 @@ const TugasSiswaDetail = () => {
   const fileName = getFileName(filePath || fileUrl)
   const isImage = isImageFile(fileUrl || filePath)
   const isPdf = isPdfFile(fileUrl || filePath)
+  const submissionLink = getSubmissionLink(tugasSiswa)
+  const isGroup = isGroupSubmission(tugasSiswa)
+  const groupMembers = getGroupMembers(tugasSiswa)
+  const needsRevision = isRevisionRequested(tugasSiswa)
 
   return (
     <div className="space-y-6">
@@ -166,6 +199,12 @@ const TugasSiswaDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tugas Siswa</h1>
         </div>
         <div className="flex gap-3">
+          {needsRevision && (
+            <Button variant="warning" onClick={() => navigate(`/akademik/tugas-siswa/${id}/edit`)}>
+              <RotateCcw size={18} className="mr-2" />
+              Revisi Jawaban
+            </Button>
+          )}
           <PermissionGuard permission="tugas-siswa.nilai">
             <Button variant="primary" onClick={() => setShowGradeForm(!showGradeForm)}>
               <Star size={18} className="mr-2" />
@@ -186,6 +225,33 @@ const TugasSiswaDetail = () => {
           </PermissionGuard>
         </div>
       </div>
+
+      {needsRevision && (
+        <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-start gap-3">
+            <RotateCcw className="text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" size={20} />
+            <div className="space-y-1 text-sm">
+              <p className="font-semibold text-orange-900 dark:text-orange-200">
+                Pengumpulan Ini Memerlukan Revisi
+              </p>
+              {(tugasSiswa.catatan_guru || tugasSiswa.catatan) && (
+                <p className="text-orange-800 dark:text-orange-300">
+                  <span className="font-medium">Catatan Guru:</span>{' '}
+                  {tugasSiswa.catatan_guru || tugasSiswa.catatan}
+                </p>
+              )}
+            </div>
+          </div>
+          <Button
+            variant="warning"
+            size="sm"
+            onClick={() => navigate(`/akademik/tugas-siswa/${id}/edit`)}
+          >
+            <RotateCcw size={15} className="mr-1.5" />
+            Perbarui & Kumpulkan Ulang
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Summary Card */}
@@ -396,6 +462,86 @@ const TugasSiswaDetail = () => {
                 )}
               </div>
 
+              {/* Tautan / Link Tugas Section */}
+              {submissionLink && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link2 size={18} className="text-sky-600 dark:text-sky-400" />
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Tautan / Link Tugas Eksternal ({getLinkProviderLabel(submissionLink)})
+                    </h4>
+                  </div>
+                  <div className="p-4 bg-sky-50/60 dark:bg-sky-950/20 rounded-xl border border-sky-200/80 dark:border-sky-800/50 flex items-center justify-between gap-4 flex-wrap">
+                    <a
+                      href={submissionLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-sky-700 dark:text-sky-300 hover:underline break-all"
+                    >
+                      {submissionLink}
+                    </a>
+                    <a
+                      href={submissionLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white shrink-0 transition-colors"
+                    >
+                      <span>Buka Tautan</span>
+                      <ExternalLink size={13} />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Informasi Kelompok Section */}
+              {isGroup && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Users size={18} className="text-violet-600 dark:text-violet-400" />
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                        Informasi Pengumpulan Kelompok:{' '}
+                        <span className="text-violet-700 dark:text-violet-300">
+                          {tugasSiswa.nama_kelompok ||
+                            tugasSiswa.metadata?.nama_kelompok ||
+                            'Tugas Kelompok'}
+                        </span>
+                      </h4>
+                    </div>
+                    {(tugasSiswa.submitted_by_nama || tugasSiswa.metadata?.submitted_by_nama) && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Dikumpulkan oleh:{' '}
+                        <strong className="text-gray-800 dark:text-gray-200">
+                          {tugasSiswa.submitted_by_nama || tugasSiswa.metadata?.submitted_by_nama}
+                        </strong>
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4 bg-violet-50/50 dark:bg-violet-950/20 rounded-xl border border-violet-200/70 dark:border-violet-800/40">
+                    {groupMembers.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {groupMembers.map((member) => (
+                          <span
+                            key={member.id || member.nama}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-gray-800 text-violet-800 dark:text-violet-200 border border-violet-200 dark:border-violet-700 shadow-2xs"
+                          >
+                            <User size={12} className="text-violet-500" />
+                            <span>
+                              {member.nis ? `${member.nis} - ` : ''}
+                              {member.nama}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-600 dark:text-gray-300">
+                        Tugas ini dikumpulkan dalam mode kelompok.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Jawaban Section */}
               {(tugasSiswa.jawaban_teks || tugasSiswa.jawaban) && (
                 <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -449,7 +595,8 @@ const TugasSiswaDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Nilai (0-100) <span className="text-red-500">*</span>
+                    Nilai (0-100){' '}
+                    {!gradeData.perlu_revisi && <span className="text-red-500">*</span>}
                   </label>
                   <Input
                     type="number"
@@ -459,7 +606,11 @@ const TugasSiswaDetail = () => {
                       setGradeData(prev => ({ ...prev, nilai: e.target.value }))
                       if (gradeErrors.nilai) setGradeErrors(prev => ({ ...prev, nilai: null }))
                     }}
-                    placeholder="Masukkan nilai"
+                    placeholder={
+                      gradeData.perlu_revisi
+                        ? 'Opsional saat meminta revisi'
+                        : 'Masukkan nilai'
+                    }
                     min="0"
                     max="100"
                     error={gradeErrors.nilai}
@@ -467,25 +618,64 @@ const TugasSiswaDetail = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Catatan
+                    Catatan / Instruksi Revisi
                   </label>
                   <textarea
                     name="catatan_guru"
                     value={gradeData.catatan_guru}
                     onChange={(e) => setGradeData(prev => ({ ...prev, catatan_guru: e.target.value }))}
-                    placeholder="Catatan untuk siswa (opsional)"
+                    placeholder="Catatan umpan balik atau poin revisi untuk siswa (opsional)"
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none resize-y"
                   />
                 </div>
               </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(gradeData.perlu_revisi)}
+                    onChange={(e) =>
+                      setGradeData(prev => ({ ...prev, perlu_revisi: e.target.checked }))
+                    }
+                    className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                  />
+                  <span className="inline-flex items-center gap-1.5 font-medium">
+                    <RotateCcw size={15} className="text-orange-600" />
+                    Minta Siswa Revisi / Kumpul Ulang Tugas
+                  </span>
+                </label>
+
+                {isGroup && (
+                  <label className="inline-flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(gradeData.sync_kelompok)}
+                      onChange={(e) =>
+                        setGradeData(prev => ({ ...prev, sync_kelompok: e.target.checked }))
+                      }
+                      className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <span className="inline-flex items-center gap-1.5 font-medium">
+                      <Users size={15} className="text-violet-600" />
+                      Terapkan ke seluruh anggota kelompok ({groupMembers.length || 'semua'} siswa)
+                    </span>
+                  </label>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button type="button" variant="secondary" onClick={() => setShowGradeForm(false)}>
                   Batal
                 </Button>
                 <Button type="submit" disabled={gradeLoading}>
                   <Save size={18} className="mr-2" />
-                  {gradeLoading ? 'Menyimpan...' : 'Simpan Nilai'}
+                  {gradeLoading
+                    ? 'Menyimpan...'
+                    : gradeData.perlu_revisi
+                    ? 'Kirim Permintaan Revisi'
+                    : 'Simpan Nilai'}
                 </Button>
               </div>
             </form>
