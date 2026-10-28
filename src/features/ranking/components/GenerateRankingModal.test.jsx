@@ -4,7 +4,7 @@ import GenerateRankingModal from './GenerateRankingModal'
 import { rankingService } from '../services/rankingService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { semesterService } from '../../semester/services/semesterService'
-import { showSuccess, showError } from '../../../utils/sweetalert'
+import { showSuccess, showError, showWarning } from '../../../utils/sweetalert'
 
 vi.mock('../services/rankingService', () => ({
   rankingService: {
@@ -27,6 +27,7 @@ vi.mock('../../semester/services/semesterService', () => ({
 vi.mock('../../../utils/sweetalert', () => ({
   showError: vi.fn(),
   showSuccess: vi.fn(),
+  showWarning: vi.fn(),
 }))
 
 describe('GenerateRankingModal', () => {
@@ -75,6 +76,7 @@ describe('GenerateRankingModal', () => {
     rankingService.generate.mockResolvedValue({
       data: {
         message: 'Ranking semua kelas generated successfully',
+        data: [{ kelas_id: 1, peringkat_dibuat: 10 }],
       },
       error: null,
     })
@@ -106,6 +108,7 @@ describe('GenerateRankingModal', () => {
     rankingService.generate.mockResolvedValue({
       data: {
         message: 'Ranking generated successfully',
+        data: [{ id: 1, peringkat: 1 }],
       },
       error: null,
     })
@@ -130,6 +133,35 @@ describe('GenerateRankingModal', () => {
         semester: 10,
       })
       expect(showSuccess).toHaveBeenCalledWith('Ranking generated successfully')
+      expect(onSuccess).toHaveBeenCalled()
+      expect(onClose).toHaveBeenCalled()
+    })
+  })
+
+  it('shows warning when 0 rankings are generated', async () => {
+    rankingService.generate.mockResolvedValue({
+      data: {
+        message: 'Tidak ada data rapor pada semester yang dipilih',
+        data: [{ kelas_id: 1, peringkat_dibuat: 0 }],
+      },
+      error: null,
+    })
+
+    const onClose = vi.fn()
+    const onSuccess = vi.fn()
+
+    render(
+      <GenerateRankingModal isOpen={true} onClose={onClose} onSuccess={onSuccess} />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Semua Kelas')).toBeDefined()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Generate Sekarang/i }))
+
+    await waitFor(() => {
+      expect(showWarning).toHaveBeenCalledWith('Tidak ada data rapor pada semester yang dipilih')
       expect(onSuccess).toHaveBeenCalled()
       expect(onClose).toHaveBeenCalled()
     })

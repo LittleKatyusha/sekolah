@@ -4,7 +4,7 @@ import Button from '../../../components/ui/Button'
 import { rankingService } from '../services/rankingService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { semesterService } from '../../semester/services/semesterService'
-import { showSuccess, showError } from '../../../utils/sweetalert'
+import { showSuccess, showError, showWarning } from '../../../utils/sweetalert'
 
 export const GenerateRankingModal = ({ isOpen, onClose, onSuccess }) => {
   const [kelasOptions, setKelasOptions] = useState([])
@@ -89,7 +89,22 @@ export const GenerateRankingModal = ({ isOpen, onClose, onSuccess }) => {
       return
     }
 
-    showSuccess(data?.message || 'Ranking siswa berhasil di-generate secara otomatis!')
+    const results = data?.data
+    let totalGenerated = 0
+    if (Array.isArray(results)) {
+      if (results.length > 0 && typeof results[0]?.peringkat_dibuat === 'number') {
+        totalGenerated = results.reduce((sum, item) => sum + (item.peringkat_dibuat || 0), 0)
+      } else {
+        totalGenerated = results.length
+      }
+    }
+
+    if (totalGenerated === 0) {
+      showWarning(data?.message || 'Tidak ada data rapor pada semester/kelas yang dipilih. Silakan generate rapor terlebih dahulu di menu Rapor.')
+    } else {
+      showSuccess(data?.message || 'Ranking siswa berhasil di-generate secara otomatis!')
+    }
+
     onSuccess?.(data)
     onClose()
   }
