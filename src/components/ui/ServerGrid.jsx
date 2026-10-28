@@ -54,6 +54,16 @@ const ServerGrid = ({
     [columnDefs]
   )
 
+  const resolvedRowSelection = useMemo(() => {
+    const hasManualCheckbox = normalizedColumnDefs?.some((col) => col.checkboxSelection)
+    return {
+      mode: 'multiRow',
+      enableClickSelection: false,
+      checkboxes: !hasManualCheckbox,
+      headerCheckbox: !hasManualCheckbox,
+    }
+  }, [normalizedColumnDefs])
+
   // Create the server-side datasource
   const dataSource = useMemo(() => ({
     getRows: async (params) => {
@@ -126,7 +136,7 @@ const ServerGrid = ({
         onGridReady={handleGridReady}
         // Server-side specific options
         serverSideStoreType="partial"
-        rowSelection={{ mode: 'multiRow', enableClickSelection: false }}
+        rowSelection={resolvedRowSelection}
         {...restProps}
       />
     </div>

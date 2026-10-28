@@ -94,6 +94,18 @@ const InfiniteGrid = forwardRef(({
     [columnDefs]
   )
 
+  const resolvedRowSelection = useMemo(() => {
+    if (!rowSelection) return undefined
+    if (typeof rowSelection === 'object' || typeof rowSelection === 'string') return rowSelection
+    const hasManualCheckbox = normalizedColumnDefs?.some((col) => col.checkboxSelection)
+    return {
+      mode: 'multiRow',
+      enableClickSelection: false,
+      checkboxes: !hasManualCheckbox,
+      headerCheckbox: !hasManualCheckbox,
+    }
+  }, [rowSelection, normalizedColumnDefs])
+
   // ponytail: columnDefs/transformData via ref so inline/changing identities don't rebuild datasource (resets to page 1)
   const latestRef = useRef({})
   latestRef.current = { normalizedColumnDefs, transformData }
@@ -191,7 +203,7 @@ const InfiniteGrid = forwardRef(({
         onGridReady={handleGridReady}
         onRowClicked={onRowClicked}
         onSelectionChanged={onSelectionChanged}
-        rowSelection={rowSelection ? { mode: 'multiRow', enableClickSelection: false } : undefined}
+        rowSelection={resolvedRowSelection}
         // Infinite row model specific
         maxBlocksInCache={10}
         blockLoadDebounceMillis={200}
