@@ -7,7 +7,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import { hasAttachment, getAttachmentPath, openAttachment, getFileName } from '../utils/tugasFileUtils'
+import { hasAttachment, getAttachmentPath, openAttachment, getFileName, isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
 import TugasFilePreviewModal from '../components/TugasFilePreviewModal'
 
 // Status mapping for display
@@ -22,9 +22,11 @@ const SUBMISSION_STATUS_MAP = {
   'tepat waktu': { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  dinilai: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  3: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
 }
 
 const TugasDetail = () => {
@@ -180,7 +182,7 @@ const TugasDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tugas</h1>
         </div>
         <div className="flex gap-3">
-          {isSiswa && (
+          {isSiswa && !studentSubmission && (
             <Button
               onClick={() =>
                 navigate('/akademik/tugas-siswa/create', { state: { mst_tugas_id: String(id) } })
@@ -400,9 +402,9 @@ const TugasDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Nilai</p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {studentSubmission.nilai !== null && studentSubmission.nilai !== undefined
-                        ? `${studentSubmission.nilai} / 100`
-                        : 'Belum dinilai'}
+                      {isSubmissionGraded(studentSubmission)
+                        ? `${getSubmissionScore(studentSubmission)} / 100`
+                        : 'Menunggu Koreksi'}
                     </p>
                   </div>
                   <div>
@@ -500,7 +502,13 @@ const TugasDetail = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                        {submission.nilai !== null && submission.nilai !== undefined ? submission.nilai : '-'}
+                        {isSubmissionGraded(submission) ? (
+                          getSubmissionScore(submission)
+                        ) : (
+                          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                            Menunggu Koreksi
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {hasAttachment(submission) ? (

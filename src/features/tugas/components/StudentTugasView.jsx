@@ -8,23 +8,48 @@ import {
   CheckCircle2,
   Clock,
   BookOpen,
+  AlertTriangle,
+  GraduationCap,
 } from 'lucide-react'
 import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
+import {
+  isSubmissionGraded,
+  deduplicateTugasList,
+  getFileName,
+} from '../utils/tugasFileUtils'
 import StudentTugasCard from './StudentTugasCard'
+import TugasFilePreviewModal from './TugasFilePreviewModal'
 
 export default function StudentTugasView() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+
+  const studentKelasNama =
+    user?.profile?.kelas?.nama_kelas ||
+    user?.profile?.kelas?.nama ||
+    user?.siswa?.kelas?.nama_kelas ||
+    user?.siswa?.kelas?.nama ||
+    user?.kelas?.nama_kelas ||
+    user?.kelas?.nama ||
+    ''
 
   const [tugasList, setTugasList] = useState([])
   const [submissionMap, setSubmissionMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedKelas, setSelectedKelas] = useState('all')
   const [selectedMapel, setSelectedMapel] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all') // 'all' | 'pending' | 'submitted' | 'graded'
+  const [selectedStatus, setSelectedStatus] = useState('all') // 'all' | 'pending' | 'overdue' | 'submitted' | 'waiting_grade' | 'graded'
   const [sortBy, setSortBy] = useState('deadline') // 'deadline' | 'newest' | 'title'
+  const [previewModal, setPreviewModal] = useState({
+    open: false,
+    filePath: '',
+    fileUrl: '',
+    title: '',
+    subtitle: '',
+  })
 
   const currentSiswaId =
     user?.profile?.id ??
@@ -83,41 +108,99 @@ export default function StudentTugasView() {
     fetchTugasData()
   }, [fetchTugasData])
 
+  // Deduplicate identical tasks (e.g. accidental double-created tasks)
+  const dedupedTugasList = useMemo(
+    () => deduplicateTugasList(tugasList, submissionMap),
+    [tugasList, submissionMap]
+  )
+
+  // Distinct classes present in the assignment list
+  const kelasList = useMemo(() => {
+    const counts = {}
+    dedupedTugasList.forEach((t) => {
+      const kName = t.kelas?.nama_kelas || t.kelas?.nama
+      if (kName) {
+        counts[kName] = (counts[kName] || 0) + 1
+      }
+    })
+    return Object.entries(counts).map(([name, count]) => ({ name, count }))
+  }, [dedupedTugasList])
+
+  // Auto-select student's active class if multiple classes exist and student's class is known
+  useEffect(() => {
+    if (
+      studentKelasNama &&
+      kelasList.length > 1 &&
+      kelasList.some((k) => k.name.toLowerCase() === studentKelasNama.toLowerCase())
+    ) {
+      setSelectedKelas(studentKelasNama)
+    }
+  }, [studentKelasNama, kelasList])
+
+  // Base list scoped by selected class
+  const classScopedTugasList = useMemo(() => {
+    if (selectedKelas === 'all') return dedupedTugasList
+    return dedupedTugasList.filter((t) => {
+      const kName = t.kelas?.nama_kelas || t.kelas?.nama || ''
+      return kName.toLowerCase() === selectedKelas.toLowerCase()
+    })
+  }, [dedupedTugasList, selectedKelas])
+
   const mapels = useMemo(() => {
     const counts = {}
-    tugasList.forEach((t) => {
+    classScopedTugasList.forEach((t) => {
       const name = t.guru_mapel?.mapel?.nama
       if (name) {
         counts[name] = (counts[name] || 0) + 1
       }
     })
     return Object.entries(counts).map(([name, count]) => ({ name, count }))
-  }, [tugasList])
+  }, [classScopedTugasList])
 
   const stats = useMemo(() => {
-    const total = tugasList.length
+    const total = classScopedTugasList.length
     const totalMapel = mapels.length
     let totalSubmitted = 0
     let totalGraded = 0
+    let totalWaitingGrade = 0
     let totalPending = 0
+    let totalOverdue = 0
+    const now = Date.now()
 
-    tugasList.forEach((t) => {
+    classScopedTugasList.forEach((t) => {
       const sub = submissionMap[t.id]
       if (sub) {
         totalSubmitted += 1
-        if (sub.nilai !== null && sub.nilai !== undefined) {
+        if (isSubmissionGraded(sub)) {
           totalGraded += 1
+        } else {
+          totalWaitingGrade += 1
         }
       } else {
         totalPending += 1
+        if (t.tenggat_waktu) {
+          const dl = new Date(t.tenggat_waktu).getTime()
+          if (!isNaN(dl) && dl < now) {
+            totalOverdue += 1
+          }
+        }
       }
     })
 
-    return { total, totalMapel, totalSubmitted, totalGraded, totalPending }
-  }, [tugasList, mapels, submissionMap])
+    return {
+      total,
+      totalMapel,
+      totalSubmitted,
+      totalGraded,
+      totalWaitingGrade,
+      totalPending,
+      totalOverdue,
+    }
+  }, [classScopedTugasList, mapels, submissionMap])
 
   const filteredTugas = useMemo(() => {
-    return tugasList
+    const now = Date.now()
+    return classScopedTugasList
       .filter((item) => {
         if (selectedMapel !== 'all') {
           const mapelNama = item.guru_mapel?.mapel?.nama || ''
@@ -125,12 +208,20 @@ export default function StudentTugasView() {
         }
 
         const sub = submissionMap[item.id]
+        const graded = isSubmissionGraded(sub)
+
         if (selectedStatus === 'pending') {
           if (sub) return false
+        } else if (selectedStatus === 'overdue') {
+          if (sub) return false
+          const dl = item.tenggat_waktu ? new Date(item.tenggat_waktu).getTime() : Infinity
+          if (isNaN(dl) || dl >= now) return false
         } else if (selectedStatus === 'submitted') {
           if (!sub) return false
+        } else if (selectedStatus === 'waiting_grade') {
+          if (!sub || graded) return false
         } else if (selectedStatus === 'graded') {
-          if (!sub || sub.nilai === null || sub.nilai === undefined) return false
+          if (!sub || !graded) return false
         }
 
         if (searchQuery.trim()) {
@@ -160,14 +251,22 @@ export default function StudentTugasView() {
         if (sortBy === 'newest') {
           return (b.id || 0) - (a.id || 0)
         }
+        // Prioritas Pengerjaan & Tenggat Terdekat:
+        // Unsubmitted tasks come first so students immediately see what needs to be done
+        const subA = Boolean(submissionMap[a.id])
+        const subB = Boolean(submissionMap[b.id])
+        if (subA !== subB) {
+          return subA ? 1 : -1
+        }
         const timeA = a.tenggat_waktu ? new Date(a.tenggat_waktu).getTime() : Infinity
         const timeB = b.tenggat_waktu ? new Date(b.tenggat_waktu).getTime() : Infinity
         return timeA - timeB
       })
-  }, [tugasList, submissionMap, selectedMapel, selectedStatus, searchQuery, sortBy])
+  }, [classScopedTugasList, submissionMap, selectedMapel, selectedStatus, searchQuery, sortBy])
 
   const handleResetFilters = () => {
     setSearchQuery('')
+    setSelectedKelas('all')
     setSelectedMapel('all')
     setSelectedStatus('all')
     setSortBy('deadline')
@@ -180,6 +279,16 @@ export default function StudentTugasView() {
   const handleSubmitTugas = (tugas) => {
     navigate('/akademik/tugas-siswa/create', { state: { mst_tugas_id: String(tugas.id) } })
   }
+
+  const handleOpenPreview = useCallback((rawPath, directUrl, title, subtitle) => {
+    setPreviewModal({
+      open: true,
+      filePath: rawPath,
+      fileUrl: directUrl,
+      title: title || 'Pratinjau Lampiran Tugas',
+      subtitle: subtitle || getFileName(rawPath || directUrl),
+    })
+  }, [])
 
   return (
     <div className="space-y-6 pb-12">
@@ -222,6 +331,25 @@ export default function StudentTugasView() {
           </div>
         </div>
       </div>
+      {/* Overdue Alert Banner */}
+      {!loading && stats.totalOverdue > 0 && selectedStatus !== 'overdue' && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/50 text-rose-800 dark:text-rose-200">
+          <div className="flex items-center gap-2.5 text-xs sm:text-sm">
+            <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400 shrink-0" />
+            <span>
+              Kamu memiliki <strong>{stats.totalOverdue} tugas</strong> yang sudah melewati batas tenggat waktu dan belum dikumpulkan.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedStatus('overdue')}
+            className="self-start sm:self-auto shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors"
+          >
+            Lihat Tugas Terlewat
+          </button>
+        </div>
+      )}
+
       {/* Controls: Search, Filters & Refresh */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -246,6 +374,28 @@ export default function StudentTugasView() {
           </div>
 
           <div className="flex items-center gap-2">
+            {kelasList.length > 1 && (
+              <div className="relative flex items-center">
+                <GraduationCap
+                  size={15}
+                  className="absolute left-3 text-gray-400 pointer-events-none"
+                />
+                <select
+                  value={selectedKelas}
+                  onChange={(e) => setSelectedKelas(e.target.value)}
+                  aria-label="Filter Kelas"
+                  className="pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-2xs"
+                >
+                  <option value="all">Semua Kelas ({dedupedTugasList.length})</option>
+                  {kelasList.map((k) => (
+                    <option key={k.name} value={k.name}>
+                      Kelas {k.name} ({k.count})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -279,7 +429,7 @@ export default function StudentTugasView() {
                   : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200/80 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
-              Semua Mapel ({tugasList.length})
+              Semua Mapel ({classScopedTugasList.length})
             </button>
             {mapels.map((m) => (
               <button
@@ -302,24 +452,38 @@ export default function StudentTugasView() {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Status:</span>
           {[
-            { id: 'all', label: 'Semua', count: stats.total },
-            { id: 'pending', label: '⏳ Belum Kumpul', count: stats.totalPending },
-            { id: 'submitted', label: '✅ Sudah Kumpul', count: stats.totalSubmitted },
-            { id: 'graded', label: '⭐ Sudah Dinilai', count: stats.totalGraded },
-          ].map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setSelectedStatus(s.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                selectedStatus === s.id
-                  ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              {s.label} ({s.count})
-            </button>
-          ))}
+            { id: 'all', label: 'Semua', count: stats.total, show: true },
+            { id: 'pending', label: '⏳ Belum Kumpul', count: stats.totalPending, show: true },
+            {
+              id: 'overdue',
+              label: '⚠️ Lewat Tenggat',
+              count: stats.totalOverdue,
+              show: stats.totalOverdue > 0 || selectedStatus === 'overdue',
+            },
+            { id: 'submitted', label: '✅ Sudah Kumpul', count: stats.totalSubmitted, show: true },
+            {
+              id: 'waiting_grade',
+              label: '🕐 Menunggu Koreksi',
+              count: stats.totalWaitingGrade,
+              show: stats.totalWaitingGrade > 0 || selectedStatus === 'waiting_grade',
+            },
+            { id: 'graded', label: '⭐ Sudah Dinilai', count: stats.totalGraded, show: true },
+          ]
+            .filter((s) => s.show)
+            .map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSelectedStatus(s.id)}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  selectedStatus === s.id
+                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {s.label} ({s.count})
+              </button>
+            ))}
         </div>
       </div>
 
@@ -371,17 +535,17 @@ export default function StudentTugasView() {
           </div>
           <div className="max-w-md mx-auto space-y-1">
             <h3 className="text-base font-bold text-gray-900 dark:text-white">
-              {searchQuery || selectedMapel !== 'all' || selectedStatus !== 'all'
+              {searchQuery || selectedKelas !== 'all' || selectedMapel !== 'all' || selectedStatus !== 'all'
                 ? 'Tugas Tidak Ditemukan'
                 : 'Belum Ada Tugas'}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {searchQuery || selectedMapel !== 'all' || selectedStatus !== 'all'
+              {searchQuery || selectedKelas !== 'all' || selectedMapel !== 'all' || selectedStatus !== 'all'
                 ? 'Tidak ada tugas yang sesuai dengan kriteria pencarian atau filter yang dipilih.'
                 : 'Bapak/ibu guru belum memberikan tugas untuk kelasmu saat ini.'}
             </p>
           </div>
-          {(searchQuery || selectedMapel !== 'all' || selectedStatus !== 'all') && (
+          {(searchQuery || selectedKelas !== 'all' || selectedMapel !== 'all' || selectedStatus !== 'all') && (
             <button
               type="button"
               onClick={handleResetFilters}
@@ -401,10 +565,20 @@ export default function StudentTugasView() {
               submission={submissionMap[tugas.id]}
               onOpen={() => handleOpenDetail(tugas.id)}
               onSubmit={() => handleSubmitTugas(tugas)}
+              onPreviewAttachment={handleOpenPreview}
             />
           ))}
         </div>
       )}
+
+      <TugasFilePreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal((prev) => ({ ...prev, open: false }))}
+        filePath={previewModal.filePath}
+        fileUrl={previewModal.fileUrl}
+        title={previewModal.title}
+        subtitle={previewModal.subtitle}
+      />
     </div>
   )
 }

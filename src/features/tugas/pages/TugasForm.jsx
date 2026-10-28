@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import SearchableSelect from '../../../components/ui/SearchableSelect'
+import FileUpload from '../../../components/ui/FileUpload'
 import { tugasService } from '../services/tugasService'
 import { guruMapelService } from '../../guru-mapel/services/guruMapelService'
 import { kelasService } from '../../kelas/services/kelasService'
@@ -26,6 +27,7 @@ const TugasForm = () => {
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
+  const isSubmittingRef = useRef(false)
   
   const [formData, setFormData] = useState({
     mst_guru_mapel_id: '',
@@ -218,16 +220,18 @@ const TugasForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
+    if (isSubmittingRef.current || loading) return
     if (!validate()) return
 
+    isSubmittingRef.current = true
     setLoading(true)
     
     const submitData = {
       mst_guru_mapel_id: parseInt(formData.mst_guru_mapel_id),
       mst_kelas_id: parseInt(formData.mst_kelas_id),
-      judul: formData.judul,
-      deskripsi: formData.deskripsi || null,
+      judul: formData.judul.trim(),
+      deskripsi: formData.deskripsi ? formData.deskripsi.trim() : null,
       tenggat_waktu: formData.tenggat_waktu ? new Date(formData.tenggat_waktu).toISOString() : null,
       file_lampiran: formData.file_lampiran || null,
       status: formData.status !== '' ? parseInt(formData.status) : null
@@ -254,6 +258,7 @@ const TugasForm = () => {
         showError(`Gagal ${isEditMode ? 'memperbarui' : 'menambahkan'} tugas`)
       }
     }
+    isSubmittingRef.current = false
     setLoading(false)
   }
 
@@ -363,17 +368,20 @@ const TugasForm = () => {
                 )}
               </div>
 
-              {/* File Path */}
+              {/* File Lampiran */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  File Path
-                </label>
-                <Input
-                  type="text"
-                  name="file_lampiran"
-                  value={formData.file_lampiran}
-                  onChange={handleChange}
-                  placeholder="Path file (opsional)"
+                <FileUpload
+                  label="File Lampiran Tugas"
+                  accept="image/*,application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                  maxSize={10 * 1024 * 1024}
+                  folder="tugas"
+                  previewUrl={formData.file_lampiran}
+                  onUpload={(path) => {
+                    setFormData((prev) => ({ ...prev, file_lampiran: path || '' }))
+                    if (errors.file_lampiran) {
+                      setErrors((prev) => ({ ...prev, file_lampiran: null }))
+                    }
+                  }}
                   error={errors.file_lampiran}
                 />
               </div>

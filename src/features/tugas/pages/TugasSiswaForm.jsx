@@ -12,6 +12,7 @@ import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { siswaService } from '../../siswa/services/siswaService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
 
 const STATUS_KUMPUL_OPTIONS = [
   { value: '0', label: 'Belum' },
@@ -120,10 +121,10 @@ const TugasSiswaForm = () => {
           const status = ts.status ?? ts.status_kumpul ?? ts.status_kumpl
           return status !== null && status !== undefined ? String(status) : ''
         })(),
-        nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
+        nilai: isSubmissionGraded(ts) ? String(getSubmissionScore(ts)) : '',
         catatan_guru: ts.catatan_guru || ts.catatan || ''
       })
-      setOriginalNilai(ts.nilai != null ? String(ts.nilai) : '')
+      setOriginalNilai(isSubmissionGraded(ts) ? String(getSubmissionScore(ts)) : '')
     } else {
       showError('Gagal mengambil data tugas siswa')
       navigate('/akademik/tugas-siswa')

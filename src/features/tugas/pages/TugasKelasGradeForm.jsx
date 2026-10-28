@@ -25,7 +25,7 @@ import { tugasService, tugasSiswaService } from '../services/tugasService'
 import { kelasService } from '../../kelas/services/kelasService'
 import { formatDateTime } from '../../../utils/formatters'
 import { showSuccess, showError } from '../../../utils/sweetalert'
-import { isImageFile, getFileName, hasAttachment, getAttachmentPath, openAttachment } from '../utils/tugasFileUtils'
+import { isImageFile, getFileName, hasAttachment, getAttachmentPath, openAttachment, isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
 
 const TugasKelasGradeForm = () => {
   const navigate = useNavigate()
@@ -174,7 +174,7 @@ const TugasKelasGradeForm = () => {
         }
 
         rows[sid] = {
-          nilai: sub && sub.nilai !== null && sub.nilai !== undefined ? String(sub.nilai) : '',
+          nilai: isSubmissionGraded(sub) ? String(getSubmissionScore(sub)) : '',
           catatan_guru: sub?.catatan_guru || '',
           status,
           statusLabel,

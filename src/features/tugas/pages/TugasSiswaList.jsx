@@ -9,16 +9,18 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import { hasAttachment, getAttachmentPath, openAttachment, getFileName } from '../utils/tugasFileUtils'
+import { hasAttachment, getAttachmentPath, openAttachment, getFileName, isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
 
 // Submission status mapping
 const STATUS_MAP = {
   'tepat waktu': { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  dinilai: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  3: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
 }
 
 // Actions Menu Component (portal-based dropdown)
@@ -259,10 +261,12 @@ const TugasSiswaList = () => {
       width: 100,
       minWidth: 80,
       cellRenderer: (params) => {
-        const nilai = params.value
-        if (nilai === null || nilai === undefined) return '-'
+        if (!params.data) return '-'
+        if (!isSubmissionGraded(params.data)) {
+          return <span className="text-xs text-amber-600 dark:text-amber-400">Menunggu</span>
+        }
         return (
-          <span className="font-medium">{nilai}</span>
+          <span className="font-medium">{getSubmissionScore(params.data)}</span>
         )
       }
     },

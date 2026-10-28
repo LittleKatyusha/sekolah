@@ -1,22 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star, Save, MessageSquare, Download, ExternalLink, Image as ImageIcon, FileCheck } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, BookOpen, Calendar, FileText, Hash, Star, Save, MessageSquare, Download, ExternalLink, Image as ImageIcon, FileCheck, Eye } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tugasSiswaService } from '../services/tugasService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
-import { isImageFile, isPdfFile, getFileName, hasAttachment, getAttachmentPath, openAttachment } from '../utils/tugasFileUtils'
+import { isImageFile, isPdfFile, getFileName, hasAttachment, getAttachmentPath, openAttachment, isSubmissionGraded, getSubmissionScore } from '../utils/tugasFileUtils'
+import TugasFilePreviewModal from '../components/TugasFilePreviewModal'
 
 // Submission status mapping
 const STATUS_MAP = {
   'tepat waktu': { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   belum: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   terlambat: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  dinilai: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   1: { label: 'Tepat Waktu', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   0: { label: 'Belum', bg: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   2: { label: 'Terlambat', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  3: { label: 'Sudah Dinilai', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
 }
 
 const TugasSiswaDetail = () => {
@@ -30,6 +33,7 @@ const TugasSiswaDetail = () => {
   const [gradeData, setGradeData] = useState({ nilai: '', catatan: '' })
   const [gradeLoading, setGradeLoading] = useState(false)
   const [gradeErrors, setGradeErrors] = useState({})
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
 
   useEffect(() => {
     fetchTugasSiswa()
@@ -42,7 +46,7 @@ const TugasSiswaDetail = () => {
       const ts = data.data
       setTugasSiswa(ts)
       setGradeData({
-        nilai: ts.nilai !== null && ts.nilai !== undefined ? String(ts.nilai) : '',
+        nilai: isSubmissionGraded(ts) ? String(getSubmissionScore(ts)) : '',
         catatan_guru: ts.catatan_guru || ts.catatan || ''
       })
     } else {
@@ -209,7 +213,7 @@ const TugasSiswaDetail = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400">Nilai</span>
                   <span className="font-medium text-gray-900 dark:text-white text-lg">
-                    {tugasSiswa.nilai !== null && tugasSiswa.nilai !== undefined ? tugasSiswa.nilai : '-'}
+                    {isSubmissionGraded(tugasSiswa) ? getSubmissionScore(tugasSiswa) : 'Menunggu Koreksi'}
                   </span>
                 </div>
               </div>
@@ -287,7 +291,7 @@ const TugasSiswaDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Nilai</p>
                     <p className="font-medium text-gray-900 dark:text-white text-lg">
-                      {tugasSiswa.nilai !== null && tugasSiswa.nilai !== undefined ? tugasSiswa.nilai : '-'}
+                      {isSubmissionGraded(tugasSiswa) ? getSubmissionScore(tugasSiswa) : 'Menunggu Koreksi'}
                     </p>
                   </div>
                 </div>
@@ -325,15 +329,26 @@ const TugasSiswaDetail = () => {
                     </h4>
                   </div>
                   {hasFile && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => openAttachment(filePath, fileUrl)}
-                      className="inline-flex items-center gap-1.5"
-                    >
-                      <Download size={15} />
-                      Buka / Unduh Berkas
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setPreviewModalOpen(true)}
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <Eye size={15} />
+                        Pratinjau Berkas
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => openAttachment(filePath, fileUrl)}
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <Download size={15} />
+                        Buka / Unduh Berkas
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -477,6 +492,14 @@ const TugasSiswaDetail = () => {
           </div>
         </Card>
       )}
+      <TugasFilePreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        filePath={filePath}
+        fileUrl={fileUrl}
+        title={`Tugas: ${tugasSiswa.siswa?.nama || tugasSiswa.siswa?.name || 'Siswa'}`}
+        subtitle={fileName}
+      />
     </div>
   )
 }

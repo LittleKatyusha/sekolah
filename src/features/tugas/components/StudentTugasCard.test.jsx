@@ -67,4 +67,28 @@ describe('StudentTugasCard', () => {
     fireEvent.click(screen.getByText(/Lihat Nilai & Detail/i))
     expect(handleOpen).toHaveBeenCalledTimes(1)
   })
+
+  it('shows Menunggu Koreksi instead of Nilai: 0 for ungraded submissions with default 0', () => {
+    const ungradedSubmission = {
+      id: 100,
+      nilai: 0,
+      status: 1,
+      status_label: 'Tepat Waktu',
+      waktu_kumpul: '2026-10-25T08:00:00+00:00',
+      waktu_dinilai: null,
+      catatan_guru: null,
+    }
+
+    render(
+      <StudentTugasCard
+        tugas={dummyTugas}
+        submission={ungradedSubmission}
+        onOpen={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText(/Menunggu Koreksi/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Nilai: 0/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Lihat Pengumpulan/i)).toBeInTheDocument()
+  })
 })

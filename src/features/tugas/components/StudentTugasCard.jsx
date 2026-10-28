@@ -10,7 +10,18 @@ import {
   ArrowRight,
   FileText,
   ExternalLink,
+  MessageSquare,
+  Hourglass,
+  Eye,
 } from 'lucide-react'
+import {
+  hasAttachment,
+  getAttachmentPath,
+  getFileName,
+  openAttachment,
+  isSubmissionGraded,
+  getSubmissionScore,
+} from '../utils/tugasFileUtils'
 
 const stripHtml = (html) => (html ? html.replace(/<[^>]*>?/gm, '').trim() : '')
 
@@ -94,7 +105,13 @@ const getSubjectStyle = (name = '') => {
   }
 }
 
-export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }) {
+export default function StudentTugasCard({
+  tugas,
+  submission,
+  onOpen,
+  onSubmit,
+  onPreviewAttachment,
+}) {
   const mapelNama = tugas.guru_mapel?.mapel?.nama || 'Mata Pelajaran'
   const mapelKode = tugas.guru_mapel?.mapel?.kode || ''
   const guruNama = tugas.guru_mapel?.guru?.nama || 'Guru Pengampu'
@@ -102,13 +119,14 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
   const plainDeskripsi = useMemo(() => stripHtml(tugas.deskripsi), [tugas.deskripsi])
   const style = useMemo(() => getSubjectStyle(mapelNama), [mapelNama])
 
-  const fileLampiran = tugas.file_lampiran || tugas.file_path || ''
-  const hasLampiran = Boolean(fileLampiran && fileLampiran.trim())
-  const isLampiranUrl =
-    hasLampiran && (fileLampiran.startsWith('http://') || fileLampiran.startsWith('https://'))
+  const fileLampiran = getAttachmentPath(tugas)
+  const hasLampiran = hasAttachment(tugas)
+  const lampiranName = getFileName(fileLampiran || tugas.file_url)
 
   const isSubmitted = Boolean(submission)
-  const isGraded = isSubmitted && submission.nilai !== null && submission.nilai !== undefined
+  const isGraded = useMemo(() => isSubmissionGraded(submission), [submission])
+  const scoreValue = useMemo(() => getSubmissionScore(submission), [submission])
+  const teacherNote = submission?.catatan_guru || submission?.catatan || ''
 
   const deadlineStatus = useMemo(() => {
     if (isSubmitted) return { type: 'submitted', label: 'Terkumpul' }
@@ -121,6 +139,20 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
     if (diffMs <= 24 * 60 * 60 * 1000) return { type: 'urgent', label: 'Segera Berakhir' }
     return { type: 'active', label: 'Aktif' }
   }, [isSubmitted, tugas.tenggat_waktu])
+
+  const handleLampiranClick = (e) => {
+    e.stopPropagation()
+    if (onPreviewAttachment) {
+      onPreviewAttachment(
+        fileLampiran,
+        tugas.file_url,
+        `Lampiran: ${tugas.judul || 'Tugas'}`,
+        lampiranName
+      )
+    } else {
+      openAttachment(fileLampiran, tugas.file_url)
+    }
+  }
 
   return (
     <div
@@ -155,11 +187,11 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
 
             {isGraded ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
-                <Award size={12} /> Nilai: {submission.nilai}
+                <Award size={12} /> Nilai: {scoreValue}
               </span>
             ) : isSubmitted ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
-                <CheckCircle2 size={12} /> Dikumpulkan
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
+                <Hourglass size={11} /> Menunggu Koreksi
               </span>
             ) : deadlineStatus.type === 'overdue' ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/70 dark:border-rose-800/60">
@@ -185,6 +217,15 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
           {plainDeskripsi || 'Klik untuk melihat petunjuk dan detail pengerjaan tugas ini.'}
         </p>
 
+        {teacherNote && (
+          <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200">
+            <MessageSquare size={13} className="shrink-0 mt-0.5 text-blue-500" />
+            <p className="line-clamp-2">
+              <span className="font-semibold">Catatan Guru:</span> {teacherNote}
+            </p>
+          </div>
+        )}
+
         <div className="mt-4 flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/60 text-xs">
           <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 min-w-0">
             <Calendar size={13} className="text-gray-400 shrink-0" />
@@ -196,14 +237,17 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
             </span>
           </div>
           <span
-            className={`text-[11px] font-medium shrink-0 ml-2 ${
-              deadlineStatus.type === 'overdue'
+            className={`text-[11px] font-medium shrink-0 ml-2 inline-flex items-center gap-1 ${
+              isSubmitted
+                ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                : deadlineStatus.type === 'overdue'
                 ? 'text-rose-600 dark:text-rose-400 font-semibold'
                 : deadlineStatus.type === 'urgent'
                 ? 'text-amber-600 dark:text-amber-400 font-semibold'
                 : 'text-gray-500 dark:text-gray-400'
             }`}
           >
+            {isSubmitted && <CheckCircle2 size={12} />}
             {getRelativeTime(tugas.tenggat_waktu, isSubmitted)}
           </span>
         </div>
@@ -223,9 +267,14 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
             </div>
           </div>
           {hasLampiran && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-200/60 dark:border-indigo-800/50 shrink-0">
+            <button
+              type="button"
+              onClick={handleLampiranClick}
+              title={`Pratinjau Lampiran (${lampiranName})`}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 px-2 py-0.5 rounded-md border border-indigo-200/60 dark:border-indigo-800/50 shrink-0 transition-colors"
+            >
               <FileText size={11} /> Lampiran
-            </span>
+            </button>
           )}
         </div>
 
@@ -250,10 +299,18 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
                   e.stopPropagation()
                   onSubmit ? onSubmit() : onOpen?.()
                 }}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-xs hover:shadow transition-all duration-200 group/btn"
+                className={`flex-1 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white shadow-xs hover:shadow transition-all duration-200 group/btn ${
+                  deadlineStatus.type === 'overdue'
+                    ? 'bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500'
+                    : 'bg-primary-600 hover:bg-primary-700'
+                }`}
               >
                 <Upload size={14} />
-                <span>Kumpulkan Tugas</span>
+                <span>
+                  {deadlineStatus.type === 'overdue'
+                    ? 'Kumpulkan Tugas (Terlambat)'
+                    : 'Kumpulkan Tugas'}
+                </span>
               </button>
               <button
                 type="button"
@@ -269,17 +326,15 @@ export default function StudentTugasCard({ tugas, submission, onOpen, onSubmit }
             </>
           )}
 
-          {isLampiranUrl && (
-            <a
-              href={fileLampiran}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              title="Buka File Lampiran"
+          {hasLampiran && (
+            <button
+              type="button"
+              onClick={handleLampiranClick}
+              title="Pratinjau / Buka File Lampiran"
               className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
             >
-              <ExternalLink size={14} />
-            </a>
+              {onPreviewAttachment ? <Eye size={14} /> : <ExternalLink size={14} />}
+            </button>
           )}
         </div>
       </div>

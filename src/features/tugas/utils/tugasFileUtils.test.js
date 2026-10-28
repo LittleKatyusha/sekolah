@@ -7,6 +7,9 @@ import {
   getAttachmentPath,
   openAttachment,
   resolveFileUrl,
+  isSubmissionGraded,
+  getSubmissionScore,
+  deduplicateTugasList,
 } from './tugasFileUtils'
 import { fileUploadService } from '../../../services/fileUploadService'
 
@@ -82,6 +85,73 @@ describe('tugasFileUtils', () => {
       '_blank',
       'noopener,noreferrer'
     )
+  })
+
+  it('distinguishes ungraded legacy 0 submissions from truly graded submissions', () => {
+    // Legacy ungraded submission with default nilai=0 and status=1 (Tepat Waktu)
+    expect(
+      isSubmissionGraded({
+        id: 1,
+        nilai: 0,
+        status: 1,
+        status_label: 'Tepat Waktu',
+        waktu_dinilai: null,
+        catatan_guru: null,
+      })
+    ).toBe(false)
+    expect(
+      getSubmissionScore({
+        id: 1,
+        nilai: 0,
+        status: 1,
+      })
+    ).toBeNull()
+
+    // Graded with positive score
+    expect(isSubmissionGraded({ id: 2, nilai: 90, status: 1 })).toBe(true)
+    expect(getSubmissionScore({ id: 2, nilai: 90, status: 1 })).toBe(90)
+
+    // Intentionally graded with 0 by teacher (status=3 or has waktu_dinilai / catatan_guru)
+    expect(isSubmissionGraded({ id: 3, nilai: 0, status: 3 })).toBe(true)
+    expect(getSubmissionScore({ id: 3, nilai: 0, status: 3 })).toBe(0)
+    expect(
+      isSubmissionGraded({ id: 4, nilai: 0, status: 1, catatan_guru: 'Belum sesuai instruksi' })
+    ).toBe(true)
+  })
+
+  it('deduplicates identical tasks and keeps the one with submission', () => {
+    const list = [
+      {
+        id: 10,
+        judul: 'Identitas diri dan Identitas Sosial',
+        mst_guru_mapel_id: 5,
+        mst_kelas_id: 1,
+        tenggat_waktu: '2026-10-26T11:30:00Z',
+      },
+      {
+        id: 11,
+        judul: 'Identitas diri dan Identitas Sosial',
+        mst_guru_mapel_id: 5,
+        mst_kelas_id: 1,
+        tenggat_waktu: '2026-10-26T11:30:00Z',
+      },
+      {
+        id: 12,
+        judul: 'Teori Masalah Sosial',
+        mst_guru_mapel_id: 5,
+        mst_kelas_id: 1,
+        tenggat_waktu: '2026-10-26T16:00:00Z',
+      },
+    ]
+
+    const submissionMap = {
+      11: { id: 99, tugas_id: 11, status: 1 },
+    }
+
+    const deduped = deduplicateTugasList(list, submissionMap)
+    expect(deduped).toHaveLength(2)
+    expect(deduped[0].id).toBe(11)
+    expect(deduped[1].id).toBe(12)
   })
 })
 
