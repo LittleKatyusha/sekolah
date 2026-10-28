@@ -274,6 +274,9 @@ const UsersForm = () => {
                 })}
               </select>
               {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role}</p>}
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                Catatan: Untuk akun Guru atau Siswa, disarankan melalui menu <strong className="text-gray-700 dark:text-gray-300">Master Data</strong> agar biodata NIP/NIS dan penugasan kelas terhubung otomatis.
+              </p>
             </div>
 
             {/* Status */}
