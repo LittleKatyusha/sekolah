@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { RefreshCw, Eye, Trash2, MoreVertical, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -9,9 +9,10 @@ import { rankingService } from '../services/rankingService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import usePermission from '../../../hooks/usePermission'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import GenerateRankingModal from '../components/GenerateRankingModal'
 
 // Actions Menu Component (portal-based dropdown)
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
+const ActionsMenu = ({ data, onDetail, onDelete, detailPermission, deletePermission }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -19,9 +20,8 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editP
   const { hasPermission } = usePermission()
 
   const showDetail = onDetail && (detailPermission ? hasPermission(detailPermission) : true)
-  const showEdit = onEdit && (editPermission ? hasPermission(editPermission) : true)
   const showDelete = onDelete && (deletePermission ? hasPermission(deletePermission) : true)
-  const hasVisibleActions = showDetail || showEdit || showDelete
+  const hasVisibleActions = showDetail || showDelete
 
   const handleAction = (action) => {
     setIsOpen(false)
@@ -90,15 +90,6 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editP
                 Detail
               </button>
             )}
-            {showEdit && (
-              <button
-                onClick={() => handleAction(onEdit)}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <Edit size={16} className="text-yellow-600" />
-                Edit
-              </button>
-            )}
             {showDelete && (
               <>
                 <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
@@ -122,16 +113,13 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editP
 const RankingList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false)
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
     sort_dir: 'desc',
     filter: '{}',
   }), [])
-
-  const handleEdit = useCallback((data) => {
-    navigate(`/akademik/ranking/${data.id}/edit`)
-  }, [navigate])
 
   const handleDetail = useCallback((data) => {
     navigate(`/akademik/ranking/${data.id}`)
@@ -279,17 +267,15 @@ const RankingList = () => {
             <ActionsMenu
               data={params.data}
               onDetail={() => handleDetail(params.data)}
-              onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
               detailPermission="ranking.view"
-              editPermission="ranking.edit"
               deletePermission="ranking.delete"
             />
           </div>
         )
       }
     }
-  ], [handleDelete, handleDetail, handleEdit])
+  ], [handleDelete, handleDetail])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -300,15 +286,20 @@ const RankingList = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ranking</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ranking</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Peringkat siswa otomatis berdasarkan nilai rapor akhir
+          </p>
+        </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="ranking.create">
-            <Button onClick={() => navigate('/akademik/ranking/create')}>
-              <Plus size={18} className="mr-2" />
-              Tambah Ranking
+            <Button onClick={() => setIsGenerateModalOpen(true)}>
+              <Sparkles size={18} className="mr-2" />
+              Generate Ranking
             </Button>
           </PermissionGuard>
         </div>
@@ -328,6 +319,12 @@ const RankingList = () => {
           height={600}
         />
       </Card>
+
+      <GenerateRankingModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onSuccess={handleRefresh}
+      />
     </div>
   )
 }
