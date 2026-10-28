@@ -486,46 +486,6 @@ const AdminBukuView = () => {
     }
   }, [])
 
-  const handleRefresh = useCallback(() => {
-    if (gridRef.current?.refreshGrid) {
-      gridRef.current.refreshGrid()
-    }
-    if (gridRef.current?.api) {
-      gridRef.current.api.refreshInfiniteCache()
-    }
-  }, [])
-
-  const handleSelectionChanged = useCallback((event) => {
-    setSelectedRows(event.api.getSelectedRows())
-  }, [])
-
-  const clearSelection = useCallback(() => {
-    if (gridRef.current?.api) {
-      gridRef.current.api.deselectAll()
-    }
-    setSelectedRows([])
-  }, [])
-
-  const handleBatchDelete = useCallback(async () => {
-    if (selectedRows.length === 0) return
-    const result = await showDeleteConfirm(`${selectedRows.length} buku terpilih`)
-    if (result.isConfirmed) {
-      const ids = selectedRows.map((r) => r.id)
-      const { error } = await bukuService.batchDelete(ids)
-      if (!error) {
-        showSuccess(`${selectedRows.length} buku berhasil dihapus!`)
-        clearSelection()
-        handleRefresh()
-      } else {
-        showError('Gagal menghapus buku terpilih')
-      }
-    }
-  }, [selectedRows, clearSelection, handleRefresh])
-
-  const handleBatchExport = useCallback(() => {
-    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-buku-terpilih.xlsx', 'Data Buku')
-  }, [selectedRows, columnDefs])
-
   const columnDefs = useMemo(() => [
     {
       checkboxSelection: true,
@@ -582,13 +542,13 @@ const AdminBukuView = () => {
       cellRenderer: (params) => params.value || '-'
     },
     {
-    field: 'tahun',
-    headerName: 'Tahun',
-    sortable: true,
-    filter: true,
-    width: 100,
-    minWidth: 80,
-    cellRenderer: (params) => params.value || '-'
+      field: 'tahun',
+      headerName: 'Tahun',
+      sortable: true,
+      filter: true,
+      width: 100,
+      minWidth: 80,
+      cellRenderer: (params) => params.value || '-'
     },
     {
       field: 'stok',
@@ -637,6 +597,46 @@ const AdminBukuView = () => {
       }
     }
   ], [handleDetail, handleEdit, handleDelete])
+
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
+    }
+  }, [])
+
+  const handleSelectionChanged = useCallback((event) => {
+    setSelectedRows(event.api.getSelectedRows())
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedRows([])
+  }, [])
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return
+    const result = await showDeleteConfirm(`${selectedRows.length} buku terpilih`)
+    if (result.isConfirmed) {
+      const ids = selectedRows.map((r) => r.id)
+      const { error } = await bukuService.batchDelete(ids)
+      if (!error) {
+        showSuccess(`${selectedRows.length} buku berhasil dihapus!`)
+        clearSelection()
+        handleRefresh()
+      } else {
+        showError('Gagal menghapus buku terpilih')
+      }
+    }
+  }, [selectedRows, clearSelection, handleRefresh])
+
+  const handleBatchExport = useCallback(() => {
+    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-buku-terpilih.xlsx', 'Data Buku')
+  }, [selectedRows, columnDefs])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

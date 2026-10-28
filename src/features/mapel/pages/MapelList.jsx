@@ -148,46 +148,6 @@ const MapelList = () => {
     }
   }, [])
 
-  const handleRefresh = useCallback(() => {
-    if (gridRef.current?.refreshGrid) {
-      gridRef.current.refreshGrid()
-    }
-    if (gridRef.current?.api) {
-      gridRef.current.api.refreshInfiniteCache()
-    }
-  }, [])
-
-  const handleSelectionChanged = useCallback((event) => {
-    setSelectedRows(event.api.getSelectedRows())
-  }, [])
-
-  const clearSelection = useCallback(() => {
-    if (gridRef.current?.api) {
-      gridRef.current.api.deselectAll()
-    }
-    setSelectedRows([])
-  }, [])
-
-  const handleBatchDelete = useCallback(async () => {
-    if (selectedRows.length === 0) return
-    const result = await showDeleteConfirm(`${selectedRows.length} mata pelajaran terpilih`)
-    if (result.isConfirmed) {
-      const ids = selectedRows.map((r) => r.id)
-      const { error } = await mapelService.batchDelete(ids)
-      if (!error) {
-        showSuccess(`${selectedRows.length} mata pelajaran berhasil dihapus!`)
-        clearSelection()
-        handleRefresh()
-      } else {
-        showError('Gagal menghapus mata pelajaran terpilih')
-      }
-    }
-  }, [selectedRows, clearSelection, handleRefresh])
-
-  const handleBatchExport = useCallback(() => {
-    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-mapel-terpilih.xlsx', 'Data Mapel')
-  }, [selectedRows, columnDefs])
-
   const columnDefs = useMemo(() => [
     {
       checkboxSelection: true,
@@ -240,6 +200,46 @@ const MapelList = () => {
       }
     }
   ], [handleDetail, handleEdit, handleDelete])
+
+  const handleRefresh = useCallback(() => {
+    if (gridRef.current?.refreshGrid) {
+      gridRef.current.refreshGrid()
+    }
+    if (gridRef.current?.api) {
+      gridRef.current.api.refreshInfiniteCache()
+    }
+  }, [])
+
+  const handleSelectionChanged = useCallback((event) => {
+    setSelectedRows(event.api.getSelectedRows())
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.deselectAll()
+    }
+    setSelectedRows([])
+  }, [])
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return
+    const result = await showDeleteConfirm(`${selectedRows.length} mata pelajaran terpilih`)
+    if (result.isConfirmed) {
+      const ids = selectedRows.map((r) => r.id)
+      const { error } = await mapelService.batchDelete(ids)
+      if (!error) {
+        showSuccess(`${selectedRows.length} mata pelajaran berhasil dihapus!`)
+        clearSelection()
+        handleRefresh()
+      } else {
+        showError('Gagal menghapus mata pelajaran terpilih')
+      }
+    }
+  }, [selectedRows, clearSelection, handleRefresh])
+
+  const handleBatchExport = useCallback(() => {
+    exportSelectedRowsToExcel(selectedRows, columnDefs, 'data-mapel-terpilih.xlsx', 'Data Mapel')
+  }, [selectedRows, columnDefs])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
