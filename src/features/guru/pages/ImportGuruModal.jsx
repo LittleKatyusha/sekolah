@@ -34,7 +34,7 @@ const downloadTemplate = () => {
     ['tempat_lahir', 'Opsional, maksimal 50 karakter.'],
     ['alamat', 'Opsional, teks alamat.'],
     ['email', 'Opsional, format email valid, maksimal 100 karakter, unik jika diisi.'],
-    ['no_hp', 'Opsional, nomor telepon/HP, maksimal 20 karakter, unik jika diisi.'],
+    ['no_hp', 'Opsional, nomor telepon/HP hanya angka (karakter non-angka otomatis dihapus), maksimal 20 karakter, unik jika diisi.'],
     ['pendidikan_terakhir', 'Opsional, contoh: SD, SMP, SMA/SMK, D3/Diploma, S1/Sarjana, S2/Magister, S3/Doktor.'],
     ['kode_mapel', 'Opsional, dipisahkan koma contoh: MAT-10,FIS-10. Semua kode mapel harus sudah terdaftar.'],
     ['Duplicate policy', 'Create-only. NIP/NIK/NUPTK/email/no_hp duplikat akan gagal.'],

@@ -58,7 +58,7 @@ const GuruForm = () => {
         jenis_kelamin: normalizeReferenceCode(guru.jenis_kelamin, jenisKelaminOptions),
         tanggal_lahir: guru.tanggal_lahir || '',
         alamat: guru.alamat || '',
-        no_hp: guru.no_hp || '',
+        no_hp: (guru.no_hp || '').replace(/\D/g, ''),
         email: guru.email || '',
         pendidikan_terakhir: normalizeReferenceCode(guru.pendidikan_terakhir, pendidikanOptions),
         foto_profil: guru.foto_profil || '',
@@ -72,7 +72,8 @@ const GuruForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const sanitizedValue = name === 'no_hp' ? value.replace(/\D/g, '') : value
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }))
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
     }
@@ -87,6 +88,10 @@ const GuruForm = () => {
     
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid'
+    }
+
+    if (formData.no_hp && !/^\d+$/.test(formData.no_hp)) {
+      newErrors.no_hp = 'No. HP hanya boleh berisi angka tanpa spasi atau karakter lain'
     }
 
     setErrors(newErrors)
@@ -272,6 +277,8 @@ const GuruForm = () => {
                   value={formData.no_hp}
                   onChange={handleChange}
                   placeholder="08xxxxxxxxxx"
+                  inputMode="numeric"
+                  maxLength={20}
                   error={errors.no_hp}
                 />
               </div>
