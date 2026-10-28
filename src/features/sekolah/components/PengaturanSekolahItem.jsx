@@ -4,6 +4,7 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 const PengaturanSekolahItem = ({
   setting,
   sekolah,
+  referenceOptions = {},
   isEditing,
   editingSettingValue,
   savingSetting,
@@ -17,10 +18,47 @@ const PengaturanSekolahItem = ({
 
   const renderValue = () => {
     const val = setting.value
-    if (setting.key === 'kepala_sekolah_user_id' && sekolah?.kepala_sekolah?.nama) {
+    if (setting.key === 'kepala_sekolah_user_id') {
+      const nama = sekolah?.kepala_sekolah?.nama || (setting.display_value ? setting.display_value.replace(/ \(ID: .*\)/, '') : '')
+      if (nama) {
+        return (
+          <span className="font-medium text-gray-900 dark:text-white">
+            {val || '-'} <span className="text-xs text-primary-600 font-semibold">({nama})</span>
+          </span>
+        )
+      }
+    }
+    if (setting.key === 'tahun_ajaran_aktif') {
+      const matched = referenceOptions?.tahunAjaran?.find((t) => String(t.id) === String(val))
+      const label = matched?.nama || matched?.kode || setting.display_value
+      const isIdOnly = !label || String(label) === String(val)
+      const display = isIdOnly ? (val && !isNaN(val) ? `Tahun Ajaran #${val}` : val) : label
+      const showIdBadge = val && !isNaN(val) && !display?.includes(`ID: ${val}`) && !display?.endsWith(`#${val}`)
       return (
-        <span className="font-medium text-gray-900 dark:text-white">
-          {val || '-'} <span className="text-xs text-primary-600 font-semibold">({sekolah.kepala_sekolah.nama})</span>
+        <span className="font-semibold text-gray-900 dark:text-white inline-flex items-center gap-1 flex-wrap">
+          <span>{display || '-'}</span>
+          {showIdBadge && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-gray-200/60 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-mono font-normal">
+              ID: {val}
+            </span>
+          )}
+        </span>
+      )
+    }
+    if (setting.key === 'ppdb_gelombang_aktif') {
+      const matched = referenceOptions?.ppdbGelombang?.find((g) => String(g.id) === String(val))
+      const label = matched?.nama_gelombang || setting.display_value
+      const isIdOnly = !label || String(label) === String(val)
+      const display = isIdOnly ? (val && !isNaN(val) ? `Gelombang ${val}` : val) : label
+      const showIdBadge = val && !isNaN(val) && !display?.includes(`ID: ${val}`) && !display?.endsWith(` ${val}`)
+      return (
+        <span className="font-semibold text-gray-900 dark:text-white inline-flex items-center gap-1 flex-wrap">
+          <span>{display || '-'}</span>
+          {showIdBadge && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-gray-200/60 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-mono font-normal">
+              ID: {val}
+            </span>
+          )}
         </span>
       )
     }
@@ -41,7 +79,136 @@ const PengaturanSekolahItem = ({
     if (setting.key === 'radius_absensi_meter' && val && !isNaN(val)) {
       return <span className="font-semibold text-gray-900 dark:text-white">{val} meter</span>
     }
-    return <span className="font-medium text-gray-900 dark:text-white break-all">{val || '-'}</span>
+    return <span className="font-medium text-gray-900 dark:text-white break-all">{setting.display_value || val || '-'}</span>
+  }
+
+  const renderEditor = () => {
+    if (setting.key === 'tahun_ajaran_aktif') {
+      const options = referenceOptions?.tahunAjaran || []
+      return (
+        <select
+          autoFocus
+          aria-label={`Nilai setting ${setting.key}`}
+          className="input-field w-full text-xs py-1"
+          value={editingSettingValue}
+          disabled={savingSetting}
+          onChange={(e) => setEditingSettingValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleUpdateSetting(setting)
+            if (e.key === 'Escape') handleCancelEditSetting()
+          }}
+        >
+          <option value="">-- Pilih Tahun Ajaran --</option>
+          {options.map((ta) => (
+            <option key={ta.id} value={String(ta.id)}>
+              {ta.nama || ta.kode} (ID: {ta.id})
+            </option>
+          ))}
+          {!options.some((ta) => String(ta.id) === String(editingSettingValue)) && editingSettingValue && (
+            <option value={editingSettingValue}>
+              Tahun Ajaran ID: {editingSettingValue}
+            </option>
+          )}
+        </select>
+      )
+    }
+
+    if (setting.key === 'ppdb_gelombang_aktif') {
+      const options = referenceOptions?.ppdbGelombang || []
+      return (
+        <select
+          autoFocus
+          aria-label={`Nilai setting ${setting.key}`}
+          className="input-field w-full text-xs py-1"
+          value={editingSettingValue}
+          disabled={savingSetting}
+          onChange={(e) => setEditingSettingValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleUpdateSetting(setting)
+            if (e.key === 'Escape') handleCancelEditSetting()
+          }}
+        >
+          <option value="">-- Pilih Gelombang PPDB --</option>
+          {options.length > 0 ? (
+            options.map((g) => (
+              <option key={g.id} value={String(g.id)}>
+                {g.nama_gelombang} (ID: {g.id})
+              </option>
+            ))
+          ) : (
+            [1, 2, 3, 4, 5].map((num) => (
+              <option key={num} value={String(num)}>
+                Gelombang {num}
+              </option>
+            ))
+          )}
+          {!options.some((g) => String(g.id) === String(editingSettingValue)) &&
+            ![1, 2, 3, 4, 5].includes(Number(editingSettingValue)) &&
+            editingSettingValue && (
+              <option value={editingSettingValue}>
+                Gelombang ID: {editingSettingValue}
+              </option>
+            )}
+        </select>
+      )
+    }
+
+    if (setting.key === 'semester_aktif') {
+      return (
+        <select
+          autoFocus
+          aria-label={`Nilai setting ${setting.key}`}
+          className="input-field w-full text-xs py-1"
+          value={editingSettingValue}
+          disabled={savingSetting}
+          onChange={(e) => setEditingSettingValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleUpdateSetting(setting)
+            if (e.key === 'Escape') handleCancelEditSetting()
+          }}
+        >
+          <option value="1">Semester 1 (Ganjil)</option>
+          <option value="2">Semester 2 (Genap)</option>
+        </select>
+      )
+    }
+
+    if (setting.key === 'maintenance_mode') {
+      return (
+        <select
+          autoFocus
+          aria-label={`Nilai setting ${setting.key}`}
+          className="input-field w-full text-xs py-1"
+          value={editingSettingValue}
+          disabled={savingSetting}
+          onChange={(e) => setEditingSettingValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleUpdateSetting(setting)
+            if (e.key === 'Escape') handleCancelEditSetting()
+          }}
+        >
+          <option value="0">Normal (Akses dibuka)</option>
+          <option value="1">Pemeliharaan Aktif (Maintenance)</option>
+        </select>
+      )
+    }
+
+    return (
+      <input
+        autoFocus
+        type="text"
+        aria-label={`Nilai setting ${setting.key}`}
+        className="input-field w-full text-xs py-1"
+        value={editingSettingValue}
+        maxLength={10000}
+        disabled={savingSetting}
+        onChange={(e) => setEditingSettingValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleUpdateSetting(setting)
+          if (e.key === 'Escape') handleCancelEditSetting()
+        }}
+      />
+    )
   }
 
   return (
@@ -84,20 +251,7 @@ const PengaturanSekolahItem = ({
 
       <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
         {isEditing ? (
-          <input
-            autoFocus
-            type="text"
-            aria-label={`Nilai setting ${setting.key}`}
-            className="input-field w-full text-xs py-1"
-            value={editingSettingValue}
-            maxLength={10000}
-            disabled={savingSetting}
-            onChange={(e) => setEditingSettingValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleUpdateSetting(setting)
-              if (e.key === 'Escape') handleCancelEditSetting()
-            }}
-          />
+          renderEditor()
         ) : (
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-400 text-[11px]">Nilai:</span>

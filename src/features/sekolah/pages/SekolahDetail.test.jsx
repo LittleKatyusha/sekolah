@@ -29,6 +29,18 @@ vi.mock('../services/sekolahService', () => ({
   },
 }))
 
+vi.mock('../../tahun-ajaran/services/tahunAjaranService', () => ({
+  tahunAjaranService: {
+    getAll: vi.fn(() => Promise.resolve({ data: { data: [] } })),
+  },
+}))
+
+vi.mock('../../ppdb/services/ppdbService', () => ({
+  gelombangService: {
+    getAll: vi.fn(() => Promise.resolve({ data: { data: [] } })),
+  },
+}))
+
 vi.mock('../../../utils/sweetalert', () => ({
   showDeleteConfirm: vi.fn(),
   showSuccess: vi.fn(),

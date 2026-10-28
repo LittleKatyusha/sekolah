@@ -6,6 +6,8 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import useAuthStore from '../../../store/useAuthStore'
 import { sekolahService } from '../services/sekolahService'
+import { tahunAjaranService } from '../../tahun-ajaran/services/tahunAjaranService'
+import { gelombangService } from '../../ppdb/services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RfidDevicesCard from '../components/RfidDevicesCard'
 import KartuPelajarSettingsCard from '../components/KartuPelajarSettingsCard'
@@ -17,6 +19,7 @@ const SekolahDetail = () => {
   const [loading, setLoading] = useState(false)
   const [sekolah, setSekolah] = useState(null)
   const [settings, setSettings] = useState([])
+  const [referenceOptions, setReferenceOptions] = useState({ tahunAjaran: [], ppdbGelombang: [] })
   const [loadingSettings, setLoadingSettings] = useState(false)
   const [editingSettingId, setEditingSettingId] = useState(null)
   const [editingSettingValue, setEditingSettingValue] = useState('')
@@ -127,7 +130,31 @@ const SekolahDetail = () => {
       })
     }
     setLoadingSettings(false)
+    fetchReferenceOptions(sekolahId)
     fetchMidtransSettings(sekolahId)
+  }
+
+  const fetchReferenceOptions = async (sekolahId) => {
+    try {
+      const [taRes, gelRes] = await Promise.allSettled([
+        tahunAjaranService.getAll({ per_page: 100 }),
+        gelombangService.getAll({ per_page: 100 }),
+      ])
+      const taList =
+        taRes.status === 'fulfilled' && taRes.value?.data
+          ? (taRes.value.data.data?.data || taRes.value.data.data || [])
+          : []
+      const gelList =
+        gelRes.status === 'fulfilled' && gelRes.value?.data
+          ? (gelRes.value.data.data?.data || gelRes.value.data.data || [])
+          : []
+      setReferenceOptions({
+        tahunAjaran: Array.isArray(taList) ? taList : [],
+        ppdbGelombang: Array.isArray(gelList) ? gelList : [],
+      })
+    } catch {
+      // Non-blocking fallback
+    }
   }
 
   const fetchMidtransSettings = async (sekolahId) => {
@@ -771,6 +798,7 @@ const SekolahDetail = () => {
       <PengaturanSekolahSection
         sekolah={sekolah}
         settings={visibleSettings}
+        referenceOptions={referenceOptions}
         loading={loadingSettings}
         editingSettingId={editingSettingId}
         editingSettingValue={editingSettingValue}

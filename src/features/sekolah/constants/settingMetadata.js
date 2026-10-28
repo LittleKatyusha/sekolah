@@ -18,7 +18,7 @@ export const SETTING_METADATA = {
   tahun_ajaran_aktif: {
     label: 'Tahun Ajaran Aktif',
     category: 'akademik',
-    description: 'ID referensi tahun ajaran berjalan',
+    description: 'Tahun ajaran akademik yang sedang aktif berjalan',
     icon: Calendar,
   },
   semester_aktif: {
@@ -72,7 +72,7 @@ export const SETTING_METADATA = {
   ppdb_gelombang_aktif: {
     label: 'Gelombang PPDB Aktif',
     category: 'layanan',
-    description: 'ID gelombang pendaftaran PPDB yang dibuka saat ini',
+    description: 'Gelombang penerimaan peserta didik baru (PPDB) yang sedang dibuka',
     icon: BookOpen,
   },
   biaya_denda_perpustakaan_per_hari: {

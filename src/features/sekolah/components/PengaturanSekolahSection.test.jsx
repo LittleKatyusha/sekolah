@@ -134,4 +134,98 @@ describe('PengaturanSekolahSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hapus setting radius_absensi_meter' }))
     expect(handleDelete).toHaveBeenCalledWith(2, 'radius_absensi_meter')
   })
+
+  it('renders descriptive names for tahun_ajaran_aktif and ppdb_gelombang_aktif instead of bare ids', () => {
+    const settingsWithIds = [
+      { id: 1, key: 'tahun_ajaran_aktif', value: '2' },
+      { id: 2, key: 'ppdb_gelombang_aktif', value: '1' },
+    ]
+
+    const referenceOptions = {
+      tahunAjaran: [{ id: 2, nama: 'Tahun Ajaran 2025/2026', kode: '2025-2026' }],
+      ppdbGelombang: [{ id: 1, nama_gelombang: 'Gelombang 1 - Jalur Prestasi' }],
+    }
+
+    render(
+      <PengaturanSekolahSection
+        sekolah={{ id: 1 }}
+        settings={settingsWithIds}
+        referenceOptions={referenceOptions}
+      />
+    )
+
+    // Should display full academic year and wave names, not bare numbers
+    expect(screen.getByText('Tahun Ajaran 2025/2026')).toBeInTheDocument()
+    expect(screen.getByText('Gelombang 1 - Jalur Prestasi')).toBeInTheDocument()
+    expect(screen.getAllByText('ID: 2').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('ID: 1').length).toBeGreaterThan(0)
+  })
+
+  it('renders fallback Gelombang X when reference options are empty for numeric id', () => {
+    const settingsWithIds = [
+      { id: 1, key: 'tahun_ajaran_aktif', value: '2' },
+      { id: 2, key: 'ppdb_gelombang_aktif', value: '1' },
+    ]
+
+    render(
+      <PengaturanSekolahSection
+        sekolah={{ id: 1 }}
+        settings={settingsWithIds}
+        referenceOptions={{ tahunAjaran: [], ppdbGelombang: [] }}
+      />
+    )
+
+    // Even without reference options loaded, it should not render bare "1" or "2"
+    expect(screen.getByText('Tahun Ajaran #2')).toBeInTheDocument()
+    expect(screen.getByText('Gelombang 1')).toBeInTheDocument()
+  })
+
+  it('renders select dropdowns when editing tahun_ajaran_aktif and ppdb_gelombang_aktif', () => {
+    const settingsWithIds = [
+      { id: 1, key: 'tahun_ajaran_aktif', value: '2' },
+      { id: 2, key: 'ppdb_gelombang_aktif', value: '1' },
+    ]
+
+    const referenceOptions = {
+      tahunAjaran: [
+        { id: 1, nama: 'Tahun Ajaran 2024/2025' },
+        { id: 2, nama: 'Tahun Ajaran 2025/2026' },
+      ],
+      ppdbGelombang: [
+        { id: 1, nama_gelombang: 'Gelombang 1' },
+        { id: 2, nama_gelombang: 'Gelombang 2' },
+      ],
+    }
+
+    const { rerender } = render(
+      <PengaturanSekolahSection
+        sekolah={{ id: 1 }}
+        settings={settingsWithIds}
+        referenceOptions={referenceOptions}
+        editingSettingId={1}
+        editingSettingValue="2"
+      />
+    )
+
+    const selectTa = screen.getByRole('combobox', { name: 'Nilai setting tahun_ajaran_aktif' })
+    expect(selectTa).toBeInTheDocument()
+    expect(selectTa).toHaveValue('2')
+    expect(screen.getByRole('option', { name: 'Tahun Ajaran 2025/2026 (ID: 2)' })).toBeInTheDocument()
+
+    // Test editing ppdb_gelombang_aktif
+    rerender(
+      <PengaturanSekolahSection
+        sekolah={{ id: 1 }}
+        settings={settingsWithIds}
+        referenceOptions={referenceOptions}
+        editingSettingId={2}
+        editingSettingValue="1"
+      />
+    )
+
+    const selectGel = screen.getByRole('combobox', { name: 'Nilai setting ppdb_gelombang_aktif' })
+    expect(selectGel).toBeInTheDocument()
+    expect(selectGel).toHaveValue('1')
+    expect(screen.getByRole('option', { name: 'Gelombang 1 (ID: 1)' })).toBeInTheDocument()
+  })
 })
