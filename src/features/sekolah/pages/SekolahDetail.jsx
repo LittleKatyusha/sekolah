@@ -9,6 +9,7 @@ import { sekolahService } from '../services/sekolahService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import RfidDevicesCard from '../components/RfidDevicesCard'
 import KartuPelajarSettingsCard from '../components/KartuPelajarSettingsCard'
+import PengaturanSekolahSection from '../components/PengaturanSekolahSection'
 
 const SekolahDetail = () => {
   const navigate = useNavigate()
@@ -39,7 +40,13 @@ const SekolahDetail = () => {
     is_custom: false,
   })
 
-  const visibleSettings = settings.filter(({ key }) => !key.startsWith('ai_') && !key.startsWith('midtrans_'))
+  const visibleSettings = settings.filter(
+    ({ key }) =>
+      !key.startsWith('ai_') &&
+      !key.startsWith('midtrans_') &&
+      !key.startsWith('rfid_') &&
+      !key.startsWith('kartu_pelajar_')
+  )
 
   const AI_PROVIDERS = [
     { id: 'openai', label: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini' },
@@ -761,123 +768,20 @@ const SekolahDetail = () => {
       </div>
     </PermissionGuard>
 
-      <Card>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Settings size={20} />
-              Pengaturan Sekolah
-            </h3>
-          </div>
+      <PengaturanSekolahSection
+        sekolah={sekolah}
+        settings={visibleSettings}
+        loading={loadingSettings}
+        editingSettingId={editingSettingId}
+        editingSettingValue={editingSettingValue}
+        savingSetting={savingSetting}
+        setEditingSettingValue={setEditingSettingValue}
+        handleEditSetting={handleEditSetting}
+        handleCancelEditSetting={handleCancelEditSetting}
+        handleUpdateSetting={handleUpdateSetting}
+        handleDeleteSetting={handleDeleteSetting}
+      />
 
-          {loadingSettings ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            </div>
-          ) : visibleSettings.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <Settings size={48} className="mx-auto mb-3 opacity-50" />
-              <p>Belum ada pengaturan</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
-                  <tr>
-                    <th className="px-4 py-3">Key</th>
-                    <th className="px-4 py-3">Value</th>
-                    <th className="px-4 py-3 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleSettings.map((setting) => {
-                    const isEditing = editingSettingId === setting.id
-
-                    return (
-                      <tr key={setting.id || setting.key} className="border-b dark:border-gray-700">
-                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{setting.key}</td>
-                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                          {isEditing ? (
-                            <input
-                              autoFocus
-                              type="text"
-                              aria-label={`Nilai setting ${setting.key}`}
-                              className="input-field w-full"
-                              value={editingSettingValue}
-                              maxLength={10000}
-                              disabled={savingSetting}
-                              onChange={(event) => setEditingSettingValue(event.target.value)}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter') handleUpdateSetting(setting)
-                                if (event.key === 'Escape') handleCancelEditSetting()
-                              }}
-                            />
-                          ) : setting.key === 'kepala_sekolah_user_id' && sekolah?.kepala_sekolah?.nama ? (
-                            <span>
-                              {setting.value || '-'} <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sekolah.kepala_sekolah.nama})</span>
-                            </span>
-                          ) : (
-                            setting.value || '-'
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <PermissionGuard permission="sekolah.settings.update">
-                            {isEditing ? (
-                              <span className="inline-flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  aria-label={`Simpan setting ${setting.key}`}
-                                  title="Simpan"
-                                  disabled={savingSetting}
-                                  onClick={() => handleUpdateSetting(setting)}
-                                  className="text-green-600 hover:text-green-800 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
-                                >
-                                  <Save size={16} />
-                                </button>
-                                <button
-                                  type="button"
-                                  aria-label={`Batal edit setting ${setting.key}`}
-                                  title="Batal"
-                                  disabled={savingSetting}
-                                  onClick={handleCancelEditSetting}
-                                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50 dark:text-gray-400 dark:hover:text-gray-200"
-                                >
-                                  <X size={16} />
-                                </button>
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                aria-label={`Edit setting ${setting.key}`}
-                                title="Edit"
-                                onClick={() => handleEditSetting(setting)}
-                                className="mr-4 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
-                              >
-                                <Edit size={16} />
-                              </button>
-                            )}
-                          </PermissionGuard>
-                          <PermissionGuard permission="sekolah.settings.delete">
-                            <button
-                              type="button"
-                              aria-label={`Hapus setting ${setting.key}`}
-                              title="Hapus"
-                              onClick={() => handleDeleteSetting(setting.id, setting.key)}
-                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </PermissionGuard>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </Card>
     </div>
   )
 }
