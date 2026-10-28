@@ -169,7 +169,10 @@ const DaftarTab = ({ autoSekolah, subdomain, sekolahOptions, sekolahLoading }) =
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const sanitizedValue = ['telp_hp', 'nisn'].includes(name)
+      ? value.replace(/\D/g, '')
+      : value
+    setFormData((prev) => ({ ...prev, [name]: sanitizedValue }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
@@ -186,6 +189,12 @@ const DaftarTab = ({ autoSekolah, subdomain, sekolahOptions, sekolahLoading }) =
     if (!formData.nama_lengkap.trim())   e.nama_lengkap      = 'Nama lengkap wajib diisi'
     if (!formData.email.trim())          e.email             = 'Email wajib diisi'
     if (!formData.jenis_kelamin)         e.jenis_kelamin     = 'Jenis kelamin wajib dipilih'
+    if (formData.nisn && !/^\d+$/.test(formData.nisn)) {
+      e.nisn = 'NISN hanya boleh berisi angka'
+    }
+    if (formData.telp_hp && !/^\d+$/.test(formData.telp_hp)) {
+      e.telp_hp = 'No. HP hanya boleh berisi angka tanpa spasi atau karakter lain'
+    }
     if (!files.kartukeluarga)            e.kartukeluarga     = 'Wajib diunggah'
     if (!files.akte)                     e.akte              = 'Wajib diunggah'
     if (!files.rapor)                    e.rapor             = 'Wajib diunggah'
@@ -385,14 +394,14 @@ const DaftarTab = ({ autoSekolah, subdomain, sekolahOptions, sekolahLoading }) =
             <Label>NISN</Label>
             <div className="relative">
               <CreditCard size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" name="nisn" value={formData.nisn} onChange={handleChange} placeholder="Nomor Induk Siswa Nasional" className={`${fieldClass(errors, 'nisn')} pl-9`} />
+              <input type="text" name="nisn" value={formData.nisn} onChange={handleChange} inputMode="numeric" maxLength={20} placeholder="Nomor Induk Siswa Nasional" className={`${fieldClass(errors, 'nisn')} pl-9`} />
             </div>
           </div>
           <div>
             <Label>No. HP / WhatsApp</Label>
             <div className="relative">
               <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" name="telp_hp" value={formData.telp_hp} onChange={handleChange} placeholder="08xxxxxxxxxx" className={`${fieldClass(errors, 'telp_hp')} pl-9`} />
+              <input type="text" name="telp_hp" value={formData.telp_hp} onChange={handleChange} inputMode="numeric" maxLength={20} placeholder="08xxxxxxxxxx" className={`${fieldClass(errors, 'telp_hp')} pl-9`} />
             </div>
           </div>
           <div>

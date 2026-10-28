@@ -101,9 +101,9 @@ const WaliForm = () => {
       const wali = data.data;
       setFormData({
         nama: wali.nama || '',
-        nik: wali.nik || '',
+        nik: (wali.nik || '').replace(/\D/g, ''),
         jenis_kelamin: normalizeReferenceCode(wali.jenis_kelamin, options.jenisKelaminOptions),
-        no_hp: wali.no_hp || '',
+        no_hp: (wali.no_hp || '').replace(/\D/g, ''),
         alamat: wali.alamat || '',
         pendidikan_terakhir: normalizeReferenceCode(wali.pendidikan_terakhir, options.pendidikanOptions),
         pekerjaan: normalizeReferenceCode(wali.pekerjaan, options.pekerjaanOptions),
@@ -118,7 +118,10 @@ const WaliForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const sanitizedValue = ['no_hp', 'nik'].includes(name)
+      ? value.replace(/\D/g, '')
+      : value;
+    setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -130,6 +133,13 @@ const WaliForm = () => {
     if (!formData.nik) newErrors.nik = 'NIK wajib diisi';
     if (!formData.jenis_kelamin) newErrors.jenis_kelamin = 'Jenis kelamin wajib dipilih';
     
+    if (formData.nik && !/^\d+$/.test(formData.nik)) {
+      newErrors.nik = 'NIK hanya boleh berisi angka';
+    }
+    if (formData.no_hp && !/^\d+$/.test(formData.no_hp)) {
+      newErrors.no_hp = 'No. HP hanya boleh berisi angka tanpa spasi atau karakter lain';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -217,6 +227,8 @@ const WaliForm = () => {
                   name="nik"
                   value={formData.nik}
                   onChange={handleChange}
+                  inputMode="numeric"
+                  maxLength={16}
                   placeholder="Nomor Induk Kependudukan"
                   error={errors.nik}
                 />
@@ -255,6 +267,8 @@ const WaliForm = () => {
                   name="no_hp"
                   value={formData.no_hp}
                   onChange={handleChange}
+                  inputMode="numeric"
+                  maxLength={20}
                   placeholder="08xxxxxxxxxx"
                   error={errors.no_hp}
                 />

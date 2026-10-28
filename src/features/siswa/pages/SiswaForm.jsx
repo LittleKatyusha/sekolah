@@ -80,9 +80,9 @@ const SiswaForm = () => {
         const siswa = data.data
         setFormData({
           nis: siswa.nis || '',
-            nisn: siswa.nisn || '',
-            rfid_uid: siswa.rfid_uid || '',
-          nik: siswa.nik || '',
+          nisn: (siswa.nisn || '').replace(/\D/g, ''),
+          rfid_uid: siswa.rfid_uid || '',
+          nik: (siswa.nik || '').replace(/\D/g, ''),
           nama: siswa.nama || '',
           // API kadang mengembalikan label; select memakai kode dari sys_references.
           jenis_kelamin: normalizeReferenceCode(siswa.jenis_kelamin, jenisKelaminOptions),
@@ -91,7 +91,7 @@ const SiswaForm = () => {
           agama: normalizeReferenceCode(siswa.agama, agamaOptions),
           alamat: siswa.alamat || '',
           email: siswa.email || '',
-          no_hp: siswa.no_hp || '',
+          no_hp: (siswa.no_hp || '').replace(/\D/g, ''),
           golongan_darah: normalizeGolonganDarah(siswa.golongan_darah),
           tinggi_badan: siswa.tinggi_badan ?? '',
           berat_badan: siswa.berat_badan ?? '',
@@ -124,7 +124,10 @@ const SiswaForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const sanitizedValue = ['no_hp', 'nik', 'nisn'].includes(name)
+      ? value.replace(/\D/g, '')
+      : value
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }))
     // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
@@ -140,6 +143,18 @@ const SiswaForm = () => {
     
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid'
+    }
+
+    if (formData.nisn && !/^\d+$/.test(formData.nisn)) {
+      newErrors.nisn = 'NISN hanya boleh berisi angka'
+    }
+
+    if (formData.nik && !/^\d+$/.test(formData.nik)) {
+      newErrors.nik = 'NIK hanya boleh berisi angka'
+    }
+
+    if (formData.no_hp && !/^\d+$/.test(formData.no_hp)) {
+      newErrors.no_hp = 'No. HP hanya boleh berisi angka tanpa spasi atau karakter lain'
     }
 
     setErrors(newErrors)
@@ -276,6 +291,8 @@ const SiswaForm = () => {
                     name="nisn"
                     value={formData.nisn}
                     onChange={handleChange}
+                    inputMode="numeric"
+                    maxLength={10}
                     placeholder="Nomor Induk Siswa Nasional"
                     error={errors.nisn}
                   />
@@ -290,6 +307,8 @@ const SiswaForm = () => {
                     name="nik"
                     value={formData.nik}
                     onChange={handleChange}
+                    inputMode="numeric"
+                    maxLength={16}
                     placeholder="Nomor Induk Kependudukan"
                     error={errors.nik}
                   />
@@ -451,6 +470,8 @@ const SiswaForm = () => {
                     name="no_hp"
                     value={formData.no_hp}
                     onChange={handleChange}
+                    inputMode="numeric"
+                    maxLength={14}
                     placeholder="08xxxxxxxxxx"
                     error={errors.no_hp}
                   />

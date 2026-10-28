@@ -25,7 +25,7 @@ const downloadTemplate = () => {
     ['Wajib diisi', 'nama, nik, no_hp, hubungan, nis_siswa'],
     ['nama', 'Maksimal 100 karakter, nama lengkap wali siswa.'],
     ['nik', 'Wajib, tepat 16 digit angka, unik; digunakan sebagai identitas login wali.'],
-    ['no_hp', 'Wajib, nomor HP aktif wali, maksimal 20 karakter.'],
+    ['no_hp', 'Wajib, nomor HP aktif wali hanya angka (simbol/spasi otomatis dibersihkan saat import), maksimal 20 karakter.'],
     ['hubungan', 'Wajib, hubungan wali: Ayah, Ibu, atau Wali.'],
     ['nis_siswa', 'Wajib, NIS siswa yang diasuh. Pisahkan koma jika lebih dari satu anak (contoh: 2026001,2026002).'],
     ['jenis_kelamin', 'Opsional, L atau P (atau Laki-Laki / Perempuan).'],

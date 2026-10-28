@@ -73,4 +73,16 @@ describe('SekolahForm', () => {
       expect(showSuccess).toHaveBeenCalledWith('Profil sekolah berhasil diperbarui!')
     })
   })
+
+  it('strips non-digits in real-time for npsn', async () => {
+    render(
+      <MemoryRouter>
+        <SekolahForm />
+      </MemoryRouter>
+    )
+
+    const npsnInput = await screen.findByPlaceholderText('Masukkan NPSN')
+    fireEvent.change(npsnInput, { target: { name: 'npsn', value: '1234-5678-ABCD' } })
+    expect(npsnInput.value).toBe('12345678')
+  })
 })

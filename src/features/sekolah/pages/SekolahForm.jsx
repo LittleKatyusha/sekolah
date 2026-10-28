@@ -81,7 +81,7 @@ const SekolahForm = () => {
       setSekolahId(currentSekolah.id)
       setFormData({
         nama_sekolah: currentSekolah.nama_sekolah || '',
-        npsn: currentSekolah.npsn || '',
+        npsn: (currentSekolah.npsn || '').replace(/\D/g, ''),
         alamat: currentSekolah.alamat || '',
         logo_path: currentSekolah.logo_path || '',
         is_active: currentSekolah.is_active !== null && currentSekolah.is_active !== undefined ? String(Number(currentSekolah.is_active)) : '1',
@@ -96,7 +96,8 @@ const SekolahForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const sanitizedValue = name === 'npsn' ? value.replace(/\D/g, '') : value
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }))
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
     }
@@ -105,6 +106,9 @@ const SekolahForm = () => {
   const validate = () => {
     const newErrors = {}
     if (!formData.nama_sekolah.trim()) newErrors.nama_sekolah = 'Nama sekolah wajib diisi'
+    if (formData.npsn && !/^\d+$/.test(formData.npsn)) {
+      newErrors.npsn = 'NPSN hanya boleh berisi angka'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -195,6 +199,8 @@ const SekolahForm = () => {
                   name="npsn"
                   value={formData.npsn}
                   onChange={handleChange}
+                  inputMode="numeric"
+                  maxLength={20}
                   placeholder="Masukkan NPSN"
                   error={errors.npsn}
                 />

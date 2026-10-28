@@ -94,9 +94,9 @@ const PendaftarForm = () => {
         nama_lengkap: p.nama_lengkap || '',
         email: p.email || '',
         password: '',
-        nisn: p.nisn || '',
+        nisn: (p.nisn || '').replace(/\D/g, ''),
         jenis_kelamin: p.jenis_kelamin != null ? String(p.jenis_kelamin) : '',
-        telp_hp: p.telp_hp || '',
+        telp_hp: (p.telp_hp || '').replace(/\D/g, ''),
         asal_sekolah: p.asal_sekolah || '',
         tanggal_lahir: p.tanggal_lahir?.slice(0, 10) || '',
         pilihan_jurusan_id: p.pilihan_jurusan_id ? String(p.pilihan_jurusan_id) : '',
@@ -117,7 +117,10 @@ const PendaftarForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const sanitizedValue = ['telp_hp', 'nisn'].includes(name)
+      ? value.replace(/\D/g, '')
+      : value
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }))
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }))
   }
 
@@ -126,6 +129,12 @@ const PendaftarForm = () => {
     if (!formData.nama_lengkap.trim()) newErrors.nama_lengkap = 'Nama lengkap wajib diisi'
     if (!formData.email.trim()) newErrors.email = 'Email wajib diisi'
     if (!formData.jenis_kelamin) newErrors.jenis_kelamin = 'Jenis kelamin wajib dipilih'
+    if (formData.nisn && !/^\d+$/.test(formData.nisn)) {
+      newErrors.nisn = 'NISN hanya boleh berisi angka'
+    }
+    if (formData.telp_hp && !/^\d+$/.test(formData.telp_hp)) {
+      newErrors.telp_hp = 'No. HP hanya boleh berisi angka tanpa spasi atau karakter lain'
+    }
     if (!isEditMode) {
       if (!formData.ppdb_gelombang_id) newErrors.ppdb_gelombang_id = 'Gelombang wajib dipilih'
       if (!formData.mst_sekolah_id) newErrors.mst_sekolah_id = 'Sekolah ID wajib diisi'
@@ -303,12 +312,12 @@ const PendaftarForm = () => {
 
                 <div>
                   <LabelField>NISN</LabelField>
-                  <Input type="text" name="nisn" value={formData.nisn} onChange={handleChange} placeholder="NISN (opsional)" error={errors.nisn} />
+                  <Input type="text" name="nisn" value={formData.nisn} onChange={handleChange} inputMode="numeric" maxLength={20} placeholder="NISN (opsional)" error={errors.nisn} />
                 </div>
 
                 <div>
                   <LabelField>No. Telp/HP</LabelField>
-                  <Input type="text" name="telp_hp" value={formData.telp_hp} onChange={handleChange} placeholder="No. telepon (opsional)" error={errors.telp_hp} />
+                  <Input type="text" name="telp_hp" value={formData.telp_hp} onChange={handleChange} inputMode="numeric" maxLength={20} placeholder="No. telepon (opsional)" error={errors.telp_hp} />
                 </div>
 
                 <div>
