@@ -86,7 +86,17 @@ const JadwalPelajaranList = () => {
       if (selectedKelasId && selectedKelasId !== 'all') {
         const { data, error } = await jadwalPelajaranService.getByKelas(selectedKelasId)
         if (!error && data) {
-          const items = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []
+          const rawItems = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []
+          const selectedKelasObj = kelasList.find((k) => String(k.id) === String(selectedKelasId))
+          const items = rawItems.map((item) => ({
+            ...item,
+            mst_kelas_id: item.mst_kelas_id ?? Number(selectedKelasId),
+            kelas:
+              item.kelas ||
+              (selectedKelasObj
+                ? { id: selectedKelasObj.id, nama_kelas: selectedKelasObj.nama_kelas }
+                : null),
+          }))
           setCardSchedules(items)
         } else {
           setCardSchedules([])
@@ -110,7 +120,7 @@ const JadwalPelajaranList = () => {
     } finally {
       setLoadingCards(false)
     }
-  }, [selectedKelasId])
+  }, [selectedKelasId, kelasList])
 
   useEffect(() => {
     if (viewMode === 'timeline') {

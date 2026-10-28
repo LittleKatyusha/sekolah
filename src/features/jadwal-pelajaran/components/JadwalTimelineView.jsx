@@ -171,7 +171,7 @@ const JadwalTimelineView = ({
 
       if (selectedKelasId && selectedKelasId !== 'all') {
         const itemKelasId = item.kelas?.id ?? item.mst_kelas_id
-        if (String(itemKelasId) !== String(selectedKelasId)) return false
+        if (itemKelasId && String(itemKelasId) !== String(selectedKelasId)) return false
       }
 
       if (searchQuery.trim()) {
@@ -453,7 +453,9 @@ const JadwalTimelineView = ({
                     'Mata Pelajaran'
                   const guruNama = item.guru_mapel?.guru?.nama || 'Guru Pengampu'
                   const guruNip = item.guru_mapel?.guru?.nip
-                  const kelasNama = item.kelas?.nama_kelas
+                  const kelasNama =
+                    item.kelas?.nama_kelas ||
+                    (selectedKelasId !== 'all' ? activeClassName : null)
                   const theme = getSubjectTheme(mapelNama)
                   const duration = getDurationText(item.jam_mulai, item.jam_selesai)
                   const slotStatus = getSlotStatus(item.hari, item.jam_mulai, item.jam_selesai)
