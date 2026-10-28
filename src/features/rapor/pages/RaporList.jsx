@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Printer } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, Printer, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import GenerateRaporKelasModal from './GenerateRaporKelasModal'
 import { raporService } from '../services/raporService'
 import { reportService } from '../../../services/reportService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
@@ -114,6 +115,7 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onPrint }) => {
 const RaporList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -319,6 +321,10 @@ const RaporList = () => {
             <RefreshCw size={18} />
           </Button>
           <PermissionGuard permission="rapor.create">
+            <Button onClick={() => setShowGenerateModal(true)} variant="secondary">
+              <Sparkles size={18} className="mr-2" />
+              Generate Rapor Kelas
+            </Button>
             <Button onClick={() => navigate('/akademik/rapor/create')}>
               <Plus size={18} className="mr-2" />
               Tambah Rapor
@@ -341,6 +347,12 @@ const RaporList = () => {
           height={600}
         />
       </Card>
+
+      <GenerateRaporKelasModal
+        isOpen={showGenerateModal}
+        onClose={() => setShowGenerateModal(false)}
+        onSuccess={() => handleRefresh()}
+      />
     </div>
   )
 }
