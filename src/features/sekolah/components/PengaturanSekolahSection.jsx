@@ -181,14 +181,11 @@ const PengaturanSekolahSection = ({
               </option>
             ))
           ) : (
-            [1, 2, 3, 4, 5].map((num) => (
-              <option key={num} value={String(num)}>
-                Gelombang {num}
-              </option>
-            ))
+            <option value="" disabled>
+              Belum ada data gelombang PPDB
+            </option>
           )}
           {!options.some((g) => String(g.id) === String(editingSettingValue)) &&
-            ![1, 2, 3, 4, 5].includes(Number(editingSettingValue)) &&
             editingSettingValue && (
               <option value={editingSettingValue}>
                 Gelombang ID: {editingSettingValue}

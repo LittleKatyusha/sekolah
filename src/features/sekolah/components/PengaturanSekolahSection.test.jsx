@@ -228,4 +228,21 @@ describe('PengaturanSekolahSection', () => {
     expect(selectGel).toHaveValue('1')
     expect(screen.getByRole('option', { name: 'Gelombang 1 (ID: 1)' })).toBeInTheDocument()
   })
+
+  it('renders disabled empty placeholder option when ppdb_gelombang has no options', () => {
+    const settings = [{ id: 2, key: 'ppdb_gelombang_aktif', value: '' }]
+    render(
+      <PengaturanSekolahSection
+        sekolah={{ id: 1 }}
+        settings={settings}
+        referenceOptions={{ ppdbGelombang: [] }}
+        editingSettingId={2}
+        editingSettingValue=""
+      />
+    )
+
+    expect(screen.getByRole('option', { name: 'Belum ada data gelombang PPDB' })).toBeDisabled()
+    expect(screen.queryByRole('option', { name: 'Gelombang 1' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Gelombang 5' })).not.toBeInTheDocument()
+  })
 })
