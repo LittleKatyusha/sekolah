@@ -77,6 +77,14 @@ export const wahaService = {
       payload: unwrapResponse(response),
     }
   },
+  notifyTugas: async (data) => {
+    const response = await apiService.post(`${BASE_URL}/notify/tugas`, data)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
 }
 
 export default wahaService

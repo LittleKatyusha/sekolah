@@ -86,6 +86,15 @@ export const tugasService = {
   getByGuruMapel: async (guruMapelId, params = {}) => {
     return await apiService.get(`${BASE_URL}/guru-mapel/${guruMapelId}`, { params })
   },
+  /**
+   * Kirim notifikasi WhatsApp ke seluruh siswa di kelas terkait
+   * @param {number|string} id - Tugas ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  notifyWhatsApp: async (id) => {
+    return await apiService.post(`${BASE_URL}/${id}/notify-wa`)
+  },
+
 }
 
 // TugasSiswa (Student Submissions) service
