@@ -221,6 +221,7 @@ const ICON_MAP = {
   'bi-credit-card': BarChart3,
   'bi-cash': BarChart3,
   'bi-receipt': BarChart3,
+  'bi-tags': BarChart3,
   'bi-shield': Settings,
   'bi-key': Settings,
   'bi-list': Table2,

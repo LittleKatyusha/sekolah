@@ -114,6 +114,8 @@ const Permissions = lazy(() => import('./pages/Permissions'))
 const RolePermissions = lazy(() => import('./pages/RolePermissions'))
 const TarifSpp = lazy(() => import('./pages/TarifSpp'))
 const PembayaranSpp = lazy(() => import('./pages/PembayaranSpp'))
+const JenisPembayaran = lazy(() => import('./pages/JenisPembayaran'))
+const PembayaranLain = lazy(() => import('./pages/PembayaranLain'))
 const Ekstrakurikuler = lazy(() => import('./pages/Ekstrakurikuler'))
 const Organisasi = lazy(() => import('./pages/Organisasi'))
 const Ppdb = lazy(() => import('./pages/Ppdb'))
@@ -423,6 +425,8 @@ function App() {
               {/* ===== KEUANGAN (SPP split) ===== */}
               <Route path="/keuangan/tarif-spp/*" element={<TarifSpp />} />
               <Route path="/keuangan/pembayaran-spp/*" element={<PembayaranSpp />} />
+              <Route path="/keuangan/jenis-pembayaran/*" element={<JenisPembayaran />} />
+              <Route path="/keuangan/pembayaran-lain/*" element={<PembayaranLain />} />
 
               {/* Ekstrakurikuler */}
               <Route path="/ekstrakurikuler/*" element={<Ekstrakurikuler />} />

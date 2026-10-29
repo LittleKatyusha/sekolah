@@ -262,6 +262,18 @@ export const ROUTE_RULES = [
   ['/keuangan/pembayaran-spp/:id', 'pembayaran-spp.view'],
   ['/keuangan/pembayaran-spp', 'pembayaran-spp.view'],
 
+  // ── Keuangan — Jenis Pembayaran ────────────────────────────
+  ['/keuangan/jenis-pembayaran/create', 'jenis-pembayaran.create'],
+  ['/keuangan/jenis-pembayaran/:id/edit', 'jenis-pembayaran.update'],
+  ['/keuangan/jenis-pembayaran/:id', 'jenis-pembayaran.view'],
+  ['/keuangan/jenis-pembayaran', 'jenis-pembayaran.view'],
+
+  // ── Keuangan — Pembayaran Lain-Lain ────────────────────────
+  ['/keuangan/pembayaran-lain/create', 'pembayaran-lain.create'],
+  ['/keuangan/pembayaran-lain/:id/edit', 'pembayaran-lain.update'],
+  ['/keuangan/pembayaran-lain/:id', 'pembayaran-lain.view'],
+  ['/keuangan/pembayaran-lain', 'pembayaran-lain.view'],
+
   // ── PPDB ───────────────────────────────────────────────────
   ['/ppdb/gelombang/create', 'ppdb.gelombang.create'],
   ['/ppdb/gelombang/:gelombangId/kriteria/create', 'ppdb.gelombang.create'],
