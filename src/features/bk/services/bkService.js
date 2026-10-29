@@ -56,7 +56,18 @@ export const bkLampiranService = (() => {
 })()
 
 /** Service for managing BK Wali (parent/guardian involvement in counseling) */
-export const bkWaliService = createCrudService('/bk/wali')
+export const bkWaliService = {
+  ...createCrudService('/bk/wali'),
+  notifyWhatsApp: async (id, data = {}) => {
+    return await apiService.post(`/bk/wali/${id}/notify-wa`, data)
+  },
+  downloadSuratPanggilan: async (id, params = {}) => {
+    return await apiService.get(`/bk/wali/${id}/cetak-surat`, {
+      params,
+      responseType: 'blob',
+    })
+  },
+}
 
 export default {
   bkJenisService,

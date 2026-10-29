@@ -17,6 +17,15 @@ const BkWaliForm = () => {
   const submitPermission = 'bk-wali.manage'
 
   const { options: peranOptions } = useReferenceOptions('peran_wali_bk')
+  const resolvedPeranOptions = useMemo(() => {
+    return peranOptions?.length > 0
+      ? peranOptions
+      : [
+          { value: 1, label: 'Dipanggil (Panggilan Orang Tua/Wali)' },
+          { value: 2, label: 'Pendamping' },
+          { value: 3, label: 'Informasi' },
+        ]
+  }, [peranOptions])
 
   const [loading, setLoading] = useState(false)
   const [fetchingData, setFetchingData] = useState(false)
@@ -34,7 +43,7 @@ const BkWaliForm = () => {
 
   const buildKasusOption = useCallback((k) => ({
     value: k.id,
-    label: `Kasus #${k.id} - ${k.siswa?.nama || k.keterangan || 'Kasus ' + k.id}`
+    label: `Kasus #${k.id} - ${k.siswa?.nama ? k.siswa.nama + ' : ' : ''}${k.judul_kasus || k.keterangan || 'Kasus ' + k.id}`
   }), [])
 
   const buildWaliOption = useCallback((w) => ({
@@ -251,7 +260,7 @@ const BkWaliForm = () => {
                   }`}
                 >
                   <option value="">Pilih Peran</option>
-                  {peranOptions.map(opt => (
+                  {resolvedPeranOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>

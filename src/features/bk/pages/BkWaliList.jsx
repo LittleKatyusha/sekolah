@@ -53,40 +53,68 @@ const BkWaliList = () => {
       filter: false
     },
     {
-      field: 'trx_bk_kasus_id',
-      headerName: 'ID Kasus',
-      width: 120,
-      sortable: true,
-      filter: true
-    },
-    {
-      headerName: 'Nama Wali',
-      flex: 2,
+      headerName: 'Siswa',
+      flex: 1.5,
       sortable: true,
       filter: true,
       cellRenderer: (params) => {
-        return params.data?.wali_murid?.nama || '-'
+        const siswa = params.data?.kasus?.siswa
+        if (!siswa) return '-'
+        return (
+          <div className="py-1">
+            <div className="font-medium text-gray-900 dark:text-gray-100">{siswa.nama}</div>
+            <div className="text-xs text-gray-500">
+              {siswa.kelas ? `${siswa.kelas} • ` : ''}NIS: {siswa.nis || '-'}
+            </div>
+          </div>
+        )
       }
     },
     {
-      headerName: 'No. Telp',
-      flex: 1,
+      headerName: 'Kasus BK',
+      flex: 1.5,
       sortable: true,
       filter: true,
       cellRenderer: (params) => {
-        return params.data?.wali_murid?.notelp || '-'
+        const kasus = params.data?.kasus
+        return (
+          <div className="py-1">
+            <div className="font-medium text-gray-900 dark:text-gray-100">
+              Kasus #{params.data?.trx_bk_kasus_id}
+            </div>
+            <div className="text-xs text-gray-500 line-clamp-1">
+              {kasus?.judul_kasus || '-'}
+            </div>
+          </div>
+        )
+      }
+    },
+    {
+      headerName: 'Wali Murid',
+      flex: 1.5,
+      sortable: true,
+      filter: true,
+      cellRenderer: (params) => {
+        const wali = params.data?.wali_murid
+        if (!wali) return '-'
+        return (
+          <div className="py-1">
+            <div className="font-medium text-gray-900 dark:text-gray-100">{wali.nama}</div>
+            <div className="text-xs text-gray-500">{wali.notelp || 'Tanpa no. telepon'}</div>
+          </div>
+        )
       }
     },
     {
       field: 'peran',
-      headerName: 'Peran',
-      width: 150,
+      headerName: 'Status / Peran',
+      width: 140,
       sortable: true,
       filter: true,
       cellRenderer: (params) => {
         return (
           <div className="h-full flex items-center">
-            {getPeranBadge(params.value)}
+            {getPeranBadge(params.data?.peran_code || params.value)}
           </div>
         )
       }

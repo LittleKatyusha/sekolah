@@ -58,16 +58,18 @@ export const getMetodeBadge = (metode) => {
 }
 
 export const getPeranBadge = (peran) => {
-  switch (peran) {
-    case 1:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">Pelapor</span>
-    case 2:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Pendamping</span>
-    case 3:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">Wali Siswa</span>
-    case 4:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">Saksi</span>
-    default:
-      return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">{peran || '-'}</span>
+  const norm = typeof peran === 'string' ? peran.toLowerCase().trim() : peran
+  if (norm === 1 || norm === '1' || norm === 'dipanggil') {
+    return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">Dipanggil</span>
   }
+  if (norm === 2 || norm === '2' || norm === 'pendamping') {
+    return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Pendamping</span>
+  }
+  if (norm === 3 || norm === '3' || norm === 'informasi') {
+    return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">Informasi</span>
+  }
+  if (norm === 4 || norm === '4' || norm === 'saksi') {
+    return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Saksi</span>
+  }
+  return <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">{peran || '-'}</span>
 }
