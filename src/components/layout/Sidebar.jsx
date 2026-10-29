@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -466,7 +466,13 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
 
           {/* User info */}
-          <div className="p-4 border-b" style={{ borderColor: 'var(--sb-border)' }}>
+          <Link
+            to="/profile"
+            onClick={onClose}
+            className="p-4 border-b block hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            style={{ borderColor: 'var(--sb-border)' }}
+            title="Buka Profil Pengguna"
+          >
             <div className="flex items-center justify-start gap-3 text-left">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
@@ -500,7 +506,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </span>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">

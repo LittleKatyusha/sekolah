@@ -11,6 +11,7 @@ const BACKEND_UNAVAILABLE_PATHS = [
 
 // Allowlist for authenticated / general private routes that require no specific granular permission
 const ALLOWLIST_PRIVATE_PATHS = [
+  '/profile',
   '/notifikasi',
   '/support/tickets',
   '/tickets',

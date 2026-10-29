@@ -197,6 +197,35 @@ const Header = ({ onMenuClick }) => {
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
+
+          {/* User Profile */}
+          <Link
+            to="/profile"
+            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-1"
+            title="Profil Pengguna"
+            aria-label="Profil Pengguna"
+          >
+            <div
+              className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-gray-200 dark:border-gray-700 shadow-xs"
+              style={{ backgroundColor: 'var(--sb-avatar, #e0e7ff)' }}
+            >
+              {user?.avatar || user?.foto_profil ? (
+                <img
+                  src={user.avatar || user.foto_profil}
+                  alt={user?.name || 'User'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              ) : (
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              )}
+            </div>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-200 hidden md:inline truncate max-w-[120px]">
+              {user?.name || 'Profil'}
+            </span>
+          </Link>
         </div>
       </div>
     </header>

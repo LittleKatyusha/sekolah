@@ -133,6 +133,7 @@ const Statistik = lazy(() => import('./pages/Statistik'))
 const Spk = lazy(() => import('./pages/Spk'))
 const Reports = lazy(() => import('./pages/Reports'))
 const SiswaInsightPage = lazy(() => import('./features/siswa/pages/SiswaInsightPage'))
+const ProfilePage = lazy(() => import('./features/profile/pages/ProfilePage'))
 const NotifikasiPage = lazy(() => import('./features/notifikasi/pages/NotifikasiPage'))
 const TicketListPage = lazy(() => import('./features/tickets/pages/TicketListPage'))
 const PanduanPage = lazy(() => import('./features/panduan/pages/PanduanPage'))
@@ -295,7 +296,6 @@ function App() {
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Public School Profile — no authentication required */}
-            <Route path="/profile" element={<PublicProfile />} />
             <Route path="/profil" element={<PublicProfile />} />
 
             {/* Public PPDB portal — no authentication required */}
@@ -448,6 +448,9 @@ function App() {
 
               {/* SPK */}
               <Route path="/spk/*" element={<Spk />} />
+
+              {/* User Self-Service Profile */}
+              <Route path="/profile" element={<ProfilePage />} />
 
               {/* Notifikasi */}
               <Route path="/notifikasi" element={<NotifikasiPage />} />
