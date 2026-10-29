@@ -70,6 +70,16 @@ export const materiService = {
   getByGuruMapel: async (guruMapelId, params = {}) => {
     return await apiService.get(`${BASE_URL}/guru-mapel/${guruMapelId}`, { params })
   },
+  /**
+   * Resend WhatsApp notification for materi
+   * @param {number|string} id - Materi ID
+   * @param {Object} [payload] - Optional payload (mst_kelas_id)
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  notifyWhatsApp: async (id, payload = {}) => {
+    return await apiService.post(`${BASE_URL}/${id}/notify-wa`, payload)
+  },
+
 }
 
 export default materiService

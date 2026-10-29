@@ -84,6 +84,14 @@ export const wahaService = {
       payload: unwrapResponse(response),
     }
   },
+  notifyMateri: async (data) => {
+    const response = await apiService.post(`${BASE_URL}/notify/materi`, data)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
 
 }
 
