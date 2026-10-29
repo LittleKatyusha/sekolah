@@ -81,6 +81,10 @@ export const pembayaranSppService = {
     return await apiService.post(`${PEMBAYARAN_BASE}/batch-bayar`, data)
   },
 
+  notifyWhatsApp: async (id) => {
+    return await apiService.post(`${PEMBAYARAN_BASE}/${id}/notify-wa`)
+  },
+
   hitungDenda: async (params = {}) => {
     return await apiService.get(`${PEMBAYARAN_BASE}/hitung-denda`, { params })
   },

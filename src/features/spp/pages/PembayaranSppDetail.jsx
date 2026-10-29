@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, DollarSign, User, Calendar, Hash, CreditCard, FileText, ExternalLink, Globe } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, DollarSign, User, Calendar, Hash, CreditCard, FileText, ExternalLink, Globe, Send } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
@@ -29,6 +29,7 @@ const PembayaranSppDetail = () => {
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(false)
+  const [sendingWa, setSendingWa] = useState(false)
   const [pembayaran, setPembayaran] = useState(null)
   const { options: statusBayarOptions } = useReferenceOptions('status_bayar')
   const { options: metodePembayaranOptions } = useReferenceOptions('metode_pembayaran')
@@ -62,6 +63,19 @@ const PembayaranSppDetail = () => {
       }
     }
   }
+  const handleSendWa = async () => {
+    setSendingWa(true)
+    const { data, error } = await pembayaranSppService.notifyWhatsApp(pembayaran.id)
+    if (!error && data?.data) {
+      const sent = data.data.sent_count ?? 0
+      const total = data.data.total_recipients ?? 0
+      showSuccess(`Kuitansi WhatsApp berhasil diproses (${sent}/${total} penerima terkirim)`)
+    } else {
+      showError(error?.response?.data?.message || 'Gagal mengirim kuitansi WhatsApp')
+    }
+    setSendingWa(false)
+  }
+
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -104,6 +118,20 @@ const PembayaranSppDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Pembayaran SPP</h1>
         </div>
         <div className="flex gap-3">
+          {(pembayaran.status === 1 || pembayaran.status === '1' || pembayaran.status === 'lunas') && (
+            <PermissionGuard permission="pembayaran-spp.bayar">
+              <Button
+                variant="success"
+                onClick={handleSendWa}
+                disabled={sendingWa}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Send size={18} className="mr-2" />
+                {sendingWa ? 'Mengirim...' : 'Kirim Kuitansi WA'}
+              </Button>
+            </PermissionGuard>
+          )}
+
           <PermissionGuard permission="pembayaran-spp.edit">
             <Button variant="warning" onClick={() => navigate(`/keuangan/pembayaran-spp/${id}/edit`)}>
               <Edit size={18} className="mr-2" />
