@@ -38,6 +38,7 @@ export const emailService = {
       formData.append('subject', data.subject)
       formData.append('content', data.content)
       if (data.from) formData.append('from', data.from)
+      if (data.from_name) formData.append('from_name', data.from_name)
       data.attachments.forEach((file) => {
         formData.append('attachments[]', file)
       })
@@ -93,6 +94,53 @@ export const emailService = {
    */
   deleteInbox: async (id) => {
     const response = await apiService.delete(`${BASE_URL}/inbox/${id}`)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
+  /**
+   * Ambil daftar email keluar (sent / outbox).
+   * @param {{ page?: number, per_page?: number, search?: string }} params
+   */
+  getOutbox: async (params = {}) => {
+    const response = await apiService.get(`${BASE_URL}/outbox`, { params })
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
+  /**
+   * Ambil detail email keluar.
+   * @param {number|string} id
+   */
+  showOutbox: async (id) => {
+    const response = await apiService.get(`${BASE_URL}/outbox/${id}`)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
+  /**
+   * Sinkronisasi email keluar dari Resend.
+   */
+  syncOutbox: async () => {
+    const response = await apiService.post(`${BASE_URL}/outbox/sync`)
+    return {
+      ...response,
+      payload: unwrapResponse(response),
+    }
+  },
+
+  /**
+   * Hapus riwayat email keluar.
+   * @param {number|string} id
+   */
+  deleteOutbox: async (id) => {
+    const response = await apiService.delete(`${BASE_URL}/outbox/${id}`)
     return {
       ...response,
       payload: unwrapResponse(response),

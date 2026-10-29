@@ -15,7 +15,7 @@ describe('emailService', () => {
 
   it('preserves the selected sender for JSON and attachment uploads', async () => {
     apiService.post.mockResolvedValue({ data: { data: { success: true } } })
-    const message = { from: 'priyambodo@akademihub.id', email: 'recipient@example.com', subject: 'Hello', content: '<p>Hello</p>' }
+    const message = { from: 'priyambodo@akademihub.id', from_name: 'Priyambodo', email: 'recipient@example.com', subject: 'Hello', content: '<p>Hello</p>' }
     await emailService.sendCustom(message)
     expect(apiService.post).toHaveBeenLastCalledWith('/email/send', message, { headers: {} })
 
@@ -23,6 +23,7 @@ describe('emailService', () => {
     await emailService.sendCustom({ ...message, attachments: [file] })
     const [, payload] = apiService.post.mock.calls.at(-1)
     expect(payload.get('from')).toBe(message.from)
+    expect(payload.get('from_name')).toBe(message.from_name)
     expect(payload.get('email')).toBe(message.email)
     expect(payload.get('attachments[]').name).toBe('hello.txt')
   })
@@ -37,5 +38,26 @@ describe('emailService', () => {
     const res = await emailService.syncInbox()
     expect(res.payload).toEqual({ synced_count: 5 })
     expect(apiService.post).toHaveBeenCalledWith('/email/inbox/sync')
+  })
+
+  it('handles outbox methods correctly', async () => {
+    apiService.get.mockResolvedValue({ data: { data: [{ id: 1, subject: 'Sent test' }] } })
+    const listRes = await emailService.getOutbox({ search: 'test' })
+    expect(listRes.payload).toEqual([{ id: 1, subject: 'Sent test' }])
+    expect(apiService.get).toHaveBeenCalledWith('/email/outbox', { params: { search: 'test' } })
+
+    apiService.get.mockResolvedValue({ data: { data: { id: 1, subject: 'Detail' } } })
+    const showRes = await emailService.showOutbox(1)
+    expect(showRes.payload).toEqual({ id: 1, subject: 'Detail' })
+    expect(apiService.get).toHaveBeenCalledWith('/email/outbox/1')
+
+    apiService.post.mockResolvedValue({ data: { data: { synced_count: 2 } } })
+    const syncRes = await emailService.syncOutbox()
+    expect(syncRes.payload).toEqual({ synced_count: 2 })
+    expect(apiService.post).toHaveBeenCalledWith('/email/outbox/sync')
+
+    apiService.delete.mockResolvedValue({ data: { data: null } })
+    await emailService.deleteOutbox(1)
+    expect(apiService.delete).toHaveBeenCalledWith('/email/outbox/1')
   })
 })

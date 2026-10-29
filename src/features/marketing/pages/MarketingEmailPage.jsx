@@ -16,8 +16,14 @@ export default function MarketingEmailPage() {
   const [syncing, setSyncing] = useState(false)
   const [searchInbox, setSearchInbox] = useState('')
 
+  const [outboxList, setOutboxList] = useState([])
+  const [selectedOutbox, setSelectedOutbox] = useState(null)
+  const [outboxLoading, setOutboxLoading] = useState(false)
+  const [syncingOutbox, setSyncingOutbox] = useState(false)
+  const [searchOutbox, setSearchOutbox] = useState('')
+
   const [offer, setOffer] = useState({ email: '', school_name: '', cta_url: 'https://akademihub.id/#demo' })
-  const [custom, setCustom] = useState({ from: '', email: '', subject: '', content: '' })
+  const [custom, setCustom] = useState({ from: '', from_name: '', email: '', subject: '', content: '' })
   const [senders, setSenders] = useState([])
   const [attachments, setAttachments] = useState([])
   const [loading, setLoading] = useState(false)
@@ -35,8 +41,21 @@ export default function MarketingEmailPage() {
     }
   }
 
+  const fetchOutbox = async () => {
+    setOutboxLoading(true)
+    try {
+      const res = await emailService.getOutbox({ search: searchOutbox })
+      setOutboxList(res.payload || res.data || [])
+    } catch {
+      // silent
+    } finally {
+      setOutboxLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (tab === 'inbox') fetchInbox()
+    if (tab === 'outbox') fetchOutbox()
   }, [tab])
 
   useEffect(() => {
@@ -44,10 +63,12 @@ export default function MarketingEmailPage() {
     let active = true
     emailService.getSenders().then((data) => {
       if (!active) return
+      const defaultSender = data?.[0]
       setSenders(data || [])
       setCustom((prev) => ({
         ...prev,
-        from: data?.some((sender) => sender.email === prev.from) ? prev.from : data?.[0]?.email || '',
+        from: prev.from || defaultSender?.email || '',
+        from_name: prev.from_name || defaultSender?.name || '',
       }))
     }).catch((err) => {
       if (!active) return
@@ -98,6 +119,48 @@ export default function MarketingEmailPage() {
       showError('Gagal', err?.response?.data?.message || err.message)
     }
   }
+  const handleSelectOutbox = async (item) => {
+    setSelectedOutbox(item)
+    try {
+      const res = await emailService.showOutbox(item.id)
+      const fresh = res?.payload || res?.data
+      if (fresh) {
+        setSelectedOutbox(fresh)
+        setOutboxList((prev) => prev.map((it) => (it.id === item.id ? { ...it, ...fresh } : it)))
+      }
+    } catch {
+      // silent
+    }
+  }
+
+  const handleSyncOutbox = async () => {
+    setSyncingOutbox(true)
+    try {
+      const res = await emailService.syncOutbox()
+      const count = res?.payload?.synced_count ?? 0
+      showSuccess('Sinkronisasi Selesai', `${count} email keluar berhasil disinkronkan dari Resend.`)
+      await fetchOutbox()
+    } catch (err) {
+      showError('Gagal Sinkronisasi', err?.response?.data?.message || err.message)
+    } finally {
+      setSyncingOutbox(false)
+    }
+  }
+
+  const handleDeleteOutbox = async (id, e) => {
+    e.stopPropagation()
+    const confirmed = await showDeleteConfirm('Hapus Email?', 'Riwayat email keluar ini akan dihapus permanen.')
+    if (!confirmed) return
+    try {
+      await emailService.deleteOutbox(id)
+      showSuccess('Dihapus', 'Riwayat email berhasil dihapus.')
+      setOutboxList((prev) => prev.filter((it) => it.id !== id))
+      if (selectedOutbox?.id === id) setSelectedOutbox(null)
+    } catch (err) {
+      showError('Gagal', err?.response?.data?.message || err.message)
+    }
+  }
+
 
   const handleOffer = async (e) => {
     e.preventDefault()
@@ -123,7 +186,7 @@ export default function MarketingEmailPage() {
     try {
       await emailService.sendCustom({ ...custom, attachments })
       showSuccess('Berhasil!', `Email terkirim ke ${custom.email}`)
-      setCustom((prev) => ({ from: prev.from, email: '', subject: '', content: '' }))
+      setCustom((prev) => ({ from: prev.from, from_name: prev.from_name, email: '', subject: '', content: '' }))
       setAttachments([])
       if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err) {
@@ -162,6 +225,15 @@ export default function MarketingEmailPage() {
           }`}
         >
           <Inbox size={16} /> Kotak Masuk (Inbox)
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('outbox')}
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold ${
+            tab === 'outbox' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'
+          }`}
+        >
+          <Send size={16} /> Kotak Keluar (Sent)
         </button>
         <button
           type="button"
@@ -287,6 +359,137 @@ export default function MarketingEmailPage() {
           </div>
         </div>
       )}
+      {tab === 'outbox' && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Cari tujuan / subjek..."
+                value={searchOutbox}
+                onChange={(e) => setSearchOutbox(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && fetchOutbox()}
+              />
+              <Button variant="secondary" onClick={fetchOutbox} disabled={outboxLoading} title="Muat ulang daftar">
+                <RefreshCw size={16} className={outboxLoading ? 'animate-spin' : ''} />
+              </Button>
+              <Button variant="secondary" onClick={handleSyncOutbox} disabled={outboxLoading || syncingOutbox} title="Sinkronkan dari Resend">
+                <Sparkles size={16} className={syncingOutbox ? 'animate-spin text-yellow-500' : 'text-blue-500'} />
+              </Button>
+            </div>
+
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {outboxList.length === 0 ? (
+                <Card>
+                  <p className="text-center text-sm text-gray-500 py-6">Belum ada email keluar.</p>
+                </Card>
+              ) : (
+                outboxList.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleSelectOutbox(item)}
+                    className={`cursor-pointer rounded-xl border p-4 transition-all ${
+                      selectedOutbox?.id === item.id
+                        ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-800 dark:bg-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="truncate pr-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                            {item.status || 'Terkirim'}
+                          </span>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            Ke: {item.to_email}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 truncate mt-1">
+                          {item.subject || '(Tanpa Subjek)'}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Dari: {item.from_name ? `${item.from_name} <${item.from_email}>` : item.from_email} • {item.sent_at ? new Date(item.sent_at).toLocaleString('id-ID') : '-'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteOutbox(item.id, e)}
+                        className="text-gray-400 hover:text-red-500 p-1"
+                        title="Hapus riwayat"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <div className="lg:col-span-7">
+            {selectedOutbox ? (
+              <Card title={selectedOutbox.subject || '(Tanpa Subjek)'}>
+                <div className="space-y-4">
+                  <div className="border-b pb-3 text-xs text-gray-500 dark:border-gray-700 space-y-1">
+                    <p><strong>Dari:</strong> {selectedOutbox.from_name ? `${selectedOutbox.from_name} <${selectedOutbox.from_email}>` : selectedOutbox.from_email}</p>
+                    <p><strong>Ke:</strong> {selectedOutbox.to_email}</p>
+                    <p><strong>Dikirim:</strong> {selectedOutbox.sent_at ? new Date(selectedOutbox.sent_at).toLocaleString('id-ID') : '-'}</p>
+                    {selectedOutbox.status && (
+                      <p><strong>Status:</strong> <span className="text-emerald-600 font-semibold">{selectedOutbox.status}</span></p>
+                    )}
+                    {Array.isArray(selectedOutbox.attachments) && selectedOutbox.attachments.length > 0 && (
+                      <div className="pt-1">
+                        <strong>Lampiran ({selectedOutbox.attachments.length}):</strong>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {selectedOutbox.attachments.map((file, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                              <Paperclip size={12} />
+                              {typeof file === 'string' ? file : file.name || `Lampiran ${idx + 1}`}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-full">
+                    {selectedOutbox.html_body ? (
+                      <iframe
+                        key={selectedOutbox.id}
+                        title={selectedOutbox.subject || 'Email Content'}
+                        srcDoc={selectedOutbox.html_body}
+                        className="w-full min-h-[500px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white"
+                        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+                        onLoad={(e) => {
+                          try {
+                            const h = e.target.contentWindow?.document?.body?.scrollHeight
+                            if (h && h > 500) e.target.style.height = `${h + 40}px`
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                      />
+                    ) : selectedOutbox.text_body ? (
+                      <pre className="whitespace-pre-wrap font-sans text-sm p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {selectedOutbox.text_body}
+                      </pre>
+                    ) : (
+                      <div className="text-center py-12 text-gray-400 text-sm italic">
+                        (Email ini tidak memiliki isi pesan)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card>
+                <div className="py-20 text-center text-gray-400 text-sm">
+                  Pilih salah satu email di sebelah kiri untuk melihat pesan yang dikirim.
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {tab === 'offer' && (
         <Card title="Form Penawaran Produk Sekolah">
@@ -313,21 +516,51 @@ export default function MarketingEmailPage() {
       {tab === 'custom' && (
         <Card title="Kirim Email Bebas" subtitle="WYSIWYG editor & multi-lampiran dokumen">
           <form onSubmit={handleCustom} className="space-y-4">
-            <div className="max-w-xl">
-              <label htmlFor="email-from" className="mb-1 block text-sm font-medium">Dari *</label>
-              <select
-                id="email-from"
-                value={custom.from}
-                onChange={(e) => setCustom({ ...custom, from: e.target.value })}
-                required
-                disabled={loading || senders.length === 0}
-                className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-              >
-                <option value="" disabled>Pilih pengirim</option>
-                {senders.map((sender) => (
-                  <option key={sender.email} value={sender.email}>{sender.name} &lt;{sender.email}&gt;</option>
-                ))}
-              </select>
+            <div className="grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="email-from-name" className="mb-1 block text-sm font-medium">Nama Pengirim *</label>
+                <Input
+                  id="email-from-name"
+                  type="text"
+                  placeholder="mis. PT Nova Terra Digital"
+                  value={custom.from_name}
+                  onChange={(e) => setCustom({ ...custom, from_name: e.target.value })}
+                  list="sender-name-presets"
+                  required
+                  disabled={loading}
+                />
+                <datalist id="sender-name-presets">
+                  {senders.map((sender) => (
+                    <option key={sender.email} value={sender.name} />
+                  ))}
+                </datalist>
+              </div>
+              <div>
+                <label htmlFor="email-from-address" className="mb-1 block text-sm font-medium">Email Pengirim *</label>
+                <Input
+                  id="email-from-address"
+                  type="email"
+                  placeholder="pengirim@novaterradigital.tech"
+                  value={custom.from}
+                  onChange={(e) => {
+                    const newFrom = e.target.value
+                    const matched = senders.find((s) => s.email === newFrom)
+                    setCustom((prev) => ({
+                      ...prev,
+                      from: newFrom,
+                      from_name: matched && !prev.from_name ? matched.name : prev.from_name,
+                    }))
+                  }}
+                  list="sender-email-presets"
+                  required
+                  disabled={loading}
+                />
+                <datalist id="sender-email-presets">
+                  {senders.map((sender) => (
+                    <option key={sender.email} value={sender.email}>{sender.name}</option>
+                  ))}
+                </datalist>
+              </div>
             </div>
             <div className="max-w-xl">
               <label className="mb-1 block text-sm font-medium">Email Tujuan *</label>
