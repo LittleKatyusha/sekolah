@@ -74,10 +74,11 @@ export const ujianUserService = {
   /**
    * Start exam (mulai ujian)
    * @param {number|string} id - Ujian User ID
+   * @param {Object} [data] - Start payload (e.g. { token })
    * @returns {Promise<{data: any, error: any}>}
    */
-  mulaiUjian: async (id) => {
-    return await apiService.post(`${BASE_URL}/${id}/mulai`)
+  mulaiUjian: async (id, data = {}) => {
+    return await apiService.post(`${BASE_URL}/${id}/mulai`, data)
   },
 
   getSoal: async (id) => {

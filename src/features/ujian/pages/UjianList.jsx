@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, FileText } from 'lucide-react'
+import { Plus, RefreshCw, Eye, Edit, Trash2, MoreVertical, FileText, Send, Key } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
@@ -9,11 +9,11 @@ import SearchableSelect from '../../../components/ui/SearchableSelect'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
 import { kelasService } from '../../kelas/services/kelasService'
-import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { showDeleteConfirm, showConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatJenisLabel, formatSemesterLabel, getJenisColorClass, getMapelLabel, getUjianName } from '../utils/ujianFormatters'
 
 // Actions Menu Component
-const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
+const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai, onNotifyWa }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef(null)
@@ -100,6 +100,15 @@ const ActionsMenu = ({ data, onDetail, onEdit, onDelete, onNilai }) => {
               >
                 <FileText size={16} className="text-green-600" />
                 Nilai
+              </button>
+            </PermissionGuard>
+            <PermissionGuard permission="ujian.update">
+              <button
+                onClick={() => handleAction(onNotifyWa)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              >
+                <Send size={16} className="text-emerald-600" />
+                Kirim Pengingat WA
               </button>
             </PermissionGuard>
             <PermissionGuard permission="ujian.delete">
@@ -192,6 +201,21 @@ const UjianList = () => {
     navigate(`/akademik/ujian/${data.id}/nilai`)
   }, [navigate])
 
+  const handleNotifyWa = useCallback(async (data) => {
+    const confirm = await showConfirm(
+      `Kirim notifikasi pengingat ujian (${data.nama || data.mapel?.nama_mapel || 'Ujian'}) ke seluruh siswa kelas ini melalui WhatsApp?`,
+      'Kirim Pengingat Ujian'
+    )
+    if (confirm.isConfirmed) {
+      const { data: resData, error } = await ujianService.notifyWhatsApp(data.id)
+      if (!error && resData?.data) {
+        showSuccess(`Notifikasi pengingat terkirim ke ${resData.data.sent_count} siswa.`)
+      } else {
+        showError(error?.message || 'Gagal mengirim pengingat WhatsApp')
+      }
+    }
+  }, [])
+
   const handleKelasChange = useCallback((e) => {
     setSelectedKelas(e.target.value)
   }, [])
@@ -282,6 +306,23 @@ const UjianList = () => {
       cellRenderer: (params) => formatSemesterLabel(params.value)
     },
     {
+      field: 'token',
+      headerName: 'Token CBT',
+      sortable: false,
+      filter: true,
+      width: 120,
+      minWidth: 100,
+      cellRenderer: (params) => {
+        const token = params.value
+        if (!token) return <span className="text-gray-400 italic text-xs">-</span>
+        return (
+          <span className="font-mono font-bold px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 text-xs">
+            {token}
+          </span>
+        )
+      }
+    },
+    {
       field: 'tahun_ajaran',
       headerName: 'Tahun Ajaran',
       sortable: true,
@@ -307,12 +348,13 @@ const UjianList = () => {
               onEdit={() => handleEdit(params.data)}
               onDelete={() => handleDelete(params.data)}
               onNilai={() => handleNilai(params.data)}
+              onNotifyWa={() => handleNotifyWa(params.data)}
             />
           </div>
         )
       }
     }
-  ], [handleDelete, handleDetail, handleEdit, handleNilai])
+  ], [handleDelete, handleDetail, handleEdit, handleNilai, handleNotifyWa])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,

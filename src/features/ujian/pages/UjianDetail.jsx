@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, FileText, Hash, Calendar, BookOpen, GraduationCap, Tag, Clock, Award } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, FileText, Hash, Calendar, BookOpen, GraduationCap, Tag, Clock, Award, Key, Send, Copy, RefreshCw, Check } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import RecordHistory from '../../activity-logs/components/RecordHistory'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { ujianService } from '../services/ujianService'
-import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { showDeleteConfirm, showConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatJenisLabel, formatSemesterLabel, getMapelCode, getMapelLabel, getUjianName } from '../utils/ujianFormatters'
 
 const UjianDetail = () => {
@@ -15,6 +15,9 @@ const UjianDetail = () => {
   
   const [loading, setLoading] = useState(false)
   const [ujian, setUjian] = useState(null)
+  const [generatingToken, setGeneratingToken] = useState(false)
+  const [sendingWa, setSendingWa] = useState(false)
+  const [copiedToken, setCopiedToken] = useState(false)
 
   useEffect(() => {
     fetchUjian()
@@ -30,6 +33,44 @@ const UjianDetail = () => {
       navigate('/akademik/ujian')
     }
     setLoading(false)
+  }
+
+  const handleGenerateToken = async () => {
+    setGeneratingToken(true)
+    const { data, error } = await ujianService.generateToken(ujian.id)
+    if (!error && (data?.data?.token || data?.token)) {
+      const newToken = data?.data?.token || data?.token
+      setUjian(prev => ({ ...prev, token: newToken }))
+      showSuccess(`Token ujian berhasil diperbarui: ${newToken}`)
+    } else {
+      showError(error?.message || 'Gagal memperbarui token ujian')
+    }
+    setGeneratingToken(false)
+  }
+
+  const handleCopyToken = () => {
+    if (!ujian?.token) return
+    navigator.clipboard.writeText(ujian.token)
+    setCopiedToken(true)
+    setTimeout(() => setCopiedToken(false), 2000)
+  }
+
+  const handleNotifyWhatsApp = async () => {
+    const confirm = await showConfirm(
+      `Kirim notifikasi pengingat jadwal dan token ujian (${ujian.token || 'Tanpa Token'}) ke seluruh siswa kelas ${ujian.kelas?.nama_kelas || ''} melalui WhatsApp?`,
+      'Kirim Pengingat Ujian'
+    )
+    if (confirm.isConfirmed) {
+      setSendingWa(true)
+      const { data, error } = await ujianService.notifyWhatsApp(ujian.id)
+      setSendingWa(false)
+      if (!error && data?.data) {
+        const { total_siswa, sent_count, failed_count } = data.data
+        showSuccess(`Notifikasi pengingat terkirim ke ${sent_count} dari ${total_siswa} siswa (Gagal: ${failed_count}).`)
+      } else {
+        showError(error?.message || 'Gagal mengirim notifikasi pengingat WhatsApp')
+      }
+    }
   }
 
   const handleDelete = async () => {
@@ -87,6 +128,16 @@ const UjianDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Ujian</h1>
         </div>
         <div className="flex flex-wrap gap-3">
+          <PermissionGuard permission="ujian.update">
+            <Button
+              variant="success"
+              onClick={handleNotifyWhatsApp}
+              disabled={sendingWa}
+            >
+              <Send size={18} className="mr-2" />
+              {sendingWa ? 'Mengirim...' : 'Kirim Pengingat WA'}
+            </Button>
+          </PermissionGuard>
           <PermissionGuard permission="nilai.update">
             <Button variant="info" onClick={() => navigate(`/akademik/ujian/${id}/nilai`)}>
               <Award size={18} className="mr-2" />
@@ -141,6 +192,57 @@ const UjianDetail = () => {
                     {ujian.kelas?.nama_kelas || '-'}
                   </p>
                 </div>
+              </div>
+
+              {/* Token Ujian CBT Section */}
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-semibold flex items-center justify-center gap-1">
+                  <Key size={14} className="text-amber-500" />
+                  TOKEN UJIAN CBT
+                </p>
+                {ujian.token ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2">
+                      <span className="font-mono text-xl font-bold tracking-widest text-amber-900 dark:text-amber-200">
+                        {ujian.token}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyToken}
+                        className="p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-700 dark:text-amber-300"
+                        title="Salin Token"
+                      >
+                        {copiedToken ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+                      </button>
+                    </div>
+                    <PermissionGuard permission="ujian.update">
+                      <button
+                        type="button"
+                        onClick={handleGenerateToken}
+                        disabled={generatingToken}
+                        className="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
+                      >
+                        <RefreshCw size={12} className={generatingToken ? 'animate-spin' : ''} />
+                        {generatingToken ? 'Memperbarui...' : 'Regenerasi Token'}
+                      </button>
+                    </PermissionGuard>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-xs text-gray-400 italic">Belum ada token</span>
+                    <PermissionGuard permission="ujian.update">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={handleGenerateToken}
+                        disabled={generatingToken}
+                      >
+                        <Key size={14} className="mr-1" />
+                        {generatingToken ? 'Membuat...' : 'Rilis Token Ujian'}
+                      </Button>
+                    </PermissionGuard>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
@@ -210,6 +312,16 @@ const UjianDetail = () => {
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Tahun Ajaran</p>
                     <p className="font-medium text-gray-900 dark:text-white">{ujian.tahun_ajaran || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Key size={20} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Token CBT</p>
+                    <p className="font-mono font-bold text-gray-900 dark:text-white">{ujian.token || '-'}</p>
                   </div>
                 </div>
 

@@ -124,6 +124,30 @@ export const showToast = (message, icon = 'success') => {
   })
 }
 
+// Exam token prompt for CBT
+export const showExamTokenPrompt = (ujianName = 'ujian') => {
+  return Swal.fire({
+    title: 'Mulai Ujian CBT',
+    html: `
+      <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+        Masukkan Token Ujian yang diberikan oleh pengawas untuk memulai <strong>${ujianName}</strong>:
+      </p>
+    `,
+    input: 'text',
+    inputPlaceholder: 'Contoh: ABC88X',
+    inputAttributes: {
+      maxlength: '10',
+      autocapitalize: 'characters',
+      style: 'text-transform: uppercase; font-family: monospace; font-size: 1.25rem; font-weight: bold; text-align: center; letter-spacing: 0.25em;',
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Mulai Sekarang',
+    cancelButtonText: 'Batal',
+    reverseButtons: true,
+    ...getTheme(),
+  })
+}
+
 // Custom HTML alert
 export const showCustom = (options) => {
   return Swal.fire({

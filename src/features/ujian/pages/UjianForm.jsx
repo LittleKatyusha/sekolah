@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Key, RefreshCw } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
@@ -32,6 +32,7 @@ const UjianForm = () => {
     nama: '',
     tanggal: '',
     semester_id: '',
+    token: '',
     keterangan: ''
   })
 
@@ -112,6 +113,7 @@ const UjianForm = () => {
         nama: ujian.nama || '',
         tanggal: ujian.tanggal || '',
         semester_id: semesterId,
+        token: ujian.token || '',
         keterangan: ujian.keterangan || ''
       })
 
@@ -175,6 +177,15 @@ const UjianForm = () => {
     return Object.keys(newErrors).length === 0
   }
 
+  const handleGenerateRandomToken = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let token = ''
+    for (let i = 0; i < 6; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setFormData(prev => ({ ...prev, token }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -189,6 +200,7 @@ const UjianForm = () => {
       nama: formData.nama,
       tanggal: formData.tanggal,
       semester_id: safeParseInt(formData.semester_id),
+      token: formData.token ? formData.token.toUpperCase().trim() : null,
       keterangan: formData.keterangan || null
     }
 
@@ -343,6 +355,34 @@ const UjianForm = () => {
                     {Array.isArray(errors.semester_id) ? errors.semester_id[0] : errors.semester_id}
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Token CBT (Kode Ujian)
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    name="token"
+                    value={formData.token}
+                    onChange={(e) => setFormData(prev => ({ ...prev, token: e.target.value.toUpperCase() }))}
+                    placeholder="Contoh: ABC88X"
+                    maxLength={10}
+                    className="font-mono tracking-widest uppercase font-semibold"
+                    error={errors.token}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleGenerateRandomToken}
+                    className="flex-shrink-0"
+                    title="Generate token acak"
+                  >
+                    <RefreshCw size={16} className="mr-1" />
+                    Acak
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Kosongkan jika tidak ingin mewajibkan token saat mulai ujian.</p>
               </div>
 
               <div className="md:col-span-2">

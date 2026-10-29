@@ -89,6 +89,29 @@ export const ujianService = {
   getByKelas: async (kelasId) => {
     return await apiService.get(`${BASE_URL}/kelas/${kelasId}`)
   },
+
+  /**
+   * Generate or refresh exam token
+   * @param {number|string} id - Ujian ID
+   * @param {Object} [data] - Optional payload with custom token
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  generateToken: async (id, data = {}) => {
+    return await apiService.post(`${BASE_URL}/${id}/token`, data)
+  },
+
+  /**
+   * Send WhatsApp exam schedule & token reminder to class students/parents
+   * @param {number|string} id - Ujian ID
+   * @returns {Promise<{data: any, error: any}>}
+   */
+  notifyWhatsApp: async (id) => {
+    const res = await apiService.post(`${BASE_URL}/${id}/notify-wa`)
+    if (res.error && (res.error.status === 404 || res.error.status === 405)) {
+      return await apiService.post(`/cbt/ujian/${id}/notify-wa`)
+    }
+    return res
+  },
 }
 
 export default ujianService

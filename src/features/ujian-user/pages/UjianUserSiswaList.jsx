@@ -6,7 +6,7 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import ExamCard from '../components/ExamCard'
 import { ujianUserService } from '../services/ujianUserService'
-import { showConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { showConfirm, showSuccess, showError, showExamTokenPrompt } from '../../../utils/sweetalert'
 
 const STATUS_TABS = [
   { key: 'all', label: 'Semua', icon: BookOpen },
@@ -87,17 +87,15 @@ const UjianUserSiswaList = () => {
 
   const handleStart = useCallback(async (ujianUser) => {
     const ujianName = ujianUser.ujian?.nama || `Ujian #${ujianUser.trx_ujian_id}`
-    const result = await showConfirm(
-      `Apakah Anda yakin ingin memulai ujian "${ujianName}"?\n\nPastikan Anda sudah siap mengerjakan ujian.`,
-      'Konfirmasi Mulai Ujian'
-    )
+    const result = await showExamTokenPrompt(ujianName)
     if (result.isConfirmed) {
-      const { error } = await ujianUserService.mulaiUjian(ujianUser.id)
+      const token = (result.value || '').trim().toUpperCase()
+      const { error } = await ujianUserService.mulaiUjian(ujianUser.id, { token })
       if (!error) {
         showSuccess('Ujian berhasil dimulai!')
         navigate(`/akademik/ujian-user/${ujianUser.id}/mulai`)
       } else {
-        showError('Gagal memulai ujian. Silakan coba lagi.')
+        showError(error?.message || 'Token ujian tidak valid atau gagal memulai ujian.')
       }
     }
   }, [navigate])
