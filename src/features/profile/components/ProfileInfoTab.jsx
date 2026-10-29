@@ -1,8 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User, Save, Loader2, IdCard } from 'lucide-react'
 import { profileService } from '../../../services/profileService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 import useAuthStore from '../../../store/useAuthStore'
+
+const normalizeGenderCode = (val) => {
+  if (val === null || val === undefined || val === '') return ''
+  const s = String(val).toUpperCase()
+  if (s === '1' || s === 'L' || s.startsWith('LAKI')) return '1'
+  if (s === '2' || s === 'P' || s.startsWith('PEREM')) return '2'
+  return String(val)
+}
+
+const getGenderLabel = (val) => {
+  const code = normalizeGenderCode(val)
+  if (code === '1') return 'Laki-laki'
+  if (code === '2') return 'Perempuan'
+  return '-'
+}
 
 export default function ProfileInfoTab({ profileData, onRefresh }) {
   const updateUser = useAuthStore((s) => s.updateUser)
@@ -17,13 +32,29 @@ export default function ProfileInfoTab({ profileData, onRefresh }) {
     alamat: siswa?.alamat || '',
     tempat_lahir: siswa?.tempat_lahir || '',
     tanggal_lahir: siswa?.tanggal_lahir || '',
-    jenis_kelamin: siswa?.jenis_kelamin || guru?.jenis_kelamin || '',
+    jenis_kelamin: normalizeGenderCode(siswa?.jenis_kelamin ?? guru?.jenis_kelamin),
     agama: siswa?.agama || '',
     golongan_darah: siswa?.golongan_darah || '',
     tinggi_badan: siswa?.tinggi_badan || '',
     berat_badan: siswa?.berat_badan || '',
     anak_ke: siswa?.anak_ke || '',
   })
+
+  useEffect(() => {
+    setFormData({
+      name: user.name || '',
+      no_hp: siswa?.no_hp || guru?.no_hp || '',
+      alamat: siswa?.alamat || '',
+      tempat_lahir: siswa?.tempat_lahir || '',
+      tanggal_lahir: siswa?.tanggal_lahir || '',
+      jenis_kelamin: normalizeGenderCode(siswa?.jenis_kelamin ?? guru?.jenis_kelamin),
+      agama: siswa?.agama || '',
+      golongan_darah: siswa?.golongan_darah || '',
+      tinggi_badan: siswa?.tinggi_badan || '',
+      berat_badan: siswa?.berat_badan || '',
+      anak_ke: siswa?.anak_ke || '',
+    })
+  }, [profileData])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -34,7 +65,11 @@ export default function ProfileInfoTab({ profileData, onRefresh }) {
 
     setSaving(true)
     try {
-      const res = await profileService.updateProfile(formData)
+      const payload = {
+        ...formData,
+        jenis_kelamin: formData.jenis_kelamin ? Number(formData.jenis_kelamin) : null,
+      }
+      const res = await profileService.updateProfile(payload)
       if (res?.user) {
         updateUser({ name: res.user.name })
       }
@@ -140,17 +175,21 @@ export default function ProfileInfoTab({ profileData, onRefresh }) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1.5">
+                <label
+                  htmlFor="jenis_kelamin"
+                  className="block text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1.5"
+                >
                   Jenis Kelamin
                 </label>
                 <select
+                  id="jenis_kelamin"
                   value={formData.jenis_kelamin}
                   onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 >
                   <option value="">Pilih</option>
-                  <option value="L">Laki-laki</option>
-                  <option value="P">Perempuan</option>
+                  <option value="1">Laki-laki</option>
+                  <option value="2">Perempuan</option>
                 </select>
               </div>
             </div>
@@ -193,7 +232,7 @@ export default function ProfileInfoTab({ profileData, onRefresh }) {
                 </label>
                 <input
                   type="text"
-                  value={guru.jenis_kelamin === 'L' ? 'Laki-laki' : guru.jenis_kelamin === 'P' ? 'Perempuan' : '-'}
+                  value={getGenderLabel(guru.jenis_kelamin)}
                   disabled
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 text-gray-500 text-sm cursor-not-allowed"
                 />

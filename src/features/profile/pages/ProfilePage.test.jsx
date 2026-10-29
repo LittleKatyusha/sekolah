@@ -82,4 +82,38 @@ describe('ProfilePage Component', () => {
       expect(profileService.getActivityLogs).toHaveBeenCalled()
     })
   })
+
+  it('correctly maps student jenis_kelamin numeric code in select', async () => {
+    profileService.getProfile.mockResolvedValue({
+      user: {
+        id: 188,
+        name: 'SANIA FITRI',
+        email: '252610024@akademihub.id',
+        username: 'saniafitrif',
+        role: 'siswa',
+      },
+      siswa: {
+        id: 50,
+        nis: '252610024',
+        nisn: '0093334853',
+        nama: 'SANIA FITRI',
+        jenis_kelamin: 2,
+        alamat: 'KP. CIBEUREUM',
+        kelas: { id: 5, nama_kelas: 'XI' },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <ProfilePage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('SANIA FITRI')).toBeInTheDocument()
+    })
+
+    const select = screen.getByLabelText(/jenis kelamin/i)
+    expect(select.value).toBe('2')
+  })
 })
