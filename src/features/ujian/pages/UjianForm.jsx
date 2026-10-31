@@ -85,13 +85,20 @@ const UjianForm = () => {
       const list = Array.isArray(data.data) ? data.data : data.data?.data || []
       setSemesterOptions(list.map((item) => ({
         value: String(item.id),
-        label: item.nama || item.semester || `Semester #${item.id}`
+        label: `${item.nama || item.semester || `Semester #${item.id}`}${item.is_active ? ' (Aktif)' : ''}`
       })))
+
+      if (!isEditMode) {
+        const activeSem = list.find((item) => item.is_active)
+        if (activeSem) {
+          setFormData((prev) => (prev.semester_id ? prev : { ...prev, semester_id: String(activeSem.id) }))
+        }
+      }
       return
     }
     console.error('Failed to fetch semester:', error)
     setSemesterOptions([])
-  }, [])
+  }, [isEditMode])
 
   const fetchUjian = useCallback(async () => {
     setFetchingData(true)

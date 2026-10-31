@@ -62,8 +62,15 @@ const RankingForm = () => {
       const list = Array.isArray(semesterResult.data.data) ? semesterResult.data.data : semesterResult.data.data?.data || []
       setSemesterOptions(list.map(s => ({
         value: String(s.id),
-        label: s.nama || `Semester #${s.id}`
+        label: `${s.nama || `Semester #${s.id}`}${s.is_active ? ' (Aktif)' : ''}`
       })))
+
+      if (!isEditMode) {
+        const activeSem = list.find(s => s.is_active)
+        if (activeSem) {
+          setFormData(prev => prev.semester ? prev : { ...prev, semester: String(activeSem.id) })
+        }
+      }
     }
   }
 
