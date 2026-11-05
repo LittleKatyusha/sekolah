@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   Search,
   X,
@@ -10,20 +10,28 @@ import {
   BookOpen,
   AlertTriangle,
   GraduationCap,
+  BarChart3,
+  Award,
 } from 'lucide-react'
 import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
+import { materiService } from '../../materi/services/materiService'
 import {
   isSubmissionGraded,
   isRevisionRequested,
   deduplicateTugasList,
   getFileName,
+  findRelatedMateriForTugas,
+  calculateSubjectProgress,
 } from '../utils/tugasFileUtils'
 import StudentTugasCard from './StudentTugasCard'
 import TugasFilePreviewModal from './TugasFilePreviewModal'
 
 export default function StudentTugasView() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const initialMapelFilter = searchParams.get('mapel') || location.state?.mapel || 'all'
   const { user } = useAuthStore()
 
   const studentKelasNama =
@@ -36,12 +44,13 @@ export default function StudentTugasView() {
     ''
 
   const [tugasList, setTugasList] = useState([])
+  const [materiList, setMateriList] = useState([])
   const [submissionMap, setSubmissionMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedKelas, setSelectedKelas] = useState('all')
-  const [selectedMapel, setSelectedMapel] = useState('all')
+  const [selectedMapel, setSelectedMapel] = useState(initialMapelFilter)
   const [selectedStatus, setSelectedStatus] = useState('all') // 'all' | 'pending' | 'overdue' | 'submitted' | 'waiting_grade' | 'graded'
   const [sortBy, setSortBy] = useState('deadline') // 'deadline' | 'newest' | 'title'
   const [previewModal, setPreviewModal] = useState({
@@ -73,8 +82,17 @@ export default function StudentTugasView() {
       const subPromise = currentSiswaId
         ? tugasSiswaService.getBySiswa(currentSiswaId)
         : Promise.resolve({ data: null, error: null })
+      const materiPromise = materiService.getAll({
+        per_page: 100,
+        sort_by: 'id',
+        sort_dir: 'desc',
+      })
 
-      const [tugasRes, subRes] = await Promise.allSettled([tugasPromise, subPromise])
+      const [tugasRes, subRes, materiRes] = await Promise.allSettled([
+        tugasPromise,
+        subPromise,
+        materiPromise,
+      ])
 
       if (tugasRes.status === 'fulfilled' && !tugasRes.value.error && tugasRes.value.data) {
         const raw = tugasRes.value.data
@@ -97,6 +115,16 @@ export default function StudentTugasView() {
           }
         })
         setSubmissionMap(map)
+      }
+
+      if (materiRes.status === 'fulfilled' && !materiRes.value.error && materiRes.value.data) {
+        const rawMateri = materiRes.value.data
+        const items = Array.isArray(rawMateri.data)
+          ? rawMateri.data
+          : Array.isArray(rawMateri)
+          ? rawMateri
+          : []
+        setMateriList(items)
       }
     } catch (err) {
       setError(err?.message || 'Terjadi kesalahan saat memuat data.')
@@ -202,6 +230,29 @@ export default function StudentTugasView() {
       totalOverdue,
     }
   }, [classScopedTugasList, mapels, submissionMap])
+
+  const subjectProgress = useMemo(
+    () => calculateSubjectProgress(classScopedTugasList, submissionMap, materiList),
+    [classScopedTugasList, submissionMap, materiList]
+  )
+
+  const handleOpenMateriForTugas = useCallback(
+    (tugas, relatedMateri) => {
+      if (Array.isArray(relatedMateri) && relatedMateri.length === 1 && relatedMateri[0]?.id) {
+        navigate(`/akademik/materi/${relatedMateri[0].id}`)
+        return
+      }
+      const mapelNama = tugas?.guru_mapel?.mapel?.nama || ''
+      if (mapelNama) {
+        navigate(`/akademik/materi?mapel=${encodeURIComponent(mapelNama)}`, {
+          state: { mapel: mapelNama },
+        })
+      } else {
+        navigate('/akademik/materi')
+      }
+    },
+    [navigate]
+  )
 
   const filteredTugas = useMemo(() => {
     const now = Date.now()
@@ -355,6 +406,102 @@ export default function StudentTugasView() {
           >
             Lihat Tugas Terlewat
           </button>
+        </div>
+      )}
+
+      {/* Subject Progress & Learning Integration Bar */}
+      {!loading && subjectProgress.length > 0 && (
+        <div className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700/80 p-4 sm:p-5 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <BarChart3 size={18} className="text-primary-600 dark:text-primary-400" />
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+                Progres Penyelesaian & Penguasaan per Mata Pelajaran
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/akademik/materi')}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline"
+            >
+              <BookOpen size={14} />
+              <span>Buka Ruang Belajar Mandiri</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {subjectProgress.map((sp) => {
+              const isSelected = selectedMapel.toLowerCase() === sp.name.toLowerCase()
+              return (
+                <div
+                  key={sp.name}
+                  onClick={() => setSelectedMapel(isSelected ? 'all' : sp.name)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setSelectedMapel(isSelected ? 'all' : sp.name)
+                    }
+                  }}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-primary-50/70 dark:bg-primary-950/30 border-primary-300 dark:border-primary-700 ring-1 ring-primary-400/50'
+                      : 'bg-gray-50/70 dark:bg-gray-900/40 border-gray-200/70 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      {sp.kode ? `${sp.kode} • ${sp.name}` : sp.name}
+                    </span>
+                    <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 shrink-0">
+                      {sp.submittedTugas}/{sp.totalTugas} ({sp.progressPercent}%)
+                    </span>
+                  </div>
+
+                  <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        sp.progressPercent === 100
+                          ? 'bg-emerald-500'
+                          : sp.progressPercent >= 50
+                          ? 'bg-primary-600'
+                          : 'bg-amber-500'
+                      }`}
+                      style={{ width: `${sp.progressPercent}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                    <span>
+                      {sp.avgScore !== null ? (
+                        <strong className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                          <Award size={11} /> Rata-rata: {sp.avgScore}
+                        </strong>
+                      ) : (
+                        'Belum ada nilai rata-rata'
+                      )}
+                    </span>
+                    {sp.materiCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigate(`/akademik/materi?mapel=${encodeURIComponent(sp.name)}`, {
+                            state: { mapel: sp.name },
+                          })
+                        }}
+                        className="inline-flex items-center gap-1 font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 hover:underline"
+                      >
+                        <BookOpen size={11} />
+                        <span>{sp.materiCount} Materi</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -572,21 +719,26 @@ export default function StudentTugasView() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTugas.map((tugas) => (
-            <StudentTugasCard
-              key={tugas.id}
-              tugas={tugas}
-              submission={submissionMap[tugas.id]}
-              onOpen={() => handleOpenDetail(tugas.id)}
-              onSubmit={() => handleSubmitTugas(tugas)}
-              onRevise={
-                submissionMap[tugas.id]?.id
-                  ? () => navigate(`/akademik/tugas-siswa/${submissionMap[tugas.id].id}/edit`)
-                  : undefined
-              }
-              onPreviewAttachment={handleOpenPreview}
-            />
-          ))}
+          {filteredTugas.map((tugas) => {
+            const relatedMateri = findRelatedMateriForTugas(tugas, materiList)
+            return (
+              <StudentTugasCard
+                key={tugas.id}
+                tugas={tugas}
+                submission={submissionMap[tugas.id]}
+                relatedMateri={relatedMateri}
+                onOpen={() => handleOpenDetail(tugas.id)}
+                onSubmit={() => handleSubmitTugas(tugas)}
+                onRevise={
+                  submissionMap[tugas.id]?.id
+                    ? () => navigate(`/akademik/tugas-siswa/${submissionMap[tugas.id].id}/edit`)
+                    : undefined
+                }
+                onOpenMateri={() => handleOpenMateriForTugas(tugas, relatedMateri)}
+                onPreviewAttachment={handleOpenPreview}
+              />
+            )
+          })}
         </div>
       )}
 

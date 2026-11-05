@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   Sparkles,
   Search,
@@ -14,39 +14,100 @@ import {
 } from 'lucide-react'
 import useAuthStore from '../../../store/useAuthStore'
 import { materiService } from '../services/materiService'
+import { tugasService } from '../../tugas/services/tugasService'
+import { logAksesMateriService } from '../../log-akses-materi/services/logAksesMateriService'
+import { getFileName } from '../../tugas/utils/tugasFileUtils'
+import TugasFilePreviewModal from '../../tugas/components/TugasFilePreviewModal'
 import StudentMateriCard from './StudentMateriCard'
 
 export default function StudentMateriView() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const initialMapelFilter = searchParams.get('mapel') || location.state?.mapel || 'all'
   const { user } = useAuthStore()
 
   const [materiList, setMateriList] = useState([])
+  const [tugasList, setTugasList] = useState([])
+  const [accessedIds, setAccessedIds] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedMapel, setSelectedMapel] = useState('all')
+  const [selectedMapel, setSelectedMapel] = useState(initialMapelFilter)
   const [selectedType, setSelectedType] = useState('all') // 'all' | 'video' | 'file'
   const [sortBy, setSortBy] = useState('newest') // 'newest' | 'title'
+  const [previewModal, setPreviewModal] = useState({
+    open: false,
+    filePath: '',
+    fileUrl: '',
+    title: '',
+    subtitle: '',
+  })
 
+  const currentSiswaId =
+    user?.profile?.id ??
+    user?.profile?.mst_siswa_id ??
+    user?.profile?.siswa_id ??
+    user?.mst_siswa_id ??
+    user?.siswa?.id ??
+    ''
   const studentName = user?.name || user?.profile?.nama || 'Siswa'
 
   const fetchMateri = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const { data, error: err } = await materiService.getAll({
-      per_page: 100,
-      sort_by: 'id',
-      sort_dir: 'desc'
-    })
+    try {
+      const materiPromise = materiService.getAll({
+        per_page: 100,
+        sort_by: 'id',
+        sort_dir: 'desc'
+      })
+      const tugasPromise = tugasService.getAll({
+        per_page: 100,
+        sort_by: 'id',
+        sort_dir: 'desc'
+      })
+      const logPromise = currentSiswaId
+        ? logAksesMateriService.bySiswa(currentSiswaId)
+        : Promise.resolve({ data: null, error: null })
 
-    if (!err && data) {
-      const items = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : [])
-      setMateriList(items)
-    } else {
+      const [materiRes, tugasRes, logRes] = await Promise.allSettled([
+        materiPromise,
+        tugasPromise,
+        logPromise
+      ])
+
+      if (materiRes.status === 'fulfilled' && !materiRes.value.error && materiRes.value.data) {
+        const data = materiRes.value.data
+        const items = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : [])
+        setMateriList(items)
+      } else {
+        const err = materiRes.status === 'fulfilled' ? materiRes.value.error : null
+        setError(err?.message || 'Gagal memuat daftar materi pelajaran.')
+      }
+
+      if (tugasRes.status === 'fulfilled' && !tugasRes.value.error && tugasRes.value.data) {
+        const rawTugas = tugasRes.value.data
+        const items = Array.isArray(rawTugas.data) ? rawTugas.data : (Array.isArray(rawTugas) ? rawTugas : [])
+        setTugasList(items)
+      }
+
+      if (logRes.status === 'fulfilled' && !logRes.value.error && logRes.value.data) {
+        const rawLogs = logRes.value.data
+        const logs = Array.isArray(rawLogs.data) ? rawLogs.data : (Array.isArray(rawLogs) ? rawLogs : [])
+        const ids = new Set()
+        logs.forEach((l) => {
+          const mId = l.materi_id ?? l.mst_materi_id ?? l.materi?.id
+          if (mId) ids.add(Number(mId))
+        })
+        setAccessedIds(ids)
+      }
+    } catch (err) {
       setError(err?.message || 'Gagal memuat daftar materi pelajaran.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }, [])
+  }, [currentSiswaId])
 
   useEffect(() => {
     fetchMateri()
@@ -109,6 +170,31 @@ export default function StudentMateriView() {
     setSelectedType('all')
     setSortBy('newest')
   }
+
+  const handleOpenPreview = useCallback((rawPath, directUrl, title, subtitle) => {
+    setPreviewModal({
+      open: true,
+      filePath: rawPath,
+      fileUrl: directUrl,
+      title: title || 'Pratinjau Modul Materi',
+      subtitle: subtitle || getFileName(rawPath || directUrl),
+    })
+  }, [])
+
+  const getRelatedTugasCount = useCallback(
+    (materi) => {
+      if (!materi || tugasList.length === 0) return 0
+      const gmId = materi.mst_guru_mapel_id ?? materi.guru_mapel?.id
+      const mapelNama = (materi.guru_mapel?.mapel?.nama || '').toLowerCase()
+      return tugasList.filter((t) => {
+        const tGmId = t.mst_guru_mapel_id ?? t.guru_mapel?.id
+        if (gmId && tGmId && String(gmId) === String(tGmId)) return true
+        const tMapel = (t.guru_mapel?.mapel?.nama || '').toLowerCase()
+        return Boolean(mapelNama && tMapel && mapelNama === tMapel)
+      }).length
+    },
+    [tugasList]
+  )
 
   return (
     <div className="space-y-6 pb-12">
@@ -319,15 +405,38 @@ export default function StudentMateriView() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMateri.map((materi) => (
-            <StudentMateriCard
-              key={materi.id}
-              materi={materi}
-              onOpen={() => navigate(`/akademik/materi/${materi.id}`)}
-            />
-          ))}
+          {filteredMateri.map((materi) => {
+            const mapelNama = materi.guru_mapel?.mapel?.nama || ''
+            return (
+              <StudentMateriCard
+                key={materi.id}
+                materi={materi}
+                relatedTugasCount={getRelatedTugasCount(materi)}
+                isAccessed={accessedIds.has(Number(materi.id))}
+                onOpen={() => navigate(`/akademik/materi/${materi.id}`)}
+                onOpenTugas={() =>
+                  navigate(
+                    mapelNama
+                      ? `/akademik/tugas?mapel=${encodeURIComponent(mapelNama)}`
+                      : '/akademik/tugas',
+                    { state: { mapel: mapelNama } }
+                  )
+                }
+                onPreviewFile={handleOpenPreview}
+              />
+            )
+          })}
         </div>
       )}
+
+      <TugasFilePreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal((prev) => ({ ...prev, open: false }))}
+        filePath={previewModal.filePath}
+        fileUrl={previewModal.fileUrl}
+        title={previewModal.title}
+        subtitle={previewModal.subtitle}
+      />
     </div>
   )
 }

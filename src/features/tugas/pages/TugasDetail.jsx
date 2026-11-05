@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink, Eye, Users, Link2, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, BookOpen, User, Calendar, FileText, Hash, ClipboardList, Upload, CheckCircle2, Download, ExternalLink, Eye, Users, Link2, RotateCcw, MessageSquare, Play } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import useAuthStore from '../../../store/useAuthStore'
 import { tugasService, tugasSiswaService } from '../services/tugasService'
+import { materiService } from '../../materi/services/materiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import {
   hasAttachment,
@@ -59,6 +60,7 @@ const TugasDetail = () => {
   
   const [loading, setLoading] = useState(false)
   const [tugas, setTugas] = useState(null)
+  const [relatedMateri, setRelatedMateri] = useState([])
   const [submissions, setSubmissions] = useState([])
   const [studentSubmission, setStudentSubmission] = useState(null)
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
@@ -89,12 +91,29 @@ const TugasDetail = () => {
     setLoading(true)
     const { data, error } = await tugasService.getById(id)
     if (data) {
-      setTugas(data.data)
+      const taskData = data.data
+      setTugas(taskData)
+      const gmId = taskData?.mst_guru_mapel_id ?? taskData?.guru_mapel?.id
+      if (gmId) {
+        fetchRelatedMateri(gmId)
+      }
     } else {
       showError('Gagal mengambil data tugas')
       navigate('/akademik/tugas')
     }
     setLoading(false)
+  }
+
+  const fetchRelatedMateri = async (guruMapelId) => {
+    try {
+      const { data } = await materiService.getByGuruMapel(guruMapelId, { status: 1 })
+      if (data) {
+        const list = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []
+        setRelatedMateri(list)
+      }
+    } catch {
+      // Non-blocking
+    }
   }
 
   const fetchSubmissions = async () => {
@@ -194,7 +213,21 @@ const TugasDetail = () => {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Detail Tugas</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="secondary"
+            onClick={() =>
+              navigate(`/akademik/forum?search=${encodeURIComponent(tugas.judul || '')}`, {
+                state: {
+                  relatedJudul: `Diskusi Tugas: ${tugas.judul || ''}`,
+                  relatedMapel: tugas.guru_mapel?.mapel?.nama || '',
+                },
+              })
+            }
+          >
+            <MessageSquare size={18} className="mr-2" />
+            Diskusi Tugas
+          </Button>
           {isSiswa && !studentSubmission && (
             <Button
               onClick={() =>
@@ -355,6 +388,69 @@ const TugasDetail = () => {
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Deskripsi</h4>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{tugas.deskripsi}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Materi Pembelajaran Terkait */}
+              {relatedMateri.length > 0 && (
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={16} className="text-teal-600 dark:text-teal-400" />
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                        Materi Pembelajaran Terkait ({relatedMateri.length})
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          `/akademik/materi?mapel=${encodeURIComponent(
+                            tugas.guru_mapel?.mapel?.nama || ''
+                          )}`
+                        )
+                      }
+                      className="text-xs font-semibold text-teal-600 hover:underline dark:text-teal-400"
+                    >
+                      Lihat Semua Materi Mapel Ini
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {relatedMateri.slice(0, 4).map((m) => (
+                      <div
+                        key={m.id}
+                        onClick={() => navigate(`/akademik/materi/${m.id}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            navigate(`/akademik/materi/${m.id}`)
+                          }
+                        }}
+                        className="p-3 rounded-xl bg-teal-50/50 hover:bg-teal-50 dark:bg-teal-950/20 dark:hover:bg-teal-950/40 border border-teal-200/70 dark:border-teal-800/50 flex items-center justify-between gap-3 cursor-pointer transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                            {m.judul}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 text-[11px] text-teal-700 dark:text-teal-300">
+                            {m.link_video && (
+                              <span className="inline-flex items-center gap-1">
+                                <Play size={10} className="fill-current" /> Video/Slide
+                              </span>
+                            )}
+                            {m.file_materi && (
+                              <span className="inline-flex items-center gap-1">
+                                <FileText size={10} /> Modul
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <ExternalLink size={14} className="text-teal-600 dark:text-teal-400 shrink-0" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

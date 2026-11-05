@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
@@ -15,8 +15,12 @@ import { checkPermission } from '../../../hooks/usePermission'
 const ForumForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuthStore((state) => state.user)
   const isEditMode = Boolean(id)
+  const initialJudul = !isEditMode
+    ? location.state?.initialJudul || location.state?.relatedJudul || ''
+    : ''
   const canPublish = checkPermission(user, 'forum.moderate')
   const localDate = value => value ? new Date(new Date(value).getTime() - new Date(value).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''
 
@@ -24,7 +28,7 @@ const ForumForm = () => {
   const [fetchingData, setFetchingData] = useState(isEditMode)
 
   const [formData, setFormData] = useState({
-    judul: '',
+    judul: initialJudul,
     konten: '',
     is_public_display: false,
     display_start_at: '',

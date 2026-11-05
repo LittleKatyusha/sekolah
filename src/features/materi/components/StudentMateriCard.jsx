@@ -1,5 +1,17 @@
 import { useMemo } from 'react'
-import { BookOpen, FileText, ExternalLink, Calendar, ArrowRight, Play, Presentation } from 'lucide-react'
+import {
+  BookOpen,
+  FileText,
+  ExternalLink,
+  Calendar,
+  ArrowRight,
+  Play,
+  Presentation,
+  ClipboardList,
+  CheckCircle2,
+  Eye,
+} from 'lucide-react'
+import { openAttachment, getFileName } from '../../tugas/utils/tugasFileUtils'
 
 const stripHtml = (html) => (html ? html.replace(/<[^>]*>?/gm, '').trim() : '')
 
@@ -26,7 +38,14 @@ const getSubjectStyle = (name = '') => {
   return { badge: 'bg-indigo-50 text-indigo-700 border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300', accent: 'from-indigo-500 to-violet-600', avatar: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200' }
 }
 
-export default function StudentMateriCard({ materi, onOpen }) {
+export default function StudentMateriCard({
+  materi,
+  relatedTugasCount = 0,
+  isAccessed = false,
+  onOpen,
+  onOpenTugas,
+  onPreviewFile,
+}) {
   const mapelNama = materi.guru_mapel?.mapel?.nama || 'Mata Pelajaran'
   const mapelKode = materi.guru_mapel?.mapel?.kode || ''
   const guruNama = materi.guru_mapel?.guru?.nama || 'Guru Pengampu'
@@ -35,8 +54,21 @@ export default function StudentMateriCard({ materi, onOpen }) {
 
   const isVideo = Boolean(materi.link_video && materi.link_video.trim())
   const isSlide = isVideo && materi.link_video.includes('docs.google.com/presentation')
-  const hasFile = Boolean(materi.file_materi && materi.file_materi.trim())
-  const isFileUrl = hasFile && (materi.file_materi.startsWith('http://') || materi.file_materi.startsWith('https://'))
+  const hasFile = Boolean((materi.file_materi && materi.file_materi.trim()) || materi.file_url)
+
+  const handleFilePreview = (e) => {
+    e.stopPropagation()
+    if (onPreviewFile) {
+      onPreviewFile(
+        materi.file_materi,
+        materi.file_url,
+        `Modul: ${materi.judul || 'Materi'}`,
+        getFileName(materi.file_materi || materi.file_url)
+      )
+    } else {
+      openAttachment(materi.file_materi, materi.file_url)
+    }
+  }
 
   return (
     <div
@@ -54,6 +86,11 @@ export default function StudentMateriCard({ materi, onOpen }) {
             <span>{mapelKode ? `${mapelKode} • ${mapelNama}` : mapelNama}</span>
           </span>
           <div className="flex items-center gap-1.5 flex-wrap">
+            {isAccessed && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+                <CheckCircle2 size={11} /> Dipelajari
+              </span>
+            )}
             {isSlide ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
                 <Presentation size={11} /> Slide
@@ -77,6 +114,23 @@ export default function StudentMateriCard({ materi, onOpen }) {
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
           {plainDeskripsi || 'Klik untuk melihat detail materi ini.'}
         </p>
+
+        {relatedTugasCount > 0 && (
+          <div className="mt-2.5 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenTugas?.()
+              }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/60 transition-colors"
+              title="Lihat Tugas Terkait Mata Pelajaran Ini"
+            >
+              <ClipboardList size={11} />
+              <span>{relatedTugasCount} Tugas Terkait</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/60 space-y-3">
@@ -117,17 +171,15 @@ export default function StudentMateriCard({ materi, onOpen }) {
               <ExternalLink size={14} />
             </a>
           )}
-          {isFileUrl && (
-            <a
-              href={materi.file_materi}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              title="Buka Dokumen / File"
+          {hasFile && (
+            <button
+              type="button"
+              onClick={handleFilePreview}
+              title="Pratinjau / Buka Dokumen Modul"
               className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
             >
-              <FileText size={14} />
-            </a>
+              {onPreviewFile ? <Eye size={14} /> : <FileText size={14} />}
+            </button>
           )}
         </div>
       </div>

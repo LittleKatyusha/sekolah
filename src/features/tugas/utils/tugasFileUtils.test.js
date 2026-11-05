@@ -15,6 +15,8 @@ import {
   isGroupSubmission,
   getGroupMembers,
   isRevisionRequested,
+  findRelatedMateriForTugas,
+  calculateSubjectProgress,
 } from './tugasFileUtils'
 import { fileUploadService } from '../../../services/fileUploadService'
 
@@ -187,6 +189,72 @@ describe('tugasFileUtils', () => {
     expect(isRevisionRequested(groupSub)).toBe(true)
     // When revision is requested, isSubmissionGraded should return false so student sees Perlu Revisi
     expect(isSubmissionGraded(groupSub)).toBe(false)
+  })
+
+  it('matches related materi and calculates per-subject progress and average score', () => {
+    const tugasList = [
+      {
+        id: 1,
+        mst_guru_mapel_id: 10,
+        guru_mapel: { id: 10, mapel: { kode: 'SOS', nama: 'Sosiologi' } },
+      },
+      {
+        id: 2,
+        mst_guru_mapel_id: 10,
+        guru_mapel: { id: 10, mapel: { kode: 'SOS', nama: 'Sosiologi' } },
+      },
+      {
+        id: 3,
+        mst_guru_mapel_id: 20,
+        guru_mapel: { id: 20, mapel: { kode: 'BIO', nama: 'Biologi' } },
+      },
+    ]
+
+    const submissionMap = {
+      1: { id: 101, tugas_id: 1, status: 3, nilai: 90 },
+      2: { id: 102, tugas_id: 2, status: 1, nilai: null },
+    }
+
+    const materiList = [
+      {
+        id: 501,
+        judul: 'Identitas Diri',
+        mst_guru_mapel_id: 10,
+        guru_mapel: { id: 10, mapel: { nama: 'Sosiologi' } },
+      },
+      {
+        id: 502,
+        judul: 'Tindakan Sosial',
+        mst_guru_mapel_id: 10,
+        guru_mapel: { id: 10, mapel: { nama: 'Sosiologi' } },
+      },
+      {
+        id: 503,
+        judul: 'Sistem Peredaran Darah',
+        mst_guru_mapel_id: 20,
+        guru_mapel: { id: 20, mapel: { nama: 'Biologi' } },
+      },
+    ]
+
+    const relatedForSosiologi = findRelatedMateriForTugas(tugasList[0], materiList)
+    expect(relatedForSosiologi).toHaveLength(2)
+
+    const progress = calculateSubjectProgress(tugasList, submissionMap, materiList)
+    expect(progress).toHaveLength(2)
+
+    const sosiologi = progress.find((p) => p.name === 'Sosiologi')
+    expect(sosiologi.totalTugas).toBe(2)
+    expect(sosiologi.submittedTugas).toBe(2)
+    expect(sosiologi.progressPercent).toBe(100)
+    expect(sosiologi.avgScore).toBe(90)
+    expect(sosiologi.materiCount).toBe(2)
+
+    const biologi = progress.find((p) => p.name === 'Biologi')
+    expect(biologi.totalTugas).toBe(1)
+    expect(biologi.submittedTugas).toBe(0)
+    expect(biologi.progressPercent).toBe(0)
+    expect(biologi.avgScore).toBeNull()
+    expect(biologi.materiCount).toBe(1)
   })
 })
 

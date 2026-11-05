@@ -129,4 +129,27 @@ describe('StudentTugasCard', () => {
     fireEvent.click(reviseBtn)
     expect(handleRevise).toHaveBeenCalledTimes(1)
   })
+
+  it('renders Baca Materi button when relatedMateri is provided and triggers onOpenMateri', () => {
+    const handleOpenMateri = vi.fn()
+    const relatedMateri = [
+      { id: 1, judul: 'Modul Bab 1 Sosiologi' },
+      { id: 2, judul: 'Video Bab 1 Sosiologi' },
+    ]
+
+    render(
+      <StudentTugasCard
+        tugas={dummyTugas}
+        submission={null}
+        relatedMateri={relatedMateri}
+        onOpen={vi.fn()}
+        onOpenMateri={handleOpenMateri}
+      />
+    )
+
+    const materiBtn = screen.getByText(/Baca Materi \(2\)/i)
+    expect(materiBtn).toBeInTheDocument()
+    fireEvent.click(materiBtn)
+    expect(handleOpenMateri).toHaveBeenCalledWith(relatedMateri)
+  })
 })

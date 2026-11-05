@@ -1,21 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { MessageSquare, Clock, User, Search, BookOpen, RefreshCw, Loader2 } from 'lucide-react'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { MessageSquare, Clock, User, Search, BookOpen, RefreshCw, Loader2, Plus } from 'lucide-react'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
+import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { forumService } from '../services/forumService'
 import { timeAgo, getInitials, getAvatarColor, stripHtml, truncateText } from '../utils/forumHelpers'
 
 const ForumList = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const initialQuery = searchParams.get('search') || ''
+  const relatedJudul = location.state?.relatedJudul || ''
   const loaderRef = useRef(null)
   const isFetchingRef = useRef(false)
   const currentPageRef = useRef(0)
   const topicsCountRef = useRef(0)
   const hasMoreRef = useRef(true)
 
-  const [searchInput, setSearchInput] = useState('')
-  const [searchText, setSearchText] = useState('')
+  const [searchInput, setSearchInput] = useState(initialQuery)
+  const [searchText, setSearchText] = useState(initialQuery)
   const [topics, setTopics] = useState([])
   const [totalRows, setTotalRows] = useState(0)
   const [page, setPage] = useState(1)
@@ -210,6 +215,18 @@ const ForumList = () => {
           <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
             <RefreshCw size={18} />
           </Button>
+          <PermissionGuard permission="forum.create">
+            <Button
+              onClick={() =>
+                navigate('/akademik/forum/create', {
+                  state: { initialJudul: relatedJudul || (searchInput ? `Diskusi: ${searchInput}` : '') },
+                })
+              }
+            >
+              <Plus size={18} className="mr-2" />
+              Buat Topik Diskusi
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 

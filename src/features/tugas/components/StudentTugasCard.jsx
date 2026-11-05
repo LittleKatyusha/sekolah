@@ -116,9 +116,11 @@ const getSubjectStyle = (name = '') => {
 export default function StudentTugasCard({
   tugas,
   submission,
+  relatedMateri = [],
   onOpen,
   onSubmit,
   onRevise,
+  onOpenMateri,
   onPreviewAttachment,
 }) {
   const mapelNama = tugas.guru_mapel?.mapel?.nama || 'Mata Pelajaran'
@@ -242,8 +244,28 @@ export default function StudentTugasCard({
           {plainDeskripsi || 'Klik untuk melihat petunjuk dan detail pengerjaan tugas ini.'}
         </p>
 
-        {(isGroup || isTaskGroupHint || submissionLink) && (
+        {(isGroup || isTaskGroupHint || submissionLink || relatedMateri.length > 0) && (
           <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
+            {relatedMateri.length > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenMateri?.(relatedMateri)
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-200/70 dark:border-teal-800/60 transition-colors"
+                title={
+                  relatedMateri.length === 1
+                    ? `Pelajari Materi: ${relatedMateri[0].judul}`
+                    : `Lihat ${relatedMateri.length} Materi Terkait`
+                }
+              >
+                <BookOpen size={11} />
+                <span>
+                  Baca Materi{relatedMateri.length > 1 ? ` (${relatedMateri.length})` : ''}
+                </span>
+              </button>
+            )}
             {isGroup ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/70 dark:border-violet-800/60">
                 <Users size={11} />

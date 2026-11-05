@@ -30,6 +30,7 @@ export const hasAttachment = (item) => {
     item.file_jawaban ||
     item.file_siswa ||
     item.file_lampiran ||
+    item.file_materi ||
     item.file_path
   return Boolean(candidate && String(candidate).trim().length > 0)
 }
@@ -41,6 +42,7 @@ export const getAttachmentPath = (item) => {
     item.file_jawaban ||
     item.file_siswa ||
     item.file_lampiran ||
+    item.file_materi ||
     item.file_path ||
     item.file_url ||
     ''
@@ -254,6 +256,99 @@ export const deduplicateTugasList = (tugasList = [], submissionMap = {}) => {
 
   return Array.from(seen.values())
 }
+
+/**
+ * Finds related learning materials (MstMateri) for a given assignment (MstTugas)
+ * by matching mst_guru_mapel_id or mapel name.
+ */
+export const findRelatedMateriForTugas = (tugas, materiList = []) => {
+  if (!tugas || !Array.isArray(materiList) || materiList.length === 0) return []
+  const tugasGmId = tugas.mst_guru_mapel_id ?? tugas.guru_mapel?.id
+  const tugasMapelNama = (tugas.guru_mapel?.mapel?.nama || '').trim().toLowerCase()
+
+  return materiList.filter((m) => {
+    if (!m) return false
+    const mGmId = m.mst_guru_mapel_id ?? m.guru_mapel?.id
+    if (tugasGmId && mGmId && String(tugasGmId) === String(mGmId)) {
+      return true
+    }
+    const mMapelNama = (m.guru_mapel?.mapel?.nama || '').trim().toLowerCase()
+    return Boolean(tugasMapelNama && mMapelNama && tugasMapelNama === mMapelNama)
+  })
+}
+
+/**
+ * Calculates per-subject (Mata Pelajaran) assignment completion progress,
+ * average score, and related learning materials count.
+ */
+export const calculateSubjectProgress = (
+  tugasList = [],
+  submissionMap = {},
+  materiList = []
+) => {
+  if (!Array.isArray(tugasList) || tugasList.length === 0) return []
+
+  const byMapel = new Map()
+
+  tugasList.forEach((t) => {
+    if (!t) return
+    const mapelNama = t.guru_mapel?.mapel?.nama || 'Mata Pelajaran Lainnya'
+    const mapelKode = t.guru_mapel?.mapel?.kode || ''
+    const guruNama = t.guru_mapel?.guru?.nama || ''
+    const key = mapelNama.toLowerCase()
+
+    if (!byMapel.has(key)) {
+      byMapel.set(key, {
+        name: mapelNama,
+        kode: mapelKode,
+        guru: guruNama,
+        totalTugas: 0,
+        submittedTugas: 0,
+        gradedCount: 0,
+        scoreSum: 0,
+        materiCount: 0,
+      })
+    }
+
+    const entry = byMapel.get(key)
+    entry.totalTugas += 1
+
+    const sub = submissionMap[t.id]
+    if (sub && !isRevisionRequested(sub)) {
+      entry.submittedTugas += 1
+      if (isSubmissionGraded(sub)) {
+        const score = getSubmissionScore(sub)
+        if (score !== null) {
+          entry.gradedCount += 1
+          entry.scoreSum += score
+        }
+      }
+    }
+  })
+
+  if (Array.isArray(materiList)) {
+    materiList.forEach((m) => {
+      const mName = (m?.guru_mapel?.mapel?.nama || '').toLowerCase()
+      if (mName && byMapel.has(mName)) {
+        byMapel.get(mName).materiCount += 1
+      }
+    })
+  }
+
+  return Array.from(byMapel.values()).map((entry) => {
+    const progressPercent =
+      entry.totalTugas > 0 ? Math.round((entry.submittedTugas / entry.totalTugas) * 100) : 0
+    const avgScore =
+      entry.gradedCount > 0 ? Math.round(entry.scoreSum / entry.gradedCount) : null
+
+    return {
+      ...entry,
+      progressPercent,
+      avgScore,
+    }
+  })
+}
+
 
 
 
