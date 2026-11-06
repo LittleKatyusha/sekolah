@@ -104,6 +104,21 @@ const AkademikStats = () => {
     setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  // Auto-retry if error is connection-related (failsafe)
+  useEffect(() => {
+    if (!error) return
+    const isConnErr = typeof error === 'string' && (
+      error.toLowerCase().includes('koneksi') ||
+      error.toLowerCase().includes('connection')
+    )
+    if (isConnErr) {
+      const timer = setTimeout(() => {
+        fetchData()
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [error, fetchData])
+
   if (error) {
     return (
       <Card>

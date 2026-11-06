@@ -147,6 +147,55 @@ api.interceptors.request.use(
   }
 )
 
+// Check if an error is transient and safe to retry automatically
+export const isTransientError = (error) => {
+  if (!error) return false
+  // Network errors or request timeouts (no HTTP response received)
+  if (!error.response) return true
+
+  const status = error.response.status
+  // Gateway and server temporary unavailable
+  if (status === 502 || status === 503 || status === 504) return true
+
+  const msg = (
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.message ||
+    ''
+  ).toString().toLowerCase()
+
+  // Database connection errors (e.g. Go pgx "driver: bad connection")
+  if (
+    msg.includes('bad connection') ||
+    msg.includes('connection refused') ||
+    msg.includes('connection reset') ||
+    msg.includes('broken pipe')
+  ) {
+    return true
+  }
+
+  // Idempotent safe requests on 500
+  const method = (error.config?.method || 'get').toLowerCase()
+  if (status === 500 && (method === 'get' || method === 'head')) {
+    return true
+  }
+
+  return false
+}
+
+// Sanitize raw driver/connection errors into user-friendly messages
+export const sanitizeApiError = (error) => {
+  if (!error) return { message: 'Terjadi kesalahan sistem' }
+  const errorObj = error.response
+    ? { ...error.response.data, status: error.response.status }
+    : { message: error.message || 'Terjadi kesalahan koneksi' }
+
+  if (typeof errorObj.message === 'string' && errorObj.message.toLowerCase().includes('bad connection')) {
+    errorObj.message = 'Koneksi ke server terputus. Silakan coba beberapa saat lagi.'
+  }
+  return errorObj
+}
+
 // Response interceptor - Handle errors globally with token refresh
 api.interceptors.response.use(
   (response) => {
@@ -156,10 +205,6 @@ api.interceptors.response.use(
     return response
   },
   async (error) => {
-    if (error.config?.__navigationProgressTracked) {
-      endTrackedRequest()
-    }
-
     const originalRequest = error.config
 
     // Handle 401 - Unauthorized (try to refresh token)
@@ -189,7 +234,9 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        endTrackedRequest()
+        if (error.config?.__navigationProgressTracked) {
+          endTrackedRequest()
+        }
         // Token refresh failed - logout user
         useAuthStore.getState().logout()
         notifyAuthExpired()
@@ -197,6 +244,26 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false
       }
+    }
+
+    // Auto-retry transient errors (e.g. "driver: bad connection", 502/503/504, network drops)
+    const maxRetries = originalRequest?.maxRetries ?? 2
+    const retryCount = originalRequest?._retryCount || 0
+    if (
+      originalRequest &&
+      !isRefreshRequest &&
+      !isLoginRequest &&
+      retryCount < maxRetries &&
+      isTransientError(error)
+    ) {
+      originalRequest._retryCount = retryCount + 1
+      const backoffDelay = originalRequest._retryCount * 300 // 300ms, 600ms
+      await new Promise((resolve) => setTimeout(resolve, backoffDelay))
+      return api(originalRequest)
+    }
+
+    if (error.config?.__navigationProgressTracked) {
+      endTrackedRequest()
     }
 
     // Handle other error status codes
@@ -241,7 +308,7 @@ export const apiService = {
       const response = await api.get(url, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
+      return { data: null, error: sanitizeApiError(error) }
     }
   },
 
@@ -251,7 +318,7 @@ export const apiService = {
       const response = await api.post(url, data, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
+      return { data: null, error: sanitizeApiError(error) }
     }
   },
 
@@ -261,7 +328,7 @@ export const apiService = {
       const response = await api.put(url, data, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
+      return { data: null, error: sanitizeApiError(error) }
     }
   },
 
@@ -271,7 +338,7 @@ export const apiService = {
       const response = await api.patch(url, data, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
+      return { data: null, error: sanitizeApiError(error) }
     }
   },
 
@@ -281,7 +348,7 @@ export const apiService = {
       const response = await api.delete(url, config)
       return { data: response.data, error: null }
     } catch (error) {
-      return { data: null, error: error.response ? { ...error.response.data, status: error.response.status } : error.message }
+      return { data: null, error: sanitizeApiError(error) }
     }
   },
 }
