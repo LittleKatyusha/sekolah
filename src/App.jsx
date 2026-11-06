@@ -1,6 +1,6 @@
 
 import { lazy, Suspense, useEffect, useRef } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import RouteAccessGuard from './components/guards/RouteAccessGuard'
@@ -121,6 +121,27 @@ const Organisasi = lazy(() => import('./pages/Organisasi'))
 const Ppdb = lazy(() => import('./pages/Ppdb'))
 const PortalPpdb = lazy(() => import('./features/ppdb/pages/PortalPpdb'))
 const PublicProfile = lazy(() => import('./features/sekolah/pages/PublicProfile'))
+import { getSubdomain } from './utils/tenant'
+
+export const ProfileRoute = () => {
+  const [searchParams] = useSearchParams()
+  const { isAuthenticated } = useAuthStore()
+
+  const schoolIdentifier =
+    searchParams.get('sekolah') ||
+    searchParams.get('tenant') ||
+    searchParams.get('subdomain') ||
+    searchParams.get('identifier') ||
+    getSubdomain()
+
+  const isSchoolContext = Boolean(schoolIdentifier && schoolIdentifier !== 'app' && schoolIdentifier !== 'www')
+
+  if (!isAuthenticated || isSchoolContext) {
+    return <PublicProfile />
+  }
+
+  return <Navigate to="/user/profile" replace />
+}
 const PublicBlogList = lazy(() => import('./features/blog/pages/PublicBlogList'))
 const PublicBlogDetail = lazy(() => import('./features/blog/pages/PublicBlogDetail'))
 const SklVerificationPage = lazy(() => import('./features/siswa/pages/SklVerificationPage'))
@@ -298,6 +319,7 @@ function App() {
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Public School Profile — no authentication required */}
+            <Route path="/profile" element={<ProfileRoute />} />
             <Route path="/profil" element={<PublicProfile />} />
 
             {/* Public PPDB portal — no authentication required */}
@@ -454,7 +476,7 @@ function App() {
               <Route path="/spk/*" element={<Spk />} />
 
               {/* User Self-Service Profile */}
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/user/profile" element={<ProfilePage />} />
 
               {/* Notifikasi */}
               <Route path="/notifikasi" element={<NotifikasiPage />} />

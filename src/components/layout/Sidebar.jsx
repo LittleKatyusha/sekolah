@@ -468,7 +468,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* User info */}
           <Link
-            to="/profile"
+            to="/user/profile"
             onClick={onClose}
             className="p-4 border-b block hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             style={{ borderColor: 'var(--sb-border)' }}

@@ -200,7 +200,7 @@ const Header = ({ onMenuClick }) => {
 
           {/* User Profile */}
           <Link
-            to="/profile"
+            to="/user/profile"
             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-1"
             title="Profil Pengguna"
             aria-label="Profil Pengguna"

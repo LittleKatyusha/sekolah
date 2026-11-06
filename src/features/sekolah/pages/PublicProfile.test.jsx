@@ -90,7 +90,7 @@ describe('PublicProfile Component', () => {
     ppdbPublicService.getPublicProfile.mockResolvedValue({ data: null, error: 'Profil sekolah tidak ditemukan' })
 
     render(
-      <MemoryRouter initialEntries={['/profile?sekolah=unknown']}>
+      <MemoryRouter initialEntries={['/profil?sekolah=unknown']}>
         <PublicProfile />
       </MemoryRouter>
     )

@@ -82,6 +82,10 @@ describe('PublicBlogDetail SEO & JSON-LD', () => {
     expect(schema['@type']).toBe('BlogPosting')
     expect(schema.headline).toBe('Juara 1 Lomba Robotik Nasional')
     expect(schema.author?.name).toBe('Ahmad Fauzi')
+
+    // Profile CTA link navigates to public school profile (/profile), not user profile
+    const ctaLink = screen.getByRole('link', { name: /Kunjungi Profil Sekolah/i })
+    expect(ctaLink.getAttribute('href')).toBe('/profile?sekolah=smada')
   })
 })
 
@@ -122,6 +126,10 @@ describe('PublicBlogList SEO', () => {
     expect(canonicalLink).not.toBeNull()
     expect(canonicalLink?.getAttribute('href')).toContain('/blog')
     expect(canonicalLink?.getAttribute('href')).not.toContain('?sekolah=smada')
+
+    // Profile button links to public school profile (/profile), not user profile
+    const profileLink = screen.getByRole('link', { name: /Profil SMADA/i })
+    expect(profileLink.getAttribute('href')).toBe('/profile?sekolah=smada')
   })
 })
 
