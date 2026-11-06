@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Sliders, Save, X, Edit, Trash2 } from 'lucide-react'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 
@@ -258,6 +259,18 @@ const PengaturanSekolahItem = ({
       </div>
 
       <p className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2">{setting.meta?.description}</p>
+
+      {(setting.key === 'jam_pulang_sekolah' || setting.key === 'jam_masuk_sekolah') && (
+        <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-between gap-1 text-[11px]">
+          <span className="text-amber-700 dark:text-amber-400">Jam kepulangan khusus per hari?</span>
+          <Link
+            to="/shift"
+            className="font-semibold text-primary-600 dark:text-primary-400 hover:underline shrink-0"
+          >
+            Atur di Shift ➔
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,13 +1,17 @@
 import { useMemo, useCallback, useRef } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { RefreshCw, Calendar, Clock, AlertCircle } from 'lucide-react'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import ShiftList from '../../shift/pages/ShiftList'
 import { hariOperasionalService } from '../services/hariOperasionalService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
 
 const HariOperasionalList = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') === 'shift' ? 'shift' : 'hari'
   const gridRef = useRef(null)
 
   const staticParams = useMemo(() => ({
@@ -125,25 +129,77 @@ const HariOperasionalList = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hari Operasional</h1>
-        <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
-          <RefreshCw size={18} />
-        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hari & Jam Operasional</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Kelola hari aktif sekolah serta jam masuk dan kepulangan (termasuk jam khusus per hari).
+          </p>
+        </div>
+        {activeTab === 'hari' && (
+          <Button onClick={handleRefresh} variant="secondary" title="Refresh Data">
+            <RefreshCw size={18} />
+          </Button>
+        )}
       </div>
 
-      <Card>
-        <InfiniteGrid
-          ref={gridRef}
-          endpoint="/admin/hari-operasional/"
-          staticParams={staticParams}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          cacheBlockSize={20}
-          paginationPageSize={20}
-          paginationPageSizeSelector={[10, 20, 50, 100]}
-          height={450}
-        />
-      </Card>
+      <div className="flex border-b border-gray-200 dark:border-gray-800 gap-2">
+        <button
+          type="button"
+          onClick={() => setSearchParams({})}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+            activeTab === 'hari'
+              ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+          }`}
+        >
+          <Calendar size={16} /> Hari Aktif
+        </button>
+        <button
+          type="button"
+          onClick={() => setSearchParams({ tab: 'shift' })}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+            activeTab === 'shift'
+              ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+          }`}
+        >
+          <Clock size={16} /> Shift & Jam Sekolah (Per Hari)
+        </button>
+      </div>
+
+      {activeTab === 'hari' ? (
+        <div className="space-y-4">
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
+              <AlertCircle size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>Ingin mengatur jam kepulangan berbeda untuk hari tertentu (misal: Jumat pulang pukul 11:30)?</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: 'shift' })}
+              className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline shrink-0"
+            >
+              Atur Jam di Shift Sekolah ➔
+            </button>
+          </div>
+
+          <Card>
+            <InfiniteGrid
+              ref={gridRef}
+              endpoint="/admin/hari-operasional/"
+              staticParams={staticParams}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              cacheBlockSize={20}
+              paginationPageSize={20}
+              paginationPageSizeSelector={[10, 20, 50, 100]}
+              height={450}
+            />
+          </Card>
+        </div>
+      ) : (
+        <ShiftList embedded={true} />
+      )}
     </div>
   )
 }

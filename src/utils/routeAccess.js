@@ -432,6 +432,8 @@ export const ROUTE_RULES = [
   ['/admin/semester', 'semester.view'],
 
   ['/admin/hari-operasional', 'hari-operasional.view'],
+  ['/admin/shift', 'shift.view'],
+  ['/shift', 'shift.view'],
 
   ['/admin/kalender-tipe/create', 'kalender-tipe.manage'],
   ['/admin/kalender-tipe/:id/edit', 'kalender-tipe.manage'],

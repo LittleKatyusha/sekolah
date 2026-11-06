@@ -163,6 +163,7 @@ const PanduanPage = lazy(() => import('./features/panduan/pages/PanduanPage'))
 const EWS = lazy(() => import('./pages/EWS'))
 const JadwalPelajaran = lazy(() => import('./pages/JadwalPelajaran'))
 const HariOperasional = lazy(() => import('./features/hari-operasional/pages/HariOperasionalList'))
+const ShiftList = lazy(() => import('./features/shift/pages/ShiftList'))
 const KalenderHarian = lazy(() => import('./features/kalender-harian/pages/KalenderHarianList'))
 const PresensiList = lazy(() => import('./features/presensi/pages/PresensiList'))
 const PresensiForm = lazy(() => import('./features/presensi/pages/PresensiForm'))
@@ -435,6 +436,8 @@ function App() {
               <Route path="/admin/permissions/*" element={<Permissions />} />
               <Route path="/admin/role-permissions/*" element={<RolePermissions />} />
               <Route path="/admin/hari-operasional" element={<HariOperasional />} />
+              <Route path="/admin/shift" element={<ShiftList />} />
+              <Route path="/shift" element={<ShiftList />} />
               <Route path="/admin/kalender-harian" element={<KalenderHarian />} />
               <Route path="/admin/references" element={<ReferenceList />} />
               <Route path="/admin/references/create" element={<ReferenceForm />} />
