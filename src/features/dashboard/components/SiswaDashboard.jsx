@@ -337,9 +337,9 @@ const SiswaDashboard = ({ data, authUser }) => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
-                      {grade.ujian?.mapel?.nama || 'Ujian'}
+                      {grade.ujian?.mapel?.nama || grade.nama_mapel || grade.nama_ujian || 'Ujian'}
                     </p>
-                    <p className="truncate text-xs text-gray-500">{grade.ujian?.nama || ''}</p>
+                    <p className="truncate text-xs text-gray-500">{grade.ujian?.nama || (grade.nama_mapel ? grade.nama_ujian : '') || ''}</p>
                   </div>
                 </div>
               ))}
