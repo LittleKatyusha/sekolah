@@ -29,7 +29,11 @@ export const profileService = {
 
   getActivityLogs: async (params = {}) => {
     const response = await apiService.get('/profile/activity-logs', { params })
-    return response.data?.data
+    const list = response.data?.data ?? []
+    if (response.data?.meta && typeof list === 'object') {
+      list.meta = response.data.meta
+    }
+    return list
   },
 }
 
