@@ -57,6 +57,11 @@ describe('KartuPelajarSettingsCard', () => {
       expect(screen.getByText('Template & Form Koordinat Kartu Pelajar (CR-80)')).toBeInTheDocument()
     })
 
+    const previewName = screen.getByText('MUHAMAD FAISAL')
+    const expectedPreviewFontPx = 8.5 * (25.4 / 72) * (320 / 85.6)
+    expect(Number.parseFloat(previewName.style.fontSize)).toBeCloseTo(expectedPreviewFontPx, 4)
+    expect(screen.getByText(/minimal 1011 × 638 px/)).toBeInTheDocument()
+
     const saveBtn = screen.getByText('Simpan Pengaturan')
     fireEvent.click(saveBtn)
 

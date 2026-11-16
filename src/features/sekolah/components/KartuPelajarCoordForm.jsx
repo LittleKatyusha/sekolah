@@ -23,10 +23,10 @@ export default function KartuPelajarCoordForm({ template, setCoord }) {
           </label>
         </div>
         <div className="grid grid-cols-4 gap-2">
-          <div><label className="text-[10px] text-gray-500">X (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.foto.x} onChange={(e) => setCoord('foto', 'x', e.target.value)} /></div>
-          <div><label className="text-[10px] text-gray-500">Y (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.foto.y} onChange={(e) => setCoord('foto', 'y', e.target.value)} /></div>
-          <div><label className="text-[10px] text-gray-500">Lebar (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.foto.width} onChange={(e) => setCoord('foto', 'width', e.target.value)} /></div>
-          <div><label className="text-[10px] text-gray-500">Tinggi (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.foto.height} onChange={(e) => setCoord('foto', 'height', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">X (mm)</label><input type="number" min="0" step="0.1" className="input-field text-xs py-0.5" value={l.foto.x} onChange={(e) => setCoord('foto', 'x', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">Y (mm)</label><input type="number" min="0" step="0.1" className="input-field text-xs py-0.5" value={l.foto.y} onChange={(e) => setCoord('foto', 'y', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">Lebar (mm)</label><input type="number" min="1" step="0.1" className="input-field text-xs py-0.5" value={l.foto.width} onChange={(e) => setCoord('foto', 'width', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">Tinggi (mm)</label><input type="number" min="1" step="0.1" className="input-field text-xs py-0.5" value={l.foto.height} onChange={(e) => setCoord('foto', 'height', e.target.value)} /></div>
         </div>
       </div>
 
@@ -40,9 +40,9 @@ export default function KartuPelajarCoordForm({ template, setCoord }) {
             </label>
           </div>
           <div className="grid grid-cols-4 gap-2">
-            <div><label className="text-[10px] text-gray-500">X (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l[key].x} onChange={(e) => setCoord(key, 'x', e.target.value)} /></div>
-            <div><label className="text-[10px] text-gray-500">Y (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l[key].y} onChange={(e) => setCoord(key, 'y', e.target.value)} /></div>
-            <div><label className="text-[10px] text-gray-500">Font (pt)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l[key].font_size} onChange={(e) => setCoord(key, 'font_size', e.target.value)} /></div>
+            <div><label className="text-[10px] text-gray-500">X (mm)</label><input type="number" min="0" step="0.1" className="input-field text-xs py-0.5" value={l[key].x} onChange={(e) => setCoord(key, 'x', e.target.value)} /></div>
+            <div><label className="text-[10px] text-gray-500">Y (mm)</label><input type="number" min="0" step="0.1" className="input-field text-xs py-0.5" value={l[key].y} onChange={(e) => setCoord(key, 'y', e.target.value)} /></div>
+            <div><label className="text-[10px] text-gray-500">Font (pt)</label><input type="number" min="4" max="36" step="0.1" className="input-field text-xs py-0.5" value={l[key].font_size} onChange={(e) => setCoord(key, 'font_size', e.target.value)} /></div>
             <div><label className="text-[10px] text-gray-500">Warna</label><input type="color" className="h-7 w-full rounded border cursor-pointer" value={l[key].color} onChange={(e) => setCoord(key, 'color', e.target.value)} /></div>
           </div>
         </div>
@@ -57,9 +57,9 @@ export default function KartuPelajarCoordForm({ template, setCoord }) {
           </label>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <div><label className="text-[10px] text-gray-500">X (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.qr.x} onChange={(e) => setCoord('qr', 'x', e.target.value)} /></div>
-          <div><label className="text-[10px] text-gray-500">Y (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.qr.y} onChange={(e) => setCoord('qr', 'y', e.target.value)} /></div>
-          <div><label className="text-[10px] text-gray-500">Ukuran (mm)</label><input type="number" step="0.5" className="input-field text-xs py-0.5" value={l.qr.size} onChange={(e) => setCoord('qr', 'size', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">X (mm)</label><input type="number" min="0" step="0.1" className="input-field text-xs py-0.5" value={l.qr.x} onChange={(e) => setCoord('qr', 'x', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">Y (mm)</label><input type="number" min="0" step="0.1" className="input-field text-xs py-0.5" value={l.qr.y} onChange={(e) => setCoord('qr', 'y', e.target.value)} /></div>
+          <div><label className="text-[10px] text-gray-500">Ukuran (mm)</label><input type="number" min="10" max="40" step="0.1" className="input-field text-xs py-0.5" value={l.qr.size} onChange={(e) => setCoord('qr', 'size', e.target.value)} /></div>
         </div>
       </div>
     </div>

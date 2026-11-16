@@ -9,8 +9,8 @@ export default function CetakKartuModal({ onClose, selectedSiswaIds = [] }) {
   const [targetType, setTargetType] = useState(selectedSiswaIds.length > 0 ? 'selected' : 'all')
   const [kelasList, setKelasList] = useState([])
   const [selectedKelasId, setSelectedKelasId] = useState('')
-  const [format, setFormat] = useState('a4')
-  const [side, setSide] = useState('front')
+  const [format, setFormat] = useState('cr80')
+  const [side, setSide] = useState('both')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -139,17 +139,18 @@ export default function CetakKartuModal({ onClose, selectedSiswaIds = [] }) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Format Kertas</label>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Format Halaman PDF</label>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <label className={`p-2.5 rounded-lg border cursor-pointer ${format === 'a4' ? 'border-primary-600 bg-primary-50 dark:bg-primary-950/30 font-medium' : 'border-gray-200 dark:border-gray-700'}`}>
                 <input type="radio" name="format" value="a4" checked={format === 'a4'} onChange={() => setFormat('a4')} className="mr-1.5" />
-                Lembar A4 (10 Kartu)
+                Lembar A4 (8 Kartu, ukuran asli)
               </label>
               <label className={`p-2.5 rounded-lg border cursor-pointer ${format === 'cr80' ? 'border-primary-600 bg-primary-50 dark:bg-primary-950/30 font-medium' : 'border-gray-200 dark:border-gray-700'}`}>
                 <input type="radio" name="format" value="cr80" checked={format === 'cr80'} onChange={() => setFormat('cr80')} className="mr-1.5" />
                 Satuan CR-80 (PVC)
               </label>
             </div>
+            <p className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400">CR-80 direkomendasikan untuk vendor digital printing agar proses imposition dilakukan tanpa mengubah skala kartu.</p>
           </div>
 
           <div>

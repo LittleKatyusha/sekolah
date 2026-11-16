@@ -45,15 +45,15 @@ describe('CetakKartuModal', () => {
 
     expect(screen.getByText('Cetak Kartu Pelajar Massal')).toBeInTheDocument()
     expect(screen.getByText('Semua Siswa Aktif')).toBeInTheDocument()
-    expect(screen.getByText('Lembar A4 (10 Kartu)')).toBeInTheDocument()
+    expect(screen.getByText('Lembar A4 (8 Kartu, ukuran asli)')).toBeInTheDocument()
 
     const submitBtn = screen.getByText('Unduh PDF Kartu')
     fireEvent.click(submitBtn)
 
     await waitFor(() => {
       expect(siswaService.cetakKartuPelajar).toHaveBeenCalledWith({
-        format: 'a4',
-        side: 'front',
+        format: 'cr80',
+        side: 'both',
         status: 'aktif',
       })
       expect(onClose).toHaveBeenCalled()
