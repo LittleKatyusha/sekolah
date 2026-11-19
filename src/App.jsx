@@ -8,8 +8,7 @@ import MainLayout from './components/layout/MainLayout'
 import Login from './pages/Login'
 import Unauthorized from './pages/Unauthorized'
 import useAuthStore from './store/useAuthStore'
-import echoService from './services/echoService'
-import useNotificationStore from './store/useNotificationStore'
+import WebSocketManager from './components/WebSocketManager'
 import { setAuthExpiredHandler } from './utils/api'
 import { runCacheWarming } from './utils/cacheWarmer'
 import NavigationProgress from './components/ui/NavigationProgress'
@@ -202,54 +201,6 @@ const NavigationProgressObserver = () => {
 
 const TitleUpdater = () => {
   usePageTitle()
-  return null
-}
-
-// ── WebSocket lifecycle manager ───────────────────────────────────────────────
-// Mounted once inside BrowserRouter; manages connection based on auth state.
-function WebSocketManager() {
-  const { isAuthenticated, token, user } = useAuthStore()
-  const { addNotification, setWsStatus } = useNotificationStore()
-
-  useEffect(() => {
-    if (!isAuthenticated || !token || !user?.id) {
-      echoService.disconnect()
-      return
-    }
-
-    // Connect once for the authenticated lifecycle.
-    echoService.connect(token)
-
-    const offStatus = echoService.on('status', (status) => {
-      setWsStatus(status)
-    })
-
-    const offNotif = echoService.on('notification', (data) => {
-      addNotification(data)
-    })
-
-    // Subscribe to the per-user Laravel notification channel.
-    // App.Models.User.{id} is registered in channels.php and is the
-    // standard Laravel private notification channel for this user only.
-    const userChannel = `App.Models.User.${user.id}`
-    echoService.subscribe(userChannel)
-
-    return () => {
-      offStatus()
-      offNotif()
-      echoService.unsubscribe(userChannel)
-      echoService.disconnect()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    if (!isAuthenticated || !token) return
-
-    // Refresh auth headers for future private channel auth without reconnecting.
-    echoService.updateToken(token)
-  }, [isAuthenticated, token])
-
   return null
 }
 
