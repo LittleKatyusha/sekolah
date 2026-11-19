@@ -137,6 +137,7 @@ describe('SekolahDetail settings', () => {
     })
 
     expect(screen.getByText('Simpan Pengaturan AI')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Model ID AI' })).toHaveValue('gpt-6-luna')
     fireEvent.change(screen.getByRole('textbox', { name: 'Model ID AI' }), {
       target: { value: 'gpt-4.1-mini' },
     })

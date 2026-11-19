@@ -52,13 +52,13 @@ const SekolahDetail = () => {
   )
 
   const AI_PROVIDERS = [
-    { id: 'openai', label: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini' },
+    { id: 'openai', label: 'OpenAI (Hemat & Direkomendasikan)', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-6-luna' },
     { id: 'cloudflare', label: 'Cloudflare AI Gateway', defaultBaseUrl: 'https://gateway.ai.cloudflare.com/v1', defaultModel: 'gpt-4o-mini' },
     { id: 'openrouter', label: 'OpenRouter', defaultBaseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'google/gemini-2.0-flash-001' },
     { id: 'deepseek', label: 'DeepSeek', defaultBaseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat' },
     { id: 'groq', label: 'Groq', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultModel: 'llama-3.3-70b-versatile' },
     { id: 'anthropic', label: 'Anthropic (via Proxy)', defaultBaseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-3-5-sonnet-20241022' },
-    { id: 'gemini', label: 'Google Gemini (OpenAI Compat)', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-2.0-flash' },
+    { id: 'gemini', label: 'Google Gemini (OpenAI Compat)', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-3.1-flash-lite' },
     { id: 'custom', label: 'Custom / Local LLM (Ollama, vLLM)', defaultBaseUrl: 'http://localhost:11434/v1', defaultModel: 'llama3' },
   ]
 
@@ -520,7 +520,7 @@ const SekolahDetail = () => {
                 <input
                   aria-label="Model ID AI"
                   required
-                  placeholder="gpt-4o-mini / deepseek-chat / dll"
+                  placeholder="gpt-6-luna / gemini-3.1-flash-lite / dll"
                   className="input-field mt-2 w-full"
                   value={aiSettings.model_id}
                   onChange={(event) => setAiSettings({ ...aiSettings, model_id: event.target.value })}
