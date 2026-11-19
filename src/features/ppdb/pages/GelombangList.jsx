@@ -8,6 +8,11 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { gelombangService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { BOOLEAN_ACTIVE_VALUES, createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+
+const transformActiveFilter = createMappedFilterParamsTransformer({
+  is_active: { valueType: 'boolean', values: BOOLEAN_ACTIVE_VALUES },
+})
 
 const STATUS_MAP = {
   1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -245,6 +250,7 @@ const GelombangList = () => {
           ref={gridRef}
           endpoint="/ppdb/gelombang/"
           requestMode="ag-grid"
+          transformRequestParams={transformActiveFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

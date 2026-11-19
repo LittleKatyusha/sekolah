@@ -44,6 +44,8 @@ const normalizeStaticParams = (value) => {
  * @param {Object} [props.staticParams] - Static parameters to include in every request.
  * Prefer passing a memoized object from callers; this component also stabilizes
  * equivalent object values internally to avoid unnecessary datasource resets.
+ * @param {Function} [props.transformRequestParams] - Optional final query-param
+ * transformer for adapting display values to backend values.
  * @param {number} [props.cacheBlockSize=100] - Number of rows per block (default: 100)
  * @param {boolean} [props.pagination=true] - Enable pagination (default: true)
  * @param {number} [props.paginationPageSize=20] - Default page size (default: 20)
@@ -62,6 +64,7 @@ const InfiniteGrid = forwardRef(({
   columnDefs,
   defaultColDef = {},
   transformData,
+  transformRequestParams,
   staticParams = EMPTY_STATIC_PARAMS,
   cacheBlockSize = 100,
   pagination = true,
@@ -108,13 +111,13 @@ const InfiniteGrid = forwardRef(({
 
   // ponytail: columnDefs/transformData via ref so inline/changing identities don't rebuild datasource (resets to page 1)
   const latestRef = useRef({})
-  latestRef.current = { normalizedColumnDefs, transformData }
+  latestRef.current = { normalizedColumnDefs, transformData, transformRequestParams }
 
   // Create the infinite row model datasource
   const dataSource = useMemo(() => ({
     getRows: async (params) => {
       const { startRow, endRow, sortModel, filterModel } = params
-      const queryParams = requestMode === 'ag-grid'
+      const builtQueryParams = requestMode === 'ag-grid'
         ? buildAgGridRequestParams({
             startRow,
             endRow,
@@ -130,6 +133,10 @@ const InfiniteGrid = forwardRef(({
             filterModel,
             staticParams: stabilizedStaticParams,
           })
+
+      const queryParams = latestRef.current.transformRequestParams
+        ? latestRef.current.transformRequestParams(builtQueryParams)
+        : builtQueryParams
 
       try {
         const { data, error } = await apiService.get(endpoint, { params: queryParams })

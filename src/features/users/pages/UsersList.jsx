@@ -10,6 +10,11 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import usePermission from '../../../hooks/usePermission'
 import { usersService } from '../services/usersService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { createMappedFilterParamsTransformer, NUMBER_ACTIVE_VALUES } from '../../../components/ui/mappedFilterParams'
+
+const transformActiveFilter = createMappedFilterParamsTransformer({
+  is_active: { valueType: 'number', values: NUMBER_ACTIVE_VALUES },
+})
 
 // Role options based on API response
 const ROLE_OPTIONS = [
@@ -353,6 +358,7 @@ const UsersList = () => {
           ref={gridRef}
           endpoint="/admin/users/"
           requestMode="ag-grid"
+          transformRequestParams={transformActiveFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

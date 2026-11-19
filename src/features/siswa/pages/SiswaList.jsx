@@ -12,6 +12,13 @@ import { siswaService } from '../services/siswaService'
 import ImportSiswaModal from './ImportSiswaModal'
 import CetakKartuModal from '../components/CetakKartuModal'
 import RfidEnrollment from '../components/RfidEnrollment'
+import { createMappedFilterParamsTransformer, GENDER_VALUES } from '../../../components/ui/mappedFilterParams'
+import { STUDENT_STATUS_VALUES } from '../../../utils/gridFilterMappings'
+
+const transformReferenceFilters = createMappedFilterParamsTransformer({
+  jenis_kelamin: { valueType: 'number', values: GENDER_VALUES },
+  status: { valueType: 'number', values: STUDENT_STATUS_VALUES },
+})
 
 const SiswaList = () => {
   const navigate = useNavigate()
@@ -318,6 +325,7 @@ const SiswaList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/siswa/"
+          transformRequestParams={transformReferenceFilters}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           rowSelection={true}

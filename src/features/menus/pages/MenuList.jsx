@@ -8,6 +8,11 @@ import Button from '../../../components/ui/Button'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { menuService } from '../services/menuService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { createMappedFilterParamsTransformer, NUMBER_ACTIVE_VALUES } from '../../../components/ui/mappedFilterParams'
+
+const transformActiveFilter = createMappedFilterParamsTransformer({
+  is_active: { valueType: 'number', values: NUMBER_ACTIVE_VALUES },
+})
 import { clearSessionCaches } from '../../../store/useAuthStore'
 
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete }) => {
@@ -238,6 +243,7 @@ const MenuList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/admin/menus/"
+          transformRequestParams={transformActiveFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

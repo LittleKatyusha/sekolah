@@ -6,8 +6,13 @@ import Button from '../../../components/ui/Button'
 import InfiniteGrid from '../../../components/ui/InfiniteGrid'
 import ActionsMenu from '../../../components/ui/ActionsMenu'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
-import { tesMinatBakatResources } from '../config.jsx'
+import {
+  STATUS_PESERTA_OPTIONS,
+  STATUS_TES_OPTIONS,
+  tesMinatBakatResources,
+} from '../config.jsx'
 import { showDeleteConfirm, showError, showSuccess } from '../../../utils/sweetalert'
+import { createMappedFilterParamsTransformer, NUMBER_ACTIVE_VALUES } from '../../../components/ui/mappedFilterParams'
 
 const TesMinatBakatListPage = ({ resourceKey }) => {
   const navigate = useNavigate()
@@ -96,6 +101,28 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
     [getRowActions, handleDelete, handleDetail, handleEdit, resource]
   )
 
+  const transformRequestParams = useMemo(() => {
+    if (resourceKey === 'tes') {
+      return createMappedFilterParamsTransformer({
+        status: { valueType: 'number', values: STATUS_TES_OPTIONS },
+      })
+    }
+
+    if (resourceKey === 'peserta') {
+      return createMappedFilterParamsTransformer({
+        status: { valueType: 'number', values: STATUS_PESERTA_OPTIONS },
+      })
+    }
+
+    if (resourceKey === 'aspek') {
+      return createMappedFilterParamsTransformer({
+        is_active: { valueType: 'number', values: NUMBER_ACTIVE_VALUES },
+      })
+    }
+
+    return undefined
+  }, [resourceKey])
+
   const defaultColDef = useMemo(() => ({
     resizable: true,
     sortable: true,
@@ -145,6 +172,7 @@ const TesMinatBakatListPage = ({ resourceKey }) => {
           ref={gridRef}
           endpoint={resource.endpoint}
           requestMode="ag-grid"
+          transformRequestParams={transformRequestParams}
           onGridReady={handleGridReady}
           staticParams={staticParams}
           columnDefs={columnDefs}

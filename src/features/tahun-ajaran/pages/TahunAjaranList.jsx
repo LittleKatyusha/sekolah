@@ -9,6 +9,11 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { tahunAjaranService } from '../services/tahunAjaranService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import ImportTahunAjaranModal from './ImportTahunAjaranModal'
+import { BOOLEAN_ACTIVE_VALUES, createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+
+const transformActiveFilter = createMappedFilterParamsTransformer({
+  is_active: { valueType: 'boolean', values: BOOLEAN_ACTIVE_VALUES },
+})
 
 const STATUS_MAP = {
   1: { label: 'Aktif', bg: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
@@ -272,6 +277,7 @@ const TahunAjaranList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/admin/tahun-ajaran/"
+          transformRequestParams={transformActiveFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

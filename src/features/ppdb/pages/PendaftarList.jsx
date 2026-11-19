@@ -9,6 +9,11 @@ import { pendaftarService } from '../services/ppdbService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
+import { createMappedFilterParamsTransformer, GENDER_VALUES } from '../../../components/ui/mappedFilterParams'
+
+const transformGenderFilter = createMappedFilterParamsTransformer({
+  jenis_kelamin: { valueType: 'number', values: GENDER_VALUES },
+})
 
 const STATUS_MAP = {
   draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
@@ -269,6 +274,7 @@ const PendaftarList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/ppdb/pendaftaran/"
+          transformRequestParams={transformGenderFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

@@ -13,6 +13,13 @@ import { guruService } from '../services/guruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import ImportGuruModal from './ImportGuruModal'
+import { createMappedFilterParamsTransformer, GENDER_VALUES } from '../../../components/ui/mappedFilterParams'
+import { EDUCATION_VALUES } from '../../../utils/gridFilterMappings'
+
+const transformReferenceFilters = createMappedFilterParamsTransformer({
+  jenis_kelamin: { valueType: 'number', values: GENDER_VALUES },
+  pendidikan_terakhir: { valueType: 'number', values: EDUCATION_VALUES },
+})
 
 // Actions Menu Component
 const ActionsMenu = ({ data, onDetail, onEdit, onDelete, detailPermission, editPermission, deletePermission }) => {
@@ -347,6 +354,7 @@ const GuruList = () => {
         <InfiniteGrid
           ref={gridRef}
           endpoint="/guru/"
+          transformRequestParams={transformReferenceFilters}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

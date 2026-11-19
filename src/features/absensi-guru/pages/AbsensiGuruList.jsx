@@ -8,6 +8,12 @@ import ActionsMenu from '../../../components/ui/ActionsMenu'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { absensiGuruService } from '../services/absensiGuruService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+import { ATTENDANCE_STATUS_VALUES } from '../../../utils/gridFilterMappings'
+
+const transformAttendanceStatusFilter = createMappedFilterParamsTransformer({
+  status: { valueType: 'number', values: ATTENDANCE_STATUS_VALUES },
+})
 
 const formatDate = (value) => {
   if (!value) return '-'
@@ -218,6 +224,7 @@ const AbsensiGuruList = () => {
           ref={gridRef}
           endpoint="/akademik/absensi-guru"
           requestMode="legacy"
+          transformRequestParams={transformAttendanceStatusFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

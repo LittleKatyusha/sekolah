@@ -9,6 +9,8 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { useReferenceOptions } from '../../../hooks/useReferenceOptions'
 import { anggotaService } from '../services/organisasiService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+import { optionsToMappedValues } from '../../../utils/gridFilterMappings'
 
 const getLabel = (value, options) => {
   if (!value) return '-'
@@ -27,6 +29,9 @@ const AnggotaList = () => {
   const navigate = useNavigate()
   const gridRef = useRef(null)
   const { options: statusOptions } = useReferenceOptions('status_organisasi')
+  const transformStatusFilter = useMemo(() => createMappedFilterParamsTransformer({
+    status: { valueType: 'number', values: optionsToMappedValues(statusOptions) },
+  }), [statusOptions])
 
   const staticParams = useMemo(() => ({
     sort_by: 'id',
@@ -176,6 +181,7 @@ const AnggotaList = () => {
           ref={gridRef}
           endpoint="/organisasi/anggota/"
           requestMode="ag-grid"
+          transformRequestParams={transformStatusFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

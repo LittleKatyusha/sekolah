@@ -10,6 +10,12 @@ import { bkKasusService } from '../services/bkService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
 import { formatDateShort } from '../../../utils/formatters'
 import { getStatusBadge } from '../../../utils/bkBadges.jsx'
+import { createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+import { BK_STATUS_VALUES } from '../../../utils/gridFilterMappings'
+
+const transformBkStatusFilter = createMappedFilterParamsTransformer({
+  status: { valueType: 'number', values: BK_STATUS_VALUES },
+})
 
 const BkKasusList = () => {
   const navigate = useNavigate()
@@ -163,6 +169,7 @@ const BkKasusList = () => {
           key="bk-kasus-grid"
           ref={gridRef}
           endpoint="/bk/kasus/"
+          transformRequestParams={transformBkStatusFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

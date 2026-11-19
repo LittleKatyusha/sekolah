@@ -21,6 +21,7 @@ import { absensiSiswaService } from '../services/absensiSiswaService'
 import { siswaService } from '../../siswa/services/siswaService'
 import useAuthStore from '../../../store/useAuthStore'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { transformStatusFilterParams } from '../utils/statusFilter'
 
 const STATUS_META = {
   hadir: {
@@ -790,6 +791,7 @@ const AdminAbsensiSiswaList = () => {
           endpoint={endpoint}
           requestMode="ag-grid"
           staticParams={staticParams}
+          transformRequestParams={transformStatusFilterParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           cacheBlockSize={20}

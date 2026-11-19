@@ -8,6 +8,12 @@ import ActionsMenu from '../../../components/ui/ActionsMenu'
 import PermissionGuard from '../../../components/guards/PermissionGuard'
 import { kalenderAkademikService } from '../services/kalenderAkademikService'
 import { showDeleteConfirm, showSuccess, showError } from '../../../utils/sweetalert'
+import { createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+import { CALENDAR_STATUS_VALUES } from '../../../utils/gridFilterMappings'
+
+const transformCalendarStatusFilter = createMappedFilterParamsTransformer({
+  status: { valueType: 'number', values: CALENDAR_STATUS_VALUES },
+})
 
 // Status mapping for display
 const STATUS_MAP = {
@@ -195,6 +201,7 @@ const KalenderAkademikList = () => {
           ref={gridRef}
           endpoint="/admin/kalender-akademik/"
           requestMode="ag-grid"
+          transformRequestParams={transformCalendarStatusFilter}
           staticParams={staticParams}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

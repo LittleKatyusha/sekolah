@@ -8,6 +8,11 @@ import PermissionGuard from '../../../components/guards/PermissionGuard'
 import ShiftList from '../../shift/pages/ShiftList'
 import { hariOperasionalService } from '../services/hariOperasionalService'
 import { showSuccess, showError } from '../../../utils/sweetalert'
+import { BOOLEAN_ACTIVE_VALUES, createMappedFilterParamsTransformer } from '../../../components/ui/mappedFilterParams'
+
+const transformActiveFilter = createMappedFilterParamsTransformer({
+  is_active: { valueType: 'boolean', values: BOOLEAN_ACTIVE_VALUES },
+})
 
 const HariOperasionalList = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -187,6 +192,7 @@ const HariOperasionalList = () => {
             <InfiniteGrid
               ref={gridRef}
               endpoint="/admin/hari-operasional/"
+              transformRequestParams={transformActiveFilter}
               staticParams={staticParams}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
