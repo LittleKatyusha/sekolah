@@ -6,7 +6,7 @@ import { create } from 'zustand'
  *
  * Each notification object shape:
  *   {
- *     id:        string  (auto-generated)
+ *     id:        number|string  (database ID when persisted)
  *     type:      string  e.g. "forum", "absensi", "nilai", "info"
  *     title:     string
  *     body:      string
@@ -25,18 +25,29 @@ const useNotificationStore = create((set, get) => ({
   /** Called by the WebSocket handler when a notification frame arrives */
   addNotification: (notif) => {
     const entry = {
-      id:        crypto.randomUUID(),
+      id:        notif.id ?? crypto.randomUUID(),
       type:      notif.type  || 'info',
-      title:     notif.title || 'Notifikasi',
-      body:      notif.body  || notif.message || '',
+      urgency:   notif.urgency || 'low',
+      title:     notif.judul || notif.title || 'Notifikasi',
+      body:      notif.pesan || notif.body || notif.message || '',
       data:      notif.data  || notif,
-      read:      false,
+      read:      Boolean(notif.is_read ?? notif.read ?? false),
+      read_at:   notif.read_at || null,
       createdAt: notif.created_at || new Date().toISOString(),
     }
-    set((state) => ({
-      notifications: [entry, ...state.notifications].slice(0, 100), // keep last 100
-      unreadCount:   state.unreadCount + 1,
-    }))
+    set((state) => {
+      const existingIndex = state.notifications.findIndex(n => String(n.id) === String(entry.id))
+      if (existingIndex >= 0) {
+        const notifications = [...state.notifications]
+        notifications[existingIndex] = { ...notifications[existingIndex], ...entry }
+        return { notifications }
+      }
+
+      return {
+        notifications: [entry, ...state.notifications].slice(0, 100), // keep last 100
+        unreadCount: state.unreadCount + (entry.read ? 0 : 1),
+      }
+    })
   },
 
   markRead: (id) => {
@@ -45,7 +56,7 @@ const useNotificationStore = create((set, get) => ({
       // avoiding a second find() traversal over the full array.
       let wasUnread = false
       const notifications = state.notifications.map(n => {
-        if (n.id === id && !n.read) {
+        if (String(n.id) === String(id) && !n.read) {
           wasUnread = true
           return { ...n, read: true }
         }
@@ -73,7 +84,7 @@ const useNotificationStore = create((set, get) => ({
 
   /** Replace in-memory list with persisted data from API */
   loadFromApi: (items, unreadCount) => {
-    const notifications = items.map(n => ({
+    const apiNotifications = items.map(n => ({
       id:        n.id,
       type:      n.type     || 'info',
       urgency:   n.urgency  || 'low',
@@ -84,7 +95,18 @@ const useNotificationStore = create((set, get) => ({
       read_at:   n.read_at  || null,
       createdAt: n.created_at,
     }))
-    set({ notifications, unreadCount: unreadCount ?? 0 })
+    set((state) => {
+      const apiIds = new Set(apiNotifications.map(n => String(n.id)))
+      const realtimeOnly = state.notifications.filter(n => !apiIds.has(String(n.id)))
+      const extraUnread = realtimeOnly.filter(n => !n.read).length
+
+      return {
+        notifications: [...realtimeOnly, ...apiNotifications]
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 100),
+        unreadCount: (unreadCount ?? 0) + extraUnread,
+      }
+    })
   },
 
   setUnreadCount: (count) => set({ unreadCount: count }),
@@ -94,7 +116,7 @@ const useNotificationStore = create((set, get) => ({
     set((state) => {
       let wasUnread = false
       const notifications = state.notifications.map(n => {
-        if (n.id === id && !n.read) {
+        if (String(n.id) === String(id) && !n.read) {
           wasUnread = true
           return { ...n, read: true }
         }

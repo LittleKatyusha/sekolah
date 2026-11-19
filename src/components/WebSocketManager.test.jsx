@@ -4,6 +4,13 @@ import WebSocketManager from './WebSocketManager'
 import useAuthStore from '../store/useAuthStore'
 import useNotificationStore from '../store/useNotificationStore'
 import echoService from '../services/echoService'
+import { notifikasiService } from '../features/notifikasi/services/notifikasiService'
+
+vi.mock('../features/notifikasi/services/notifikasiService', () => ({
+  notifikasiService: {
+    getAll: vi.fn(() => Promise.resolve({ data: [], meta: { unread_count: 0 } })),
+  },
+}))
 
 vi.mock('../services/echoService', () => {
   const listeners = new Map()
@@ -33,6 +40,7 @@ beforeEach(() => {
   echoService.status = 'disconnected'
   useAuthStore.setState({ isAuthenticated: true, token: null, user: { id: 42 } })
   useNotificationStore.setState({ wsStatus: 'disconnected' })
+  notifikasiService.getAll.mockResolvedValue({ data: [], meta: { unread_count: 0 } })
 })
 afterEach(cleanup)
 
@@ -45,6 +53,7 @@ describe('WebSocket session lifecycle', () => {
 
     expect(echoService.connect).toHaveBeenCalledWith('restored-token')
     expect(echoService.subscribe).toHaveBeenCalledWith('App.Models.User.42')
+    expect(notifikasiService.getAll).toHaveBeenCalledWith({ page: 1, per_page: 20 })
     expect(useNotificationStore.getState().wsStatus).toBe('connecting')
   })
 

@@ -20,6 +20,30 @@ describe('useNotificationStore — existing actions', () => {
     expect(state.unreadCount).toBe(1)
   })
 
+  it('preserves persisted ids, maps API fields, and ignores duplicate realtime events', () => {
+    const notification = {
+      id: 91,
+      type: 'ews_alert',
+      urgency: 'high',
+      judul: 'Peringatan EWS',
+      pesan: 'Siswa perlu ditindaklanjuti',
+      is_read: false,
+      created_at: '2026-11-19T10:00:00Z',
+    }
+
+    useNotificationStore.getState().addNotification(notification)
+    useNotificationStore.getState().addNotification(notification)
+
+    const state = useNotificationStore.getState()
+    expect(state.notifications).toHaveLength(1)
+    expect(state.notifications[0]).toMatchObject({
+      id: 91,
+      title: 'Peringatan EWS',
+      body: 'Siswa perlu ditindaklanjuti',
+    })
+    expect(state.unreadCount).toBe(1)
+  })
+
   it('markAllRead sets all read and unreadCount to 0', () => {
     useNotificationStore.setState({
       notifications: [
@@ -49,6 +73,23 @@ describe('useNotificationStore — API actions', () => {
     expect(state.notifications[0].read).toBe(false)
     expect(state.notifications[1].read).toBe(true)
     expect(state.unreadCount).toBe(1)
+  })
+
+  it('keeps a newer realtime notification when an older API response arrives', () => {
+    useNotificationStore.getState().addNotification({
+      id: 3,
+      judul: 'Realtime',
+      pesan: 'Baru masuk',
+      created_at: '2026-11-19T11:00:00Z',
+    })
+
+    useNotificationStore.getState().loadFromApi([
+      { id: 1, judul: 'API', pesan: 'Lama', is_read: false, created_at: '2026-11-19T10:00:00Z' },
+    ], 1)
+
+    const state = useNotificationStore.getState()
+    expect(state.notifications.map(n => n.id)).toEqual([3, 1])
+    expect(state.unreadCount).toBe(2)
   })
 
   it('setUnreadCount updates unreadCount', () => {

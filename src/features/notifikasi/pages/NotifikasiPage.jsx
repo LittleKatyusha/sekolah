@@ -7,12 +7,18 @@ const TYPE_LABEL = {
   ews_alert:       'EWS Alert',
   absensi:         'Absensi',
   nilai_anomali:   'Nilai',
+  nilai_diposting: 'Nilai',
   spp_tunggakan:   'SPP',
+  spp_lunas:       'SPP',
   ppdb_status:     'PPDB',
   risk_profile:    'Risiko',
+  tugas_baru:      'Tugas',
+  materi_baru:     'Materi',
+  pengingat_ujian: 'Ujian',
 }
 
 const URGENCY_CLASS = {
+  critical: 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300',
   high:   'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   low:    'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',

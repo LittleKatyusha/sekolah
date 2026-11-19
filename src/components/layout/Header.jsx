@@ -10,10 +10,20 @@ import { notifikasiService } from '../../features/notifikasi/services/notifikasi
 
 // ── Notification type colour map ──────────────────────────────────────────────
 const TYPE_DOT = {
-  forum:   'bg-blue-500',
-  absensi: 'bg-yellow-500',
-  nilai:   'bg-green-500',
-  info:    'bg-gray-400',
+  forum:            'bg-blue-500',
+  absensi:          'bg-yellow-500',
+  nilai:            'bg-green-500',
+  nilai_diposting:  'bg-green-500',
+  nilai_anomali:    'bg-red-500',
+  ews_alert:        'bg-red-600',
+  risk_profile:     'bg-red-600',
+  spp_tunggakan:    'bg-orange-500',
+  spp_lunas:        'bg-emerald-500',
+  ppdb_status:      'bg-indigo-500',
+  tugas_baru:       'bg-blue-500',
+  materi_baru:      'bg-cyan-500',
+  pengingat_ujian:  'bg-purple-500',
+  info:             'bg-gray-400',
 }
 
 // ── WS status indicator ───────────────────────────────────────────────────────
@@ -35,7 +45,7 @@ const WsIndicator = ({ status }) => {
 
 // ── Notification dropdown ─────────────────────────────────────────────────────
 const NotificationPanel = ({ onClose }) => {
-  const { notifications, unreadCount, markAllReadApi, markReadApi, loadFromApi } = useNotificationStore()
+  const { notifications, unreadCount, markAllReadApi, markReadApi, markRead, loadFromApi } = useNotificationStore()
 
   // Load persisted notifications from API on first open
   useEffect(() => {
@@ -48,6 +58,10 @@ const NotificationPanel = ({ onClose }) => {
   }, [])
 
   const handleMarkRead = async (id) => {
+    if (typeof id !== 'number') {
+      markRead(id)
+      return
+    }
     const response = await notifikasiService.markRead(id)
     if (response?.success) markReadApi(id)
   }
